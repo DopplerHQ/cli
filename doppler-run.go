@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,11 +13,13 @@ import (
 // TODO add fallback support
 func main() {
 	config := map[string]string{
-		"api_key":  os.Getenv("key"),
-		"pipeline": os.Getenv("pipeline"),
-		"env":      os.Getenv("environment"),
-		"api":      "https://deploy.doppler.com/v1/variables",
+		"api": "https://deploy.doppler.com/v1/variables",
 	}
+
+	key := flag.String("key", "", "doppler api key")
+	pipeline := flag.String("pipeline", "", "")
+	environment := flag.String("environment", "", "")
+	flag.Parse()
 
 	argLocation := indexOf(os.Args, "--")
 	if argLocation == -1 || argLocation == (len(os.Args)-1) {
@@ -25,7 +28,7 @@ func main() {
 	}
 
 	// make variables request to doppler api
-	body := getVariables(config["api"], config["api_key"], config["pipeline"], config["env"])
+	body := getVariables(config["api"], *key, *pipeline, *environment)
 
 	var result map[string]interface{}
 	json.Unmarshal([]byte(body), &result)
