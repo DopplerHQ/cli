@@ -18,14 +18,13 @@ for target in "${targets[@]}"; do
 
   os="${TARGET[0]}"
   arch="${TARGET[1]}"
+  extension="${TARGET[2]}"
 
   echo "Building binary for $os $arch"
 
   if [ "${#TARGET[@]}" == 2 ]; then
     GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-run.$os-$arch"
   fi
-
-  extension="${TARGET[2]}"
 
   if [ "${#TARGET[@]}" == 3 ]; then
     GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-run.$os-$arch.$extension"
