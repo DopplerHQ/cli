@@ -7,15 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // TODO add fallback support
 func main() {
 	config := map[string]string{
-		"api_key":  os.Getenv("api_key"),
+		"api_key":  os.Getenv("key"),
 		"pipeline": os.Getenv("pipeline"),
-		"env":      os.Getenv("env"),
+		"env":      os.Getenv("environment"),
 		"api":      "https://deploy.doppler.com/v1/variables",
 	}
 
@@ -29,16 +28,15 @@ func main() {
 	body := getVariables(config["api"], config["api_key"], config["pipeline"], config["env"])
 
 	var result map[string]interface{}
-	fmt.Println("body", body)
 	json.Unmarshal([]byte(body), &result)
 	variables := result["variables"].(map[string]interface{})
 
 	command := os.Args[argLocation+1 : len(os.Args)]
-	runCommand(strings.Join(command, " "), variables)
+	runCommand(command, variables)
 }
 
-func runCommand(command string, variables map[string]interface{}) {
-	cmd := exec.Command(command)
+func runCommand(command []string, variables map[string]interface{}) {
+	cmd := exec.Command(command[0], command[1:]...)
 	env := os.Environ()
 
 	excludedKeys := []string{"PATH", "PS1", "HOME"}
