@@ -1,0 +1,86 @@
+/*
+Copyright © 2019 Doppler <support@doppler.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package cmd
+
+import (
+	api "doppler-cli/api"
+	configuration "doppler-cli/config"
+	"doppler-cli/utils"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/spf13/cobra"
+)
+
+var deployHost string
+var key string
+var project string
+var config string
+
+var runCmd = &cobra.Command{
+	Use:   "run [command to run]",
+	Short: "A brief description of your command",
+	Long: `Run a command with secrets injected into the environment
+
+Usage:
+doppler run printenv
+doppler run -- printenv
+doppler run --key=123 -- printenv`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			fmt.Println("Error: Command to execute not specified")
+			cmd.Help()
+			return
+		}
+
+		silent, parseErr := strconv.ParseBool(cmd.Flag("silent").Value.String())
+		if parseErr != nil {
+			utils.Err(parseErr)
+		}
+
+		localConfig := configuration.LocalConfig(cmd)
+		_, secrets := api.GetDeploySecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, true)
+
+		env := os.Environ()
+		excludedKeys := []string{"PATH", "PS1", "HOME"}
+		for name, value := range secrets {
+			addKey := true
+			for _, excludedKey := range excludedKeys {
+				if excludedKey == name {
+					addKey = false
+					break
+				}
+			}
+
+			if addKey {
+				env = append(env, fmt.Sprintf("%s=%s", name, value))
+			}
+		}
+
+		err := utils.RunCommand(args, env, !silent)
+		if err != nil {
+			fmt.Println(fmt.Sprintf("Error trying to execute command: %s", args))
+			utils.Err(err)
+		}
+	},
+}
+
+func init() {
+	runCmd.Flags().Bool("silent", false, "don't output the response")
+
+	rootCmd.AddCommand(runCmd)
+}

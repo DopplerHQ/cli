@@ -23,10 +23,10 @@ for target in "${targets[@]}"; do
   echo "Building binary for $os $arch"
 
   if [ "${#TARGET[@]}" == 2 ]; then
-    GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-run.$os-$arch"
+    GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-cli.$os-$arch"
   fi
 
   if [ "${#TARGET[@]}" == 3 ]; then
-    GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-run.$os-$arch.$extension"
+    GOOS="$os" GOARCH="$arcg" go build -o "./bin/doppler-cli.$os-$arch.$extension"
   fi
 done

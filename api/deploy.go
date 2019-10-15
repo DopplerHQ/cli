@@ -1,0 +1,88 @@
+/*
+Copyright © 2019 Doppler <support@doppler.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package api
+
+import (
+	utils "doppler-cli/utils"
+	"encoding/json"
+	"fmt"
+	"strconv"
+
+	"github.com/spf13/cobra"
+)
+
+type errorResponse struct {
+	messages []string
+	success  bool
+}
+
+// Secret key/value
+type Secret struct {
+	Name  string
+	Value string
+}
+
+// GetDeploySecrets for specified project and config
+func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config string, parse bool) ([]byte, map[string]string) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "environment", Value: config})
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("deploy-host").Value.String()
+	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch secrets")
+		utils.Err(err)
+		return nil, nil
+	}
+
+	if parse {
+		var result map[string]interface{}
+		err = json.Unmarshal(response, &result)
+		if err != nil {
+			utils.Err(err)
+		}
+
+		parsedSecrets := make(map[string]string)
+		secrets := result["variables"].(map[string]interface{})
+		for name, value := range secrets {
+			parsedSecrets[name] = value.(string)
+		}
+
+		return response, parsedSecrets
+	}
+
+	return response, nil
+}
+
+// DownloadSecrets for specified project and config
+func DownloadSecrets(cmd *cobra.Command, apiKey string, project string, config string, metadata bool) []byte {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "environment", Value: config})
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+	params = append(params, utils.QueryParam{Key: "format", Value: "file"})
+	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
+
+	host := cmd.Flag("deploy-host").Value.String()
+	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to download secrets")
+		utils.Err(err)
+		return nil
+	}
+
+	return response
+}
