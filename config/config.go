@@ -134,6 +134,11 @@ func LocalConfig(cmd *cobra.Command) ScopedConfig {
 	return localConfig
 }
 
+// AllConfigs get all configs we know about
+func AllConfigs() map[string]Config {
+	return configContents
+}
+
 // Set a local config
 func Set(scope string, options []string) {
 	if scope != "*" {

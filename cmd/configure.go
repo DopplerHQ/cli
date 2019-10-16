@@ -44,9 +44,34 @@ var configureCmd = &cobra.Command{
 		}
 
 		if all {
-			// TODO print all config
-			// TODO support --json
-			fmt.Println("printing all configs")
+			allConfigs := configuration.AllConfigs()
+
+			if jsonFlag {
+				resp, err := json.Marshal(allConfigs)
+				if err != nil {
+					utils.Err(err)
+				}
+
+				fmt.Println(string(resp))
+				return
+			}
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"name", "value", "scope"})
+
+			for scope, config := range allConfigs {
+				if config.Key != "" {
+					table.Append([]string{"key", config.Key, scope})
+				}
+				if config.Project != "" {
+					table.Append([]string{"project", config.Project, scope})
+				}
+				if config.Config != "" {
+					table.Append([]string{"config", config.Config, scope})
+				}
+			}
+
+			table.Render()
 			return
 		}
 
