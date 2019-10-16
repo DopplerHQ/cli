@@ -30,11 +30,6 @@ type ComputedSecret struct {
 	ComputedValue string `json:"computed"`
 }
 
-type computedSecret struct {
-	computed string
-	raw      string
-}
-
 // GetAPISecrets for specified project and config
 func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config string, parse bool) ([]byte, map[string]ComputedSecret) {
 	var params []utils.QueryParam
