@@ -70,19 +70,12 @@ var secretsCmd = &cobra.Command{
 			return
 		}
 
-		_, secrets := api.GetAPISecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, true)
-
-		var matchedSecrets []api.ComputedSecret
-		for _, name := range args {
-			if secrets[name] != (api.ComputedSecret{}) {
-				matchedSecrets = append(matchedSecrets, secrets[name])
-			}
-		}
+		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)
 
 		if plain {
 			sbEmpty := true
 			var sb strings.Builder
-			for _, secret := range matchedSecrets {
+			for _, secret := range secrets {
 				if sbEmpty {
 					sbEmpty = false
 				} else {
@@ -248,11 +241,11 @@ var secretsDownloadCmd = &cobra.Command{
 }
 
 func init() {
-	secretsCmd.Flags().Bool("raw", false, "display the raw secret value without processing variables")
+	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
-	secretsGetCmd.Flags().Bool("raw", false, "display the raw secret value without processing variables")
+	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 
 	secretsDownloadCmd.Flags().String("path", ".", "location to save the file")
 	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
