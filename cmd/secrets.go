@@ -22,11 +22,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -98,9 +100,23 @@ var secretsCmd = &cobra.Command{
 			return
 		}
 
-		// TODO support --raw
-		// TODO print table
-		fmt.Println(matchedSecrets)
+		// TODO doesn't handle multi line secrets well at all
+		table := tablewriter.NewWriter(os.Stdout)
+		headers := []string{"name", "value"}
+		if raw {
+			headers = append(headers, "raw")
+		}
+		table.SetHeader(headers)
+
+		for _, secret := range secrets {
+			row := []string{secret.Name, secret.ComputedValue}
+			if raw {
+				row = append(row, secret.RawValue)
+			}
+			table.Append(row)
+		}
+
+		table.Render()
 	},
 }
 
@@ -183,9 +199,22 @@ doppler secrets get api_key crypto_key`,
 			return
 		}
 
-		// TODO support --raw
-		// TODO print table
-		fmt.Println(matchedSecrets)
+		table := tablewriter.NewWriter(os.Stdout)
+		headers := []string{"name", "value"}
+		if raw {
+			headers = append(headers, "raw")
+		}
+		table.SetHeader(headers)
+
+		for _, secret := range matchedSecrets {
+			row := []string{secret.Name, secret.ComputedValue}
+			if raw {
+				row = append(row, secret.RawValue)
+			}
+			table.Append(row)
+		}
+
+		table.Render()
 	},
 }
 

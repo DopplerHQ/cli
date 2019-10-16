@@ -20,9 +20,11 @@ import (
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +62,20 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(configuration.Get(scope))
+		config := configuration.Get(scope)
+		var data [][]string
+		data = append(data, []string{"key", config.Key.Value, config.Key.Scope})
+		data = append(data, []string{"project", config.Project.Value, config.Project.Scope})
+		data = append(data, []string{"config", config.Config.Value, config.Config.Scope})
+
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"name", "value", "scope"})
+
+		for _, row := range data {
+			table.Append(row)
+		}
+
+		table.Render()
 	},
 }
 
@@ -126,20 +141,20 @@ doppler configure get key otherkey`,
 			return
 		}
 
-		filteredConfMap := make(map[string]string)
-		for _, arg := range args {
-			if arg == "key" {
-				filteredConfMap["key"] = conf.Key
-			}
-			if arg == "project" {
-				filteredConfMap["project"] = conf.Project
-			}
-			if arg == "config" {
-				filteredConfMap["config"] = conf.Config
-			}
-		}
-
 		if jsonFlag {
+			filteredConfMap := make(map[string]string)
+			for _, arg := range args {
+				if arg == "key" {
+					filteredConfMap["key"] = conf.Key.Value
+				}
+				if arg == "project" {
+					filteredConfMap["project"] = conf.Project.Value
+				}
+				if arg == "config" {
+					filteredConfMap["config"] = conf.Config.Value
+				}
+			}
+
 			resp, err := json.Marshal(filteredConfMap)
 			if err != nil {
 				utils.Err(err)
@@ -149,8 +164,27 @@ doppler configure get key otherkey`,
 			return
 		}
 
-		// TODO print a table
-		fmt.Println(filteredConfMap)
+		var data [][]string
+		for _, arg := range args {
+			if arg == "key" {
+				data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
+			}
+			if arg == "project" {
+				data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
+			}
+			if arg == "config" {
+				data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
+			}
+		}
+
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"name", "value", "scope"})
+
+		for _, row := range data {
+			table.Append(row)
+		}
+
+		table.Render()
 	},
 }
 
@@ -177,7 +211,20 @@ doppler configure set key=123 otherkey=456`,
 		configuration.Set(scope, args)
 
 		if !silent {
-			fmt.Println(configuration.Get(scope))
+			conf := configuration.Get(scope)
+			var data [][]string
+			data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
+			data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
+			data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"name", "value", "scope"})
+
+			for _, row := range data {
+				table.Append(row)
+			}
+
+			table.Render()
 		}
 	},
 }
@@ -205,7 +252,20 @@ doppler configure unset key otherkey`,
 		configuration.Unset(scope, args)
 
 		if !silent {
-			fmt.Println(configuration.Get(scope))
+			conf := configuration.Get(scope)
+			var data [][]string
+			data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
+			data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
+			data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
+
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader([]string{"name", "value", "scope"})
+
+			for _, row := range data {
+				table.Append(row)
+			}
+
+			table.Render()
 		}
 	},
 }
