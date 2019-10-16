@@ -53,7 +53,7 @@ doppler run --key=123 -- printenv`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetDeploySecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, true)
+		_, secrets := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)
 
 		env := os.Environ()
 		excludedKeys := []string{"PATH", "PS1", "HOME"}

@@ -35,13 +35,14 @@ type Config struct {
 	Key     string `json:"key"`
 }
 
-type configPair struct {
-	Project pair `json:"project"`
-	Config  pair `json:"config"`
-	Key     pair `json:"key"`
+// ScopedConfig options with their scope
+type ScopedConfig struct {
+	Project Pair `json:"project"`
+	Config  Pair `json:"config"`
+	Key     Pair `json:"key"`
 }
 
-type pair struct {
+type Pair struct {
 	Value string `json:"value"`
 	Scope string `json:"scope"`
 }
@@ -64,64 +65,70 @@ func init() {
 	configContents = readYAML()
 }
 
-// Get the local config at the specified scope
-func Get(scope string) Config {
+// Get the config at the specified scope
+func Get(scope string) ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
 		utils.Err(err)
 	}
 	scope = path.Join(scope, "/")
-	var scopedConfig configPair
+	var scopedConfig ScopedConfig
 
 	for confScope, conf := range configContents {
-		// both paths should end in / to prevent partial match (e.g. /test matching /test123)
+		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
 		if confScope != "*" && !strings.HasPrefix(scope, path.Join(confScope, "/")) {
 			continue
 		}
 
 		if conf.Key != "" {
-			if scopedConfig.Key == (pair{}) {
-				scopedConfig.Key = pair{Value: conf.Key, Scope: confScope}
+			if scopedConfig.Key == (Pair{}) {
+				scopedConfig.Key = Pair{Value: conf.Key, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Key.Scope) {
 				scopedConfig.Key.Value = conf.Key
+				scopedConfig.Key.Scope = confScope
 			}
 		}
 
 		if conf.Project != "" {
-			if scopedConfig.Project == (pair{}) {
-				scopedConfig.Project = pair{Value: conf.Project, Scope: confScope}
+			if scopedConfig.Project == (Pair{}) {
+				scopedConfig.Project = Pair{Value: conf.Project, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
+				scopedConfig.Project.Scope = confScope
 			}
 		}
 
 		if conf.Config != "" {
-			if scopedConfig.Config == (pair{}) {
-				scopedConfig.Config = pair{Value: conf.Config, Scope: confScope}
+			if scopedConfig.Config == (Pair{}) {
+				scopedConfig.Config = Pair{Value: conf.Config, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
+				scopedConfig.Config.Scope = confScope
 			}
 		}
 	}
 
-	return Config{Project: scopedConfig.Project.Value, Config: scopedConfig.Config.Value, Key: scopedConfig.Key.Value}
+	return scopedConfig
 }
 
 // LocalConfig retrieves the config for the current directory
-func LocalConfig(cmd *cobra.Command) Config {
+func LocalConfig(cmd *cobra.Command) ScopedConfig {
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
 	key := cmd.Flag("key").Value.String()
 	if key != "" {
-		localConfig.Key = key
+		localConfig.Key.Value = key
+		localConfig.Key.Scope = ""
 	}
 	project := cmd.Flag("project").Value.String()
 	if project != "" {
-		localConfig.Project = project
+		localConfig.Project.Value = project
+		localConfig.Project.Scope = ""
 	}
 	config := cmd.Flag("config").Value.String()
 	if config != "" {
-		localConfig.Config = config
+		localConfig.Config.Value = config
+		localConfig.Config.Scope = ""
 	}
 
 	return localConfig

@@ -63,7 +63,7 @@ var secretsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 
 		if jsonFlag {
-			response, _ := api.GetAPISecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, false)
+			response, _ := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, false)
 			fmt.Println(string(response))
 			return
 		}
@@ -134,7 +134,7 @@ doppler secrets get api_key crypto_key`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, true)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)
 
 		if jsonFlag {
 			secretsMap := make(map[string]map[string]string)
@@ -209,7 +209,7 @@ var secretsDownloadCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body := api.DownloadSecrets(cmd, localConfig.Key, localConfig.Project, localConfig.Config, metadata)
+		body := api.DownloadSecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 
 		err = ioutil.WriteFile(path.Join(filePath, fileName), body, 0600)
 		if err != nil {

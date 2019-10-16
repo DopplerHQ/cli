@@ -102,7 +102,7 @@ doppler configure get key otherkey`,
 					} else {
 						sb.WriteString("\n")
 					}
-					sb.WriteString(conf.Key)
+					sb.WriteString(conf.Key.Value)
 				}
 				if arg == "project" {
 					if sbEmpty {
@@ -110,7 +110,7 @@ doppler configure get key otherkey`,
 					} else {
 						sb.WriteString("\n")
 					}
-					sb.WriteString(conf.Project)
+					sb.WriteString(conf.Project.Value)
 				}
 				if arg == "config" {
 					if sbEmpty {
@@ -118,7 +118,7 @@ doppler configure get key otherkey`,
 					} else {
 						sb.WriteString("\n")
 					}
-					sb.WriteString(conf.Config)
+					sb.WriteString(conf.Config.Value)
 				}
 			}
 
