@@ -63,11 +63,11 @@ func RunCommand(command []string, env []string, output bool) error {
 	cmdOut, _ := cmd.StdoutPipe()
 	cmdErr, _ := cmd.StderrPipe()
 
-	startErr := cmd.Start()
-	if startErr != nil {
+	err := cmd.Start()
+	if err != nil {
 		fmt.Println(fmt.Sprintf("Error trying to execute command: %s", command))
-		Err(startErr)
-		return startErr
+		Err(err)
+		return err
 	}
 
 	if output {
@@ -78,7 +78,7 @@ func RunCommand(command []string, env []string, output bool) error {
 		fmt.Printf(string(errOutput))
 	}
 
-	err := cmd.Wait()
+	err = cmd.Wait()
 	if err == nil {
 		os.Exit(0)
 	}
