@@ -20,11 +20,9 @@ import (
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
@@ -56,22 +54,20 @@ var configureCmd = &cobra.Command{
 				return
 			}
 
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"name", "value", "scope"})
-
+			var rows [][]string
 			for scope, config := range allConfigs {
 				if config.Key != "" {
-					table.Append([]string{"key", config.Key, scope})
+					rows = append(rows, []string{"key", config.Key, scope})
 				}
 				if config.Project != "" {
-					table.Append([]string{"project", config.Project, scope})
+					rows = append(rows, []string{"project", config.Project, scope})
 				}
 				if config.Config != "" {
-					table.Append([]string{"config", config.Config, scope})
+					rows = append(rows, []string{"config", config.Config, scope})
 				}
 			}
 
-			table.Render()
+			utils.PrintTable([]string{"name", "value", "scope"}, rows)
 			return
 		}
 
@@ -88,19 +84,8 @@ var configureCmd = &cobra.Command{
 		}
 
 		config := configuration.Get(scope)
-		var data [][]string
-		data = append(data, []string{"key", config.Key.Value, config.Key.Scope})
-		data = append(data, []string{"project", config.Project.Value, config.Project.Scope})
-		data = append(data, []string{"config", config.Config.Value, config.Config.Scope})
-
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"name", "value", "scope"})
-
-		for _, row := range data {
-			table.Append(row)
-		}
-
-		table.Render()
+		rows := [][]string{{"key", config.Key.Value, config.Key.Scope}, {"project", config.Project.Value, config.Project.Scope}, {"config", config.Config.Value, config.Config.Scope}}
+		utils.PrintTable([]string{"name", "value", "scope"}, rows)
 	},
 }
 
@@ -189,27 +174,18 @@ doppler configure get key otherkey`,
 			return
 		}
 
-		var data [][]string
+		var rows [][]string
 		for _, arg := range args {
 			if arg == "key" {
-				data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
-			}
-			if arg == "project" {
-				data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
-			}
-			if arg == "config" {
-				data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
+				rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
+			} else if arg == "project" {
+				rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
+			} else if arg == "config" {
+				rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
 			}
 		}
 
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"name", "value", "scope"})
-
-		for _, row := range data {
-			table.Append(row)
-		}
-
-		table.Render()
+		utils.PrintTable([]string{"name", "value", "scope"}, rows)
 	},
 }
 
@@ -237,19 +213,8 @@ doppler configure set key=123 otherkey=456`,
 
 		if !silent {
 			conf := configuration.Get(scope)
-			var data [][]string
-			data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
-			data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
-			data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
-
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"name", "value", "scope"})
-
-			for _, row := range data {
-				table.Append(row)
-			}
-
-			table.Render()
+			rows := [][]string{{"key", conf.Key.Value, conf.Key.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
+			utils.PrintTable([]string{"name", "value", "scope"}, rows)
 		}
 	},
 }
@@ -278,19 +243,8 @@ doppler configure unset key otherkey`,
 
 		if !silent {
 			conf := configuration.Get(scope)
-			var data [][]string
-			data = append(data, []string{"key", conf.Key.Value, conf.Key.Scope})
-			data = append(data, []string{"project", conf.Project.Value, conf.Project.Scope})
-			data = append(data, []string{"config", conf.Config.Value, conf.Config.Scope})
-
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"name", "value", "scope"})
-
-			for _, row := range data {
-				table.Append(row)
-			}
-
-			table.Render()
+			rows := [][]string{{"key", conf.Key.Value, conf.Key.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
+			utils.PrintTable([]string{"name", "value", "scope"}, rows)
 		}
 	},
 }
