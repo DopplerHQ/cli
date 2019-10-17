@@ -17,6 +17,8 @@ package cmd
 
 import (
 	"doppler-cli/utils"
+	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -29,11 +31,22 @@ TODO
 	- global --configuration option
 */
 
-var cfgFile string
+var programVersion = "0.0.1"
 
 var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
+	Run: func(cmd *cobra.Command, args []string) {
+		version := utils.GetBoolFlag(cmd, "version")
+		if version {
+			fmt.Println(programVersion)
+			return
+		}
+
+		fmt.Println("Error: subcommand is required")
+		cmd.Help()
+		os.Exit(1)
+	},
 }
 
 func Execute() {
@@ -55,6 +68,5 @@ func init() {
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
 
-	// TODO how to trigger --version without throwing an error
-	rootCmd.Flags().BoolP("version", "v", false, "")
+	rootCmd.Flags().BoolP("version", "V", false, "")
 }
