@@ -54,7 +54,6 @@ func init() {
 
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
-	rootCmd.PersistentFlags().Bool("json", false, "output json")
 
 	// TODO how to trigger --version without throwing an error
 	rootCmd.Flags().BoolP("version", "v", false, "")

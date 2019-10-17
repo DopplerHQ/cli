@@ -212,16 +212,18 @@ var secretsDownloadCmd = &cobra.Command{
 }
 
 func init() {
-	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
+	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsCmd.Flags().Bool("json", false, "output json")
 
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsGetCmd.Flags().Bool("json", false, "output json")
+	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsDownloadCmd.Flags().String("path", ".", "location to save the file")
 	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
-
-	secretsCmd.AddCommand(secretsGetCmd)
 	secretsCmd.AddCommand(secretsDownloadCmd)
+
 	rootCmd.AddCommand(secretsCmd)
 }
