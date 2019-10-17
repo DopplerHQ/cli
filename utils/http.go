@@ -17,9 +17,11 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // QueryParam a url query parameter. ex: ?foo=bar
@@ -68,15 +70,18 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 		var response errorResponse
 		err = json.Unmarshal(body, &response)
 		if err != nil {
-			fmt.Println(err)
-			return nil, nil
+			return nil, err
 		}
 
-		for _, message := range response.Messages {
-			fmt.Println(message)
+		var sb strings.Builder
+		for i, message := range response.Messages {
+			if i != 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString(message)
 		}
 
-		return nil, nil
+		return nil, errors.New(sb.String())
 	}
 
 	return body, nil

@@ -41,7 +41,6 @@ func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	if err != nil {
 		fmt.Println("Unable to fetch secrets")
 		utils.Err(err)
-		return nil, nil
 	}
 
 	if parse {

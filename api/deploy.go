@@ -46,7 +46,6 @@ func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config 
 	if err != nil {
 		fmt.Println("Unable to fetch secrets")
 		utils.Err(err)
-		return nil, nil
 	}
 
 	if parse {
@@ -81,7 +80,6 @@ func DownloadSecrets(cmd *cobra.Command, apiKey string, project string, config s
 	if err != nil {
 		fmt.Println("Unable to download secrets")
 		utils.Err(err)
-		return nil
 	}
 
 	return response
