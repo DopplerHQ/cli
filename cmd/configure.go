@@ -25,7 +25,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// configureCmd represents the config command
 var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "View cli configuration",
@@ -64,9 +63,42 @@ var configureCmd = &cobra.Command{
 		}
 
 		scope := cmd.Flag("scope").Value.String()
+		config := configuration.Get(scope)
 
 		if jsonFlag {
-			resp, err := json.Marshal(configuration.Get(scope))
+			confMap := make(map[string]map[string]string)
+
+			if config.Config != (configuration.Pair{}) {
+				scope := config.Config.Scope
+				value := config.Config.Value
+
+				if confMap[scope] == nil {
+					confMap[scope] = make(map[string]string)
+				}
+				confMap[scope]["config"] = value
+			}
+
+			if config.Project != (configuration.Pair{}) {
+				scope := config.Project.Scope
+				value := config.Project.Value
+
+				if confMap[scope] == nil {
+					confMap[scope] = make(map[string]string)
+				}
+				confMap[scope]["project"] = value
+			}
+
+			if config.Key != (configuration.Pair{}) {
+				scope := config.Key.Scope
+				value := config.Key.Value
+
+				if confMap[scope] == nil {
+					confMap[scope] = make(map[string]string)
+				}
+				confMap[scope]["key"] = value
+			}
+
+			resp, err := json.Marshal(confMap)
 			if err != nil {
 				utils.Err(err)
 			}
@@ -75,7 +107,6 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
-		config := configuration.Get(scope)
 		rows := [][]string{{"key", config.Key.Value, config.Key.Scope}, {"project", config.Project.Value, config.Project.Scope}, {"config", config.Config.Value, config.Config.Scope}}
 		utils.PrintTable([]string{"name", "value", "scope"}, rows)
 	},
