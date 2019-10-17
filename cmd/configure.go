@@ -20,7 +20,6 @@ import (
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,15 +30,8 @@ var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "View cli configuration",
 	Run: func(cmd *cobra.Command, args []string) {
-		all, err := strconv.ParseBool(cmd.Flag("all").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		jsonFlag, err := strconv.ParseBool(cmd.Flag("json").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		all := utils.GetBoolFlag(cmd, "all")
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
 
 		if all {
 			allConfigs := configuration.AllConfigs()
@@ -103,15 +95,8 @@ doppler configure get key otherkey`,
 			return
 		}
 
-		plain, err := strconv.ParseBool(cmd.Flag("plain").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		jsonFlag, err := strconv.ParseBool(cmd.Flag("json").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		plain := utils.GetBoolFlag(cmd, "plain")
 
 		scope := cmd.Flag("scope").Value.String()
 		conf := configuration.Get(scope)
@@ -203,10 +188,7 @@ doppler configure set key=123 otherkey=456`,
 			return
 		}
 
-		silent, err := strconv.ParseBool(cmd.Flag("silent").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()
 		configuration.Set(scope, args)
@@ -233,10 +215,7 @@ doppler configure unset key otherkey`,
 			return
 		}
 
-		silent, err := strconv.ParseBool(cmd.Flag("silent").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()
 		configuration.Unset(scope, args)

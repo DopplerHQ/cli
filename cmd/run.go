@@ -21,7 +21,6 @@ import (
 	"doppler-cli/utils"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -47,10 +46,7 @@ doppler run --key=123 -- printenv`,
 			return
 		}
 
-		silent, parseErr := strconv.ParseBool(cmd.Flag("silent").Value.String())
-		if parseErr != nil {
-			utils.Err(parseErr)
-		}
+		silent := utils.GetBoolFlag(cmd, "silent")
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, secrets := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)

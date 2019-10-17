@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -45,20 +44,9 @@ var secretsCmd = &cobra.Command{
 			return
 		}
 
-		plain, err := strconv.ParseBool(cmd.Flag("plain").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		jsonFlag, err := strconv.ParseBool(cmd.Flag("json").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		raw, err := strconv.ParseBool(cmd.Flag("raw").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		plain := utils.GetBoolFlag(cmd, "plain")
+		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -124,20 +112,9 @@ doppler secrets get api_key crypto_key`,
 			return
 		}
 
-		plain, err := strconv.ParseBool(cmd.Flag("plain").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		raw, err := strconv.ParseBool(cmd.Flag("raw").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-
-		jsonFlag, err := strconv.ParseBool(cmd.Flag("json").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		plain := utils.GetBoolFlag(cmd, "plain")
+		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)
@@ -213,6 +190,8 @@ var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filename>",
 	Short: "Download a config's .env file",
 	Run: func(cmd *cobra.Command, args []string) {
+		metadata := utils.GetBoolFlag(cmd, "metadata")
+
 		filePath, err := filepath.Abs(cmd.Flag("path").Value.String())
 		if err != nil {
 			utils.Err(err)
@@ -220,12 +199,6 @@ var secretsDownloadCmd = &cobra.Command{
 		fileName := "doppler.env"
 		if len(args) > 0 {
 			fileName = args[0]
-		}
-
-		var metadata bool
-		metadata, err = strconv.ParseBool(cmd.Flag("metadata").Value.String())
-		if err != nil {
-			metadata = true
 		}
 
 		localConfig := configuration.LocalConfig(cmd)

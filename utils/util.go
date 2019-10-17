@@ -21,8 +21,10 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 )
 
 // Home get home dir
@@ -83,4 +85,13 @@ func RunCommand(command []string, env []string, output bool) error {
 
 	os.Exit(1)
 	return nil
+}
+
+// GetBoolFlag get flag parsed as a boolean
+func GetBoolFlag(cmd *cobra.Command, flag string) bool {
+	jsonFlag, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
+	if err != nil {
+		Err(err)
+	}
+	return jsonFlag
 }
