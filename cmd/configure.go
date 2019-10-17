@@ -135,11 +135,9 @@ doppler configure get key otherkey`,
 			for _, arg := range args {
 				if arg == "key" {
 					filteredConfMap["key"] = conf.Key.Value
-				}
-				if arg == "project" {
+				} else if arg == "project" {
 					filteredConfMap["project"] = conf.Project.Value
-				}
-				if arg == "config" {
+				} else if arg == "config" {
 					filteredConfMap["config"] = conf.Config.Value
 				}
 			}
@@ -223,16 +221,15 @@ doppler configure unset key otherkey`,
 }
 
 func init() {
-	configureCmd.Flags().Bool("all", false, "print all saved options")
-
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified	")
+	configureCmd.AddCommand(configureGetCmd)
 
 	configureSetCmd.Flags().Bool("silent", false, "don't output the new config")
+	configureCmd.AddCommand(configureSetCmd)
 
 	configureUnsetCmd.Flags().Bool("silent", false, "don't output the new config")
-
-	configureCmd.AddCommand(configureGetCmd)
-	configureCmd.AddCommand(configureSetCmd)
 	configureCmd.AddCommand(configureUnsetCmd)
+
+	configureCmd.Flags().Bool("all", false, "print all saved options")
 	rootCmd.AddCommand(configureCmd)
 }
