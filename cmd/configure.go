@@ -106,29 +106,23 @@ doppler configure get key otherkey`,
 			var sb strings.Builder
 
 			for _, arg := range args {
+				value := ""
 				if arg == "key" {
-					if sbEmpty {
-						sbEmpty = false
-					} else {
-						sb.WriteString("\n")
-					}
-					sb.WriteString(conf.Key.Value)
+					value = conf.Key.Value
+				} else if arg == "project" {
+					value = conf.Project.Value
+				} else if arg == "config" {
+					value = conf.Config.Value
 				}
-				if arg == "project" {
+
+				if value != "" {
 					if sbEmpty {
 						sbEmpty = false
 					} else {
 						sb.WriteString("\n")
 					}
-					sb.WriteString(conf.Project.Value)
-				}
-				if arg == "config" {
-					if sbEmpty {
-						sbEmpty = false
-					} else {
-						sb.WriteString("\n")
-					}
-					sb.WriteString(conf.Config.Value)
+
+					sb.WriteString(value)
 				}
 			}
 
