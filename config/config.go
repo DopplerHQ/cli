@@ -17,7 +17,7 @@ package config
 
 import (
 	utils "doppler-cli/utils"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path"
@@ -151,15 +151,9 @@ func Set(scope string, options []string) {
 
 	for _, option := range options {
 		optionArr := strings.Split(option, "=")
-		if len(optionArr) < 2 {
-			fmt.Println("Error: invalid option", option)
-			os.Exit(1)
-		}
-
 		key := optionArr[0]
-		if key != "key" && key != "project" && key != "config" {
-			fmt.Println("Error: invalid option", option)
-			os.Exit(1)
+		if len(optionArr) < 2 || (key != "key" && key != "project" && key != "config") {
+			utils.Err(errors.New("invalid option " + option))
 		}
 	}
 
@@ -200,8 +194,7 @@ func Unset(scope string, options []string) {
 
 	for _, key := range options {
 		if key != "key" && key != "project" && key != "config" {
-			fmt.Println("Error: invalid option", key)
-			os.Exit(1)
+			utils.Err(errors.New("invalid option " + key))
 		}
 	}
 
