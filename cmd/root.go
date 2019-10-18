@@ -31,15 +31,13 @@ TODO
 	- global --configuration option
 */
 
-var programVersion = "0.0.1"
-
 var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
 	Run: func(cmd *cobra.Command, args []string) {
 		version := utils.GetBoolFlag(cmd, "version")
 		if version {
-			fmt.Println(programVersion)
+			fmt.Println(utils.ProgramVersion)
 			return
 		}
 

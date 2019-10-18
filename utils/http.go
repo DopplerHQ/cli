@@ -45,8 +45,8 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 
 	req.Header.Set("api-key", apiKey)
 	req.Header.Set("client-sdk", "go-cli")
-	req.Header.Set("client-version", "0.1")
-	req.Header.Set("user-agent", "doppler go-cli 0.1")
+	req.Header.Set("client-version", ProgramVersion)
+	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
 	req.Header.Set("Accept", "application/json")
 
 	query := req.URL.Query()
