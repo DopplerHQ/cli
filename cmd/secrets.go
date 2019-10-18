@@ -179,25 +179,41 @@ doppler secrets get api_key crypto_key`,
 	},
 }
 
+func getFilePath(fullPath string, defaultPath string) string {
+	if fullPath == "" {
+		return defaultPath
+	}
+
+	parsedPath := filepath.Dir(fullPath)
+	parsedName := filepath.Base(fullPath)
+
+	nameValid := parsedName != "." && parsedName != ".." && parsedName != "/"
+	if !nameValid {
+		return defaultPath
+	}
+
+	return path.Join(parsedPath, parsedName)
+}
+
 var secretsDownloadCmd = &cobra.Command{
-	Use:   "download <filename>",
+	Use:   "download <filepath>",
 	Short: "Download a config's .env file",
+	Long: `Save your config's secrets to a .env file. The default filepath is ./doppler.env
+
+Ex: download the file to /root and name it test.env:
+doppler secrets download /root/test.env`,
 	Run: func(cmd *cobra.Command, args []string) {
 		metadata := utils.GetBoolFlag(cmd, "metadata")
 
-		filePath, err := filepath.Abs(cmd.Flag("path").Value.String())
-		if err != nil {
-			utils.Err(err)
-		}
-		fileName := "doppler.env"
+		filePath := "./doppler.env"
 		if len(args) > 0 {
-			fileName = args[0]
+			filePath = getFilePath(args[0], filePath)
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
 		body := api.DownloadSecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 
-		err = ioutil.WriteFile(path.Join(filePath, fileName), body, 0600)
+		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
 			utils.Err(err)
 		}
@@ -214,7 +230,6 @@ func init() {
 	secretsGetCmd.Flags().Bool("json", false, "output json")
 	secretsCmd.AddCommand(secretsGetCmd)
 
-	secretsDownloadCmd.Flags().String("path", ".", "location to save the file")
 	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
