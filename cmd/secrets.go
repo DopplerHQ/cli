@@ -18,6 +18,7 @@ package cmd
 import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
+	"doppler-cli/errors"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -38,12 +39,6 @@ var secretsCmd = &cobra.Command{
 	Use:   "secrets",
 	Short: "Fetch all Doppler secrets",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			fmt.Println("Error: no argument expected")
-			cmd.Help()
-			return
-		}
-
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
@@ -107,9 +102,7 @@ Ex: output the secrets "api_key" and "crypto_key":
 doppler secrets get api_key crypto_key`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			fmt.Println("Error: missing argument")
-			cmd.Help()
-			return
+			errors.CommandMissingArgument(cmd)
 		}
 
 		jsonFlag := utils.GetBoolFlag(cmd, "json")

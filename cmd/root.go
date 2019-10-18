@@ -16,9 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"doppler-cli/errors"
 	"doppler-cli/utils"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -43,9 +43,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println("Error: subcommand is required")
-		cmd.Help()
-		os.Exit(1)
+		errors.ApplicationMissingCommand(cmd)
 	},
 }
 

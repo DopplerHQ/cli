@@ -18,6 +18,7 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
+	"doppler-cli/errors"
 	"doppler-cli/utils"
 	"fmt"
 	"os"
@@ -41,9 +42,7 @@ doppler run -- printenv
 doppler run --key=123 -- printenv`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			fmt.Println("Error: Command to execute not specified")
-			cmd.Help()
-			return
+			errors.CommandMissingArgument(cmd)
 		}
 
 		silent := utils.GetBoolFlag(cmd, "silent")
