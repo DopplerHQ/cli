@@ -16,12 +16,14 @@ limitations under the License.
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // QueryParam a url query parameter. ex: ?foo=bar
@@ -55,11 +57,125 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 	}
 	req.URL.RawQuery = query.Encode()
 
-	client := &http.Client{}
+	// tr := &http.Transport{
+	// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// }
+	// client := &http.Client{Transport: tr}
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		var response errorResponse
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
+
+		var sb strings.Builder
+		for i, message := range response.Messages {
+			if i != 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString(message)
+		}
+
+		return nil, errors.New(sb.String())
+	}
+
+	return body, nil
+}
+
+// PostRequest perform HTTP POST
+func PostRequest(host string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
+	url := fmt.Sprintf("%s/%s", host, uri)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("api-key", apiKey)
+	req.Header.Set("client-sdk", "go-cli")
+	req.Header.Set("client-version", ProgramVersion)
+	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	query := req.URL.Query()
+	for _, param := range params {
+		query.Add(param.Key, param.Value)
+	}
+	req.URL.RawQuery = query.Encode()
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		var response errorResponse
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			return nil, err
+		}
+
+		var sb strings.Builder
+		for i, message := range response.Messages {
+			if i != 0 {
+				sb.WriteString("\n")
+			}
+			sb.WriteString(message)
+		}
+
+		return nil, errors.New(sb.String())
+	}
+
+	return body, nil
+}
+
+// DeleteRequest perform HTTP DELETE
+func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+	url := fmt.Sprintf("%s/%s", host, uri)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("api-key", apiKey)
+	req.Header.Set("client-sdk", "go-cli")
+	req.Header.Set("client-version", ProgramVersion)
+	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	query := req.URL.Query()
+	for _, param := range params {
+		query.Add(param.Key, param.Value)
+	}
+	req.URL.RawQuery = query.Encode()
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
