@@ -18,7 +18,6 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
-	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -61,14 +60,14 @@ var projectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		silent := utils.GetBoolFlag(cmd, "silent")
-		name := args[0]
 		description := cmd.Flag("description").Value.String()
+
+		name := cmd.Flag("name").Value.String()
+		if len(args) > 0 {
+			name = args[0]
+		}
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.CreateAPIProject(cmd, localConfig.Key.Value, name, description)
@@ -136,6 +135,7 @@ func init() {
 
 	projectsCreateCmd.Flags().Bool("json", false, "output json")
 	projectsCreateCmd.Flags().Bool("silent", false, "don't output the response")
+	projectsCreateCmd.Flags().String("name", "", "project name")
 	projectsCreateCmd.Flags().String("description", "", "project description")
 	projectsCmd.AddCommand(projectsCreateCmd)
 
