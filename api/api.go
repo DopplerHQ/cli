@@ -46,6 +46,17 @@ type ProjectInfo struct {
 	SetupAt     string `json:"setup_at"`
 }
 
+// EnvironmentInfo environment info
+type EnvironmentInfo struct {
+	ID               string   `json:"id"`
+	Name             string   `json:"name"`
+	CreatedAt        string   `json:"created_at"`
+	FirstDeployAt    string   `json:"first_deploy_at"`
+	SetupAt          string   `json:"setup_at"`
+	Pipeline         string   `json:"pipeline"`
+	MissingVariables []string `json:"missing_variables"`
+}
+
 func parseWorkplaceInfo(info map[string]interface{}) WorkplaceInfo {
 	var workplaceInfo WorkplaceInfo
 
@@ -82,6 +93,38 @@ func parseProjectInfo(info map[string]interface{}) ProjectInfo {
 	}
 
 	return projectInfo
+}
+
+func parseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
+	var environmentInfo EnvironmentInfo
+
+	if info["id"] != nil {
+		environmentInfo.ID = info["id"].(string)
+	}
+	if info["name"] != nil {
+		environmentInfo.Name = info["name"].(string)
+	}
+	if info["created_at"] != nil {
+		environmentInfo.CreatedAt = info["created_at"].(string)
+	}
+	if info["first_deploy_at"] != nil {
+		environmentInfo.FirstDeployAt = info["first_deploy_at"].(string)
+	}
+	if info["setup_at"] != nil {
+		environmentInfo.SetupAt = info["setup_at"].(string)
+	}
+	if info["pipeline"] != nil {
+		environmentInfo.Pipeline = info["pipeline"].(string)
+	}
+	if info["missing_variables"] != nil {
+		var missingVariables []string
+		for _, val := range info["missing_variables"].([]interface{}) {
+			missingVariables = append(missingVariables, val.(string))
+		}
+		environmentInfo.MissingVariables = missingVariables
+	}
+
+	return environmentInfo
 }
 
 // GetAPISecrets for specified project and config
@@ -302,4 +345,52 @@ func DeleteAPIProject(cmd *cobra.Command, apiKey string, project string) {
 	if err != nil {
 		utils.Err(err)
 	}
+}
+
+// GetAPIEnvironments get environments
+func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]byte, []EnvironmentInfo) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/stages", params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch environments")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	var info []EnvironmentInfo
+	for _, environment := range result["stages"].([]interface{}) {
+		environmentInfo := parseEnvironmentInfo(environment.(map[string]interface{}))
+		info = append(info, environmentInfo)
+	}
+	return response, info
+}
+
+// GetAPIEnvironment get specified environment
+func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, environment string) ([]byte, EnvironmentInfo) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/stages/"+environment, params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch environment")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	info := parseEnvironmentInfo(result["stage"].(map[string]interface{}))
+	return response, info
 }
