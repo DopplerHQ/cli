@@ -18,7 +18,7 @@ package cmd
 import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/errors"
+	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -102,7 +102,7 @@ Ex: output the secrets "api_key" and "crypto_key":
 doppler secrets get api_key crypto_key`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			errors.CommandMissingArgument(cmd)
+			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
 		jsonFlag := utils.GetBoolFlag(cmd, "json")

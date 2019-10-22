@@ -18,7 +18,7 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/errors"
+	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"fmt"
 	"os"
@@ -42,7 +42,7 @@ doppler run -- printenv
 doppler run --key=123 -- printenv`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			errors.CommandMissingArgument(cmd)
+			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
 		silent := utils.GetBoolFlag(cmd, "silent")

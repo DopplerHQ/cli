@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"doppler-cli/errors"
+	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"fmt"
 
@@ -41,7 +41,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		errors.ApplicationMissingCommand(cmd)
+		dopplerErrors.ApplicationMissingCommand(cmd)
 	},
 }
 

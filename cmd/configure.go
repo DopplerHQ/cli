@@ -17,7 +17,7 @@ package cmd
 
 import (
 	configuration "doppler-cli/config"
-	"doppler-cli/errors"
+	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -122,7 +122,7 @@ Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			errors.CommandMissingArgument(cmd)
+			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
@@ -205,7 +205,7 @@ Ex: set the options "key" and "otherkey":
 doppler configure set key=123 otherkey=456`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			errors.CommandMissingArgument(cmd)
+			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -230,7 +230,7 @@ Ex: unset the options "key" and "otherkey":
 doppler configure unset key otherkey`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			errors.CommandMissingArgument(cmd)
+			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
 		silent := utils.GetBoolFlag(cmd, "silent")
