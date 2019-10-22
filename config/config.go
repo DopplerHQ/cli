@@ -111,23 +111,22 @@ func Get(scope string) ScopedConfig {
 	return scopedConfig
 }
 
-// LocalConfig retrieves the config for the current directory
+// LocalConfig retrieves the config for the current directory. prioritizes command flags and falls back to the config file
 func LocalConfig(cmd *cobra.Command) ScopedConfig {
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
-	key := cmd.Flag("key").Value.String()
-	if key != "" {
-		localConfig.Key.Value = key
+	if cmd.Flags().Changed("key") {
+		localConfig.Key.Value = cmd.Flag("key").Value.String()
 		localConfig.Key.Scope = ""
 	}
-	project := cmd.Flag("project").Value.String()
-	if project != "" {
-		localConfig.Project.Value = project
+
+	if cmd.Flags().Changed("project") {
+		localConfig.Project.Value = cmd.Flag("project").Value.String()
 		localConfig.Project.Scope = ""
 	}
-	config := cmd.Flag("config").Value.String()
-	if config != "" {
-		localConfig.Config.Value = config
+
+	if cmd.Flags().Changed("config") {
+		localConfig.Config.Value = cmd.Flag("config").Value.String()
 		localConfig.Config.Scope = ""
 	}
 
