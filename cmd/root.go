@@ -55,11 +55,9 @@ func init() {
 	// cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String("key", "", "doppler api key")
-	rootCmd.PersistentFlags().String("project", "", "doppler project (e.g. backend)")
-	rootCmd.PersistentFlags().String("config", "", "doppler config (e.g. dev)")
-
-	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
-	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
+	// TODO support setting api-host and deploy-host in config
+	rootCmd.PersistentFlags().String("api-host", "https://staging-api.doppler.com", "api host")
+	rootCmd.PersistentFlags().String("deploy-host", "https://staging-deploy.doppler.com", "deploy host")
 
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")

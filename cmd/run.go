@@ -32,7 +32,7 @@ var project string
 var config string
 
 var runCmd = &cobra.Command{
-	Use:   "run [command to run]",
+	Use:   "run [command]",
 	Short: "A brief description of your command",
 	Long: `Run a command with secrets injected into the environment
 
@@ -76,6 +76,8 @@ doppler run --key=123 -- printenv`,
 
 func init() {
 	runCmd.Flags().Bool("silent", false, "don't output the response")
+	runCmd.Flags().String("project", "", "doppler project (e.g. backend)")
+	runCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 
 	rootCmd.AddCommand(runCmd)
 }
