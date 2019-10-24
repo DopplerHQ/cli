@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strconv"
 
 	"github.com/mitchellh/go-homedir"
@@ -94,4 +95,21 @@ func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 		Err(err)
 	}
 	return jsonFlag
+}
+
+// GetFilePath verify file path and name are provided
+func GetFilePath(fullPath string, defaultPath string) string {
+	if fullPath == "" {
+		return defaultPath
+	}
+
+	parsedPath := filepath.Dir(fullPath)
+	parsedName := filepath.Base(fullPath)
+
+	nameValid := parsedName != "." && parsedName != ".." && parsedName != "/"
+	if !nameValid {
+		return defaultPath
+	}
+
+	return path.Join(parsedPath, parsedName)
 }

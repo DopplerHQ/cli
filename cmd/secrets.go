@@ -23,8 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -143,22 +141,6 @@ doppler secrets delete api_key crypto_key`,
 	},
 }
 
-func getFilePath(fullPath string, defaultPath string) string {
-	if fullPath == "" {
-		return defaultPath
-	}
-
-	parsedPath := filepath.Dir(fullPath)
-	parsedName := filepath.Base(fullPath)
-
-	nameValid := parsedName != "." && parsedName != ".." && parsedName != "/"
-	if !nameValid {
-		return defaultPath
-	}
-
-	return path.Join(parsedPath, parsedName)
-}
-
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's .env file",
@@ -171,7 +153,7 @@ doppler secrets download /root/test.env`,
 
 		filePath := "./doppler.env"
 		if len(args) > 0 {
-			filePath = getFilePath(args[0], filePath)
+			filePath = utils.GetFilePath(args[0], filePath)
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
