@@ -95,8 +95,8 @@ var projectsDeleteCmd = &cobra.Command{
 		api.DeleteAPIProject(cmd, localConfig.Key.Value, project)
 
 		// fetch and display projects
-		_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
 		if !silent {
+			_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
 			printProjectsInfo(info, jsonFlag)
 		}
 	},
@@ -106,8 +106,6 @@ var projectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO API endpoint currently requires user to specify name AND description to update either. can we change this?
-
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
@@ -130,7 +128,7 @@ var projectsUpdateCmd = &cobra.Command{
 
 func init() {
 	projectsGetCmd.Flags().Bool("json", false, "output json")
-	projectsGetCmd.Flags().String("project", "", "output json")
+	projectsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	projectsCmd.AddCommand(projectsGetCmd)
 
 	projectsCreateCmd.Flags().Bool("json", false, "output json")

@@ -193,7 +193,7 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	return response, computed
 }
 
-// GetAPIWorkplace get workplace info
+// GetAPIWorkplace get specified workplace info
 func GetAPIWorkplace(cmd *cobra.Command, apiKey string) ([]byte, WorkplaceInfo) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey)
@@ -260,7 +260,7 @@ func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []ProjectInfo) {
 	return response, info
 }
 
-// GetAPIProject get project
+// GetAPIProject get specified project
 func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)

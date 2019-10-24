@@ -28,8 +28,7 @@ func CommandMissingArgument(cmd *cobra.Command) {
 	os.Exit(1)
 }
 
-func CommandMissingSubcommand(cmd *cobra.Command) {
-	fmt.Println("Error: command needs a subcommand")
+func CommandMissingSubcommand(cmd *cobra.Command) { 
 	cmd.Help()
 	os.Exit(1)
 }

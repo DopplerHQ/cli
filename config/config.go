@@ -47,7 +47,6 @@ type Pair struct {
 	Scope string `json:"scope"`
 }
 
-// TODO add support for global --configuration flag
 var yamlFile = utils.Home() + "/.doppler.yaml"
 
 var configContents map[string]Config
