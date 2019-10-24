@@ -37,7 +37,7 @@ type WorkplaceInfo struct {
 	BillingEmail string `json:"billing_email"`
 }
 
-// ProjectInfo info on all projects
+// ProjectInfo project info
 type ProjectInfo struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -53,7 +53,7 @@ type EnvironmentInfo struct {
 	CreatedAt        string   `json:"created_at"`
 	FirstDeployAt    string   `json:"first_deploy_at"`
 	SetupAt          string   `json:"setup_at"`
-	Pipeline         string   `json:"pipeline"`
+	Project          string   `json:"pipeline"`
 	MissingVariables []string `json:"missing_variables"`
 }
 
@@ -114,7 +114,7 @@ func parseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
 		environmentInfo.SetupAt = info["setup_at"].(string)
 	}
 	if info["pipeline"] != nil {
-		environmentInfo.Pipeline = info["pipeline"].(string)
+		environmentInfo.Project = info["pipeline"].(string)
 	}
 	if info["missing_variables"] != nil {
 		var missingVariables []string

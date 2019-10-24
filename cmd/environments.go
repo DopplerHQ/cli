@@ -85,9 +85,9 @@ func printEnvironmentsInfo(info []api.EnvironmentInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, environmentInfo := range info {
-		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt, environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Pipeline})
+		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt, environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
 	}
-	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "pipeline"}, rows)
+	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
 func printEnvironmentInfo(info api.EnvironmentInfo, jsonFlag bool) {
@@ -101,6 +101,6 @@ func printEnvironmentInfo(info api.EnvironmentInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Pipeline}}
-	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "pipeline"}, rows)
+	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
+	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
