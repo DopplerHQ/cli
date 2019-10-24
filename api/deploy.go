@@ -35,8 +35,25 @@ type Secret struct {
 	Value string
 }
 
+// ParseDeploySecrets parse deploy secrets
+func ParseDeploySecrets(response []byte) (map[string]string, error) {
+	var result map[string]interface{}
+	err := json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedSecrets := make(map[string]string)
+	secrets := result["variables"].(map[string]interface{})
+	for name, value := range secrets {
+		parsedSecrets[name] = value.(string)
+	}
+
+	return parsedSecrets, nil
+}
+
 // GetDeploySecrets for specified project and config
-func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config string, parse bool) ([]byte, map[string]string) {
+func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
@@ -45,23 +62,7 @@ func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config 
 	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
 	if err != nil {
 		fmt.Println("Unable to fetch secrets")
-		utils.Err(err)
-	}
-
-	if parse {
-		var result map[string]interface{}
-		err = json.Unmarshal(response, &result)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		parsedSecrets := make(map[string]string)
-		secrets := result["variables"].(map[string]interface{})
-		for name, value := range secrets {
-			parsedSecrets[name] = value.(string)
-		}
-
-		return response, parsedSecrets
+		return nil, err
 	}
 
 	return response, nil

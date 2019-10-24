@@ -20,7 +20,9 @@ import (
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -47,8 +49,16 @@ doppler run --key=123 -- printenv`,
 
 		silent := utils.GetBoolFlag(cmd, "silent")
 
+		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
+		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
+		fallbackPath := utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
+
+		if cmd.Flags().Changed("fallback") && fallbackPath == "" {
+			utils.Err(errors.New("invalid fallback file path"))
+		}
+
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, true)
+		secrets := getSecrets(cmd, localConfig, fallbackPath, fallbackReadonly, fallbackOnly)
 
 		env := os.Environ()
 		excludedKeys := []string{"PATH", "PS1", "HOME"}
@@ -74,10 +84,66 @@ doppler run --key=123 -- printenv`,
 	},
 }
 
+func getSecrets(cmd *cobra.Command, localConfig configuration.ScopedConfig, fallbackPath string, fallbackReadonly bool, fallbackOnly bool) map[string]string {
+	useFallbackFile := (fallbackPath != "")
+	if useFallbackFile && fallbackOnly {
+		return readFallbackFile(fallbackPath)
+	}
+
+	response, err := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+
+	if !useFallbackFile && err != nil {
+		utils.Err(err)
+	}
+
+	if useFallbackFile {
+		if err != nil {
+			return readFallbackFile(fallbackPath)
+		}
+
+		if !fallbackReadonly {
+			err := ioutil.WriteFile(fallbackPath, response, 0600)
+			if err != nil {
+				fmt.Println("Unable to write fallback file")
+				utils.Err(err)
+			}
+		}
+	}
+
+	secrets, err := api.ParseDeploySecrets(response)
+	if err != nil {
+		fmt.Println("Unable to parse response")
+		utils.Err(err)
+	}
+
+	return secrets
+}
+
+func readFallbackFile(path string) map[string]string {
+	fmt.Println("Using fallback file")
+	response, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println("Unable to read fallback file")
+		utils.Err(err)
+	}
+
+	secrets, err := api.ParseDeploySecrets(response)
+	if err != nil {
+		fmt.Println("Unable to parse fallback file")
+		utils.Err(err)
+	}
+
+	return secrets
+}
+
 func init() {
 	runCmd.Flags().Bool("silent", false, "don't output the response")
 	runCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	runCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+
+	runCmd.Flags().String("fallback", "", "write secrets to this file after connecting to Doppler. secrets will be read from this file if future connection attempts are unsuccessful.")
+	runCmd.Flags().Bool("fallback-readonly", false, "don't update or modify the fallback file")
+	runCmd.Flags().Bool("fallback-only", false, "don't request secrets from Doppler. all secrets will be read directly from the fallback file")
 
 	rootCmd.AddCommand(runCmd)
 }
