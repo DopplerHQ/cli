@@ -57,6 +57,36 @@ type EnvironmentInfo struct {
 	MissingVariables []string `json:"missing_variables"`
 }
 
+// ConfigInfo project info
+type ConfigInfo struct {
+	Name             string   `json:"name"`
+	Environment      string   `json:"stage"`
+	Project          string   `json:"project"`
+	CreatedAt        string   `json:"created_at"`
+	DeployedAt       string   `json:"deployed_at"`
+	MissingVariables []string `json:"missing_variables"`
+}
+
+// ActivityLog activity log
+type ActivityLog struct {
+	ID          string `json:"id"`
+	Text        string `json:"text"`
+	HTML        string `json:"html"`
+	CreatedAt   string `json:"created_at"`
+	Config      string `json:"environment"`
+	Environment string `json:"stage"`
+	Project     string `json:"pipeline"`
+	User        User   `json:"user"`
+}
+
+// User user profile
+type User struct {
+	Email        string `json:"email"`
+	Name         string `json:"name"`
+	Username     string `json:"username"`
+	ProfileImage string `json:"profile_image_url"`
+}
+
 func parseWorkplaceInfo(info map[string]interface{}) WorkplaceInfo {
 	var workplaceInfo WorkplaceInfo
 
@@ -125,6 +155,70 @@ func parseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
 	}
 
 	return environmentInfo
+}
+
+func parseConfigInfo(info map[string]interface{}) ConfigInfo {
+	var configInfo ConfigInfo
+
+	if info["name"] != nil {
+		configInfo.Name = info["name"].(string)
+	}
+	if info["stage"] != nil {
+		configInfo.Environment = info["stage"].(string)
+	}
+	if info["pipeline"] != nil {
+		configInfo.Project = info["pipeline"].(string)
+	}
+	if info["created_at"] != nil {
+		configInfo.CreatedAt = info["created_at"].(string)
+	}
+	if info["deployed_at"] != nil {
+		configInfo.DeployedAt = info["deployed_at"].(string)
+	}
+	if info["missing_variables"] != nil {
+		var missingVariables []string
+		for _, val := range info["missing_variables"].([]interface{}) {
+			missingVariables = append(missingVariables, val.(string))
+		}
+		configInfo.MissingVariables = missingVariables
+	}
+
+	return configInfo
+}
+
+func parseActivityLog(log map[string]interface{}) ActivityLog {
+	var activityLog ActivityLog
+
+	if log["id"] != nil {
+		activityLog.ID = log["id"].(string)
+	}
+	if log["text"] != nil {
+		activityLog.Text = log["text"].(string)
+	}
+	if log["html"] != nil {
+		activityLog.HTML = log["html"].(string)
+	}
+	if log["created_at"] != nil {
+		activityLog.CreatedAt = log["created_at"].(string)
+	}
+	if log["environment"] != nil {
+		activityLog.Config = log["environment"].(string)
+	}
+	if log["stage"] != nil {
+		activityLog.Environment = log["stage"].(string)
+	}
+	if log["pipeline"] != nil {
+		activityLog.Project = log["pipeline"].(string)
+	}
+	if log["user"] != nil {
+		user := log["user"].(map[string]interface{})
+		activityLog.User.Email = user["email"].(string)
+		activityLog.User.Name = user["name"].(string)
+		activityLog.User.Username = user["username"].(string)
+		activityLog.User.ProfileImage = user["profile_image_url"].(string)
+	}
+
+	return activityLog
 }
 
 // GetAPISecrets for specified project and config
@@ -393,4 +487,171 @@ func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, enviro
 
 	info := parseEnvironmentInfo(result["stage"].(map[string]interface{}))
 	return response, info
+}
+
+// GetAPIConfigs get configs
+func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, []ConfigInfo) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/environments", params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch configs")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	var info []ConfigInfo
+	for _, config := range result["environments"].([]interface{}) {
+		configInfo := parseConfigInfo(config.(map[string]interface{}))
+		info = append(info, configInfo)
+	}
+	return response, info
+}
+
+// GetAPIConfig get a config
+func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, ConfigInfo) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/environments/"+config, params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch configs")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	return response, info
+}
+
+// CreateAPIConfig create a config
+func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name string, environment string, defaults bool) ([]byte, ConfigInfo) {
+	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		fmt.Println("Invalid config info")
+		utils.Err(err)
+	}
+
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.PostRequest(host, "v2/environments", params, apiKey, body)
+	if err != nil {
+		fmt.Println("Unable to create config")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	return response, info
+}
+
+// DeleteAPIConfig create a config
+func DeleteAPIConfig(cmd *cobra.Command, apiKey string, project string, config string) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.DeleteRequest(host, "v2/environments/"+config, params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to delete config")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+}
+
+// UpdateAPIConfig create a config
+func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config string, name string) ([]byte, ConfigInfo) {
+	postBody := map[string]interface{}{"name": name}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		fmt.Println("Invalid config info")
+		utils.Err(err)
+	}
+
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.PostRequest(host, "v2/environments/"+config, params, apiKey, body)
+	if err != nil {
+		fmt.Println("Unable to update config")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	return response, info
+}
+
+// GetAPIActivityLogs get activity logs
+func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []ActivityLog) {
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/logs", []utils.QueryParam{}, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch activity logs")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	var logs []ActivityLog
+	for _, log := range result["logs"].([]interface{}) {
+		activityLog := parseActivityLog(log.(map[string]interface{}))
+		logs = append(logs, activityLog)
+	}
+	return response, logs
+}
+
+// GetAPIActivityLog get specified activity log
+func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, ActivityLog) {
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/logs/"+log, []utils.QueryParam{}, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch activity log")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	activityLog := parseActivityLog(result["log"].(map[string]interface{}))
+	return response, activityLog
 }
