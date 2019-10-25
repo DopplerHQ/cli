@@ -16,6 +16,7 @@ limitations under the License.
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
@@ -23,8 +24,28 @@ import (
 
 // JSON whether to print JSON
 var JSON = false
+
+// Log info
+func Log(info string) {
+	if !JSON {
+		fmt.Println(info)
+	}
+}
+
 // Err prints the error and exits
-func Err(e error) {
-	fmt.Println("Error:", e)
+func Err(e error, message string) {
+	if JSON {
+		resp, err := json.Marshal(map[string]string{"error": e.Error()})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(resp))
+	} else {
+		if message != "" {
+			fmt.Println(message)
+		}
+		fmt.Println("Error:", e)
+	}
+
 	os.Exit(1)
 }

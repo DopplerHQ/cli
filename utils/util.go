@@ -33,8 +33,7 @@ import (
 func Home() string {
 	home, err := homedir.Dir()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		Err(err, "")
 	}
 
 	return home
@@ -52,7 +51,7 @@ func Exists(path string) bool {
 func Cwd() string {
 	cwd, err := os.Executable()
 	if err != nil {
-		Err(err)
+		Err(err, "")
 	}
 	return path.Dir(cwd)
 }
@@ -67,8 +66,7 @@ func RunCommand(command []string, env []string, output bool) error {
 
 	err := cmd.Start()
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Error trying to execute command: %s", command))
-		Err(err)
+		Err(err, fmt.Sprintf("Error trying to execute command: %s", command))
 		return err
 	}
 
@@ -93,7 +91,7 @@ func RunCommand(command []string, env []string, output bool) error {
 func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	jsonFlag, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
 	if err != nil {
-		Err(err)
+		Err(err, "")
 	}
 	return jsonFlag
 }
@@ -102,7 +100,7 @@ func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
 	if err != nil {
-		Err(err)
+		Err(err, "")
 	}
 
 	return int(number)

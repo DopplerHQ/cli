@@ -54,7 +54,7 @@ doppler run --key=123 -- printenv`,
 		fallbackPath := utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
 
 		if cmd.Flags().Changed("fallback") && fallbackPath == "" {
-			utils.Err(errors.New("invalid fallback file path"))
+			utils.Err(errors.New("invalid fallback file path"), "")
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
@@ -78,8 +78,7 @@ doppler run --key=123 -- printenv`,
 
 		err := utils.RunCommand(args, env, !silent)
 		if err != nil {
-			fmt.Println(fmt.Sprintf("Error trying to execute command: %s", args))
-			utils.Err(err)
+			utils.Err(err, fmt.Sprintf("Error trying to execute command: %s", args))
 		}
 	},
 }
@@ -93,7 +92,7 @@ func getSecrets(cmd *cobra.Command, localConfig configuration.ScopedConfig, fall
 	response, err := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 	if !useFallbackFile && err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	if useFallbackFile {
@@ -104,33 +103,29 @@ func getSecrets(cmd *cobra.Command, localConfig configuration.ScopedConfig, fall
 		if !fallbackReadonly {
 			err := ioutil.WriteFile(fallbackPath, response, 0600)
 			if err != nil {
-				fmt.Println("Unable to write fallback file")
-				utils.Err(err)
+				utils.Err(err, "Unable to write fallback file")
 			}
 		}
 	}
 
 	secrets, err := api.ParseDeploySecrets(response)
 	if err != nil {
-		fmt.Println("Unable to parse response")
-		utils.Err(err)
+		utils.Err(err, "Unable to parse response")
 	}
 
 	return secrets
 }
 
 func readFallbackFile(path string) map[string]string {
-	fmt.Println("Using fallback file")
+	utils.Log("Using fallback file")
 	response, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Println("Unable to read fallback file")
-		utils.Err(err)
+		utils.Err(err, "Unable to read fallback file")
 	}
 
 	secrets, err := api.ParseDeploySecrets(response)
 	if err != nil {
-		fmt.Println("Unable to parse fallback file")
-		utils.Err(err)
+		utils.Err(err, "Unable to parse fallback file")
 	}
 
 	return secrets

@@ -68,7 +68,7 @@ func init() {
 func Get(scope string) ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 	scope = path.Join(scope, "/")
 	var scopedConfig ScopedConfig
@@ -166,7 +166,7 @@ func Set(scope string, options []string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	}
 
@@ -174,7 +174,7 @@ func Set(scope string, options []string) {
 		optionArr := strings.Split(option, "=")
 		key := optionArr[0]
 		if len(optionArr) < 2 || (key != "key" && key != "project" && key != "config") {
-			utils.Err(errors.New("invalid option " + option))
+			utils.Err(errors.New("invalid option "+option), "")
 		}
 	}
 
@@ -209,13 +209,13 @@ func Unset(scope string, options []string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	}
 
 	for _, key := range options {
 		if key != "key" && key != "project" && key != "config" {
-			utils.Err(errors.New("invalid option " + key))
+			utils.Err(errors.New("invalid option "+key), "")
 		}
 	}
 
@@ -252,12 +252,12 @@ func Unset(scope string, options []string) {
 func writeYAML(config map[string]Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	err = ioutil.WriteFile(yamlFile, bytes, os.FileMode(0600))
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 }
 
@@ -268,7 +268,7 @@ func exists() bool {
 func readYAML() map[string]Config {
 	fileContents, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var config map[string]Config

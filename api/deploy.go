@@ -18,7 +18,6 @@ package api
 import (
 	utils "doppler-cli/utils"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -61,7 +60,7 @@ func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config 
 	host := cmd.Flag("deploy-host").Value.String()
 	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch secrets")
+		utils.Log("Unable to fetch secrets")
 		return nil, err
 	}
 
@@ -79,8 +78,7 @@ func DownloadSecrets(cmd *cobra.Command, apiKey string, project string, config s
 	host := cmd.Flag("deploy-host").Value.String()
 	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to download secrets")
-		utils.Err(err)
+		utils.Err(err, "Unable to download secrets")
 	}
 
 	return response

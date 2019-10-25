@@ -164,7 +164,7 @@ doppler secrets download /root/test.env`,
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	},
 }
