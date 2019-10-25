@@ -19,9 +19,6 @@ import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -32,10 +29,11 @@ var activityCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		localConfig := configuration.LocalConfig(cmd)
+		number := utils.GetIntFlag(cmd, "number", 16)
 
 		_, activity := api.GetAPIActivityLogs(cmd, localConfig.Key.Value)
 
-		utils.PrintLogs(activity, jsonFlag)
+		utils.PrintLogs(activity, number, jsonFlag)
 	},
 }
 
@@ -63,5 +61,6 @@ func init() {
 	activityCmd.AddCommand(activityGetCmd)
 
 	activityCmd.Flags().Bool("json", false, "output json")
+	activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	rootCmd.AddCommand(activityCmd)
 }

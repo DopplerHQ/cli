@@ -19,6 +19,7 @@ import (
 	"doppler-cli/models"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -37,9 +38,11 @@ func PrintTable(headers []string, rows [][]string) {
 }
 
 // PrintLogs print logs
-func PrintLogs(logs []models.Log, jsonFlag bool) {
+func PrintLogs(logs []models.Log, number int, jsonFlag bool) {
+	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+
 	if jsonFlag {
-		resp, err := json.Marshal(logs)
+		resp, err := json.Marshal(logs[0:maxLogs])
 		if err != nil {
 			Err(err)
 		}

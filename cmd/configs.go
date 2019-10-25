@@ -138,10 +138,11 @@ var configsLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		localConfig := configuration.LocalConfig(cmd)
+		number := utils.GetIntFlag(cmd, "number", 16)
 
 		_, logs := api.GetAPIConfigLogs(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
-		utils.PrintLogs(logs, jsonFlag)
+		utils.PrintLogs(logs, number, jsonFlag)
 	},
 }
 
@@ -221,6 +222,7 @@ func init() {
 	configsLogsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	configsLogsCmd.Flags().Bool("json", false, "output json")
+	configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
