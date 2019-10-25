@@ -204,7 +204,7 @@ func init() {
 	rootCmd.AddCommand(secretsCmd)
 }
 
-func printSecrets(secrets map[string]api.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
+func printSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
 	if len(secretsToPrint) == 0 {
 		for name := range secrets {
 			secretsToPrint = append(secretsToPrint, name)
@@ -215,7 +215,7 @@ func printSecrets(secrets map[string]api.ComputedSecret, secretsToPrint []string
 	if jsonFlag {
 		secretsMap := make(map[string]map[string]string)
 		for _, name := range secretsToPrint {
-			if secrets[name] != (api.ComputedSecret{}) {
+			if secrets[name] != (models.ComputedSecret{}) {
 				secretsMap[name] = make(map[string]string)
 				secretsMap[name]["computed"] = secrets[name].ComputedValue
 				if raw {
@@ -233,9 +233,9 @@ func printSecrets(secrets map[string]api.ComputedSecret, secretsToPrint []string
 		return
 	}
 
-	var matchedSecrets []api.ComputedSecret
+	var matchedSecrets []models.ComputedSecret
 	for _, name := range secretsToPrint {
-		if secrets[name] != (api.ComputedSecret{}) {
+		if secrets[name] != (models.ComputedSecret{}) {
 			matchedSecrets = append(matchedSecrets, secrets[name])
 		}
 	}

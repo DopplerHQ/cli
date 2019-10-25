@@ -16,6 +16,7 @@ limitations under the License.
 package api
 
 import (
+	"doppler-cli/models"
 	utils "doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -23,206 +24,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ComputedSecret holds computed and raw value
-type ComputedSecret struct {
-	Name          string `json:"name"`
-	RawValue      string `json:"raw"`
-	ComputedValue string `json:"computed"`
-}
-
-// WorkplaceInfo workplace info
-type WorkplaceInfo struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	BillingEmail string `json:"billing_email"`
-}
-
-// ProjectInfo project info
-type ProjectInfo struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"created_at"`
-	SetupAt     string `json:"setup_at"`
-}
-
-// EnvironmentInfo environment info
-type EnvironmentInfo struct {
-	ID               string   `json:"id"`
-	Name             string   `json:"name"`
-	CreatedAt        string   `json:"created_at"`
-	FirstDeployAt    string   `json:"first_deploy_at"`
-	SetupAt          string   `json:"setup_at"`
-	Project          string   `json:"pipeline"`
-	MissingVariables []string `json:"missing_variables"`
-}
-
-// ConfigInfo project info
-type ConfigInfo struct {
-	Name             string   `json:"name"`
-	Environment      string   `json:"stage"`
-	Project          string   `json:"project"`
-	CreatedAt        string   `json:"created_at"`
-	DeployedAt       string   `json:"deployed_at"`
-	MissingVariables []string `json:"missing_variables"`
-}
-
-// ActivityLog activity log
-type ActivityLog struct {
-	ID          string `json:"id"`
-	Text        string `json:"text"`
-	HTML        string `json:"html"`
-	CreatedAt   string `json:"created_at"`
-	Config      string `json:"environment"`
-	Environment string `json:"stage"`
-	Project     string `json:"pipeline"`
-	User        User   `json:"user"`
-}
-
-// User user profile
-type User struct {
-	Email        string `json:"email"`
-	Name         string `json:"name"`
-	Username     string `json:"username"`
-	ProfileImage string `json:"profile_image_url"`
-}
-
-func parseWorkplaceInfo(info map[string]interface{}) WorkplaceInfo {
-	var workplaceInfo WorkplaceInfo
-
-	if info["id"] != nil {
-		workplaceInfo.ID = info["id"].(string)
-	}
-	if info["name"] != nil {
-		workplaceInfo.Name = info["name"].(string)
-	}
-	if info["billing_email"] != nil {
-		workplaceInfo.BillingEmail = info["billing_email"].(string)
-	}
-
-	return workplaceInfo
-}
-
-func parseProjectInfo(info map[string]interface{}) ProjectInfo {
-	var projectInfo ProjectInfo
-
-	if info["id"] != nil {
-		projectInfo.ID = info["id"].(string)
-	}
-	if info["name"] != nil {
-		projectInfo.Name = info["name"].(string)
-	}
-	if info["description"] != nil {
-		projectInfo.Description = info["description"].(string)
-	}
-	if info["created_at"] != nil {
-		projectInfo.CreatedAt = info["created_at"].(string)
-	}
-	if info["setup_at"] != nil {
-		projectInfo.SetupAt = info["setup_at"].(string)
-	}
-
-	return projectInfo
-}
-
-func parseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
-	var environmentInfo EnvironmentInfo
-
-	if info["id"] != nil {
-		environmentInfo.ID = info["id"].(string)
-	}
-	if info["name"] != nil {
-		environmentInfo.Name = info["name"].(string)
-	}
-	if info["created_at"] != nil {
-		environmentInfo.CreatedAt = info["created_at"].(string)
-	}
-	if info["first_deploy_at"] != nil {
-		environmentInfo.FirstDeployAt = info["first_deploy_at"].(string)
-	}
-	if info["setup_at"] != nil {
-		environmentInfo.SetupAt = info["setup_at"].(string)
-	}
-	if info["pipeline"] != nil {
-		environmentInfo.Project = info["pipeline"].(string)
-	}
-	if info["missing_variables"] != nil {
-		var missingVariables []string
-		for _, val := range info["missing_variables"].([]interface{}) {
-			missingVariables = append(missingVariables, val.(string))
-		}
-		environmentInfo.MissingVariables = missingVariables
-	}
-
-	return environmentInfo
-}
-
-func parseConfigInfo(info map[string]interface{}) ConfigInfo {
-	var configInfo ConfigInfo
-
-	if info["name"] != nil {
-		configInfo.Name = info["name"].(string)
-	}
-	if info["stage"] != nil {
-		configInfo.Environment = info["stage"].(string)
-	}
-	if info["pipeline"] != nil {
-		configInfo.Project = info["pipeline"].(string)
-	}
-	if info["created_at"] != nil {
-		configInfo.CreatedAt = info["created_at"].(string)
-	}
-	if info["deployed_at"] != nil {
-		configInfo.DeployedAt = info["deployed_at"].(string)
-	}
-	if info["missing_variables"] != nil {
-		var missingVariables []string
-		for _, val := range info["missing_variables"].([]interface{}) {
-			missingVariables = append(missingVariables, val.(string))
-		}
-		configInfo.MissingVariables = missingVariables
-	}
-
-	return configInfo
-}
-
-func parseActivityLog(log map[string]interface{}) ActivityLog {
-	var activityLog ActivityLog
-
-	if log["id"] != nil {
-		activityLog.ID = log["id"].(string)
-	}
-	if log["text"] != nil {
-		activityLog.Text = log["text"].(string)
-	}
-	if log["html"] != nil {
-		activityLog.HTML = log["html"].(string)
-	}
-	if log["created_at"] != nil {
-		activityLog.CreatedAt = log["created_at"].(string)
-	}
-	if log["environment"] != nil {
-		activityLog.Config = log["environment"].(string)
-	}
-	if log["stage"] != nil {
-		activityLog.Environment = log["stage"].(string)
-	}
-	if log["pipeline"] != nil {
-		activityLog.Project = log["pipeline"].(string)
-	}
-	if log["user"] != nil {
-		user := log["user"].(map[string]interface{})
-		activityLog.User.Email = user["email"].(string)
-		activityLog.User.Name = user["name"].(string)
-		activityLog.User.Username = user["username"].(string)
-		activityLog.User.ProfileImage = user["profile_image_url"].(string)
-	}
-
-	return activityLog
-}
-
 // GetAPISecrets for specified project and config
-func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, map[string]ComputedSecret) {
+func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, map[string]models.ComputedSecret) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
@@ -240,19 +43,19 @@ func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 		utils.Err(err)
 	}
 
-	computed := make(map[string]ComputedSecret)
+	computed := make(map[string]models.ComputedSecret)
 	secrets := result["variables"].(map[string]interface{})
 	// fmt.Println("secret1", secrets)
 	for key, secret := range secrets {
 		val := secret.(map[string]interface{})
-		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
+		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
 	return response, computed
 }
 
 // SetAPISecrets for specified project and config
-func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config string, secrets map[string]interface{}) ([]byte, map[string]ComputedSecret) {
+func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config string, secrets map[string]interface{}) ([]byte, map[string]models.ComputedSecret) {
 	reqBody := make(map[string]interface{})
 	reqBody["variables"] = secrets
 	body, err := json.Marshal(reqBody)
@@ -278,21 +81,21 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 		utils.Err(err)
 	}
 
-	computed := make(map[string]ComputedSecret)
+	computed := make(map[string]models.ComputedSecret)
 	for key, secret := range result["variables"].(map[string]interface{}) {
 		val := secret.(map[string]interface{})
-		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
+		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
 	return response, computed
 }
 
-// GetAPIWorkplace get specified workplace info
-func GetAPIWorkplace(cmd *cobra.Command, apiKey string) ([]byte, WorkplaceInfo) {
+// GetAPIWorkplaceSettings get specified workplace settings
+func GetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string) ([]byte, models.WorkplaceSettings) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch workplace")
+		fmt.Println("Unable to fetch workplace settings")
 		utils.Err(err)
 	}
 
@@ -302,22 +105,22 @@ func GetAPIWorkplace(cmd *cobra.Command, apiKey string) ([]byte, WorkplaceInfo) 
 		utils.Err(err)
 	}
 
-	info := parseWorkplaceInfo(result["workplace"].(map[string]interface{}))
-	return response, info
+	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
+	return response, settings
 }
 
-// SetAPIWorkplace set workplace info
-func SetAPIWorkplace(cmd *cobra.Command, apiKey string, values WorkplaceInfo) ([]byte, WorkplaceInfo) {
+// SetAPIWorkplaceSettings set workplace settings
+func SetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string, values models.WorkplaceSettings) ([]byte, models.WorkplaceSettings) {
 	body, err := json.Marshal(values)
 	if err != nil {
-		fmt.Println("Invalid workplace info")
+		fmt.Println("Invalid workplace settings")
 		utils.Err(err)
 	}
 
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.PostRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to update workplace info")
+		fmt.Println("Unable to update workplace settings")
 		utils.Err(err)
 	}
 
@@ -327,12 +130,12 @@ func SetAPIWorkplace(cmd *cobra.Command, apiKey string, values WorkplaceInfo) ([
 		utils.Err(err)
 	}
 
-	info := parseWorkplaceInfo(result["workplace"].(map[string]interface{}))
-	return response, info
+	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
+	return response, settings
 }
 
 // GetAPIProjects get projects
-func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []ProjectInfo) {
+func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/pipelines", []utils.QueryParam{}, apiKey)
 	if err != nil {
@@ -346,16 +149,16 @@ func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []ProjectInfo) {
 		utils.Err(err)
 	}
 
-	var info []ProjectInfo
+	var info []models.ProjectInfo
 	for _, project := range result["pipelines"].([]interface{}) {
-		projectInfo := parseProjectInfo(project.(map[string]interface{}))
+		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
 		info = append(info, projectInfo)
 	}
 	return response, info
 }
 
 // GetAPIProject get specified project
-func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, ProjectInfo) {
+func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
@@ -369,12 +172,12 @@ func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, P
 		utils.Err(err)
 	}
 
-	projectInfo := parseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
 	return response, projectInfo
 }
 
 // CreateAPIProject create a project
-func CreateAPIProject(cmd *cobra.Command, apiKey string, name string, description string) ([]byte, ProjectInfo) {
+func CreateAPIProject(cmd *cobra.Command, apiKey string, name string, description string) ([]byte, models.ProjectInfo) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -395,12 +198,12 @@ func CreateAPIProject(cmd *cobra.Command, apiKey string, name string, descriptio
 		utils.Err(err)
 	}
 
-	projectInfo := parseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
 	return response, projectInfo
 }
 
 // UpdateAPIProject update a project
-func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name string, description string) ([]byte, ProjectInfo) {
+func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name string, description string) ([]byte, models.ProjectInfo) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -421,7 +224,7 @@ func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name st
 		utils.Err(err)
 	}
 
-	projectInfo := parseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
 	return response, projectInfo
 }
 
@@ -442,7 +245,7 @@ func DeleteAPIProject(cmd *cobra.Command, apiKey string, project string) {
 }
 
 // GetAPIEnvironments get environments
-func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]byte, []EnvironmentInfo) {
+func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]byte, []models.EnvironmentInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -459,16 +262,16 @@ func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]by
 		utils.Err(err)
 	}
 
-	var info []EnvironmentInfo
+	var info []models.EnvironmentInfo
 	for _, environment := range result["stages"].([]interface{}) {
-		environmentInfo := parseEnvironmentInfo(environment.(map[string]interface{}))
+		environmentInfo := models.ParseEnvironmentInfo(environment.(map[string]interface{}))
 		info = append(info, environmentInfo)
 	}
 	return response, info
 }
 
 // GetAPIEnvironment get specified environment
-func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, environment string) ([]byte, EnvironmentInfo) {
+func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, environment string) ([]byte, models.EnvironmentInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -485,12 +288,12 @@ func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, enviro
 		utils.Err(err)
 	}
 
-	info := parseEnvironmentInfo(result["stage"].(map[string]interface{}))
+	info := models.ParseEnvironmentInfo(result["stage"].(map[string]interface{}))
 	return response, info
 }
 
 // GetAPIConfigs get configs
-func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, []ConfigInfo) {
+func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, []models.ConfigInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -507,16 +310,16 @@ func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, [
 		utils.Err(err)
 	}
 
-	var info []ConfigInfo
+	var info []models.ConfigInfo
 	for _, config := range result["environments"].([]interface{}) {
-		configInfo := parseConfigInfo(config.(map[string]interface{}))
+		configInfo := models.ParseConfigInfo(config.(map[string]interface{}))
 		info = append(info, configInfo)
 	}
 	return response, info
 }
 
 // GetAPIConfig get a config
-func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, ConfigInfo) {
+func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, models.ConfigInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -533,12 +336,12 @@ func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config stri
 		utils.Err(err)
 	}
 
-	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
 	return response, info
 }
 
 // CreateAPIConfig create a config
-func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name string, environment string, defaults bool) ([]byte, ConfigInfo) {
+func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name string, environment string, defaults bool) ([]byte, models.ConfigInfo) {
 	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -562,7 +365,7 @@ func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name str
 		utils.Err(err)
 	}
 
-	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
 	return response, info
 }
 
@@ -586,7 +389,7 @@ func DeleteAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 }
 
 // UpdateAPIConfig create a config
-func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config string, name string) ([]byte, ConfigInfo) {
+func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config string, name string) ([]byte, models.ConfigInfo) {
 	postBody := map[string]interface{}{"name": name}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -610,12 +413,12 @@ func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 		utils.Err(err)
 	}
 
-	info := parseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
 	return response, info
 }
 
 // GetAPIActivityLogs get activity logs
-func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []ActivityLog) {
+func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []models.Log) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/logs", []utils.QueryParam{}, apiKey)
 	if err != nil {
@@ -629,16 +432,16 @@ func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []ActivityLo
 		utils.Err(err)
 	}
 
-	var logs []ActivityLog
+	var logs []models.Log
 	for _, log := range result["logs"].([]interface{}) {
-		activityLog := parseActivityLog(log.(map[string]interface{}))
-		logs = append(logs, activityLog)
+		parsedLog := models.ParseLog(log.(map[string]interface{}))
+		logs = append(logs, parsedLog)
 	}
 	return response, logs
 }
 
 // GetAPIActivityLog get specified activity log
-func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, ActivityLog) {
+func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, models.Log) {
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.GetRequest(host, "v2/logs/"+log, []utils.QueryParam{}, apiKey)
 	if err != nil {
@@ -652,8 +455,8 @@ func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, A
 		utils.Err(err)
 	}
 
-	activityLog := parseActivityLog(result["log"].(map[string]interface{}))
-	return response, activityLog
+	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	return response, parsedLog
 }
 
 // GetAPIConfigLogs get config audit logs
