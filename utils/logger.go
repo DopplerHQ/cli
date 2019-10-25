@@ -21,6 +21,8 @@ import (
 	"os"
 )
 
+// Debug whether we're running in debug mode
+var Debug = false
 
 // JSON whether to print JSON
 var JSON = false
@@ -45,6 +47,10 @@ func Err(e error, message string) {
 			fmt.Println(message)
 		}
 		fmt.Println("Error:", e)
+	}
+
+	if Debug {
+		panic(e)
 	}
 
 	os.Exit(1)
