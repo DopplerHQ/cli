@@ -75,12 +75,7 @@ func init() {
 
 func printEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 
@@ -93,12 +88,7 @@ func printEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 
 func printEnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 

@@ -158,12 +158,7 @@ func init() {
 
 func printProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 
@@ -176,12 +171,7 @@ func printProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 
 func printProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 

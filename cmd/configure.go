@@ -37,12 +37,7 @@ var configureCmd = &cobra.Command{
 			allConfigs := configuration.AllConfigs()
 
 			if jsonFlag {
-				resp, err := json.Marshal(allConfigs)
-				if err != nil {
-					utils.Err(err)
-				}
-
-				fmt.Println(string(resp))
+				utils.PrintJSON(allConfigs)
 				return
 			}
 
@@ -99,12 +94,7 @@ var configureCmd = &cobra.Command{
 				confMap[scope]["key"] = value
 			}
 
-			resp, err := json.Marshal(confMap)
-			if err != nil {
-				utils.Err(err)
-			}
-
-			fmt.Println(string(resp))
+			utils.PrintJSON(confMap)
 			return
 		}
 
@@ -172,12 +162,7 @@ doppler configure get key otherkey`,
 				}
 			}
 
-			resp, err := json.Marshal(filteredConfMap)
-			if err != nil {
-				utils.Err(err)
-			}
-
-			fmt.Println(string(resp))
+			utils.PrintJSON(filteredConfMap)
 			return
 		}
 

@@ -21,8 +21,6 @@ import (
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -78,12 +76,7 @@ func init() {
 
 func printSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(settings)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(settings)
 		return
 	}
 

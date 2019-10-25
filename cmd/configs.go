@@ -245,12 +245,7 @@ func init() {
 
 func printConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 
@@ -263,12 +258,7 @@ func printConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 
 func printConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(info)
 		return
 	}
 

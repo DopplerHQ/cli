@@ -42,12 +42,7 @@ func PrintLogs(logs []models.Log, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
 
 	if jsonFlag {
-		resp, err := json.Marshal(logs[0:maxLogs])
-		if err != nil {
-			Err(err)
-		}
-
-		fmt.Println(string(resp))
+		PrintJSON(logs[0:maxLogs])
 		return
 	}
 
@@ -59,12 +54,7 @@ func PrintLogs(logs []models.Log, number int, jsonFlag bool) {
 // PrintLog print log
 func PrintLog(log models.Log, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(log)
-		if err != nil {
-			Err(err)
-		}
-
-		fmt.Println(string(resp))
+		PrintJSON(log)
 		return
 	}
 
@@ -78,4 +68,14 @@ func PrintLog(log models.Log, jsonFlag bool) {
 	fmt.Println("")
 	fmt.Println("\t" + log.Text)
 	fmt.Println("")
+}
+
+// PrintJSON print object as json
+func PrintJSON(structure interface{}) {
+	resp, err := json.Marshal(structure)
+	if err != nil {
+		Err(err, "")
+	}
+
+	fmt.Println(string(resp))
 }

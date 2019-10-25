@@ -229,12 +229,7 @@ func printSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 			}
 		}
 
-		resp, err := json.Marshal(secretsMap)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
+		utils.PrintJSON(secretsMap)
 		return
 	}
 
