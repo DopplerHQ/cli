@@ -19,6 +19,7 @@ import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -26,22 +27,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var workplaceCmd = &cobra.Command{
-	Use:   "workplace",
-	Short: "Get workplace info",
+var settingsCmd = &cobra.Command{
+	Use:   "settings",
+	Short: "Get workplace settings",
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.GetAPIWorkplace(cmd, localConfig.Key.Value)
+		_, info := api.GetAPIWorkplaceSettings(cmd, localConfig.Key.Value)
 
-		printWorkplaceInfo(info, jsonFlag)
+		printSettings(info, jsonFlag)
 	},
 }
 
-var workplaceUpdateCmd = &cobra.Command{
+var settingsUpdateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update a workplace's info",
+	Short: "Update workplace settings",
 	Run: func(cmd *cobra.Command, args []string) {
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
@@ -53,31 +54,31 @@ var workplaceUpdateCmd = &cobra.Command{
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
-		values := api.WorkplaceInfo{Name: name, BillingEmail: email}
+		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.SetAPIWorkplace(cmd, localConfig.Key.Value, values)
+		_, info := api.SetAPIWorkplaceSettings(cmd, localConfig.Key.Value, settings)
 
 		if !silent {
-			printWorkplaceInfo(info, jsonFlag)
+			printSettings(info, jsonFlag)
 		}
 	},
 }
 
 func init() {
-	workplaceUpdateCmd.Flags().String("name", "", "set the workplace's name")
-	workplaceUpdateCmd.Flags().String("email", "", "set the workplace's billing email")
-	workplaceUpdateCmd.Flags().Bool("json", false, "output json")
-	workplaceUpdateCmd.Flags().Bool("silent", false, "don't output the response")
-	workplaceCmd.AddCommand(workplaceUpdateCmd)
+	settingsUpdateCmd.Flags().String("name", "", "set the workplace's name")
+	settingsUpdateCmd.Flags().String("email", "", "set the workplace's billing email")
+	settingsUpdateCmd.Flags().Bool("json", false, "output json")
+	settingsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
+	settingsCmd.AddCommand(settingsUpdateCmd)
 
-	workplaceCmd.Flags().Bool("json", false, "output json")
-	rootCmd.AddCommand(workplaceCmd)
+	settingsCmd.Flags().Bool("json", false, "output json")
+	rootCmd.AddCommand(settingsCmd)
 }
 
-func printWorkplaceInfo(info api.WorkplaceInfo, jsonFlag bool) {
+func printSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 	if jsonFlag {
-		resp, err := json.Marshal(info)
+		resp, err := json.Marshal(settings)
 		if err != nil {
 			utils.Err(err)
 		}
@@ -86,6 +87,6 @@ func printWorkplaceInfo(info api.WorkplaceInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.BillingEmail}}
+	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
 	utils.PrintTable([]string{"id", "name", "billing_email"}, rows)
 }
