@@ -20,8 +20,6 @@ import (
 	configuration "doppler-cli/config"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -129,22 +127,18 @@ var projectsUpdateCmd = &cobra.Command{
 }
 
 func init() {
-	projectsGetCmd.Flags().Bool("json", false, "output json")
 	projectsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	projectsCmd.AddCommand(projectsGetCmd)
 
-	projectsCreateCmd.Flags().Bool("json", false, "output json")
 	projectsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsCreateCmd.Flags().String("name", "", "project name")
 	projectsCreateCmd.Flags().String("description", "", "project description")
 	projectsCmd.AddCommand(projectsCreateCmd)
 
-	projectsDeleteCmd.Flags().Bool("json", false, "output json")
 	projectsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
-	projectsUpdateCmd.Flags().Bool("json", false, "output json")
 	projectsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
@@ -152,7 +146,6 @@ func init() {
 	projectsUpdateCmd.MarkFlagRequired("description")
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
-	projectsCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(projectsCmd)
 }
 

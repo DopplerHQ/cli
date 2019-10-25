@@ -19,7 +19,6 @@ import (
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -233,7 +232,6 @@ doppler configure unset key otherkey`,
 
 func init() {
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified	")
-	configureGetCmd.Flags().Bool("json", false, "output json")
 	configureCmd.AddCommand(configureGetCmd)
 
 	configureSetCmd.Flags().Bool("silent", false, "don't output the new config")
@@ -243,6 +241,5 @@ func init() {
 	configureCmd.AddCommand(configureUnsetCmd)
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")
-	configureCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(configureCmd)
 }

@@ -20,6 +20,9 @@ import (
 	"os"
 )
 
+
+// JSON whether to print JSON
+var JSON = false
 // Err prints the error and exits
 func Err(e error) {
 	fmt.Println("Error:", e)

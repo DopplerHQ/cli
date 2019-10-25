@@ -21,7 +21,6 @@ import (
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"sort"
@@ -175,20 +174,17 @@ func init() {
 	secretsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsCmd.Flags().Bool("json", false, "output json")
 
 	secretsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	secretsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsGetCmd.Flags().Bool("json", false, "output json")
 	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsSetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	secretsSetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsSetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsSetCmd.Flags().Bool("json", false, "output json")
 	secretsSetCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsSetCmd)
 
@@ -196,7 +192,6 @@ func init() {
 	secretsDeleteCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsDeleteCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsDeleteCmd.Flags().Bool("json", false, "output json")
 	secretsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)

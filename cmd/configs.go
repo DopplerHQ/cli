@@ -20,8 +20,6 @@ import (
 	configuration "doppler-cli/config"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -190,18 +188,15 @@ var configsLogsRollbackCmd = &cobra.Command{
 
 func init() {
 	configsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	configsCmd.Flags().Bool("json", false, "output json")
 
 	configsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsGetCmd.Flags().Bool("json", false, "output json")
 	configsCmd.AddCommand(configsGetCmd)
 
 	configsCreateCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().String("environment", "", "config environment")
 	configsCreateCmd.Flags().Bool("defaults", true, "populate config with environment's default secrets")
-	configsCreateCmd.Flags().Bool("json", false, "output json")
 	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsCreateCmd.MarkFlagRequired("environment")
 	configsCmd.AddCommand(configsCreateCmd)
@@ -209,34 +204,29 @@ func init() {
 	configsUpdateCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsUpdateCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	configsUpdateCmd.Flags().String("name", "", "config name")
-	configsUpdateCmd.Flags().Bool("json", false, "output json")
 	configsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsUpdateCmd.MarkFlagRequired("name")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsDeleteCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsDeleteCmd.Flags().Bool("json", false, "output json")
 	configsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
 	configsLogsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsCmd.Flags().Bool("json", false, "output json")
 	configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
 	configsLogsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsGetCmd.Flags().Bool("json", false, "output json")
 	configsLogsCmd.AddCommand(configsLogsGetCmd)
 
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
 	configsLogsRollbackCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsRollbackCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsRollbackCmd.Flags().Bool("json", false, "output json")
 	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 

@@ -56,11 +56,9 @@ var activityGetCmd = &cobra.Command{
 }
 
 func init() {
-	activityGetCmd.Flags().Bool("json", false, "output json")
 	activityGetCmd.Flags().String("log", "", "activity log id")
 	activityCmd.AddCommand(activityGetCmd)
 
-	activityCmd.Flags().Bool("json", false, "output json")
 	activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	rootCmd.AddCommand(activityCmd)
 }

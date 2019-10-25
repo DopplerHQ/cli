@@ -66,11 +66,9 @@ var settingsUpdateCmd = &cobra.Command{
 func init() {
 	settingsUpdateCmd.Flags().String("name", "", "set the workplace's name")
 	settingsUpdateCmd.Flags().String("email", "", "set the workplace's billing email")
-	settingsUpdateCmd.Flags().Bool("json", false, "output json")
 	settingsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	settingsCmd.AddCommand(settingsUpdateCmd)
 
-	settingsCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(settingsCmd)
 }
 

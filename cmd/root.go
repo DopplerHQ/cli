@@ -46,6 +46,12 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	args := os.Args[1:]
+	rootCmd.ParseFlags(args)
+	if rootCmd.Flags().Changed("json") {
+		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		utils.Err(err)
 	}
@@ -62,6 +68,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("enable-env", true, "support reading doppler config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
+	rootCmd.PersistentFlags().Bool("json", false, "output json")
 
 	rootCmd.Flags().BoolP("version", "V", false, "")
 }

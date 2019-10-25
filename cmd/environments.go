@@ -21,8 +21,6 @@ import (
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -65,11 +63,9 @@ var environmentsGetCmd = &cobra.Command{
 }
 
 func init() {
-	environmentsGetCmd.Flags().Bool("json", false, "output json")
 	environmentsGetCmd.Flags().String("project", "", "output json")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
-	environmentsCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(environmentsCmd)
 }
 
