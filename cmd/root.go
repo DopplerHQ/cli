@@ -59,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().String("api-host", "https://staging-api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://staging-deploy.doppler.com", "deploy host")
 
+	rootCmd.PersistentFlags().Bool("enable-env", true, "support reading doppler config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
 

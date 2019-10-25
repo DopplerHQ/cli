@@ -110,10 +110,33 @@ func Get(scope string) ScopedConfig {
 	return scopedConfig
 }
 
-// LocalConfig retrieves the config for the current directory. prioritizes command flags and falls back to the config file
+// LocalConfig retrieves the config for the scoped directory
 func LocalConfig(cmd *cobra.Command) ScopedConfig {
+	// cli config file (lowest priority)
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
+	// environment variables
+	if utils.GetBoolFlag(cmd, "enable-env") {
+		key := os.Getenv("DOPPLER_API_KEY")
+		if key != "" {
+			localConfig.Key.Value = key
+			localConfig.Key.Scope = ""
+		}
+
+		project := os.Getenv("DOPPLER_PROJECT")
+		if project != "" {
+			localConfig.Project.Value = project
+			localConfig.Project.Scope = ""
+		}
+
+		config := os.Getenv("DOPPLER_CONFIG")
+		if config != "" {
+			localConfig.Config.Value = config
+			localConfig.Config.Scope = ""
+		}
+	}
+
+	// individual flags (highest priority)
 	if cmd.Flags().Changed("key") {
 		localConfig.Key.Value = cmd.Flag("key").Value.String()
 		localConfig.Key.Scope = ""
