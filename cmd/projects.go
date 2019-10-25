@@ -18,6 +18,7 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -155,7 +156,7 @@ func init() {
 	rootCmd.AddCommand(projectsCmd)
 }
 
-func printProjectsInfo(info []api.ProjectInfo, jsonFlag bool) {
+func printProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
 		resp, err := json.Marshal(info)
 		if err != nil {
@@ -173,7 +174,7 @@ func printProjectsInfo(info []api.ProjectInfo, jsonFlag bool) {
 	utils.PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }
 
-func printProjectInfo(info api.ProjectInfo, jsonFlag bool) {
+func printProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
 		resp, err := json.Marshal(info)
 		if err != nil {

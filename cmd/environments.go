@@ -19,6 +19,7 @@ import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"
@@ -72,7 +73,7 @@ func init() {
 	rootCmd.AddCommand(environmentsCmd)
 }
 
-func printEnvironmentsInfo(info []api.EnvironmentInfo, jsonFlag bool) {
+func printEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
 		resp, err := json.Marshal(info)
 		if err != nil {
@@ -90,7 +91,7 @@ func printEnvironmentsInfo(info []api.EnvironmentInfo, jsonFlag bool) {
 	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
-func printEnvironmentInfo(info api.EnvironmentInfo, jsonFlag bool) {
+func printEnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
 		resp, err := json.Marshal(info)
 		if err != nil {

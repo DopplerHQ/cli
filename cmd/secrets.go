@@ -19,6 +19,7 @@ import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"encoding/json"
 	"fmt"

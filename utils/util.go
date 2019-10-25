@@ -98,6 +98,16 @@ func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	return jsonFlag
 }
 
+// GetIntFlag get flag parsed as an int
+func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
+	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
+	if err != nil {
+		Err(err)
+	}
+
+	return int(number)
+}
+
 // GetFilePath verify file path and name are provided
 func GetFilePath(fullPath string, defaultPath string) string {
 	if fullPath == "" {
