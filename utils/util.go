@@ -89,11 +89,11 @@ func RunCommand(command []string, env []string, output bool) error {
 
 // GetBoolFlag get flag parsed as a boolean
 func GetBoolFlag(cmd *cobra.Command, flag string) bool {
-	jsonFlag, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
+	value, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
 	if err != nil {
 		Err(err, "")
 	}
-	return jsonFlag
+	return value
 }
 
 // GetIntFlag get flag parsed as an int

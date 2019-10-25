@@ -34,7 +34,7 @@ var configsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List configs",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
@@ -47,7 +47,7 @@ var configsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		config := localConfig.Config.Value
@@ -65,7 +65,7 @@ var configsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		defaults := utils.GetBoolFlag(cmd, "defaults")
 		environment := cmd.Flag("environment").Value.String()
@@ -88,7 +88,7 @@ var configsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
@@ -113,7 +113,7 @@ var configsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
@@ -135,7 +135,7 @@ var configsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
@@ -149,7 +149,7 @@ var configsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
@@ -168,7 +168,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 

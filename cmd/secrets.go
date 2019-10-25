@@ -38,7 +38,7 @@ var secretsCmd = &cobra.Command{
 	Use:   "secrets",
 	Short: "Fetch all Doppler secrets",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 
@@ -61,7 +61,7 @@ doppler secrets get api_key crypto_key`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 
@@ -84,7 +84,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -122,7 +122,7 @@ doppler secrets delete api_key crypto_key`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")

@@ -30,7 +30,7 @@ var environmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "List environments",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		project := localConfig.Project.Value
@@ -52,7 +52,7 @@ var environmentsGetCmd = &cobra.Command{
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
 

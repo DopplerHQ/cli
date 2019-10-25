@@ -29,7 +29,7 @@ var settingsCmd = &cobra.Command{
 	Use:   "settings",
 	Short: "Get workplace settings",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.GetAPIWorkplaceSettings(cmd, localConfig.Key.Value)
@@ -49,7 +49,7 @@ var settingsUpdateCmd = &cobra.Command{
 			dopplerErrors.CommandMissingFlag(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}

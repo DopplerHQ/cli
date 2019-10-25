@@ -30,7 +30,7 @@ var configureCmd = &cobra.Command{
 	Short: "View cli configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		all := utils.GetBoolFlag(cmd, "all")
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 
 		if all {
 			allConfigs := configuration.AllConfigs()
@@ -114,7 +114,7 @@ doppler configure get key otherkey`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 
 		scope := cmd.Flag("scope").Value.String()
