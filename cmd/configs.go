@@ -131,6 +131,60 @@ var configsUpdateCmd = &cobra.Command{
 	},
 }
 
+var configsLogsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "List config audit logs",
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		localConfig := configuration.LocalConfig(cmd)
+
+		_, logs := api.GetAPIConfigLogs(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+
+		utils.PrintLogs(logs, jsonFlag)
+	},
+}
+
+var configsLogsGetCmd = &cobra.Command{
+	Use:   "get [log_id]",
+	Short: "Get config audit log",
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		localConfig := configuration.LocalConfig(cmd)
+
+		log := cmd.Flag("log").Value.String()
+		if len(args) > 0 {
+			log = args[0]
+		}
+
+		_, configLog := api.GetAPIConfigLog(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+
+		// TODO print diff (like node cli environments:logs:view command)
+		utils.PrintLog(configLog, jsonFlag)
+	},
+}
+
+var configsLogsRollbackCmd = &cobra.Command{
+	Use:   "rollback [log_id]",
+	Short: "Rollback a config change",
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		silent := utils.GetBoolFlag(cmd, "silent")
+		localConfig := configuration.LocalConfig(cmd)
+
+		log := cmd.Flag("log").Value.String()
+		if len(args) > 0 {
+			log = args[0]
+		}
+
+		_, configLog := api.RollbackAPIConfigLog(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+
+		if !silent {
+			// TODO print diff (like node cli environments:logs:view command)
+			utils.PrintLog(configLog, jsonFlag)
+		}
+	},
+}
+
 func init() {
 	configsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsCmd.Flags().Bool("json", false, "output json")
@@ -162,6 +216,24 @@ func init() {
 	configsDeleteCmd.Flags().Bool("json", false, "output json")
 	configsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	configsCmd.AddCommand(configsDeleteCmd)
+
+	configsLogsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
+	configsLogsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	configsLogsCmd.Flags().Bool("json", false, "output json")
+	configsCmd.AddCommand(configsLogsCmd)
+
+	configsLogsGetCmd.Flags().String("log", "", "audit log id")
+	configsLogsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
+	configsLogsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	configsLogsGetCmd.Flags().Bool("json", false, "output json")
+	configsLogsCmd.AddCommand(configsLogsGetCmd)
+
+	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
+	configsLogsRollbackCmd.Flags().String("project", "", "doppler project (e.g. backend)")
+	configsLogsRollbackCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	configsLogsRollbackCmd.Flags().Bool("json", false, "output json")
+	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
+	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
 	rootCmd.AddCommand(configsCmd)
 }

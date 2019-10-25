@@ -35,7 +35,7 @@ var activityCmd = &cobra.Command{
 
 		_, activity := api.GetAPIActivityLogs(cmd, localConfig.Key.Value)
 
-		printActivityLogs(activity, jsonFlag)
+		utils.PrintLogs(activity, jsonFlag)
 	},
 }
 
@@ -53,7 +53,7 @@ var activityGetCmd = &cobra.Command{
 
 		_, activity := api.GetAPIActivityLog(cmd, localConfig.Key.Value, log)
 
-		printActivityLog(activity, jsonFlag)
+		utils.PrintLog(activity, jsonFlag)
 	},
 }
 
@@ -64,43 +64,4 @@ func init() {
 
 	activityCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(activityCmd)
-}
-
-func printActivityLogs(logs []api.ActivityLog, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(logs)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	for _, log := range logs {
-		printActivityLog(log, false)
-	}
-}
-
-func printActivityLog(log api.ActivityLog, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(log)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	dateTime, err := time.Parse(time.RFC3339, log.CreatedAt)
-
-	fmt.Println("Log " + log.ID)
-	fmt.Println("User: " + log.User.Name + " <" + log.User.Email + ">")
-	if err == nil {
-		fmt.Println("Date: " + dateTime.In(time.Local).String())
-	}
-	fmt.Println("")
-	fmt.Println("\t" + log.Text)
-	fmt.Println("")
 }

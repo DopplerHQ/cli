@@ -655,3 +655,73 @@ func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, A
 	activityLog := parseActivityLog(result["log"].(map[string]interface{}))
 	return response, activityLog
 }
+
+// GetAPIConfigLogs get config audit logs
+func GetAPIConfigLogs(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, []models.Log) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs", params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch config logs")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	var logs []models.Log
+	for _, log := range result["logs"].([]interface{}) {
+		parsedLog := models.ParseLog(log.(map[string]interface{}))
+		logs = append(logs, parsedLog)
+	}
+	return response, logs
+}
+
+// GetAPIConfigLog get config audit log
+func GetAPIConfigLog(cmd *cobra.Command, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs/"+log, params, apiKey)
+	if err != nil {
+		fmt.Println("Unable to fetch config log")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	return response, parsedLog
+}
+
+// RollbackAPIConfigLog rollback a config log
+func RollbackAPIConfigLog(cmd *cobra.Command, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+
+	host := cmd.Flag("api-host").Value.String()
+	response, err := utils.PostRequest(host, "v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
+	if err != nil {
+		fmt.Println("Unable to rollback config log")
+		utils.Err(err)
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	return response, parsedLog
+}
