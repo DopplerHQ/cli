@@ -90,9 +90,9 @@ var configsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO prompt user with a confirmation before proceeding (and add a --yes flag to skip it)
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
 		config := localConfig.Config.Value
@@ -100,12 +100,13 @@ var configsDeleteCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		api.DeleteAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config)
+		if yes || utils.ConfirmationPrompt("Delete config "+config) {
+			api.DeleteAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config)
 
-		// fetch and display configs
-		if !silent {
-			_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
-			printConfigsInfo(configs, jsonFlag)
+			if !silent {
+				_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
+				printConfigsInfo(configs, jsonFlag)
+			}
 		}
 	},
 }
@@ -217,6 +218,7 @@ func init() {
 	configsDeleteCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	configsDeleteCmd.Flags().Bool("json", false, "output json")
 	configsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
+	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
 	configsLogsCmd.Flags().String("project", "", "doppler project (e.g. backend)")

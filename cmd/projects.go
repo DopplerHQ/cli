@@ -82,9 +82,9 @@ var projectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO prompt user with a confirmation before proceeding (and add a --yes flag to skip it)
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
 		project := localConfig.Project.Value
@@ -92,12 +92,13 @@ var projectsDeleteCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		api.DeleteAPIProject(cmd, localConfig.Key.Value, project)
+		if yes || utils.ConfirmationPrompt("Delete project "+project) {
+			api.DeleteAPIProject(cmd, localConfig.Key.Value, project)
 
-		// fetch and display projects
-		if !silent {
-			_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
-			printProjectsInfo(info, jsonFlag)
+			if !silent {
+				_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
+				printProjectsInfo(info, jsonFlag)
+			}
 		}
 	},
 }
@@ -139,6 +140,7 @@ func init() {
 
 	projectsDeleteCmd.Flags().Bool("json", false, "output json")
 	projectsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
+	projectsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
 	projectsUpdateCmd.Flags().Bool("json", false, "output json")

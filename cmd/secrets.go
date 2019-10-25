@@ -126,17 +126,20 @@ doppler secrets delete api_key crypto_key`,
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
 
-		secrets := make(map[string]interface{})
-		for _, arg := range args {
-			secrets[arg] = nil
-		}
+		if yes || utils.ConfirmationPrompt("Delete secret(s)") {
+			secrets := make(map[string]interface{})
+			for _, arg := range args {
+				secrets[arg] = nil
+			}
 
-		localConfig := configuration.LocalConfig(cmd)
-		_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+			localConfig := configuration.LocalConfig(cmd)
+			_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
-		if !silent {
-			printSecrets(response, []string{}, jsonFlag, plain, raw)
+			if !silent {
+				printSecrets(response, []string{}, jsonFlag, plain, raw)
+			}
 		}
 	},
 }
@@ -194,6 +197,7 @@ func init() {
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().Bool("json", false, "output json")
 	secretsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
+	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().String("project", "", "doppler project (e.g. backend)")

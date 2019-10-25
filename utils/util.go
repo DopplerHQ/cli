@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/AlecAivazis/survey"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
@@ -112,4 +113,15 @@ func GetFilePath(fullPath string, defaultPath string) string {
 	}
 
 	return path.Join(parsedPath, parsedName)
+}
+
+// ConfirmationPrompt prompt user to confirm yes/no
+func ConfirmationPrompt(message string) bool {
+	confirm := false
+	prompt := &survey.Confirm{
+		Message: message,
+	}
+
+	survey.AskOne(prompt, &confirm)
+	return confirm
 }
