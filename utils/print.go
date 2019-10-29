@@ -23,18 +23,29 @@ import (
 	"os"
 	"time"
 
-	"github.com/olekukonko/tablewriter"
+	"github.com/jedib0t/go-pretty/table"
 )
 
 // PrintTable prints table
 func PrintTable(headers []string, rows [][]string) {
-	// TODO doesn't handle multi line secrets well
-	table := tablewriter.NewWriter(os.Stdout)
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
 
-	table.SetHeader(headers)
-	table.AppendBulk(rows)
+	tableHeaders := table.Row{}
+	for _, header := range headers {
+		tableHeaders = append(tableHeaders, header)
+	}
+	t.AppendHeader(tableHeaders)
 
-	table.Render()
+	for _, row := range rows {
+		tableRow := table.Row{}
+		for _, val := range row {
+			tableRow = append(tableRow, val)
+		}
+		t.AppendRow(tableRow)
+	}
+
+	t.Render()
 }
 
 // PrintLogs print logs
