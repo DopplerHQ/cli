@@ -19,6 +19,7 @@ import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"errors"
 	"fmt"
@@ -83,13 +84,13 @@ doppler run --key=123 -- printenv`,
 	},
 }
 
-func getSecrets(cmd *cobra.Command, localConfig configuration.ScopedConfig, fallbackPath string, fallbackReadonly bool, fallbackOnly bool) map[string]string {
+func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPath string, fallbackReadonly bool, fallbackOnly bool) map[string]string {
 	useFallbackFile := (fallbackPath != "")
 	if useFallbackFile && fallbackOnly {
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := api.GetDeploySecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 	if !useFallbackFile && err != nil {
 		utils.Err(err, "")

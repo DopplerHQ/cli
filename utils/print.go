@@ -212,7 +212,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 			}
 
 			if raw {
-				sb.WriteString(strings.ReplaceAll(secret.RawValue, `\r\n`, `\n`))
+				sb.WriteString(secret.RawValue)
 			} else {
 				sb.WriteString(secret.ComputedValue)
 			}
@@ -231,7 +231,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 	for _, secret := range matchedSecrets {
 		row := []string{secret.Name, secret.ComputedValue}
 		if raw {
-			row = append(row, strings.ReplaceAll(secret.RawValue, `\r\n`, `\n`))
+			row = append(row, secret.RawValue)
 		}
 
 		rows = append(rows, row)
@@ -249,4 +249,56 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
 	PrintTable([]string{"id", "name", "billing_email"}, rows)
+}
+
+// PrintScopedConfig print scoped config
+func PrintScopedConfig(conf models.ScopedConfig) {
+	var rows [][]string
+
+	if conf.Key != (models.Pair{}) {
+		rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
+	}
+	if conf.Project != (models.Pair{}) {
+		rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
+	}
+	if conf.Config != (models.Pair{}) {
+		rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
+	}
+	if conf.APIHost != (models.Pair{}) {
+		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
+	}
+	if conf.DeployHost != (models.Pair{}) {
+		rows = append(rows, []string{"deploy-host", conf.DeployHost.Value, conf.DeployHost.Scope})
+	}
+
+	PrintTable([]string{"name", "value", "scope"}, rows)
+}
+
+// PrintConfigs print configs
+func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
+	if jsonFlag {
+		PrintJSON(configs)
+		return
+	}
+
+	var rows [][]string
+	for scope, config := range configs {
+		if config.Key != "" {
+			rows = append(rows, []string{"key", config.Key, scope})
+		}
+		if config.Project != "" {
+			rows = append(rows, []string{"project", config.Project, scope})
+		}
+		if config.Config != "" {
+			rows = append(rows, []string{"config", config.Config, scope})
+		}
+		if config.APIHost != "" {
+			rows = append(rows, []string{"api-host", config.APIHost, scope})
+		}
+		if config.DeployHost != "" {
+			rows = append(rows, []string{"deploy-host", config.DeployHost, scope})
+		}
+	}
+
+	PrintTable([]string{"name", "value", "scope"}, rows)
 }

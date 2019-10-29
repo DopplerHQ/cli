@@ -16,6 +16,7 @@ limitations under the License.
 package config
 
 import (
+	"doppler-cli/models"
 	utils "doppler-cli/utils"
 	"errors"
 	"io/ioutil"
@@ -28,35 +29,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config options
-type Config struct {
-	Project string `json:"project"`
-	Config  string `json:"config"`
-	Key     string `json:"key"`
-}
-
-// ScopedConfig options with their scope
-type ScopedConfig struct {
-	Project Pair `json:"project"`
-	Config  Pair `json:"config"`
-	Key     Pair `json:"key"`
-}
-
-type Pair struct {
-	Value string `json:"value"`
-	Scope string `json:"scope"`
-}
-
 var yamlFile = utils.Home() + "/.doppler.yaml"
 
-var configContents map[string]Config
+var configContents map[string]models.Config
 
 func init() {
 	if !exists() {
 		if jsonExists() {
 			migrateJSONToYaml()
 		} else {
-			var blankConfig map[string]Config
+			var blankConfig map[string]models.Config
 			writeYAML(blankConfig)
 		}
 	}
@@ -65,13 +47,13 @@ func init() {
 }
 
 // Get the config at the specified scope
-func Get(scope string) ScopedConfig {
+func Get(scope string) models.ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
 		utils.Err(err, "")
 	}
 	scope = path.Join(scope, "/")
-	var scopedConfig ScopedConfig
+	var scopedConfig models.ScopedConfig
 
 	for confScope, conf := range configContents {
 		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
@@ -80,29 +62,37 @@ func Get(scope string) ScopedConfig {
 		}
 
 		if conf.Key != "" {
-			if scopedConfig.Key == (Pair{}) {
-				scopedConfig.Key = Pair{Value: conf.Key, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Key.Scope) {
+			if scopedConfig.Key == (models.Pair{}) || len(confScope) > len(scopedConfig.Key.Scope) {
 				scopedConfig.Key.Value = conf.Key
 				scopedConfig.Key.Scope = confScope
 			}
 		}
 
 		if conf.Project != "" {
-			if scopedConfig.Project == (Pair{}) {
-				scopedConfig.Project = Pair{Value: conf.Project, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Project.Scope) {
+			if scopedConfig.Project == (models.Pair{}) || len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
 				scopedConfig.Project.Scope = confScope
 			}
 		}
 
 		if conf.Config != "" {
-			if scopedConfig.Config == (Pair{}) {
-				scopedConfig.Config = Pair{Value: conf.Config, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Config.Scope) {
+			if scopedConfig.Config == (models.Pair{}) || len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
 				scopedConfig.Config.Scope = confScope
+			}
+		}
+
+		if conf.APIHost != "" {
+			if scopedConfig.APIHost == (models.Pair{}) || len(confScope) > len(scopedConfig.APIHost.Scope) {
+				scopedConfig.APIHost.Value = conf.APIHost
+				scopedConfig.APIHost.Scope = confScope
+			}
+		}
+
+		if conf.DeployHost != "" {
+			if scopedConfig.DeployHost == (models.Pair{}) || len(confScope) > len(scopedConfig.DeployHost.Scope) {
+				scopedConfig.DeployHost.Value = conf.DeployHost
+				scopedConfig.DeployHost.Scope = confScope
 			}
 		}
 	}
@@ -111,7 +101,7 @@ func Get(scope string) ScopedConfig {
 }
 
 // LocalConfig retrieves the config for the scoped directory
-func LocalConfig(cmd *cobra.Command) ScopedConfig {
+func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 	// cli config file (lowest priority)
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
@@ -134,29 +124,51 @@ func LocalConfig(cmd *cobra.Command) ScopedConfig {
 			localConfig.Config.Value = config
 			localConfig.Config.Scope = ""
 		}
+
+		apiHost := os.Getenv("DOPPLER_API_HOST")
+		if apiHost != "" {
+			localConfig.APIHost.Value = apiHost
+			localConfig.APIHost.Scope = ""
+		}
+
+		deployHost := os.Getenv("DOPPLER_DEPLOY_HOST")
+		if deployHost != "" {
+			localConfig.DeployHost.Value = deployHost
+			localConfig.DeployHost.Scope = ""
+		}
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("key") {
+	if cmd.Flags().Changed("key") || localConfig.Key.Value == "" {
 		localConfig.Key.Value = cmd.Flag("key").Value.String()
 		localConfig.Key.Scope = ""
 	}
 
-	if cmd.Flags().Changed("project") {
+	if cmd.Flags().Changed("project") || localConfig.Project.Value == "" {
 		localConfig.Project.Value = cmd.Flag("project").Value.String()
 		localConfig.Project.Scope = ""
 	}
 
-	if cmd.Flags().Changed("config") {
+	if cmd.Flags().Changed("config") || localConfig.Config.Value == "" {
 		localConfig.Config.Value = cmd.Flag("config").Value.String()
 		localConfig.Config.Scope = ""
+	}
+
+	if cmd.Flags().Changed("api-host") || localConfig.APIHost.Value == "" {
+		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
+		localConfig.APIHost.Scope = ""
+	}
+
+	if cmd.Flags().Changed("deploy-host") || localConfig.DeployHost.Value == "" {
+		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
+		localConfig.DeployHost.Scope = ""
 	}
 
 	return localConfig
 }
 
 // AllConfigs get all configs we know about
-func AllConfigs() map[string]Config {
+func AllConfigs() map[string]models.Config {
 	return configContents
 }
 
@@ -171,21 +183,13 @@ func Set(scope string, options map[string]string) {
 	}
 
 	for key, value := range options {
-		if key == "key" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Key = value
-			configContents[scope] = scopedConfig
-		} else if key == "project" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Project = value
-			configContents[scope] = scopedConfig
-		} else if key == "config" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Config = value
-			configContents[scope] = scopedConfig
-		} else {
+		if !IsValidConfigOption(key) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
+
+		config := configContents[scope]
+		SetConfigValue(&config, key, value)
+		configContents[scope] = config
 	}
 
 	writeYAML(configContents)
@@ -201,29 +205,21 @@ func Unset(scope string, options []string) {
 		}
 	}
 
-	if configContents[scope] == (Config{}) {
+	if configContents[scope] == (models.Config{}) {
 		return
 	}
 
 	for _, key := range options {
-		if key == "key" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Key = ""
-			configContents[scope] = scopedConfig
-		} else if key == "project" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Project = ""
-			configContents[scope] = scopedConfig
-		} else if key == "config" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Config = ""
-			configContents[scope] = scopedConfig
-		} else {
+		if !IsValidConfigOption(key) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
+
+		config := configContents[scope]
+		SetConfigValue(&config, key, "")
+		configContents[scope] = config
 	}
 
-	if configContents[scope] == (Config{}) {
+	if configContents[scope] == (models.Config{}) {
 		delete(configContents, scope)
 	}
 
@@ -231,7 +227,7 @@ func Unset(scope string, options []string) {
 }
 
 // Write config to ~/.doppler.yaml
-func writeYAML(config map[string]Config) {
+func writeYAML(config map[string]models.Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		utils.Err(err, "")
@@ -247,13 +243,13 @@ func exists() bool {
 	return utils.Exists(yamlFile)
 }
 
-func readYAML() map[string]Config {
+func readYAML() map[string]models.Config {
 	fileContents, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
 		utils.Err(err, "")
 	}
 
-	var config map[string]Config
+	var config map[string]models.Config
 	yaml.Unmarshal(fileContents, &config)
 	return config
 }
@@ -265,4 +261,45 @@ func parseScope(scope string) (string, error) {
 	}
 
 	return absScope, nil
+}
+
+// IsValidConfigOption whether the specified key is a valid option
+func IsValidConfigOption(key string) bool {
+	return key == "key" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
+}
+
+// GetScopedConfigValue get the value of the specified key within the config
+func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string) {
+	if key == "key" {
+		return conf.Key.Value, conf.Key.Scope
+	}
+	if key == "project" {
+		return conf.Project.Value, conf.Project.Scope
+	}
+	if key == "config" {
+		return conf.Config.Value, conf.Config.Scope
+	}
+	if key == "api-host" {
+		return conf.APIHost.Value, conf.APIHost.Scope
+	}
+	if key == "deploy-host" {
+		return conf.DeployHost.Value, conf.DeployHost.Scope
+	}
+
+	return "", ""
+}
+
+// SetConfigValue set the value for the specified key in the config
+func SetConfigValue(conf *models.Config, key string, value string) {
+	if key == "key" {
+		(*conf).Key = value
+	} else if key == "project" {
+		(*conf).Project = value
+	} else if key == "config" {
+		(*conf).Config = value
+	} else if key == "api-host" {
+		(*conf).APIHost = value
+	} else if key == "deploy-host" {
+		(*conf).DeployHost = value
+	}
 }

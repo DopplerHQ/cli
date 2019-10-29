@@ -32,7 +32,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		_, projects := api.GetAPIProjects(cmd, localConfig.Key.Value)
+		_, projects := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Key.Value)
 
 		project := ""
 		if cmd.Flags().Changed("project") {
@@ -63,7 +63,7 @@ var setupCmd = &cobra.Command{
 		if cmd.Flags().Changed("config") {
 			config = localConfig.Config.Value
 		} else {
-			_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, project)
+			_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project)
 
 			var configOptions []string
 			for _, val := range configs {

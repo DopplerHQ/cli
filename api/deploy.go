@@ -52,12 +52,11 @@ func ParseDeploySecrets(response []byte) (map[string]string, error) {
 }
 
 // GetDeploySecrets for specified project and config
-func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config string) ([]byte, error) {
+func GetDeploySecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	host := cmd.Flag("deploy-host").Value.String()
 	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
 	if err != nil {
 		utils.Log("Unable to fetch secrets")
@@ -68,14 +67,13 @@ func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config 
 }
 
 // DownloadSecrets for specified project and config
-func DownloadSecrets(cmd *cobra.Command, apiKey string, project string, config string, metadata bool) []byte {
+func DownloadSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, metadata bool) []byte {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 	params = append(params, utils.QueryParam{Key: "format", Value: "file"})
 	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
 
-	host := cmd.Flag("deploy-host").Value.String()
 	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to download secrets")
