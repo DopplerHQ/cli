@@ -39,7 +39,7 @@ type errorResponse struct {
 
 // GetRequest perform HTTP GET
 func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
-	url := fmt.Sprintf("%s/%s", host, uri)
+	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 
 // PostRequest perform HTTP POST
 func PostRequest(host string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
-	url := fmt.Sprintf("%s/%s", host, uri)
+	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 
 // DeleteRequest perform HTTP DELETE
 func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
-	url := fmt.Sprintf("%s/%s", host, uri)
+	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return nil, err

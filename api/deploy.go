@@ -58,7 +58,7 @@ func GetDeploySecrets(cmd *cobra.Command, apiKey string, project string, config 
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("deploy-host").Value.String()
-	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
+	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
 	if err != nil {
 		utils.Log("Unable to fetch secrets")
 		return nil, err
@@ -76,7 +76,7 @@ func DownloadSecrets(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
 
 	host := cmd.Flag("deploy-host").Value.String()
-	response, err := utils.GetRequest(host, "v1/variables", params, apiKey)
+	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to download secrets")
 	}

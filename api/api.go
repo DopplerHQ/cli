@@ -30,7 +30,7 @@ func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/variables", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/variables", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch secrets")
 	}
@@ -66,7 +66,7 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/variables", params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/variables", params, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to fetch secrets")
 	}
@@ -89,7 +89,7 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 // GetAPIWorkplaceSettings get specified workplace settings
 func GetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string) ([]byte, models.WorkplaceSettings) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch workplace settings")
 	}
@@ -112,7 +112,7 @@ func SetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string, values models.Wo
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to update workplace settings")
 	}
@@ -130,7 +130,7 @@ func SetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string, values models.Wo
 // GetAPIProjects get projects
 func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/pipelines", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/pipelines", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch projects")
 	}
@@ -152,7 +152,7 @@ func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []models.Project
 // GetAPIProject get specified project
 func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch project")
 	}
@@ -176,7 +176,7 @@ func CreateAPIProject(cmd *cobra.Command, apiKey string, name string, descriptio
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/pipelines/", []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/pipelines/", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to create project")
 	}
@@ -200,7 +200,7 @@ func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name st
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to update project")
 	}
@@ -218,7 +218,7 @@ func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name st
 // DeleteAPIProject create a project
 func DeleteAPIProject(cmd *cobra.Command, apiKey string, project string) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.DeleteRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	response, err := utils.DeleteRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to delete project")
 	}
@@ -236,7 +236,7 @@ func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]by
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/stages", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/stages", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch environments")
 	}
@@ -261,7 +261,7 @@ func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, enviro
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/stages/"+environment, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/stages/"+environment, params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch environment")
 	}
@@ -282,7 +282,7 @@ func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, [
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch configs")
 	}
@@ -307,7 +307,7 @@ func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config stri
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch configs")
 	}
@@ -334,7 +334,7 @@ func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name str
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments", params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/environments", params, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to create config")
 	}
@@ -355,7 +355,7 @@ func DeleteAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.DeleteRequest(host, "v2/environments/"+config, params, apiKey)
+	response, err := utils.DeleteRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to delete config")
 	}
@@ -379,7 +379,7 @@ func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments/"+config, params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/environments/"+config, params, apiKey, body)
 	if err != nil {
 		utils.Err(err, "Unable to update config")
 	}
@@ -397,7 +397,7 @@ func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 // GetAPIActivityLogs get activity logs
 func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []models.Log) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/logs", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/logs", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch activity logs")
 	}
@@ -419,7 +419,7 @@ func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []models.Log
 // GetAPIActivityLog get specified activity log
 func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, models.Log) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/logs/"+log, []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/logs/"+log, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch activity log")
 	}
@@ -440,7 +440,7 @@ func GetAPIConfigLogs(cmd *cobra.Command, apiKey string, project string, config 
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch config logs")
 	}
@@ -465,7 +465,7 @@ func GetAPIConfigLog(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs/"+log, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs/"+log, params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch config log")
 	}
@@ -486,7 +486,7 @@ func RollbackAPIConfigLog(cmd *cobra.Command, apiKey string, project string, con
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
+	response, err := utils.PostRequest(host, "/v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
 	if err != nil {
 		utils.Err(err, "Unable to rollback config log")
 	}
