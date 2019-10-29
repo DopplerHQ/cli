@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime/debug"
 )
 
 // Debug whether we're running in debug mode
@@ -46,11 +47,13 @@ func Err(e error, message string) {
 		if message != "" {
 			fmt.Println(message)
 		}
+
 		fmt.Println("Error:", e)
 	}
 
 	if Debug {
-		panic(e)
+		fmt.Println("")
+		debug.PrintStack()
 	}
 
 	os.Exit(1)
