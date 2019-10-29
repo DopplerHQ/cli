@@ -16,31 +16,35 @@ limitations under the License.
 package errors
 
 import (
-	"fmt"
+	"doppler-cli/utils"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
+// CommandMissingArgument command missing an argument
 func CommandMissingArgument(cmd *cobra.Command) {
-	fmt.Println("Error: command needs an argument")
+	utils.Log("Error: command needs an argument")
 	cmd.Help()
 	os.Exit(1)
 }
 
-func CommandMissingSubcommand(cmd *cobra.Command) { 
+// CommandMissingSubcommand command missing a subcommand
+func CommandMissingSubcommand(cmd *cobra.Command) {
 	cmd.Help()
 	os.Exit(1)
 }
 
+// CommandMissingFlag command missing a flag
 func CommandMissingFlag(cmd *cobra.Command) {
-	fmt.Println("Error: command needs a flag")
+	utils.Log("Error: command needs a flag")
 	cmd.Help()
 	os.Exit(1)
 }
 
+// ApplicationMissingCommand application missing a command
 func ApplicationMissingCommand(cmd *cobra.Command) {
-	fmt.Println("Error: application needs a command")
+	utils.Log("Error: application needs a command")
 	cmd.Help()
 	os.Exit(1)
 }

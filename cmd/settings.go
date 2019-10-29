@@ -21,8 +21,6 @@ import (
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -31,12 +29,12 @@ var settingsCmd = &cobra.Command{
 	Use:   "settings",
 	Short: "Get workplace settings",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.GetAPIWorkplaceSettings(cmd, localConfig.Key.Value)
 
-		printSettings(info, jsonFlag)
+		utils.PrintSettings(info, jsonFlag)
 	},
 }
 
@@ -51,7 +49,7 @@ var settingsUpdateCmd = &cobra.Command{
 			dopplerErrors.CommandMissingFlag(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
@@ -60,7 +58,7 @@ var settingsUpdateCmd = &cobra.Command{
 		_, info := api.SetAPIWorkplaceSettings(cmd, localConfig.Key.Value, settings)
 
 		if !silent {
-			printSettings(info, jsonFlag)
+			utils.PrintSettings(info, jsonFlag)
 		}
 	},
 }
@@ -68,25 +66,8 @@ var settingsUpdateCmd = &cobra.Command{
 func init() {
 	settingsUpdateCmd.Flags().String("name", "", "set the workplace's name")
 	settingsUpdateCmd.Flags().String("email", "", "set the workplace's billing email")
-	settingsUpdateCmd.Flags().Bool("json", false, "output json")
 	settingsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	settingsCmd.AddCommand(settingsUpdateCmd)
 
-	settingsCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(settingsCmd)
-}
-
-func printSettings(settings models.WorkplaceSettings, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(settings)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	utils.PrintTable([]string{"id", "name", "billing_email"}, rows)
 }

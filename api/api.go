@@ -19,7 +19,6 @@ import (
 	"doppler-cli/models"
 	utils "doppler-cli/utils"
 	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -31,16 +30,15 @@ func GetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/variables", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/variables", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch secrets")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch secrets")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -60,8 +58,7 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	reqBody["variables"] = secrets
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		fmt.Println("Invalid secrets")
-		utils.Err(err)
+		utils.Err(err, "Invalid secrets")
 	}
 
 	var params []utils.QueryParam
@@ -69,16 +66,15 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/variables", params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/variables", params, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to fetch secrets")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch secrets")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -93,16 +89,15 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 // GetAPIWorkplaceSettings get specified workplace settings
 func GetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string) ([]byte, models.WorkplaceSettings) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch workplace settings")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch workplace settings")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
@@ -113,21 +108,19 @@ func GetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string) ([]byte, models.
 func SetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string, values models.WorkplaceSettings) ([]byte, models.WorkplaceSettings) {
 	body, err := json.Marshal(values)
 	if err != nil {
-		fmt.Println("Invalid workplace settings")
-		utils.Err(err)
+		utils.Err(err, "Invalid workplace settings")
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/workplace", []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to update workplace settings")
-		utils.Err(err)
+		utils.Err(err, "Unable to update workplace settings")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
@@ -137,16 +130,15 @@ func SetAPIWorkplaceSettings(cmd *cobra.Command, apiKey string, values models.Wo
 // GetAPIProjects get projects
 func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/pipelines", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/pipelines", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch projects")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch projects")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var info []models.ProjectInfo
@@ -160,16 +152,15 @@ func GetAPIProjects(cmd *cobra.Command, apiKey string) ([]byte, []models.Project
 // GetAPIProject get specified project
 func GetAPIProject(cmd *cobra.Command, apiKey string, project string) ([]byte, models.ProjectInfo) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch project")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch project")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -181,21 +172,19 @@ func CreateAPIProject(cmd *cobra.Command, apiKey string, name string, descriptio
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		fmt.Println("Invalid project info")
-		utils.Err(err)
+		utils.Err(err, "Invalid project info")
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/pipelines/", []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/pipelines/", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to create project")
-		utils.Err(err)
+		utils.Err(err, "Unable to create project")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -207,21 +196,19 @@ func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name st
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		fmt.Println("Invalid project info")
-		utils.Err(err)
+		utils.Err(err, "Invalid project info")
 	}
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to update project")
-		utils.Err(err)
+		utils.Err(err, "Unable to update project")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -231,16 +218,15 @@ func UpdateAPIProject(cmd *cobra.Command, apiKey string, project string, name st
 // DeleteAPIProject create a project
 func DeleteAPIProject(cmd *cobra.Command, apiKey string, project string) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.DeleteRequest(host, "v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	response, err := utils.DeleteRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to delete project")
-		utils.Err(err)
+		utils.Err(err, "Unable to delete project")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 }
 
@@ -250,16 +236,15 @@ func GetAPIEnvironments(cmd *cobra.Command, apiKey string, project string) ([]by
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/stages", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/stages", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch environments")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch environments")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var info []models.EnvironmentInfo
@@ -276,16 +261,15 @@ func GetAPIEnvironment(cmd *cobra.Command, apiKey string, project string, enviro
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/stages/"+environment, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/stages/"+environment, params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch environment")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch environment")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	info := models.ParseEnvironmentInfo(result["stage"].(map[string]interface{}))
@@ -298,16 +282,15 @@ func GetAPIConfigs(cmd *cobra.Command, apiKey string, project string) ([]byte, [
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch configs")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch configs")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var info []models.ConfigInfo
@@ -324,16 +307,15 @@ func GetAPIConfig(cmd *cobra.Command, apiKey string, project string, config stri
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch configs")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch configs")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -345,24 +327,22 @@ func CreateAPIConfig(cmd *cobra.Command, apiKey string, project string, name str
 	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		fmt.Println("Invalid config info")
-		utils.Err(err)
+		utils.Err(err, "Invalid config info")
 	}
 
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments", params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/environments", params, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to create config")
-		utils.Err(err)
+		utils.Err(err, "Unable to create config")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -375,16 +355,15 @@ func DeleteAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.DeleteRequest(host, "v2/environments/"+config, params, apiKey)
+	response, err := utils.DeleteRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to delete config")
-		utils.Err(err)
+		utils.Err(err, "Unable to delete config")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 }
 
@@ -393,24 +372,22 @@ func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 	postBody := map[string]interface{}{"name": name}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		fmt.Println("Invalid config info")
-		utils.Err(err)
+		utils.Err(err, "Invalid config info")
 	}
 
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments/"+config, params, apiKey, body)
+	response, err := utils.PostRequest(host, "/v2/environments/"+config, params, apiKey, body)
 	if err != nil {
-		fmt.Println("Unable to update config")
-		utils.Err(err)
+		utils.Err(err, "Unable to update config")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -420,16 +397,15 @@ func UpdateAPIConfig(cmd *cobra.Command, apiKey string, project string, config s
 // GetAPIActivityLogs get activity logs
 func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []models.Log) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/logs", []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/logs", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch activity logs")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch activity logs")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var logs []models.Log
@@ -443,16 +419,15 @@ func GetAPIActivityLogs(cmd *cobra.Command, apiKey string) ([]byte, []models.Log
 // GetAPIActivityLog get specified activity log
 func GetAPIActivityLog(cmd *cobra.Command, apiKey string, log string) ([]byte, models.Log) {
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/logs/"+log, []utils.QueryParam{}, apiKey)
+	response, err := utils.GetRequest(host, "/v2/logs/"+log, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch activity log")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch activity log")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
@@ -465,16 +440,15 @@ func GetAPIConfigLogs(cmd *cobra.Command, apiKey string, project string, config 
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs", params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs", params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch config logs")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch config logs")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var logs []models.Log
@@ -491,16 +465,15 @@ func GetAPIConfigLog(cmd *cobra.Command, apiKey string, project string, config s
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.GetRequest(host, "v2/environments/"+config+"/logs/"+log, params, apiKey)
+	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs/"+log, params, apiKey)
 	if err != nil {
-		fmt.Println("Unable to fetch config log")
-		utils.Err(err)
+		utils.Err(err, "Unable to fetch config log")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
@@ -513,16 +486,15 @@ func RollbackAPIConfigLog(cmd *cobra.Command, apiKey string, project string, con
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	host := cmd.Flag("api-host").Value.String()
-	response, err := utils.PostRequest(host, "v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
+	response, err := utils.PostRequest(host, "/v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
 	if err != nil {
-		fmt.Println("Unable to rollback config log")
-		utils.Err(err)
+		utils.Err(err, "Unable to rollback config log")
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))

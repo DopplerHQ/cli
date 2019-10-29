@@ -33,7 +33,7 @@ var openDashboardCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := open.Run("https://doppler.com")
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	},
 }
@@ -44,7 +44,7 @@ var openStatusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := open.Run("https://status.doppler.com")
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	},
 }
@@ -55,7 +55,7 @@ var openSlackCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := open.Run("https://doppler.com/slack")
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	},
 }
@@ -66,7 +66,7 @@ var openGithubCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := open.Run("https://doppler.com/github")
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	},
 }

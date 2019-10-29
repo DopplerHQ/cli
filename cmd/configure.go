@@ -19,7 +19,7 @@ import (
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -31,18 +31,13 @@ var configureCmd = &cobra.Command{
 	Short: "View cli configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		all := utils.GetBoolFlag(cmd, "all")
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 
 		if all {
 			allConfigs := configuration.AllConfigs()
 
 			if jsonFlag {
-				resp, err := json.Marshal(allConfigs)
-				if err != nil {
-					utils.Err(err)
-				}
-
-				fmt.Println(string(resp))
+				utils.PrintJSON(allConfigs)
 				return
 			}
 
@@ -99,12 +94,7 @@ var configureCmd = &cobra.Command{
 				confMap[scope]["key"] = value
 			}
 
-			resp, err := json.Marshal(confMap)
-			if err != nil {
-				utils.Err(err)
-			}
-
-			fmt.Println(string(resp))
+			utils.PrintJSON(confMap)
 			return
 		}
 
@@ -125,7 +115,7 @@ doppler configure get key otherkey`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 
 		scope := cmd.Flag("scope").Value.String()
@@ -172,12 +162,7 @@ doppler configure get key otherkey`,
 				}
 			}
 
-			resp, err := json.Marshal(filteredConfMap)
-			if err != nil {
-				utils.Err(err)
-			}
-
-			fmt.Println(string(resp))
+			utils.PrintJSON(filteredConfMap)
 			return
 		}
 
@@ -211,7 +196,15 @@ doppler configure set key=123 otherkey=456`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()
-		configuration.Set(scope, args)
+		options := make(map[string]string)
+		for _, option := range args {
+			arr := strings.Split(option, "=")
+			if len(arr) < 2 {
+				utils.Err(errors.New("invalid option "+option), "")
+			}
+			options[arr[0]] = arr[1]
+		}
+		configuration.Set(scope, options)
 
 		if !silent {
 			conf := configuration.Get(scope)
@@ -248,7 +241,6 @@ doppler configure unset key otherkey`,
 
 func init() {
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified	")
-	configureGetCmd.Flags().Bool("json", false, "output json")
 	configureCmd.AddCommand(configureGetCmd)
 
 	configureSetCmd.Flags().Bool("silent", false, "don't output the new config")
@@ -258,6 +250,5 @@ func init() {
 	configureCmd.AddCommand(configureUnsetCmd)
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")
-	configureCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(configureCmd)
 }

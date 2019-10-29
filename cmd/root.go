@@ -19,6 +19,7 @@ import (
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -46,8 +47,17 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	args := os.Args[1:]
+	rootCmd.ParseFlags(args)
+	if rootCmd.Flags().Changed("debug") {
+		utils.Debug = utils.GetBoolFlag(rootCmd, "debug")
+	}
+	if rootCmd.Flags().Changed("json") {
+		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
+	}
+
 	if err := rootCmd.Execute(); err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 }
 
@@ -59,9 +69,11 @@ func init() {
 	rootCmd.PersistentFlags().String("api-host", "https://staging-api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://staging-deploy.doppler.com", "deploy host")
 
-	rootCmd.PersistentFlags().Bool("enable-env", true, "support reading doppler config from the environment")
+	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read doppler config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
+	rootCmd.PersistentFlags().Bool("json", false, "output json")
+	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
 
 	rootCmd.Flags().BoolP("version", "V", false, "")
 }

@@ -18,11 +18,7 @@ package cmd
 import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -36,12 +32,12 @@ var configsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List configs",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
 
-		printConfigsInfo(configs, jsonFlag)
+		utils.PrintConfigsInfo(configs, jsonFlag)
 	},
 }
 
@@ -49,7 +45,7 @@ var configsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		config := localConfig.Config.Value
@@ -59,7 +55,7 @@ var configsGetCmd = &cobra.Command{
 
 		_, configInfo := api.GetAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config)
 
-		printConfigInfo(configInfo, jsonFlag)
+		utils.PrintConfigInfo(configInfo, jsonFlag)
 	},
 }
 
@@ -67,7 +63,7 @@ var configsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		defaults := utils.GetBoolFlag(cmd, "defaults")
 		environment := cmd.Flag("environment").Value.String()
@@ -81,7 +77,7 @@ var configsCreateCmd = &cobra.Command{
 		_, info := api.CreateAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, name, environment, defaults)
 
 		if !silent {
-			printConfigInfo(info, jsonFlag)
+			utils.PrintConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -90,7 +86,7 @@ var configsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
@@ -105,7 +101,7 @@ var configsDeleteCmd = &cobra.Command{
 
 			if !silent {
 				_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
-				printConfigsInfo(configs, jsonFlag)
+				utils.PrintConfigsInfo(configs, jsonFlag)
 			}
 		}
 	},
@@ -115,7 +111,7 @@ var configsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
@@ -128,7 +124,7 @@ var configsUpdateCmd = &cobra.Command{
 		_, info := api.UpdateAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config, name)
 
 		if !silent {
-			printConfigInfo(info, jsonFlag)
+			utils.PrintConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -137,7 +133,7 @@ var configsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
@@ -151,7 +147,7 @@ var configsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
@@ -170,7 +166,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -190,18 +186,15 @@ var configsLogsRollbackCmd = &cobra.Command{
 
 func init() {
 	configsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	configsCmd.Flags().Bool("json", false, "output json")
 
 	configsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsGetCmd.Flags().Bool("json", false, "output json")
 	configsCmd.AddCommand(configsGetCmd)
 
 	configsCreateCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().String("environment", "", "config environment")
 	configsCreateCmd.Flags().Bool("defaults", true, "populate config with environment's default secrets")
-	configsCreateCmd.Flags().Bool("json", false, "output json")
 	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsCreateCmd.MarkFlagRequired("environment")
 	configsCmd.AddCommand(configsCreateCmd)
@@ -209,69 +202,31 @@ func init() {
 	configsUpdateCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsUpdateCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	configsUpdateCmd.Flags().String("name", "", "config name")
-	configsUpdateCmd.Flags().Bool("json", false, "output json")
 	configsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsUpdateCmd.MarkFlagRequired("name")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsDeleteCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsDeleteCmd.Flags().Bool("json", false, "output json")
 	configsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
 	configsLogsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsCmd.Flags().Bool("json", false, "output json")
 	configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
 	configsLogsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsGetCmd.Flags().Bool("json", false, "output json")
 	configsLogsCmd.AddCommand(configsLogsGetCmd)
 
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
 	configsLogsRollbackCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	configsLogsRollbackCmd.Flags().String("config", "", "doppler config (e.g. dev)")
-	configsLogsRollbackCmd.Flags().Bool("json", false, "output json")
 	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
 	rootCmd.AddCommand(configsCmd)
-}
-
-func printConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	var rows [][]string
-	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt, configInfo.Environment, configInfo.Project})
-	}
-	utils.PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
-}
-
-func printConfigInfo(info models.ConfigInfo, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	utils.PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }

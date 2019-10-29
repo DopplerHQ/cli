@@ -18,10 +18,7 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/models"
 	"doppler-cli/utils"
-	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -30,12 +27,12 @@ var projectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List projects",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
 
-		printProjectsInfo(info, jsonFlag)
+		utils.PrintProjectsInfo(info, jsonFlag)
 	},
 }
 
@@ -43,7 +40,7 @@ var projectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		project := localConfig.Project.Value
@@ -53,7 +50,7 @@ var projectsGetCmd = &cobra.Command{
 
 		_, info := api.GetAPIProject(cmd, localConfig.Key.Value, project)
 
-		printProjectInfo(info, jsonFlag)
+		utils.PrintProjectInfo(info, jsonFlag)
 	},
 }
 
@@ -61,7 +58,7 @@ var projectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		description := cmd.Flag("description").Value.String()
 
@@ -74,7 +71,7 @@ var projectsCreateCmd = &cobra.Command{
 		_, info := api.CreateAPIProject(cmd, localConfig.Key.Value, name, description)
 
 		if !silent {
-			printProjectInfo(info, jsonFlag)
+			utils.PrintProjectInfo(info, jsonFlag)
 		}
 	},
 }
@@ -83,7 +80,7 @@ var projectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
@@ -98,7 +95,7 @@ var projectsDeleteCmd = &cobra.Command{
 
 			if !silent {
 				_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
-				printProjectsInfo(info, jsonFlag)
+				utils.PrintProjectsInfo(info, jsonFlag)
 			}
 		}
 	},
@@ -108,7 +105,7 @@ var projectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -123,28 +120,24 @@ var projectsUpdateCmd = &cobra.Command{
 		_, info := api.UpdateAPIProject(cmd, localConfig.Key.Value, project, name, description)
 
 		if !silent {
-			printProjectInfo(info, jsonFlag)
+			utils.PrintProjectInfo(info, jsonFlag)
 		}
 	},
 }
 
 func init() {
-	projectsGetCmd.Flags().Bool("json", false, "output json")
 	projectsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	projectsCmd.AddCommand(projectsGetCmd)
 
-	projectsCreateCmd.Flags().Bool("json", false, "output json")
 	projectsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsCreateCmd.Flags().String("name", "", "project name")
 	projectsCreateCmd.Flags().String("description", "", "project description")
 	projectsCmd.AddCommand(projectsCreateCmd)
 
-	projectsDeleteCmd.Flags().Bool("json", false, "output json")
 	projectsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
-	projectsUpdateCmd.Flags().Bool("json", false, "output json")
 	projectsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
@@ -152,39 +145,5 @@ func init() {
 	projectsUpdateCmd.MarkFlagRequired("description")
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
-	projectsCmd.Flags().Bool("json", false, "output json")
 	rootCmd.AddCommand(projectsCmd)
-}
-
-func printProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	var rows [][]string
-	for _, projectInfo := range info {
-		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
-	}
-	utils.PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
-}
-
-func printProjectInfo(info models.ProjectInfo, jsonFlag bool) {
-	if jsonFlag {
-		resp, err := json.Marshal(info)
-		if err != nil {
-			utils.Err(err)
-		}
-
-		fmt.Println(string(resp))
-		return
-	}
-
-	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	utils.PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }

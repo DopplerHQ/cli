@@ -68,7 +68,7 @@ func init() {
 func Get(scope string) ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 	scope = path.Join(scope, "/")
 	var scopedConfig ScopedConfig
@@ -116,7 +116,7 @@ func LocalConfig(cmd *cobra.Command) ScopedConfig {
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
 	// environment variables
-	if utils.GetBoolFlag(cmd, "enable-env") {
+	if !utils.GetBoolFlag(cmd, "no-read-env") {
 		key := os.Getenv("DOPPLER_API_KEY")
 		if key != "" {
 			localConfig.Key.Value = key
@@ -161,42 +161,30 @@ func AllConfigs() map[string]Config {
 }
 
 // Set a local config
-func Set(scope string, options []string) {
+func Set(scope string, options map[string]string) {
 	if scope != "*" {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "")
 		}
 	}
 
-	for _, option := range options {
-		optionArr := strings.Split(option, "=")
-		key := optionArr[0]
-		if len(optionArr) < 2 || (key != "key" && key != "project" && key != "config") {
-			utils.Err(errors.New("invalid option " + option))
-		}
-	}
-
-	for _, option := range options {
-		optionArr := strings.Split(option, "=")
-		key := optionArr[0]
-		value := optionArr[1]
-
+	for key, value := range options {
 		if key == "key" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Key = value
 			configContents[scope] = scopedConfig
-		}
-		if key == "project" {
+		} else if key == "project" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Project = value
 			configContents[scope] = scopedConfig
-		}
-		if key == "config" {
+		} else if key == "config" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Config = value
 			configContents[scope] = scopedConfig
+		} else {
+			utils.Err(errors.New("invalid option "+key), "")
 		}
 	}
 
@@ -209,13 +197,7 @@ func Unset(scope string, options []string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
-		}
-	}
-
-	for _, key := range options {
-		if key != "key" && key != "project" && key != "config" {
-			utils.Err(errors.New("invalid option " + key))
+			utils.Err(err, "")
 		}
 	}
 
@@ -228,16 +210,16 @@ func Unset(scope string, options []string) {
 			scopedConfig := configContents[scope]
 			scopedConfig.Key = ""
 			configContents[scope] = scopedConfig
-		}
-		if key == "project" {
+		} else if key == "project" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Project = ""
 			configContents[scope] = scopedConfig
-		}
-		if key == "config" {
+		} else if key == "config" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Config = ""
 			configContents[scope] = scopedConfig
+		} else {
+			utils.Err(errors.New("invalid option "+key), "")
 		}
 	}
 
@@ -252,12 +234,12 @@ func Unset(scope string, options []string) {
 func writeYAML(config map[string]Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	err = ioutil.WriteFile(yamlFile, bytes, os.FileMode(0600))
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 }
 
@@ -268,7 +250,7 @@ func exists() bool {
 func readYAML() map[string]Config {
 	fileContents, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
-		utils.Err(err)
+		utils.Err(err, "")
 	}
 
 	var config map[string]Config
