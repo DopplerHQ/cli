@@ -288,8 +288,8 @@ func IsValidConfigOption(key string) bool {
 	return key == "key" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
 }
 
-// GetConfigValue get the value of the specified key within the config
-func GetConfigValue(conf models.ScopedConfig, key string) (string, string) {
+// GetScopedConfigValue get the value of the specified key within the config
+func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string) {
 	if key == "key" {
 		return conf.Key.Value, conf.Key.Scope
 	}

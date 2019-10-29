@@ -111,7 +111,7 @@ doppler configure get key otherkey`,
 					return
 				}
 
-				value, _ := configuration.GetConfigValue(conf, arg)
+				value, _ := configuration.GetScopedConfigValue(conf, arg)
 				if sbEmpty {
 					sbEmpty = false
 				} else {
@@ -129,7 +129,7 @@ doppler configure get key otherkey`,
 			filteredConfMap := make(map[string]string)
 			for _, arg := range args {
 				if configuration.IsValidConfigOption(arg) {
-					filteredConfMap[arg], _ = configuration.GetConfigValue(conf, arg)
+					filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
 				}
 			}
 
@@ -140,7 +140,7 @@ doppler configure get key otherkey`,
 		var rows [][]string
 		for _, arg := range args {
 			if configuration.IsValidConfigOption(arg) {
-				value, scope := configuration.GetConfigValue(conf, arg)
+				value, scope := configuration.GetScopedConfigValue(conf, arg)
 				rows = append(rows, []string{arg, value, scope})
 			}
 		}
@@ -221,7 +221,7 @@ func printScopedConfigArgs(conf models.ScopedConfig, args []string) {
 	var rows [][]string
 	for _, arg := range args {
 		if configuration.IsValidConfigOption(arg) {
-			value, scope := configuration.GetConfigValue(conf, arg)
+			value, scope := configuration.GetScopedConfigValue(conf, arg)
 			rows = append(rows, []string{arg, value, scope})
 		}
 	}
