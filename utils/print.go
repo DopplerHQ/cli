@@ -250,3 +250,55 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
 	PrintTable([]string{"id", "name", "billing_email"}, rows)
 }
+
+// PrintScopedConfig print scoped config
+func PrintScopedConfig(conf configuration.ScopedConfig) {
+	var rows [][]string
+
+	if conf.Key != (configuration.Pair{}) {
+		rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
+	}
+	if conf.Project != (configuration.Pair{}) {
+		rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
+	}
+	if conf.Config != (configuration.Pair{}) {
+		rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
+	}
+	if conf.APIHost != (configuration.Pair{}) {
+		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
+	}
+	if conf.DeployHost != (configuration.Pair{}) {
+		rows = append(rows, []string{"deploy-host", conf.DeployHost.Value, conf.DeployHost.Scope})
+	}
+
+	PrintTable([]string{"name", "value", "scope"}, rows)
+}
+
+// PrintConfigs print configs
+func PrintConfigs(configs map[string]configuration.Config, jsonFlag bool) {
+	if jsonFlag {
+		PrintJSON(configs)
+		return
+	}
+
+	var rows [][]string
+	for scope, config := range configs {
+		if config.Key != "" {
+			rows = append(rows, []string{"key", config.Key, scope})
+		}
+		if config.Project != "" {
+			rows = append(rows, []string{"project", config.Project, scope})
+		}
+		if config.Config != "" {
+			rows = append(rows, []string{"config", config.Config, scope})
+		}
+		if config.APIHost != "" {
+			rows = append(rows, []string{"api-host", config.APIHost, scope})
+		}
+		if config.DeployHost != "" {
+			rows = append(rows, []string{"deploy-host", config.DeployHost, scope})
+		}
+	}
+
+	PrintTable([]string{"name", "value", "scope"}, rows)
+}

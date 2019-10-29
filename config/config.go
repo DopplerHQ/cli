@@ -266,3 +266,29 @@ func parseScope(scope string) (string, error) {
 
 	return absScope, nil
 }
+
+// IsValidConfigOption whether the specified key is a valid option
+func IsValidConfigOption(key string) bool {
+	return key == "key" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
+}
+
+// GetConfigValue get the value of the specified key within the config
+func GetConfigValue(conf ScopedConfig, key string) (string, string) {
+	if key == "key" {
+		return conf.Key.Value, conf.Key.Scope
+	}
+	if key == "project" {
+		return conf.Project.Value, conf.Project.Scope
+	}
+	if key == "config" {
+		return conf.Config.Value, conf.Config.Scope
+	}
+	if key == "api-host" {
+		return conf.APIHost.Value, conf.APIHost.Scope
+	}
+	if key == "deploy-host" {
+		return conf.DeployHost.Value, conf.DeployHost.Scope
+	}
+
+	return "", ""
+}

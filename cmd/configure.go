@@ -18,6 +18,7 @@ package cmd
 import (
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
+	"doppler-cli/models"
 	"doppler-cli/utils"
 	"errors"
 	"fmt"
@@ -35,26 +36,7 @@ var configureCmd = &cobra.Command{
 
 		if all {
 			allConfigs := configuration.AllConfigs()
-
-			if jsonFlag {
-				utils.PrintJSON(allConfigs)
-				return
-			}
-
-			var rows [][]string
-			for scope, config := range allConfigs {
-				if config.Key != "" {
-					rows = append(rows, []string{"key", config.Key, scope})
-				}
-				if config.Project != "" {
-					rows = append(rows, []string{"project", config.Project, scope})
-				}
-				if config.Config != "" {
-					rows = append(rows, []string{"config", config.Config, scope})
-				}
-			}
-
-			utils.PrintTable([]string{"name", "value", "scope"}, rows)
+			utils.PrintConfigs(allConfigs, jsonFlag)
 			return
 		}
 
@@ -98,8 +80,7 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
-		rows := [][]string{{"key", config.Key.Value, config.Key.Scope}, {"project", config.Project.Value, config.Project.Scope}, {"config", config.Config.Value, config.Config.Scope}}
-		utils.PrintTable([]string{"name", "value", "scope"}, rows)
+		utils.PrintScopedConfig(configuration.Get(scope))
 	},
 }
 
@@ -126,24 +107,18 @@ doppler configure get key otherkey`,
 			var sb strings.Builder
 
 			for _, arg := range args {
-				value := ""
-				if arg == "key" {
-					value = conf.Key.Value
-				} else if arg == "project" {
-					value = conf.Project.Value
-				} else if arg == "config" {
-					value = conf.Config.Value
+				if !configuration.IsValidConfigOption(arg) {
+					return
 				}
 
-				if value != "" {
-					if sbEmpty {
-						sbEmpty = false
-					} else {
-						sb.WriteString("\n")
-					}
-
-					sb.WriteString(value)
+				value, _ := configuration.GetConfigValue(conf, arg)
+				if sbEmpty {
+					sbEmpty = false
+				} else {
+					sb.WriteString("\n")
 				}
+
+				sb.WriteString(value)
 			}
 
 			fmt.Println(sb.String())
@@ -153,12 +128,8 @@ doppler configure get key otherkey`,
 		if jsonFlag {
 			filteredConfMap := make(map[string]string)
 			for _, arg := range args {
-				if arg == "key" {
-					filteredConfMap["key"] = conf.Key.Value
-				} else if arg == "project" {
-					filteredConfMap["project"] = conf.Project.Value
-				} else if arg == "config" {
-					filteredConfMap["config"] = conf.Config.Value
+				if configuration.IsValidConfigOption(arg) {
+					filteredConfMap[arg], _ = configuration.GetConfigValue(conf, arg)
 				}
 			}
 
@@ -168,12 +139,9 @@ doppler configure get key otherkey`,
 
 		var rows [][]string
 		for _, arg := range args {
-			if arg == "key" {
-				rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
-			} else if arg == "project" {
-				rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
-			} else if arg == "config" {
-				rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
+			if configuration.IsValidConfigOption(arg) {
+				value, scope := configuration.GetConfigValue(conf, arg)
+				rows = append(rows, []string{arg, value, scope})
 			}
 		}
 
@@ -199,7 +167,7 @@ doppler configure set key=123 otherkey=456`,
 		options := make(map[string]string)
 		for _, option := range args {
 			arr := strings.Split(option, "=")
-			if len(arr) < 2 {
+			if len(arr) < 2 || !configuration.IsValidConfigOption(arr[0]) {
 				utils.Err(errors.New("invalid option "+option), "")
 			}
 			options[arr[0]] = arr[1]
@@ -207,9 +175,7 @@ doppler configure set key=123 otherkey=456`,
 		configuration.Set(scope, options)
 
 		if !silent {
-			conf := configuration.Get(scope)
-			rows := [][]string{{"key", conf.Key.Value, conf.Key.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
-			utils.PrintTable([]string{"name", "value", "scope"}, rows)
+			utils.PrintScopedConfig(configuration.Get(scope))
 		}
 	},
 }
@@ -232,9 +198,7 @@ doppler configure unset key otherkey`,
 		configuration.Unset(scope, args)
 
 		if !silent {
-			conf := configuration.Get(scope)
-			rows := [][]string{{"key", conf.Key.Value, conf.Key.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
-			utils.PrintTable([]string{"name", "value", "scope"}, rows)
+			utils.PrintScopedConfig(configuration.Get(scope))
 		}
 	},
 }
@@ -251,4 +215,16 @@ func init() {
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")
 	rootCmd.AddCommand(configureCmd)
+}
+
+func printScopedConfigArgs(conf models.ScopedConfig, args []string) {
+	var rows [][]string
+	for _, arg := range args {
+		if configuration.IsValidConfigOption(arg) {
+			value, scope := configuration.GetConfigValue(conf, arg)
+			rows = append(rows, []string{arg, value, scope})
+		}
+	}
+
+	utils.PrintTable([]string{"name", "value", "scope"}, rows)
 }
