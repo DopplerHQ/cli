@@ -187,19 +187,9 @@ func Set(scope string, options map[string]string) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
 
-		scopedConfig := configContents[scope]
-		if key == "key" {
-			scopedConfig.Key = value
-		} else if key == "project" {
-			scopedConfig.Project = value
-		} else if key == "config" {
-			scopedConfig.Config = value
-		} else if key == "api-host" {
-			scopedConfig.APIHost = value
-		} else if key == "deploy-host" {
-			scopedConfig.DeployHost = value
-		}
-		configContents[scope] = scopedConfig
+		config := configContents[scope]
+		SetConfigValue(&config, key, value)
+		configContents[scope] = config
 	}
 
 	writeYAML(configContents)
@@ -224,19 +214,9 @@ func Unset(scope string, options []string) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
 
-		scopedConfig := configContents[scope]
-		if key == "key" {
-			scopedConfig.Key = ""
-		} else if key == "project" {
-			scopedConfig.Project = ""
-		} else if key == "config" {
-			scopedConfig.Config = ""
-		} else if key == "api-host" {
-			scopedConfig.APIHost = ""
-		} else if key == "deploy-host" {
-			scopedConfig.DeployHost = ""
-		}
-		configContents[scope] = scopedConfig
+		config := configContents[scope]
+		SetConfigValue(&config, key, "")
+		configContents[scope] = config
 	}
 
 	if configContents[scope] == (models.Config{}) {
@@ -307,4 +287,19 @@ func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string)
 	}
 
 	return "", ""
+}
+
+// SetConfigValue set the value for the specified key in the config
+func SetConfigValue(conf *models.Config, key string, value string) {
+	if key == "key" {
+		(*conf).Key = value
+	} else if key == "project" {
+		(*conf).Project = value
+	} else if key == "config" {
+		(*conf).Config = value
+	} else if key == "api-host" {
+		(*conf).APIHost = value
+	} else if key == "deploy-host" {
+		(*conf).DeployHost = value
+	}
 }
