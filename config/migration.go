@@ -16,6 +16,7 @@ limitations under the License.
 package config
 
 import (
+	"doppler-cli/models"
 	utils "doppler-cli/utils"
 	"encoding/json"
 	"io/ioutil"
@@ -40,11 +41,11 @@ func migrateJSONToYaml() {
 	writeYAML(newConfig)
 }
 
-func convertOldConfig(oldConfig map[string]oldConfig) map[string]Config {
-	config := make(map[string]Config)
+func convertOldConfig(oldConfig map[string]oldConfig) map[string]models.Config {
+	config := make(map[string]models.Config)
 
 	for key, val := range oldConfig {
-		config[key] = Config{Project: val.Pipeline, Config: val.Environment, Key: val.Key}
+		config[key] = models.Config{Project: val.Pipeline, Config: val.Environment, Key: val.Key}
 	}
 
 	return config

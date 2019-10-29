@@ -16,6 +16,7 @@ limitations under the License.
 package config
 
 import (
+	"doppler-cli/models"
 	utils "doppler-cli/utils"
 	"errors"
 	"io/ioutil"
@@ -28,35 +29,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config options
-type Config struct {
-	Project string `json:"project"`
-	Config  string `json:"config"`
-	Key     string `json:"key"`
-}
-
-// ScopedConfig options with their scope
-type ScopedConfig struct {
-	Project Pair `json:"project"`
-	Config  Pair `json:"config"`
-	Key     Pair `json:"key"`
-}
-
-type Pair struct {
-	Value string `json:"value"`
-	Scope string `json:"scope"`
-}
-
 var yamlFile = utils.Home() + "/.doppler.yaml"
 
-var configContents map[string]Config
+var configContents map[string]models.Config
 
 func init() {
 	if !exists() {
 		if jsonExists() {
 			migrateJSONToYaml()
 		} else {
-			var blankConfig map[string]Config
+			var blankConfig map[string]models.Config
 			writeYAML(blankConfig)
 		}
 	}
@@ -65,13 +47,13 @@ func init() {
 }
 
 // Get the config at the specified scope
-func Get(scope string) ScopedConfig {
+func Get(scope string) models.ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
 		utils.Err(err, "")
 	}
 	scope = path.Join(scope, "/")
-	var scopedConfig ScopedConfig
+	var scopedConfig models.ScopedConfig
 
 	for confScope, conf := range configContents {
 		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
@@ -80,8 +62,8 @@ func Get(scope string) ScopedConfig {
 		}
 
 		if conf.Key != "" {
-			if scopedConfig.Key == (Pair{}) {
-				scopedConfig.Key = Pair{Value: conf.Key, Scope: confScope}
+			if scopedConfig.Key == (models.Pair{}) {
+				scopedConfig.Key = models.Pair{Value: conf.Key, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Key.Scope) {
 				scopedConfig.Key.Value = conf.Key
 				scopedConfig.Key.Scope = confScope
@@ -89,8 +71,8 @@ func Get(scope string) ScopedConfig {
 		}
 
 		if conf.Project != "" {
-			if scopedConfig.Project == (Pair{}) {
-				scopedConfig.Project = Pair{Value: conf.Project, Scope: confScope}
+			if scopedConfig.Project == (models.Pair{}) {
+				scopedConfig.Project = models.Pair{Value: conf.Project, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
 				scopedConfig.Project.Scope = confScope
@@ -98,8 +80,8 @@ func Get(scope string) ScopedConfig {
 		}
 
 		if conf.Config != "" {
-			if scopedConfig.Config == (Pair{}) {
-				scopedConfig.Config = Pair{Value: conf.Config, Scope: confScope}
+			if scopedConfig.Config == (models.Pair{}) {
+				scopedConfig.Config = models.Pair{Value: conf.Config, Scope: confScope}
 			} else if len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
 				scopedConfig.Config.Scope = confScope
@@ -111,7 +93,7 @@ func Get(scope string) ScopedConfig {
 }
 
 // LocalConfig retrieves the config for the scoped directory
-func LocalConfig(cmd *cobra.Command) ScopedConfig {
+func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 	// cli config file (lowest priority)
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
@@ -156,7 +138,7 @@ func LocalConfig(cmd *cobra.Command) ScopedConfig {
 }
 
 // AllConfigs get all configs we know about
-func AllConfigs() map[string]Config {
+func AllConfigs() map[string]models.Config {
 	return configContents
 }
 
@@ -201,7 +183,7 @@ func Unset(scope string, options []string) {
 		}
 	}
 
-	if configContents[scope] == (Config{}) {
+	if configContents[scope] == (models.Config{}) {
 		return
 	}
 
@@ -223,7 +205,7 @@ func Unset(scope string, options []string) {
 		}
 	}
 
-	if configContents[scope] == (Config{}) {
+	if configContents[scope] == (models.Config{}) {
 		delete(configContents, scope)
 	}
 
@@ -231,7 +213,7 @@ func Unset(scope string, options []string) {
 }
 
 // Write config to ~/.doppler.yaml
-func writeYAML(config map[string]Config) {
+func writeYAML(config map[string]models.Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		utils.Err(err, "")
@@ -247,13 +229,13 @@ func exists() bool {
 	return utils.Exists(yamlFile)
 }
 
-func readYAML() map[string]Config {
+func readYAML() map[string]models.Config {
 	fileContents, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
 		utils.Err(err, "")
 	}
 
-	var config map[string]Config
+	var config map[string]models.Config
 	yaml.Unmarshal(fileContents, &config)
 	return config
 }
@@ -273,7 +255,7 @@ func IsValidConfigOption(key string) bool {
 }
 
 // GetConfigValue get the value of the specified key within the config
-func GetConfigValue(conf ScopedConfig, key string) (string, string) {
+func GetConfigValue(conf models.ScopedConfig, key string) (string, string) {
 	if key == "key" {
 		return conf.Key.Value, conf.Key.Scope
 	}

@@ -43,37 +43,37 @@ var configureCmd = &cobra.Command{
 		scope := cmd.Flag("scope").Value.String()
 		config := configuration.Get(scope)
 
+		storeInMap := func(confMap *map[string]map[string]string, key string, pair models.Pair) {
+			scope := pair.Scope
+			value := pair.Value
+
+			if (*confMap)[scope] == nil {
+				(*confMap)[scope] = make(map[string]string)
+			}
+			(*confMap)[scope][key] = value
+		}
+
 		if jsonFlag {
 			confMap := make(map[string]map[string]string)
 
-			if config.Config != (configuration.Pair{}) {
-				scope := config.Config.Scope
-				value := config.Config.Value
-
-				if confMap[scope] == nil {
-					confMap[scope] = make(map[string]string)
-				}
-				confMap[scope]["config"] = value
+			if config.Key != (models.Pair{}) {
+				storeInMap(&confMap, "key", config.Key)
 			}
 
-			if config.Project != (configuration.Pair{}) {
-				scope := config.Project.Scope
-				value := config.Project.Value
-
-				if confMap[scope] == nil {
-					confMap[scope] = make(map[string]string)
-				}
-				confMap[scope]["project"] = value
+			if config.Project != (models.Pair{}) {
+				storeInMap(&confMap, "project", config.Project)
 			}
 
-			if config.Key != (configuration.Pair{}) {
-				scope := config.Key.Scope
-				value := config.Key.Value
+			if config.Config != (models.Pair{}) {
+				storeInMap(&confMap, "config", config.Config)
+			}
 
-				if confMap[scope] == nil {
-					confMap[scope] = make(map[string]string)
-				}
-				confMap[scope]["key"] = value
+			if config.APIHost != (models.Pair{}) {
+				storeInMap(&confMap, "api-host", config.APIHost)
+			}
+
+			if config.DeployHost != (models.Pair{}) {
+				storeInMap(&confMap, "deploy-host", config.DeployHost)
 			}
 
 			utils.PrintJSON(confMap)

@@ -252,22 +252,22 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 }
 
 // PrintScopedConfig print scoped config
-func PrintScopedConfig(conf configuration.ScopedConfig) {
+func PrintScopedConfig(conf models.ScopedConfig) {
 	var rows [][]string
 
-	if conf.Key != (configuration.Pair{}) {
+	if conf.Key != (models.Pair{}) {
 		rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
 	}
-	if conf.Project != (configuration.Pair{}) {
+	if conf.Project != (models.Pair{}) {
 		rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
 	}
-	if conf.Config != (configuration.Pair{}) {
+	if conf.Config != (models.Pair{}) {
 		rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
 	}
-	if conf.APIHost != (configuration.Pair{}) {
+	if conf.APIHost != (models.Pair{}) {
 		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
 	}
-	if conf.DeployHost != (configuration.Pair{}) {
+	if conf.DeployHost != (models.Pair{}) {
 		rows = append(rows, []string{"deploy-host", conf.DeployHost.Value, conf.DeployHost.Scope})
 	}
 
@@ -275,7 +275,7 @@ func PrintScopedConfig(conf configuration.ScopedConfig) {
 }
 
 // PrintConfigs print configs
-func PrintConfigs(configs map[string]configuration.Config, jsonFlag bool) {
+func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 	if jsonFlag {
 		PrintJSON(configs)
 		return
