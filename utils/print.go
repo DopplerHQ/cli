@@ -113,7 +113,8 @@ func PrintConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt, configInfo.Environment, configInfo.Project})
+		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt,
+			configInfo.Environment, configInfo.Project})
 	}
 	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }
@@ -127,7 +128,8 @@ func PrintEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, environmentInfo := range info {
-		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt, environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
+		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
+			environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
 	}
 	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
