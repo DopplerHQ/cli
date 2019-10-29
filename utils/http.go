@@ -53,7 +53,7 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 
 	body, err := performRequest(req, params)
 	if err != nil {
-		return nil, err
+		return body, err
 	}
 
 	return body, nil
@@ -71,7 +71,7 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 
 	body, err = performRequest(req, params)
 	if err != nil {
-		return nil, err
+		return body, err
 	}
 
 	return body, nil
@@ -89,36 +89,39 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 
 	body, err := performRequest(req, params)
 	if err != nil {
-		return nil, err
+		return body, err
 	}
 
 	return body, nil
 }
 
 func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
+	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", ProgramVersion)
 	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 
+	// set url query parameters
 	query := req.URL.Query()
 	for _, param := range params {
 		query.Add(param.Key, param.Value)
 	}
 	req.URL.RawQuery = query.Encode()
 
+	// set timeout and tls config
 	client := &http.Client{Timeout: 10 * time.Second}
 	if Insecure {
-		tr := &http.Transport{
+		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
-		client.Transport = tr
 	}
 
-	var res *http.Response
-	res = nil
-	err := retry(5, 100*time.Millisecond, func() error {
+	var response *http.Response
+	response = nil
+
+	requestErr := retry(5, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
 			if Debug {
@@ -127,51 +130,62 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 			return StopRetry{errors.New("Unable to reach host " + req.Host + ". Please ensure you are connected to the internet.")}
 		}
 
-		// TODO make status code handling more granular
-		if resp.StatusCode != 200 {
-			if Debug && !JSON {
-				requestID := resp.Header.Get("x-request-id")
-				fmt.Println("Request ID:", requestID)
-			}
+		response = resp
 
-			var response errorResponse
-			var body []byte
-			err = json.Unmarshal(body, &response)
-			if err != nil {
-				return err
-			}
-
-			var sb strings.Builder
-			for i, message := range response.Messages {
-				if i != 0 {
-					sb.WriteString("\n")
-				}
-				sb.WriteString(message)
-			}
-
-			return errors.New(sb.String())
+		if Debug {
+			fmt.Println("Request ID:", resp.Header.Get("x-request-id"))
 		}
 
-		res = resp
-		return nil
+		if isSuccess(resp.StatusCode) {
+			return nil
+		}
+
+		if isRetry(resp.StatusCode) {
+			return errors.New("Request failed")
+		}
+
+		// we can't recover from this error code; accept defeat
+		return StopRetry{errors.New("Request failed")}
 	})
 
-	if res != nil {
-		defer res.Body.Close()
+	if requestErr != nil && response == nil {
+		return nil, requestErr
 	}
 
+	defer response.Body.Close()
+
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	// success
+	if requestErr == nil {
+		return body, nil
+	}
+
+	// print the response body error messages
+	var errResponse errorResponse
+	err = json.Unmarshal(body, &errResponse)
 	if err != nil {
-		if Debug && !JSON {
-			requestID := res.Header.Get("x-request-id")
-			fmt.Println("Request ID:", requestID)
+		return nil, err
+	}
+
+	var sb strings.Builder
+	for i, message := range errResponse.Messages {
+		if i != 0 {
+			sb.WriteString("\n")
 		}
-		return nil, err
+		sb.WriteString(message)
 	}
 
-	return body, nil
+	return body, errors.New(sb.String())
+}
+
+func isSuccess(statusCode int) bool {
+	return statusCode >= 200 && statusCode <= 299
+}
+
+func isRetry(statusCode int) bool {
+	return (statusCode == 429) || (statusCode >= 100 && statusCode <= 199) || (statusCode >= 500 && statusCode <= 599)
 }
