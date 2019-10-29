@@ -68,7 +68,7 @@ func SetAPISecrets(cmd *cobra.Command, apiKey string, project string, config str
 	host := cmd.Flag("api-host").Value.String()
 	response, err := utils.PostRequest(host, "/v2/variables", params, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to fetch secrets")
+		utils.Err(err, "Unable to set secrets")
 	}
 
 	var result map[string]interface{}
