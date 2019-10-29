@@ -18,7 +18,6 @@ package cmd
 import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/models"
 	"doppler-cli/utils"
 
 	"github.com/spf13/cobra"
@@ -33,7 +32,7 @@ var projectsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
 
-		printProjectsInfo(info, jsonFlag)
+		utils.PrintProjectsInfo(info, jsonFlag)
 	},
 }
 
@@ -51,7 +50,7 @@ var projectsGetCmd = &cobra.Command{
 
 		_, info := api.GetAPIProject(cmd, localConfig.Key.Value, project)
 
-		printProjectInfo(info, jsonFlag)
+		utils.PrintProjectInfo(info, jsonFlag)
 	},
 }
 
@@ -72,7 +71,7 @@ var projectsCreateCmd = &cobra.Command{
 		_, info := api.CreateAPIProject(cmd, localConfig.Key.Value, name, description)
 
 		if !silent {
-			printProjectInfo(info, jsonFlag)
+			utils.PrintProjectInfo(info, jsonFlag)
 		}
 	},
 }
@@ -96,7 +95,7 @@ var projectsDeleteCmd = &cobra.Command{
 
 			if !silent {
 				_, info := api.GetAPIProjects(cmd, localConfig.Key.Value)
-				printProjectsInfo(info, jsonFlag)
+				utils.PrintProjectsInfo(info, jsonFlag)
 			}
 		}
 	},
@@ -121,7 +120,7 @@ var projectsUpdateCmd = &cobra.Command{
 		_, info := api.UpdateAPIProject(cmd, localConfig.Key.Value, project, name, description)
 
 		if !silent {
-			printProjectInfo(info, jsonFlag)
+			utils.PrintProjectInfo(info, jsonFlag)
 		}
 	},
 }
@@ -147,27 +146,4 @@ func init() {
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
 	rootCmd.AddCommand(projectsCmd)
-}
-
-func printProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	var rows [][]string
-	for _, projectInfo := range info {
-		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
-	}
-	utils.PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
-}
-
-func printProjectInfo(info models.ProjectInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	utils.PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }

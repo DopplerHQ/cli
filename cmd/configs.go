@@ -18,9 +18,7 @@ package cmd
 import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
-	"doppler-cli/models"
 	"doppler-cli/utils"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -39,7 +37,7 @@ var configsCmd = &cobra.Command{
 
 		_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
 
-		printConfigsInfo(configs, jsonFlag)
+		utils.PrintConfigsInfo(configs, jsonFlag)
 	},
 }
 
@@ -57,7 +55,7 @@ var configsGetCmd = &cobra.Command{
 
 		_, configInfo := api.GetAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config)
 
-		printConfigInfo(configInfo, jsonFlag)
+		utils.PrintConfigInfo(configInfo, jsonFlag)
 	},
 }
 
@@ -79,7 +77,7 @@ var configsCreateCmd = &cobra.Command{
 		_, info := api.CreateAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, name, environment, defaults)
 
 		if !silent {
-			printConfigInfo(info, jsonFlag)
+			utils.PrintConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -103,7 +101,7 @@ var configsDeleteCmd = &cobra.Command{
 
 			if !silent {
 				_, configs := api.GetAPIConfigs(cmd, localConfig.Key.Value, localConfig.Project.Value)
-				printConfigsInfo(configs, jsonFlag)
+				utils.PrintConfigsInfo(configs, jsonFlag)
 			}
 		}
 	},
@@ -126,7 +124,7 @@ var configsUpdateCmd = &cobra.Command{
 		_, info := api.UpdateAPIConfig(cmd, localConfig.Key.Value, localConfig.Project.Value, config, name)
 
 		if !silent {
-			printConfigInfo(info, jsonFlag)
+			utils.PrintConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -231,27 +229,4 @@ func init() {
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
 	rootCmd.AddCommand(configsCmd)
-}
-
-func printConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	var rows [][]string
-	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt, configInfo.Environment, configInfo.Project})
-	}
-	utils.PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
-}
-
-func printConfigInfo(info models.ConfigInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	utils.PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }

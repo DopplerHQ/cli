@@ -19,11 +19,8 @@ import (
 	"doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
-	"doppler-cli/models"
 	"doppler-cli/utils"
-	"fmt"
 	"io/ioutil"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -45,7 +42,7 @@ var secretsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
-		printSecrets(secrets, []string{}, jsonFlag, plain, raw)
+		utils.PrintSecrets(secrets, []string{}, jsonFlag, plain, raw)
 	},
 }
 
@@ -68,7 +65,7 @@ doppler secrets get api_key crypto_key`,
 		localConfig := configuration.LocalConfig(cmd)
 		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
-		printSecrets(secrets, args, jsonFlag, plain, raw)
+		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
 	},
 }
 
@@ -105,7 +102,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 		if !silent {
-			printSecrets(response, keys, jsonFlag, plain, raw)
+			utils.PrintSecrets(response, keys, jsonFlag, plain, raw)
 		}
 	},
 }
@@ -138,7 +135,7 @@ doppler secrets delete api_key crypto_key`,
 			_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 			if !silent {
-				printSecrets(response, []string{}, jsonFlag, plain, raw)
+				utils.PrintSecrets(response, []string{}, jsonFlag, plain, raw)
 			}
 		}
 	},
@@ -202,74 +199,4 @@ func init() {
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
 	rootCmd.AddCommand(secretsCmd)
-}
-
-func printSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
-	if len(secretsToPrint) == 0 {
-		for name := range secrets {
-			secretsToPrint = append(secretsToPrint, name)
-		}
-		sort.Strings(secretsToPrint)
-	}
-
-	if jsonFlag {
-		secretsMap := make(map[string]map[string]string)
-		for _, name := range secretsToPrint {
-			if secrets[name] != (models.ComputedSecret{}) {
-				secretsMap[name] = make(map[string]string)
-				secretsMap[name]["computed"] = secrets[name].ComputedValue
-				if raw {
-					secretsMap[name]["raw"] = secrets[name].RawValue
-				}
-			}
-		}
-
-		utils.PrintJSON(secretsMap)
-		return
-	}
-
-	var matchedSecrets []models.ComputedSecret
-	for _, name := range secretsToPrint {
-		if secrets[name] != (models.ComputedSecret{}) {
-			matchedSecrets = append(matchedSecrets, secrets[name])
-		}
-	}
-
-	if plain {
-		sbEmpty := true
-		var sb strings.Builder
-		for _, secret := range matchedSecrets {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
-			if raw {
-				sb.WriteString(secret.RawValue)
-			} else {
-				sb.WriteString(secret.ComputedValue)
-			}
-		}
-
-		fmt.Println(sb.String())
-		return
-	}
-
-	headers := []string{"name", "value"}
-	if raw {
-		headers = append(headers, "raw")
-	}
-
-	var rows [][]string
-	for _, secret := range matchedSecrets {
-		row := []string{secret.Name, secret.ComputedValue}
-		if raw {
-			row = append(row, secret.RawValue)
-		}
-
-		rows = append(rows, row)
-	}
-
-	utils.PrintTable(headers, rows)
 }

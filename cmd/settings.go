@@ -34,7 +34,7 @@ var settingsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		_, info := api.GetAPIWorkplaceSettings(cmd, localConfig.Key.Value)
 
-		printSettings(info, jsonFlag)
+		utils.PrintSettings(info, jsonFlag)
 	},
 }
 
@@ -58,7 +58,7 @@ var settingsUpdateCmd = &cobra.Command{
 		_, info := api.SetAPIWorkplaceSettings(cmd, localConfig.Key.Value, settings)
 
 		if !silent {
-			printSettings(info, jsonFlag)
+			utils.PrintSettings(info, jsonFlag)
 		}
 	},
 }
@@ -70,14 +70,4 @@ func init() {
 	settingsCmd.AddCommand(settingsUpdateCmd)
 
 	rootCmd.AddCommand(settingsCmd)
-}
-
-func printSettings(settings models.WorkplaceSettings, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(settings)
-		return
-	}
-
-	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	utils.PrintTable([]string{"id", "name", "billing_email"}, rows)
 }

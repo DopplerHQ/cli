@@ -19,9 +19,7 @@ import (
 	api "doppler-cli/api"
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
-	"doppler-cli/models"
 	"doppler-cli/utils"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -40,7 +38,7 @@ var environmentsCmd = &cobra.Command{
 
 		_, info := api.GetAPIEnvironments(cmd, localConfig.Key.Value, project)
 
-		printEnvironmentsInfo(info, jsonFlag)
+		utils.PrintEnvironmentsInfo(info, jsonFlag)
 	},
 }
 
@@ -58,7 +56,7 @@ var environmentsGetCmd = &cobra.Command{
 
 		_, info := api.GetAPIEnvironment(cmd, localConfig.Key.Value, localConfig.Project.Value, environment)
 
-		printEnvironmentInfo(info, jsonFlag)
+		utils.PrintEnvironmentInfo(info, jsonFlag)
 	},
 }
 
@@ -67,27 +65,4 @@ func init() {
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
 	rootCmd.AddCommand(environmentsCmd)
-}
-
-func printEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	var rows [][]string
-	for _, environmentInfo := range info {
-		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt, environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
-	}
-	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
-}
-
-func printEnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
-	if jsonFlag {
-		utils.PrintJSON(info)
-		return
-	}
-
-	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
-	utils.PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
