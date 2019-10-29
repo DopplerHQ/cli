@@ -12,6 +12,8 @@ jobs:
     - name: Run a one-line script
       run: echo Hello, world!
     - name: GoReleaser Action
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       uses: goreleaser/goreleaser-action@v0.1.0
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
