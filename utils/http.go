@@ -17,6 +17,7 @@ package utils
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,6 +38,9 @@ type errorResponse struct {
 	Success  bool
 }
 
+// Insecure whether we should support https connections without a valid cert
+var Insecure = false
+
 // GetRequest perform HTTP GET
 func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
@@ -46,48 +50,10 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 	}
 
 	req.Header.Set("api-key", apiKey)
-	req.Header.Set("client-sdk", "go-cli")
-	req.Header.Set("client-version", ProgramVersion)
-	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
-	req.Header.Set("Accept", "application/json")
 
-	query := req.URL.Query()
-	for _, param := range params {
-		query.Add(param.Key, param.Value)
-	}
-	req.URL.RawQuery = query.Encode()
-
-	// tr := &http.Transport{
-	// 	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	// }
-	// client := &http.Client{Transport: tr}
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	body, err := performRequest(req, params)
 	if err != nil {
 		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		var response errorResponse
-		err = json.Unmarshal(body, &response)
-		if err != nil {
-			return nil, err
-		}
-
-		var sb strings.Builder
-		for i, message := range response.Messages {
-			if i != 0 {
-				sb.WriteString("\n")
-			}
-			sb.WriteString(message)
-		}
-
-		return nil, errors.New(sb.String())
 	}
 
 	return body, nil
@@ -102,47 +68,10 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 	}
 
 	req.Header.Set("api-key", apiKey)
-	req.Header.Set("client-sdk", "go-cli")
-	req.Header.Set("client-version", ProgramVersion)
-	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
 
-	query := req.URL.Query()
-	for _, param := range params {
-		query.Add(param.Key, param.Value)
-	}
-	req.URL.RawQuery = query.Encode()
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	body, err = performRequest(req, params)
 	if err != nil {
 		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		var response errorResponse
-		err = json.Unmarshal(body, &response)
-		if err != nil {
-			return nil, err
-		}
-
-		var sb strings.Builder
-		for i, message := range response.Messages {
-			if i != 0 {
-				sb.WriteString("\n")
-			}
-			sb.WriteString(message)
-		}
-
-		return nil, errors.New(sb.String())
 	}
 
 	return body, nil
@@ -157,6 +86,16 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 	}
 
 	req.Header.Set("api-key", apiKey)
+
+	body, err := performRequest(req, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", ProgramVersion)
 	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
@@ -170,34 +109,68 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 	req.URL.RawQuery = query.Encode()
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	if Insecure {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client.Transport = tr
 	}
 
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		var response errorResponse
-		err = json.Unmarshal(body, &response)
+	var res *http.Response
+	res = nil
+	err := retry(5, 100*time.Millisecond, func() error {
+		resp, err := client.Do(req)
 		if err != nil {
-			return nil, err
-		}
-
-		var sb strings.Builder
-		for i, message := range response.Messages {
-			if i != 0 {
-				sb.WriteString("\n")
+			if Debug {
+				fmt.Println(err)
 			}
-			sb.WriteString(message)
+			return StopRetry{errors.New("Unable to reach host " + req.Host + ". Please ensure you are connected to the internet.")}
 		}
 
-		return nil, errors.New(sb.String())
+		// TODO make status code handling more granular
+		if resp.StatusCode != 200 {
+			if Debug && !JSON {
+				requestID := resp.Header.Get("x-request-id")
+				fmt.Println("Request ID:", requestID)
+			}
+
+			var response errorResponse
+			var body []byte
+			err = json.Unmarshal(body, &response)
+			if err != nil {
+				return err
+			}
+
+			var sb strings.Builder
+			for i, message := range response.Messages {
+				if i != 0 {
+					sb.WriteString("\n")
+				}
+				sb.WriteString(message)
+			}
+
+			return errors.New(sb.String())
+		}
+
+		res = resp
+		return nil
+	})
+
+	if res != nil {
+		defer res.Body.Close()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		if Debug && !JSON {
+			requestID := res.Header.Get("x-request-id")
+			fmt.Println("Request ID:", requestID)
+		}
+		return nil, err
 	}
 
 	return body, nil
