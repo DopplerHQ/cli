@@ -62,29 +62,37 @@ func Get(scope string) models.ScopedConfig {
 		}
 
 		if conf.Key != "" {
-			if scopedConfig.Key == (models.Pair{}) {
-				scopedConfig.Key = models.Pair{Value: conf.Key, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Key.Scope) {
+			if scopedConfig.Key == (models.Pair{}) || len(confScope) > len(scopedConfig.Key.Scope) {
 				scopedConfig.Key.Value = conf.Key
 				scopedConfig.Key.Scope = confScope
 			}
 		}
 
 		if conf.Project != "" {
-			if scopedConfig.Project == (models.Pair{}) {
-				scopedConfig.Project = models.Pair{Value: conf.Project, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Project.Scope) {
+			if scopedConfig.Project == (models.Pair{}) || len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
 				scopedConfig.Project.Scope = confScope
 			}
 		}
 
 		if conf.Config != "" {
-			if scopedConfig.Config == (models.Pair{}) {
-				scopedConfig.Config = models.Pair{Value: conf.Config, Scope: confScope}
-			} else if len(confScope) > len(scopedConfig.Config.Scope) {
+			if scopedConfig.Config == (models.Pair{}) || len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
 				scopedConfig.Config.Scope = confScope
+			}
+		}
+
+		if conf.APIHost != "" {
+			if scopedConfig.APIHost == (models.Pair{}) || len(confScope) > len(scopedConfig.APIHost.Scope) {
+				scopedConfig.APIHost.Value = conf.APIHost
+				scopedConfig.APIHost.Scope = confScope
+			}
+		}
+
+		if conf.DeployHost != "" {
+			if scopedConfig.DeployHost == (models.Pair{}) || len(confScope) > len(scopedConfig.DeployHost.Scope) {
+				scopedConfig.DeployHost.Value = conf.DeployHost
+				scopedConfig.DeployHost.Scope = confScope
 			}
 		}
 	}
@@ -116,22 +124,44 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.Config.Value = config
 			localConfig.Config.Scope = ""
 		}
+
+		apiHost := os.Getenv("DOPPLER_API_HOST")
+		if apiHost != "" {
+			localConfig.APIHost.Value = apiHost
+			localConfig.APIHost.Scope = ""
+		}
+
+		deployHost := os.Getenv("DOPPLER_DEPLOY_HOST")
+		if deployHost != "" {
+			localConfig.DeployHost.Value = deployHost
+			localConfig.DeployHost.Scope = ""
+		}
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("key") {
+	if cmd.Flags().Changed("key") || localConfig.Key.Value == "" {
 		localConfig.Key.Value = cmd.Flag("key").Value.String()
 		localConfig.Key.Scope = ""
 	}
 
-	if cmd.Flags().Changed("project") {
+	if cmd.Flags().Changed("project") || localConfig.Project.Value == "" {
 		localConfig.Project.Value = cmd.Flag("project").Value.String()
 		localConfig.Project.Scope = ""
 	}
 
-	if cmd.Flags().Changed("config") {
+	if cmd.Flags().Changed("config") || localConfig.Config.Value == "" {
 		localConfig.Config.Value = cmd.Flag("config").Value.String()
 		localConfig.Config.Scope = ""
+	}
+
+	if cmd.Flags().Changed("api-host") || localConfig.APIHost.Value == "" {
+		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
+		localConfig.APIHost.Scope = ""
+	}
+
+	if cmd.Flags().Changed("deploy-host") || localConfig.DeployHost.Value == "" {
+		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
+		localConfig.DeployHost.Scope = ""
 	}
 
 	return localConfig
@@ -153,21 +183,23 @@ func Set(scope string, options map[string]string) {
 	}
 
 	for key, value := range options {
-		if key == "key" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Key = value
-			configContents[scope] = scopedConfig
-		} else if key == "project" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Project = value
-			configContents[scope] = scopedConfig
-		} else if key == "config" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Config = value
-			configContents[scope] = scopedConfig
-		} else {
+		if !IsValidConfigOption(key) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
+
+		scopedConfig := configContents[scope]
+		if key == "key" {
+			scopedConfig.Key = value
+		} else if key == "project" {
+			scopedConfig.Project = value
+		} else if key == "config" {
+			scopedConfig.Config = value
+		} else if key == "api-host" {
+			scopedConfig.APIHost = value
+		} else if key == "deploy-host" {
+			scopedConfig.DeployHost = value
+		}
+		configContents[scope] = scopedConfig
 	}
 
 	writeYAML(configContents)
@@ -188,21 +220,23 @@ func Unset(scope string, options []string) {
 	}
 
 	for _, key := range options {
-		if key == "key" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Key = ""
-			configContents[scope] = scopedConfig
-		} else if key == "project" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Project = ""
-			configContents[scope] = scopedConfig
-		} else if key == "config" {
-			scopedConfig := configContents[scope]
-			scopedConfig.Config = ""
-			configContents[scope] = scopedConfig
-		} else {
+		if !IsValidConfigOption(key) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
+
+		scopedConfig := configContents[scope]
+		if key == "key" {
+			scopedConfig.Key = ""
+		} else if key == "project" {
+			scopedConfig.Project = ""
+		} else if key == "config" {
+			scopedConfig.Config = ""
+		} else if key == "api-host" {
+			scopedConfig.APIHost = ""
+		} else if key == "deploy-host" {
+			scopedConfig.DeployHost = ""
+		}
+		configContents[scope] = scopedConfig
 	}
 
 	if configContents[scope] == (models.Config{}) {

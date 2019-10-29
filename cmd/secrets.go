@@ -40,7 +40,7 @@ var secretsCmd = &cobra.Command{
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		utils.PrintSecrets(secrets, []string{}, jsonFlag, plain, raw)
 	},
@@ -63,7 +63,7 @@ doppler secrets get api_key crypto_key`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
 	},
@@ -99,7 +99,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+		_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 		if !silent {
 			utils.PrintSecrets(response, keys, jsonFlag, plain, raw)
@@ -132,7 +132,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			localConfig := configuration.LocalConfig(cmd)
-			_, response := api.SetAPISecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+			_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 			if !silent {
 				utils.PrintSecrets(response, []string{}, jsonFlag, plain, raw)
@@ -157,7 +157,7 @@ doppler secrets download /root/test.env`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body := api.DownloadSecrets(cmd, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {

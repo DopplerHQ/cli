@@ -31,7 +31,7 @@ var activityCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
-		_, activity := api.GetAPIActivityLogs(cmd, localConfig.Key.Value)
+		_, activity := api.GetAPIActivityLogs(cmd, localConfig.APIHost.Value, localConfig.Key.Value)
 
 		utils.PrintLogs(activity, number, jsonFlag)
 	},
@@ -49,7 +49,7 @@ var activityGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		_, activity := api.GetAPIActivityLog(cmd, localConfig.Key.Value, log)
+		_, activity := api.GetAPIActivityLog(cmd, localConfig.APIHost.Value, localConfig.Key.Value, log)
 
 		utils.PrintLog(activity, jsonFlag)
 	},

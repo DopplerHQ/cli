@@ -71,9 +71,8 @@ func init() {
 	// cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().String("key", "", "doppler api key")
-	// TODO support setting api-host and deploy-host in config
-	rootCmd.PersistentFlags().String("api-host", "https://staging-api.doppler.com", "api host")
-	rootCmd.PersistentFlags().String("deploy-host", "https://staging-deploy.doppler.com", "deploy host")
+	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
+	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
 	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections lacking a valid certificate")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read doppler config from the environment")
