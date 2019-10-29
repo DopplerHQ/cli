@@ -212,7 +212,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 			}
 
 			if raw {
-				sb.WriteString(strings.ReplaceAll(secret.RawValue, `\r\n`, `\n`))
+				sb.WriteString(secret.RawValue)
 			} else {
 				sb.WriteString(secret.ComputedValue)
 			}
@@ -231,7 +231,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 	for _, secret := range matchedSecrets {
 		row := []string{secret.Name, secret.ComputedValue}
 		if raw {
-			row = append(row, strings.ReplaceAll(secret.RawValue, `\r\n`, `\n`))
+			row = append(row, secret.RawValue)
 		}
 
 		rows = append(rows, row)
