@@ -19,6 +19,7 @@ import (
 	configuration "doppler-cli/config"
 	dopplerErrors "doppler-cli/errors"
 	"doppler-cli/utils"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -195,7 +196,15 @@ doppler configure set key=123 otherkey=456`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()
-		configuration.Set(scope, args)
+		options := make(map[string]string)
+		for _, option := range args {
+			arr := strings.Split(option, "=")
+			if len(arr) < 2 {
+				utils.Err(errors.New("invalid option "+option), "")
+			}
+			options[arr[0]] = arr[1]
+		}
+		configuration.Set(scope, options)
 
 		if !silent {
 			conf := configuration.Get(scope)

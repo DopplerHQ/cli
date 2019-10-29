@@ -161,7 +161,7 @@ func AllConfigs() map[string]Config {
 }
 
 // Set a local config
-func Set(scope string, options []string) {
+func Set(scope string, options map[string]string) {
 	if scope != "*" {
 		var err error
 		scope, err = parseScope(scope)
@@ -170,33 +170,21 @@ func Set(scope string, options []string) {
 		}
 	}
 
-	for _, option := range options {
-		optionArr := strings.Split(option, "=")
-		key := optionArr[0]
-		if len(optionArr) < 2 || (key != "key" && key != "project" && key != "config") {
-			utils.Err(errors.New("invalid option "+option), "")
-		}
-	}
-
-	for _, option := range options {
-		optionArr := strings.Split(option, "=")
-		key := optionArr[0]
-		value := optionArr[1]
-
+	for key, value := range options {
 		if key == "key" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Key = value
 			configContents[scope] = scopedConfig
-		}
-		if key == "project" {
+		} else if key == "project" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Project = value
 			configContents[scope] = scopedConfig
-		}
-		if key == "config" {
+		} else if key == "config" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Config = value
 			configContents[scope] = scopedConfig
+		} else {
+			utils.Err(errors.New("invalid option "+key), "")
 		}
 	}
 
@@ -213,12 +201,6 @@ func Unset(scope string, options []string) {
 		}
 	}
 
-	for _, key := range options {
-		if key != "key" && key != "project" && key != "config" {
-			utils.Err(errors.New("invalid option "+key), "")
-		}
-	}
-
 	if configContents[scope] == (Config{}) {
 		return
 	}
@@ -228,16 +210,16 @@ func Unset(scope string, options []string) {
 			scopedConfig := configContents[scope]
 			scopedConfig.Key = ""
 			configContents[scope] = scopedConfig
-		}
-		if key == "project" {
+		} else if key == "project" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Project = ""
 			configContents[scope] = scopedConfig
-		}
-		if key == "config" {
+		} else if key == "config" {
 			scopedConfig := configContents[scope]
 			scopedConfig.Config = ""
 			configContents[scope] = scopedConfig
+		} else {
+			utils.Err(errors.New("invalid option "+key), "")
 		}
 	}
 
