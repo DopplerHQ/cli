@@ -136,9 +136,11 @@ func init() {
 
 	projectsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	projectsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	projectsDeleteCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
 	projectsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
+	projectsUpdateCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
 	projectsUpdateCmd.MarkFlagRequired("name")
