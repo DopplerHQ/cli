@@ -116,7 +116,7 @@ func LocalConfig(cmd *cobra.Command) ScopedConfig {
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
 	// environment variables
-	if utils.GetBoolFlag(cmd, "enable-env") {
+	if !utils.GetBoolFlag(cmd, "no-read-env") {
 		key := os.Getenv("DOPPLER_API_KEY")
 		if key != "" {
 			localConfig.Key.Value = key
