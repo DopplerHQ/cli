@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -75,10 +76,9 @@ doppler run --key=123 -- printenv`,
 			}
 		}
 
-		err := utils.RunCommand(args, env)
-		if err != nil {
-			utils.Err(err, fmt.Sprintf("Error trying to execute command: %s", args))
-			os.Exit(1)
+		exitCode, err := utils.RunCommand(args, env)
+		if err != nil || exitCode != 0 {
+			utils.ErrExit(err, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")), exitCode)
 		}
 	},
 }

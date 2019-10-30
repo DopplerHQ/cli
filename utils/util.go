@@ -55,15 +55,22 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string) error {
+func RunCommand(command []string, env []string) (int, error) {
 	cmd := exec.Command(command[0], command[1:]...)
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
-	return err
+	if err := cmd.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode(), err
+		}
+
+		return 1, err
+	}
+
+	return 0, nil
 }
 
 // GetBoolFlag get flag parsed as a boolean
