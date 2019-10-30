@@ -9,13 +9,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
     - name: Set up Go
-      uses: actions/setup-go@master
+      uses: actions/setup-go@v1
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
+        version: latest
         args: --snapshot --skip-publish
       env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
 #     - name: Run a multi-line script
