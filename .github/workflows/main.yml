@@ -4,19 +4,18 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v1
-    - name: Run a one-line script
-      run: echo Hello, world!
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Set up Go
+      uses: actions/setup-go@master
     - name: GoReleaser Action
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-      uses: goreleaser/goreleaser-action@v0.1.0
+      uses: goreleaser/goreleaser-action@v1
       with:
         args: --snapshot --skip-publish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
 #     - name: Run a multi-line script
