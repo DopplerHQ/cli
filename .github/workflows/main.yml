@@ -18,6 +18,7 @@ jobs:
         version: latest
         args: release --snapshot --skip-publish
       env:
+        GOPATH: /home/runner/go
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
