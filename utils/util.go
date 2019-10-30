@@ -16,8 +16,6 @@ limitations under the License.
 package utils
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -57,34 +55,22 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, output bool) error {
+func RunCommand(command []string, env []string) (int, error) {
 	cmd := exec.Command(command[0], command[1:]...)
 	cmd.Env = env
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
-	cmdOut, _ := cmd.StdoutPipe()
-	cmdErr, _ := cmd.StderrPipe()
+	if err := cmd.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode(), err
+		}
 
-	err := cmd.Start()
-	if err != nil {
-		Err(err, fmt.Sprintf("Error trying to execute command: %s", command))
-		return err
+		return 1, err
 	}
 
-	if output {
-		stdOutput, _ := ioutil.ReadAll(cmdOut)
-		errOutput, _ := ioutil.ReadAll(cmdErr)
-
-		fmt.Printf(string(stdOutput))
-		fmt.Printf(string(errOutput))
-	}
-
-	err = cmd.Wait()
-	if err == nil {
-		os.Exit(0)
-	}
-
-	os.Exit(1)
-	return nil
+	return 0, nil
 }
 
 // GetBoolFlag get flag parsed as a boolean

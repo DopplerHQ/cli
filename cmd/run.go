@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -47,8 +48,6 @@ doppler run --key=123 -- printenv`,
 		if len(args) == 0 {
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
-
-		silent := utils.GetBoolFlag(cmd, "silent")
 
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
@@ -77,9 +76,9 @@ doppler run --key=123 -- printenv`,
 			}
 		}
 
-		err := utils.RunCommand(args, env, !silent)
-		if err != nil {
-			utils.Err(err, fmt.Sprintf("Error trying to execute command: %s", args))
+		exitCode, err := utils.RunCommand(args, env)
+		if err != nil || exitCode != 0 {
+			utils.ErrExit(err, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")), exitCode)
 		}
 	},
 }
@@ -133,7 +132,6 @@ func readFallbackFile(path string) map[string]string {
 }
 
 func init() {
-	runCmd.Flags().Bool("silent", false, "don't output the response")
 	runCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	runCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 

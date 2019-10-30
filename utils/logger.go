@@ -35,8 +35,13 @@ func Log(info string) {
 	}
 }
 
-// Err prints the error and exits
+// Err prints the error and exits with code 1
 func Err(e error, message string) {
+	ErrExit(e, message, 1)
+}
+
+// ErrExit prints the error and exits with the specified code
+func ErrExit(e error, message string, exitCode int) {
 	if JSON {
 		resp, err := json.Marshal(map[string]string{"error": e.Error()})
 		if err != nil {
@@ -56,5 +61,5 @@ func Err(e error, message string) {
 		debug.PrintStack()
 	}
 
-	os.Exit(1)
+	os.Exit(exitCode)
 }
