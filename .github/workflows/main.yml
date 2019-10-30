@@ -15,7 +15,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       uses: goreleaser/goreleaser-action@v0.1.0
-      run: goreleaser --snapshot --skip-publish --rm-dist
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
 #     - name: Run a multi-line script
