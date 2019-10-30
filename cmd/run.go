@@ -48,8 +48,6 @@ doppler run --key=123 -- printenv`,
 			dopplerErrors.CommandMissingArgument(cmd)
 		}
 
-		silent := utils.GetBoolFlag(cmd, "silent")
-
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		fallbackPath := utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
@@ -77,9 +75,10 @@ doppler run --key=123 -- printenv`,
 			}
 		}
 
-		err := utils.RunCommand(args, env, !silent)
+		err := utils.RunCommand(args, env)
 		if err != nil {
 			utils.Err(err, fmt.Sprintf("Error trying to execute command: %s", args))
+			os.Exit(1)
 		}
 	},
 }
@@ -133,7 +132,6 @@ func readFallbackFile(path string) map[string]string {
 }
 
 func init() {
-	runCmd.Flags().Bool("silent", false, "don't output the response")
 	runCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	runCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 
