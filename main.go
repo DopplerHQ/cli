@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "doppler-cli/cmd"
+import "cli/cmd"
 
 func main() {
 	cmd.Execute()

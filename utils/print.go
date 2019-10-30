@@ -16,7 +16,7 @@ limitations under the License.
 package utils
 
 import (
-	"doppler-cli/models"
+	"cli/models"
 	"encoding/json"
 	"fmt"
 	"math"

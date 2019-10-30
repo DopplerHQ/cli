@@ -16,9 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	api "doppler-cli/api"
-	configuration "doppler-cli/config"
-	"doppler-cli/utils"
+	api "cli/api"
+	configuration "cli/config"
+	"cli/utils"
 
 	"github.com/spf13/cobra"
 )

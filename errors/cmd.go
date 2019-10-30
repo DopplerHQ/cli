@@ -16,7 +16,7 @@ limitations under the License.
 package errors
 
 import (
-	"doppler-cli/utils"
+	"cli/utils"
 	"os"
 
 	"github.com/spf13/cobra"

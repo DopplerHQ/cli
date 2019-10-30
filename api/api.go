@@ -16,8 +16,8 @@ limitations under the License.
 package api
 
 import (
-	"doppler-cli/models"
-	utils "doppler-cli/utils"
+	"cli/models"
+	utils "cli/utils"
 	"encoding/json"
 
 	"github.com/spf13/cobra"

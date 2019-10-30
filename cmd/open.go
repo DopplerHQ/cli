@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"doppler-cli/utils"
+	"cli/utils"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"

@@ -16,10 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	configuration "doppler-cli/config"
-	dopplerErrors "doppler-cli/errors"
-	"doppler-cli/models"
-	"doppler-cli/utils"
+	configuration "cli/config"
+	dopplerErrors "cli/errors"
+	"cli/models"
+	"cli/utils"
 	"errors"
 	"fmt"
 	"strings"

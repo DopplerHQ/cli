@@ -16,8 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	dopplerErrors "doppler-cli/errors"
-	"doppler-cli/utils"
+	dopplerErrors "cli/errors"
+	"cli/utils"
 	"fmt"
 	"os"
 

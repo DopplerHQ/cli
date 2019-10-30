@@ -16,7 +16,7 @@ limitations under the License.
 package api
 
 import (
-	utils "doppler-cli/utils"
+	utils "cli/utils"
 	"encoding/json"
 	"strconv"
 

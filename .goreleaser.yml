@@ -5,7 +5,7 @@
 #     # you may remove this if you don't need go generate
 #     - go generate ./...
 builds:
-  - id: doppler-cli
+  - id: cli
     binary: doppler
     env:
       - CGO_ENABLED=0
