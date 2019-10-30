@@ -38,7 +38,8 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  # name_template: "{{ .Tag }}-next"
+  name_template: "SNAPSHOT-{{.ShortCommit}}"
 changelog:
   sort: asc
   filters:
