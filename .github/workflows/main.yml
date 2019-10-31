@@ -12,15 +12,14 @@ jobs:
         go-version: '1.13.x'
     - name: Checkout
       uses: actions/checkout@v1
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v1
+      with:
+        path: /home/runner/go/src/github.com/dopplerhq/cli
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
         version: latest
         args: release --snapshot --skip-publish
       env:
-        GOPATH: /home/runner/go
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
