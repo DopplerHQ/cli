@@ -13,13 +13,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
       with:
-        path: /home/runner/go/src/github.com/dopplerhq/cli
+        path: ./src/github.com/${{ github.repository }}
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
         version: latest
         args: release --snapshot --skip-publish
       env:
+        GOPATH: ${{ runner.workspace }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #     - name: Go Release Binary
 #       uses: ngs/go-release.action@v1.0.0
