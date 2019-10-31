@@ -14,6 +14,8 @@ jobs:
       uses: actions/checkout@v1
       with:
         path: ./src/github.com/${{ github.repository }}
+    - name: Fetch dependencies
+      run: cd ./src/github.com/${{ github.repository }} && go get -u
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
