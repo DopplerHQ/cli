@@ -110,8 +110,8 @@ func GetFilePath(fullPath string, defaultPath string) string {
 	parsedPath := filepath.Dir(fullPath)
 	parsedName := filepath.Base(fullPath)
 
-	nameValid := parsedName != "." && parsedName != ".." && parsedName != "/"
-	if !nameValid {
+	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/")
+	if !isNameValid {
 		return defaultPath
 	}
 
