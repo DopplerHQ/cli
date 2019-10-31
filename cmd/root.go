@@ -74,7 +74,7 @@ func init() {
 	rootCmd.PersistentFlags().String("key", "", "doppler api key")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
-	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections lacking a valid certificate")
+	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections with invalid certificate")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read doppler config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
