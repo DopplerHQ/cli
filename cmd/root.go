@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/DopplerHQ/cli/configuration"
 	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
@@ -77,7 +78,7 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read doppler config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
-	rootCmd.PersistentFlags().String("configuration", "$HOME/.doppler.yaml", "config file")
+	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
 
