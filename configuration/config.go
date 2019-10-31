@@ -16,8 +16,6 @@ limitations under the License.
 package configuration
 
 import (
-	"cli/models"
-	utils "cli/utils"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -25,6 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/DopplerHQ/cli/models"
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )

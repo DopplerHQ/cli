@@ -16,11 +16,11 @@ limitations under the License.
 package cmd
 
 import (
-	dopplerErrors "cli/errors"
-	"cli/utils"
 	"fmt"
 	"os"
 
+	dopplerErrors "github.com/DopplerHQ/cli/errors"
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
 

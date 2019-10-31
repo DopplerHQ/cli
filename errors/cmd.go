@@ -16,9 +16,9 @@ limitations under the License.
 package errors
 
 import (
-	"cli/utils"
 	"os"
 
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
 

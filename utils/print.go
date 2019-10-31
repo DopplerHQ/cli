@@ -16,7 +16,6 @@ limitations under the License.
 package utils
 
 import (
-	"cli/models"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -25,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DopplerHQ/cli/models"
 	"github.com/jedib0t/go-pretty/table"
 )
 

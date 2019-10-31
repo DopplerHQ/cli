@@ -16,12 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	api "cli/api"
-	configuration "cli/config"
-	"cli/utils"
 	"strings"
 
 	"github.com/AlecAivazis/survey"
+	"github.com/DopplerHQ/cli/api"
+	"github.com/DopplerHQ/cli/configuration"
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
 

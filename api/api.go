@@ -16,10 +16,10 @@ limitations under the License.
 package api
 
 import (
-	"cli/models"
-	utils "cli/utils"
 	"encoding/json"
 
+	"github.com/DopplerHQ/cli/models"
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
 

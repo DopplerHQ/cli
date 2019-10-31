@@ -16,11 +16,10 @@ limitations under the License.
 package cmd
 
 import (
-	api "cli/api"
-	configuration "cli/config"
-	dopplerErrors "cli/errors"
-	"cli/utils"
-
+	"github.com/DopplerHQ/cli/api"
+	"github.com/DopplerHQ/cli/configuration"
+	dopplerErrors "github.com/DopplerHQ/cli/errors"
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
 

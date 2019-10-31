@@ -16,10 +16,11 @@ limitations under the License.
 package configuration
 
 import (
-	"cli/models"
-	utils "cli/utils"
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/DopplerHQ/cli/models"
+	"github.com/DopplerHQ/cli/utils"
 )
 
 type oldConfig struct {

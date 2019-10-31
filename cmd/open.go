@@ -16,8 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"cli/utils"
-
+	"github.com/DopplerHQ/cli/utils"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 )
