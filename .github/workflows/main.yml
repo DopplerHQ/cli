@@ -12,6 +12,8 @@ jobs:
         go-version: '1.13.x'
     - name: Checkout
       uses: actions/checkout@v1
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v1
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
