@@ -15,7 +15,7 @@ jobs:
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Fetch dependencies
-      run: cd ${{ runner.workspace }}/src/github.com/${{ github.repository }} && go get
+      run: cd ${{ runner.workspace }}/src/github.com/${{ github.repository }} && go get -u -f
       env:
         GOPATH: ${{ runner.workspace }}
     - name: GoReleaser Action
