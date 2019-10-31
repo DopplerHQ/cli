@@ -16,6 +16,8 @@ jobs:
         path: ./src/github.com/${{ github.repository }}
     - name: Fetch dependencies
       run: cd ${{ runner.workspace }}/src/github.com/${{ github.repository }} && go get -u
+      env:
+        GOPATH: ${{ runner.workspace }}
     - name: GoReleaser Action
       uses: goreleaser/goreleaser-action@v1
       with:
