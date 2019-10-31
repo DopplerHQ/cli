@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/DopplerHQ/cli/api"
@@ -143,7 +144,7 @@ doppler secrets download /root/test.env`,
 	Run: func(cmd *cobra.Command, args []string) {
 		metadata := utils.GetBoolFlag(cmd, "metadata")
 
-		filePath := "./doppler.env"
+		filePath := path.Join(".", "doppler.env")
 		if len(args) > 0 {
 			filePath = utils.GetFilePath(args[0], filePath)
 		}
