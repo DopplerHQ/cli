@@ -28,9 +28,3 @@ jobs:
       env:
         GOPATH: ${{ runner.workspace }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#     - name: Go Release Binary
-#       uses: ngs/go-release.action@v1.0.0
-#     - name: Run a multi-line script
-#       run: |
-#         echo Add other actions to build,
-#         echo test, and deploy your project.
