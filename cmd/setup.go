@@ -18,7 +18,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/AlecAivazis/survey"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/DopplerHQ/cli/api"
 	"github.com/DopplerHQ/cli/configuration"
 	"github.com/DopplerHQ/cli/utils"
