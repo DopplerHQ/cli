@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
@@ -36,6 +35,7 @@ TODO
 var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		version := utils.GetBoolFlag(cmd, "version")
 		if version {
@@ -43,7 +43,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		dopplerErrors.ApplicationMissingCommand(cmd)
+		cmd.Help()
 	},
 }
 

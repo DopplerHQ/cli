@@ -18,7 +18,6 @@ package cmd
 import (
 	"github.com/DopplerHQ/cli/api"
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +25,7 @@ import (
 var environmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "List environments",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -44,11 +44,8 @@ var environmentsCmd = &cobra.Command{
 var environmentsGetCmd = &cobra.Command{
 	Use:   "get [environment_id]",
 	Short: "Get info for an environment",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]

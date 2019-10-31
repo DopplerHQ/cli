@@ -30,6 +30,7 @@ type configsResponse struct {
 var configsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List configs",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -43,6 +44,7 @@ var configsCmd = &cobra.Command{
 var configsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -61,6 +63,7 @@ var configsGetCmd = &cobra.Command{
 var configsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -84,6 +87,7 @@ var configsCreateCmd = &cobra.Command{
 var configsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -109,6 +113,7 @@ var configsDeleteCmd = &cobra.Command{
 var configsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -131,6 +136,7 @@ var configsUpdateCmd = &cobra.Command{
 var configsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -145,6 +151,7 @@ var configsLogsCmd = &cobra.Command{
 var configsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -164,6 +171,7 @@ var configsLogsGetCmd = &cobra.Command{
 var configsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")

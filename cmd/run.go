@@ -24,7 +24,6 @@ import (
 
 	"github.com/DopplerHQ/cli/api"
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/models"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
@@ -44,11 +43,8 @@ Usage:
 doppler run printenv
 doppler run -- printenv
 doppler run --key=123 -- printenv`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		fallbackPath := utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")

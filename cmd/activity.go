@@ -25,6 +25,7 @@ import (
 var activityCmd = &cobra.Command{
 	Use:   "activity",
 	Short: "Get workplace activity logs",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		localConfig := configuration.LocalConfig(cmd)
@@ -39,6 +40,7 @@ var activityCmd = &cobra.Command{
 var activityGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get workplace activity log",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.GetBoolFlag(cmd, "json")
 		localConfig := configuration.LocalConfig(cmd)
