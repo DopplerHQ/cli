@@ -40,6 +40,7 @@ archives:
 
 release:
   github:
+    owner: DopplerHQ
     name: cli
 
 checksum:
