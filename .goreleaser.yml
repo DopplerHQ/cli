@@ -1,9 +1,7 @@
-# before:
-#   hooks:
-#     # you may remove this if you don't use vgo
-#     - go mod tidy
-#     # you may remove this if you don't need go generate
-#     - go generate ./...
+before:
+  hooks:
+    - go mod tidy
+
 builds:
   - id: cli
     binary: doppler
@@ -11,7 +9,6 @@ builds:
       - CGO_ENABLED=0
     goos:
       - darwin
-      - dragonfly
       - freebsd
       - linux
       - netbsd
@@ -25,6 +22,14 @@ builds:
     goarm:
       - 6
       - 7
+    ignore:
+    - goos: darwin
+      goarch: "386"
+    - goos: windows
+      goarch: "386"
+    - goos: freebsd
+      goarch: "386"
+
 archives:
 - replacements:
     darwin: Darwin
