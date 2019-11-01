@@ -16,6 +16,13 @@ Build the app with `go build`. Run `build.sh` instead if you want to build cross
 `docker run --rm -it -v "$(pwd)/bin":/mnt/bin -e key=$(doppler config:get key) -e pipeline=$(doppler config:get pipeline) -e environment=$(doppler config:get environment) alpine:latest`
 
 
+## Test
+
+Test building for all targets:
+
+`goreleaser release --snapshot --skip-publish --rm-dist`
+
+
 ## Release
 
 ```
