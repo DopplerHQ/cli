@@ -21,4 +21,3 @@ jobs:
         args: release --snapshot --skip-publish
       env:
         GOPATH: ${{ runner.workspace }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
