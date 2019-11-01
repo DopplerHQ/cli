@@ -17,11 +17,11 @@ package cmd
 
 import (
 	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/DopplerHQ/cli/api"
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +34,7 @@ type secretsResponse struct {
 var secretsCmd = &cobra.Command{
 	Use:   "secrets",
 	Short: "Fetch all Doppler secrets",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
@@ -53,11 +54,8 @@ var secretsGetCmd = &cobra.Command{
 
 Ex: output the secrets "api_key" and "crypto_key":
 doppler secrets get api_key crypto_key`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
@@ -76,11 +74,8 @@ var secretsSetCmd = &cobra.Command{
 
 Ex: set the secrets "api_key" and "crypto_key":
 doppler secrets set api_key=123 crypto_key=456`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
@@ -114,11 +109,8 @@ var secretsDeleteCmd = &cobra.Command{
 
 Ex: delete the secrets "api_key" and "crypto_key":
 doppler secrets delete api_key crypto_key`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
@@ -148,10 +140,11 @@ var secretsDownloadCmd = &cobra.Command{
 
 Ex: download the file to /root and name it test.env:
 doppler secrets download /root/test.env`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		metadata := utils.GetBoolFlag(cmd, "metadata")
 
-		filePath := "./doppler.env"
+		filePath := path.Join(".", "doppler.env")
 		if len(args) > 0 {
 			filePath = utils.GetFilePath(args[0], filePath)
 		}

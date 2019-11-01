@@ -28,6 +28,7 @@ import (
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup the doppler cli",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()

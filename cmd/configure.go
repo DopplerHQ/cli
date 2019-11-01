@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/models"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
@@ -30,6 +29,7 @@ import (
 var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "View cli configuration",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		all := utils.GetBoolFlag(cmd, "all")
 		jsonFlag := utils.JSON
@@ -91,11 +91,8 @@ var configureGetCmd = &cobra.Command{
 
 Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 
@@ -156,11 +153,8 @@ var configureSetCmd = &cobra.Command{
 
 Ex: set the options "key" and "otherkey":
 doppler configure set key=123 otherkey=456`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()
@@ -187,11 +181,8 @@ var configureUnsetCmd = &cobra.Command{
 
 Ex: unset the options "key" and "otherkey":
 doppler configure unset key otherkey`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			dopplerErrors.CommandMissingArgument(cmd)
-		}
-
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		scope := cmd.Flag("scope").Value.String()

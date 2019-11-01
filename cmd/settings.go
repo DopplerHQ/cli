@@ -16,9 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
+
 	"github.com/DopplerHQ/cli/api"
 	"github.com/DopplerHQ/cli/configuration"
-	dopplerErrors "github.com/DopplerHQ/cli/errors"
 	"github.com/DopplerHQ/cli/models"
 	"github.com/DopplerHQ/cli/utils"
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ import (
 var settingsCmd = &cobra.Command{
 	Use:   "settings",
 	Short: "Get workplace settings",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 
@@ -40,16 +42,26 @@ var settingsCmd = &cobra.Command{
 var settingsUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update workplace settings",
-	Run: func(cmd *cobra.Command, args []string) {
-		name := cmd.Flag("name").Value.String()
-		email := cmd.Flag("email").Value.String()
-
-		if name == "" && email == "" {
-			dopplerErrors.CommandMissingFlag(cmd)
+	Args: func(cmd *cobra.Command, args []string) error {
+		err := cobra.NoArgs(cmd, args)
+		if err != nil {
+			return err
 		}
 
-		jsonFlag := utils.JSON
+		// require at least one flag to be specified
+		name := cmd.Flag("name").Value.String()
+		email := cmd.Flag("email").Value.String()
+		if name == "" && email == "" {
+			return errors.New("Error: command needs a flag")
+		}
+
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
+		name := cmd.Flag("name").Value.String()
+		email := cmd.Flag("email").Value.String()
+		jsonFlag := utils.JSON
 
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 

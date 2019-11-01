@@ -18,6 +18,7 @@ package configuration
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path"
 
 	"github.com/DopplerHQ/cli/models"
 	"github.com/DopplerHQ/cli/utils"
@@ -29,7 +30,7 @@ type oldConfig struct {
 	Key         string
 }
 
-var jsonFile = utils.Home() + "/.doppler.json"
+var jsonFile = path.Join(utils.HomeDir(), ".doppler.json")
 
 func jsonExists() bool {
 	return utils.Exists(jsonFile)

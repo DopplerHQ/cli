@@ -34,6 +34,7 @@ To configure your bash shell to load completions for each session add to your ba
 # ~/.bashrc or ~/.profile
 . <(doppler completion)
 `,
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		rootCmd.GenBashCompletion(os.Stdout)
 	},

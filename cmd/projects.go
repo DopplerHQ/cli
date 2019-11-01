@@ -25,6 +25,7 @@ import (
 var projectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List projects",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 
@@ -38,6 +39,7 @@ var projectsCmd = &cobra.Command{
 var projectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -56,6 +58,7 @@ var projectsGetCmd = &cobra.Command{
 var projectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -78,6 +81,7 @@ var projectsCreateCmd = &cobra.Command{
 var projectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -103,6 +107,7 @@ var projectsDeleteCmd = &cobra.Command{
 var projectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")

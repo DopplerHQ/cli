@@ -22,19 +22,28 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/spf13/cobra"
 )
 
-// Home get home dir
-func Home() string {
-	home, err := homedir.Dir()
+// ConfigDir get configuration directory
+func ConfigDir() string {
+	dir, err := os.UserConfigDir()
 	if err != nil {
-		Err(err, "")
+		Err(err, "Unable to determine configuration directory")
 	}
 
-	return home
+	return dir
+}
+
+// HomeDir get home directory
+func HomeDir() string {
+	dir, err := os.UserHomeDir()
+	if err != nil {
+		Err(err, "Unable to determine home directory")
+	}
+
+	return dir
 }
 
 // Exists whether path exists
@@ -101,8 +110,8 @@ func GetFilePath(fullPath string, defaultPath string) string {
 	parsedPath := filepath.Dir(fullPath)
 	parsedName := filepath.Base(fullPath)
 
-	nameValid := parsedName != "." && parsedName != ".." && parsedName != "/"
-	if !nameValid {
+	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/")
+	if !isNameValid {
 		return defaultPath
 	}
 
