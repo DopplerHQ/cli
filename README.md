@@ -19,8 +19,10 @@ Build the app with `go build`. Run `build.sh` instead if you want to build cross
 ## Release
 
 ```
-git status # confirm clean workspace and no unpushed changes
-git tag vX.Y.Z -a -m "Release notes"
+vi version.go  # bump the version
+git add version.go && git commit -m "Bump version to vX.Y.Z" && git push
+git status # confirm clean workspace
+git tag vX.Y.Z -a -m "The release message"
 git push --tags
 GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain goreleaser release --rm-dist
 ```
