@@ -18,6 +18,6 @@ jobs:
       uses: goreleaser/goreleaser-action@v1
       with:
         version: latest
-        args: release --snapshot --skip-publish
+        args: release --snapshot --skip-publish --skip-sign
       env:
         GOPATH: ${{ runner.workspace }}
