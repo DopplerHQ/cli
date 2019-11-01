@@ -46,6 +46,9 @@ release:
 checksum:
   name_template: 'checksums.txt'
 
+signs:
+  - artifacts: checksum
+
 snapshot:
   # name_template: "{{ .Tag }}-next"
   name_template: "SNAPSHOT-{{.ShortCommit}}"
