@@ -23,3 +23,6 @@ git tag vX.Y.Z -a -m "Initial release"
 git push --tags
 goreleaser release --rm-dist
 ```
+
+Note: The release will automatically fail if the tag and HEAD have diverged
+`   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
