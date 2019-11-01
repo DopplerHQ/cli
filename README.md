@@ -5,6 +5,18 @@
 
 Build the app with `go build`. Run `build.sh` instead if you want to build cross-compiled binaries.
 
+### Generate a GPG key
+
+Store the keys and passphrase in your doppler config
+
+```
+gpg --full-generate-key
+gpg --list-secret-keys  # copy the key's 40-character ID
+gpg --output secret.key --armor --export-secret-key KEY_ID
+gpg --output public.key --armor --export KEY_ID
+gpg --keyserver pgp.mit.edu --send-key LAST_8_DIGITS_OF_KEY_ID
+```
+
 ## Run
 
 #### Local development
@@ -36,3 +48,8 @@ GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain goreleaser release --rm-
 
 Note: The release will automatically fail if the tag and HEAD have diverged
 `   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
+
+## Help
+
+Issue: `gpg: signing failed: Inappropriate ioctl for device`
+Fix: `export GPG_TTY=$(tty)`
