@@ -91,7 +91,19 @@ var configureGetCmd = &cobra.Command{
 
 Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
-	Args: cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("requires at least 1 arg(s), only received 0")
+		}
+
+		for _, arg := range args {
+			if !configuration.IsValidConfigOption(arg) {
+				return errors.New("invalid option " + arg)
+			}
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
@@ -104,10 +116,6 @@ doppler configure get key otherkey`,
 			var sb strings.Builder
 
 			for _, arg := range args {
-				if !configuration.IsValidConfigOption(arg) {
-					return
-				}
-
 				value, _ := configuration.GetScopedConfigValue(conf, arg)
 				if sbEmpty {
 					sbEmpty = false
@@ -125,9 +133,7 @@ doppler configure get key otherkey`,
 		if jsonFlag {
 			filteredConfMap := make(map[string]string)
 			for _, arg := range args {
-				if configuration.IsValidConfigOption(arg) {
-					filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
-				}
+				filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
 			}
 
 			utils.PrintJSON(filteredConfMap)
@@ -136,10 +142,8 @@ doppler configure get key otherkey`,
 
 		var rows [][]string
 		for _, arg := range args {
-			if configuration.IsValidConfigOption(arg) {
-				value, scope := configuration.GetScopedConfigValue(conf, arg)
-				rows = append(rows, []string{arg, value, scope})
-			}
+			value, scope := configuration.GetScopedConfigValue(conf, arg)
+			rows = append(rows, []string{arg, value, scope})
 		}
 
 		utils.PrintTable([]string{"name", "value", "scope"}, rows)
@@ -153,7 +157,20 @@ var configureSetCmd = &cobra.Command{
 
 Ex: set the options "key" and "otherkey":
 doppler configure set key=123 otherkey=456`,
-	Args: cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("requires at least 1 arg(s), only received 0")
+		}
+
+		for _, arg := range args {
+			option := strings.Split(arg, "=")
+			if len(option) < 2 || !configuration.IsValidConfigOption(option[0]) {
+				return errors.New("invalid option " + arg)
+			}
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 
@@ -161,9 +178,6 @@ doppler configure set key=123 otherkey=456`,
 		options := make(map[string]string)
 		for _, option := range args {
 			arr := strings.Split(option, "=")
-			if len(arr) < 2 || !configuration.IsValidConfigOption(arr[0]) {
-				utils.Err(errors.New("invalid option "+option), "")
-			}
 			options[arr[0]] = arr[1]
 		}
 		configuration.Set(scope, options)
@@ -181,7 +195,19 @@ var configureUnsetCmd = &cobra.Command{
 
 Ex: unset the options "key" and "otherkey":
 doppler configure unset key otherkey`,
-	Args: cobra.MinimumNArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("requires at least 1 arg(s), only received 0")
+		}
+
+		for _, arg := range args {
+			if !configuration.IsValidConfigOption(arg) {
+				return errors.New("invalid option " + arg)
+			}
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 
