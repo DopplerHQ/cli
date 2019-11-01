@@ -19,9 +19,10 @@ Build the app with `go build`. Run `build.sh` instead if you want to build cross
 ## Release
 
 ```
-git tag vX.Y.Z -a -m "Initial release"
+git status # confirm clean workspace and no unpushed changes
+git tag vX.Y.Z -a -m "Release notes"
 git push --tags
-goreleaser release --rm-dist
+GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain goreleaser release --rm-dist
 ```
 
 Note: The release will automatically fail if the tag and HEAD have diverged
