@@ -32,16 +32,17 @@ TODO
 */
 
 var rootCmd = &cobra.Command{
-	Use:     "doppler",
-	Short:   "The official Doppler CLI",
-	Version: utils.ProgramVersion,
-	Args:    cobra.NoArgs,
+	Use:   "doppler",
+	Short: "The official Doppler CLI",
+	Args:  cobra.NoArgs,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	args := os.Args[1:]
+	rootCmd.Version = utils.ProgramVersion
+	rootCmd.SetVersionTemplate("v" + rootCmd.Version + "\n")
 	rootCmd.ParseFlags(args)
 
 	if rootCmd.Flags().Changed("debug") {
@@ -72,6 +73,4 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
-
-	rootCmd.Flags().BoolP("version", "V", false, "")
 }

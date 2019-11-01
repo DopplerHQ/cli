@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package utils
+package main
 
 // ProgramVersion current CLI version
-var ProgramVersion = "0.0.1"
+const ProgramVersion = "0.0.3"
