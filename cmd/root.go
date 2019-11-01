@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/DopplerHQ/cli/configuration"
@@ -33,18 +32,10 @@ TODO
 */
 
 var rootCmd = &cobra.Command{
-	Use:   "doppler",
-	Short: "The official Doppler CLI",
-	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		version := utils.GetBoolFlag(cmd, "version")
-		if version {
-			fmt.Println(utils.ProgramVersion)
-			return
-		}
-
-		cmd.Help()
-	},
+	Use:     "doppler",
+	Short:   "The official Doppler CLI",
+	Version: utils.ProgramVersion,
+	Args:    cobra.NoArgs,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
