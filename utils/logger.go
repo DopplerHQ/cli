@@ -36,20 +36,20 @@ func Log(info string) {
 }
 
 // Err prints the error and exits with code 1
-func Err(e error, message string) {
-	ErrExit(e, message, 1)
+func Err(e error, messages ...string) {
+	ErrExit(e, 1, messages...)
 }
 
 // ErrExit prints the error and exits with the specified code
-func ErrExit(e error, message string, exitCode int) {
+func ErrExit(e error, exitCode int, messages ...string) {
 	if JSON {
 		resp, err := json.Marshal(map[string]string{"error": e.Error()})
 		if err != nil {
-			panic(err)
+			panic(err)	
 		}
 		fmt.Println(string(resp))
 	} else {
-		if message != "" {
+		for _, message := range messages {
 			fmt.Println(message)
 		}
 

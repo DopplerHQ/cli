@@ -49,7 +49,7 @@ var setupCmd = &cobra.Command{
 			}
 			err := survey.AskOne(prompt, &project)
 			if err != nil {
-				utils.Err(err, "")
+				utils.Err(err)
 			}
 
 			for _, val := range projects {
@@ -76,7 +76,7 @@ var setupCmd = &cobra.Command{
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
-				utils.Err(err, "")
+				utils.Err(err)
 			}
 		}
 

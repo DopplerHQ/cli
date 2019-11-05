@@ -51,7 +51,7 @@ func init() {
 func Get(scope string) models.ScopedConfig {
 	scope, err := parseScope(scope)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 	scope = path.Join(scope, "/")
 	var scopedConfig models.ScopedConfig
@@ -179,7 +179,7 @@ func Set(scope string, options map[string]string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err, "")
+			utils.Err(err)
 		}
 	}
 
@@ -202,7 +202,7 @@ func Unset(scope string, options []string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err, "")
+			utils.Err(err)
 		}
 	}
 
@@ -231,12 +231,12 @@ func Unset(scope string, options []string) {
 func writeYAML(config map[string]models.Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	err = ioutil.WriteFile(ConfigFile, bytes, os.FileMode(0600))
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 }
 
@@ -247,7 +247,7 @@ func exists() bool {
 func readYAML() map[string]models.Config {
 	fileContents, err := ioutil.ReadFile(ConfigFile)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var config map[string]models.Config
