@@ -57,7 +57,6 @@ signs:
     - "${artifact}"
 
 snapshot:
-  # name_template: "{{ .Tag }}-next"
   name_template: "SNAPSHOT-{{.ShortCommit}}"
 
 changelog:
@@ -66,3 +65,15 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+
+brews:
+  - name: doppler
+    github:
+      owner: DopplerHQ
+      name: homebrew-dopplerhq
+    commit_author:
+      name: "Doppler Bot"
+      email: support@doppler.com
+    folder: Formula
+    homepage: "https://doppler.com"
+    description: "The official Doppler CLI for managing your secrets and config"
