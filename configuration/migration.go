@@ -56,13 +56,13 @@ func convertOldConfig(oldConfig map[string]oldConfig) map[string]models.Config {
 func parseJSONConfig() map[string]oldConfig {
 	fileContents, err := ioutil.ReadFile(jsonFile)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var config map[string]oldConfig
 	err = json.Unmarshal(fileContents, &config)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	return config

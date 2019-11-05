@@ -37,7 +37,7 @@ func GetAPISecrets(cmd *cobra.Command, host string, apiKey string, project strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -72,7 +72,7 @@ func SetAPISecrets(cmd *cobra.Command, host string, apiKey string, project strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -94,7 +94,7 @@ func GetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) ([]
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
@@ -116,7 +116,7 @@ func SetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, val
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
@@ -133,7 +133,7 @@ func GetAPIProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []m
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var info []models.ProjectInfo
@@ -154,7 +154,7 @@ func GetAPIProject(cmd *cobra.Command, host string, apiKey string, project strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -177,7 +177,7 @@ func CreateAPIProject(cmd *cobra.Command, host string, apiKey string, name strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -200,7 +200,7 @@ func UpdateAPIProject(cmd *cobra.Command, host string, apiKey string, project st
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
@@ -217,7 +217,7 @@ func DeleteAPIProject(cmd *cobra.Command, host string, apiKey string, project st
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 }
 
@@ -234,7 +234,7 @@ func GetAPIEnvironments(cmd *cobra.Command, host string, apiKey string, project 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var info []models.EnvironmentInfo
@@ -258,7 +258,7 @@ func GetAPIEnvironment(cmd *cobra.Command, host string, apiKey string, project s
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	info := models.ParseEnvironmentInfo(result["stage"].(map[string]interface{}))
@@ -278,7 +278,7 @@ func GetAPIConfigs(cmd *cobra.Command, host string, apiKey string, project strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var info []models.ConfigInfo
@@ -302,7 +302,7 @@ func GetAPIConfig(cmd *cobra.Command, host string, apiKey string, project string
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -328,7 +328,7 @@ func CreateAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -348,7 +348,7 @@ func DeleteAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 }
 
@@ -371,7 +371,7 @@ func UpdateAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
@@ -388,7 +388,7 @@ func GetAPIActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte,
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var logs []models.Log
@@ -409,7 +409,7 @@ func GetAPIActivityLog(cmd *cobra.Command, host string, apiKey string, log strin
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
@@ -429,7 +429,7 @@ func GetAPIConfigLogs(cmd *cobra.Command, host string, apiKey string, project st
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	var logs []models.Log
@@ -453,7 +453,7 @@ func GetAPIConfigLog(cmd *cobra.Command, host string, apiKey string, project str
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
@@ -473,7 +473,7 @@ func RollbackAPIConfigLog(cmd *cobra.Command, host string, apiKey string, projec
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))

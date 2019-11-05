@@ -56,7 +56,7 @@ func Execute() {
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 }
 

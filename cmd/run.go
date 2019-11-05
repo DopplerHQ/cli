@@ -74,7 +74,7 @@ doppler run --key=123 -- printenv`,
 
 		exitCode, err := utils.RunCommand(args, env)
 		if err != nil || exitCode != 0 {
-			utils.ErrExit(err, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")), exitCode)
+			utils.ErrExit(err, exitCode, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")))
 		}
 	},
 }
@@ -88,7 +88,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 	if !useFallbackFile && err != nil {
-		utils.Err(err, "")
+		utils.Err(err)
 	}
 
 	if useFallbackFile {
