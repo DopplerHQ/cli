@@ -70,7 +70,7 @@ brews:
   - name: doppler
     github:
       owner: DopplerHQ
-      name: homebrew-dopplerhq
+      name: homebrew-tap
     commit_author:
       name: "Doppler Bot"
       email: support@doppler.com
