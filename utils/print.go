@@ -242,6 +242,48 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 	PrintTable(headers, rows)
 }
 
+// PrintSecretsNames print secrets
+func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain bool) {
+	var secretsNames []string
+	for name := range secrets {
+		secretsNames = append(secretsNames, name)
+	}
+	sort.Strings(secretsNames)
+
+	if jsonFlag {
+		secretsMap := make(map[string]map[string]string)
+		for _, name := range secretsNames {
+			secretsMap[name] = map[string]string{}
+		}
+
+		PrintJSON(secretsMap)
+		return
+	}
+
+	if plain {
+		sbEmpty := true
+		var sb strings.Builder
+		for _, name := range secretsNames {
+			if sbEmpty {
+				sbEmpty = false
+			} else {
+				sb.WriteString("\n")
+			}
+
+			sb.WriteString(name)
+		}
+
+		fmt.Println(sb.String())
+		return
+	}
+
+	var rows [][]string
+	for _, name := range secretsNames {
+		rows = append(rows, []string{name})
+	}
+	PrintTable([]string{"name"}, rows)
+}
+
 // PrintSettings print settings
 func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 	if jsonFlag {

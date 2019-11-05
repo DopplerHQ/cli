@@ -39,11 +39,16 @@ var secretsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
+		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
 		localConfig := configuration.LocalConfig(cmd)
 		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
 
-		utils.PrintSecrets(secrets, []string{}, jsonFlag, plain, raw)
+		if onlyNames {
+			utils.PrintSecretsNames(secrets, jsonFlag, plain)
+		} else {
+			utils.PrintSecrets(secrets, []string{}, jsonFlag, plain, raw)
+		}
 	},
 }
 
@@ -164,6 +169,7 @@ func init() {
 	secretsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	secretsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	secretsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
