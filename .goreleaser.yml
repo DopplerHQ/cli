@@ -77,3 +77,22 @@ brews:
     folder: Formula
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets and config"
+
+snapcrafts:
+  - name: doppler
+    id: doppler
+    base: core18
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+      linux: Linux
+    summary: "The official Doppler CLI"
+    description: "Doppler helps you manage your secrets and config across all your projects."
+    license: Apache-2.0
+    plugs:
+      personal-files:
+        read:
+          - $HOME/.doppler.json
+        write:
+          - $HOME/.config/.doppler.yaml
