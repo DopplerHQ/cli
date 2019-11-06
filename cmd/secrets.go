@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 	"strings"
@@ -148,6 +149,7 @@ doppler secrets download /root/test.env`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		metadata := utils.GetBoolFlag(cmd, "metadata")
+		silent := utils.GetBoolFlag(cmd, "silent")
 
 		filePath := path.Join(".", "doppler.env")
 		if len(args) > 0 {
@@ -160,6 +162,10 @@ doppler secrets download /root/test.env`,
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
 			utils.Err(err)
+		}
+
+		if !silent {
+			fmt.Println("Downloaded secrets to " + filePath)
 		}
 	},
 }
@@ -195,6 +201,7 @@ func init() {
 	secretsDownloadCmd.Flags().String("project", "", "doppler project (e.g. backend)")
 	secretsDownloadCmd.Flags().String("config", "", "doppler config (e.g. dev)")
 	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
+	secretsDownloadCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
 	rootCmd.AddCommand(secretsCmd)
