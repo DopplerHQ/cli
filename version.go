@@ -16,4 +16,4 @@ limitations under the License.
 package main
 
 // ProgramVersion current CLI version
-const ProgramVersion = "0.0.7"
+const ProgramVersion = "0.0.8"
