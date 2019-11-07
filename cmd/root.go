@@ -23,14 +23,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-/**
-TODO
-	- doppler run deploy-host option not working?
-	- doppler run fallback options
-  - table printer and --json support
-	- global --configuration option
-*/
-
 var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
@@ -61,8 +53,6 @@ func Execute() {
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
-
 	rootCmd.PersistentFlags().String("key", "", "doppler api key")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
