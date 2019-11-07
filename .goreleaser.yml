@@ -36,10 +36,8 @@ archives:
 -
   replacements:
     darwin: macOS
-    linux: Linux
-    windows: Windows
-    386: 32-bit
-    amd64: 64-bit
+    386: i386
+    amd64: x86_64
   format_overrides:
     - goos: windows
       format: zip
@@ -115,10 +113,9 @@ snapcrafts:
     id: doppler
     base: core18
     replacements:
-      amd64: 64-bit
-      386: 32-bit
       darwin: macOS
-      linux: Linux
+      386: i386
+      amd64: x86_64
     summary: "The official Doppler CLI"
     description: "Doppler helps you manage your secrets and config across all your projects."
     license: Apache-2.0
@@ -131,6 +128,9 @@ snapcrafts:
 
 nfpms:
   - id: cli
+    replacements:
+      386: i386
+      amd64: x86_64
     homepage: "https://doppler.com"
     maintainer: Doppler Bot <support@doppler.com>
     description: "The official Doppler CLI for managing your secrets and config"
