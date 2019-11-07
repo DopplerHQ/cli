@@ -31,12 +31,13 @@ builds:
       goarch: "386"
 
 archives:
-- replacements:
-    darwin: Darwin
+-
+  replacements:
+    darwin: macOS
     linux: Linux
     windows: Windows
-    386: i386
-    amd64: x86_64
+    386: 32-bit
+    amd64: 64-bit
 
 release:
   github:
