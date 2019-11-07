@@ -17,7 +17,6 @@ package configuration
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
