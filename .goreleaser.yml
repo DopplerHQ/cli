@@ -85,7 +85,7 @@ brews:
 scoop:
   bucket:
     owner: DopplerHQ
-    name: scoop-bucket
+    name: scoop-cli
   commit_author:
     name: "Doppler Bot"
     email: support@doppler.com
