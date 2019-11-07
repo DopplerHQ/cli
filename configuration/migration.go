@@ -36,7 +36,7 @@ func jsonExists() bool {
 	return utils.Exists(jsonFile)
 }
 
-// migrateJSONToYaml migrate ~/.doppler.json to  ~/.doppler.yaml
+// migrateJSONToYaml migrate ~/.doppler.json to yaml config
 func migrateJSONToYaml() {
 	jsonConfig := parseJSONConfig()
 	newConfig := convertOldConfig(jsonConfig)

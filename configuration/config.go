@@ -227,7 +227,7 @@ func Unset(scope string, options []string) {
 	writeYAML(configContents)
 }
 
-// Write config to ~/.doppler.yaml
+// Write config to filesystem
 func writeYAML(config map[string]models.Config) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
