@@ -51,7 +51,10 @@ func init() {
 			writeYAML(blankConfig)
 		}
 	}
+}
 
+// LoadConfig load the configuration file
+func LoadConfig() {
 	configContents = readYAML()
 }
 

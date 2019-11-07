@@ -46,6 +46,11 @@ func Execute() {
 		utils.Insecure = utils.GetBoolFlag(rootCmd, "insecure")
 	}
 
+	if rootCmd.Flags().Changed("configuration") {
+		configuration.ConfigFile = rootCmd.Flag("configuration").Value.String()
+	}
+	configuration.LoadConfig()
+
 	if err := rootCmd.Execute(); err != nil {
 		utils.Err(err)
 	}
