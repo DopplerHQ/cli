@@ -38,6 +38,9 @@ archives:
     windows: Windows
     386: 32-bit
     amd64: 64-bit
+  format_overrides:
+    - goos: windows
+      format: zip
 
 release:
   github:
