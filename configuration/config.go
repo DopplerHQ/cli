@@ -17,6 +17,7 @@ package configuration
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -264,7 +265,7 @@ func readYAML() map[string]models.Config {
 }
 
 func parseScope(scope string) (string, error) {
-	absScope, err := filepath.Abs(scope)
+	absScope, err := filepath.Abs(path.Clean(scope))
 	if err != nil {
 		return "", err
 	}
