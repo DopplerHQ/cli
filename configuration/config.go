@@ -30,11 +30,19 @@ import (
 )
 
 // ConfigFile path to the user's configuration file
-var ConfigFile = path.Join(utils.ConfigDir(), ".doppler.yaml")
+var ConfigFile string
 
 var configContents map[string]models.Config
 
 func init() {
+	fileName := ".doppler.yaml"
+	configDir := utils.ConfigDir()
+	if utils.Exists(configDir) {
+		ConfigFile = path.Join(configDir, fileName)
+	} else {
+		ConfigFile = path.Join(utils.HomeDir(), fileName)
+	}
+
 	if !exists() {
 		if jsonExists() {
 			migrateJSONToYaml()
