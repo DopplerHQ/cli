@@ -53,14 +53,15 @@ checksum:
   name_template: 'checksums.txt'
 
 signs:
-  - artifacts: checksum
-  - args:
-    - "-u"
-    - "B70BD7FCA460C4A3D0EEB965D3D593D50EE79DEC"
-    - "--output"
-    - "${signature}"
-    - "--detach-sign"
-    - "${artifact}"
+  -
+    artifacts: checksum
+    args:
+      - "-u"
+      - "B70BD7FCA460C4A3D0EEB965D3D593D50EE79DEC"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
 
 snapshot:
   name_template: "SNAPSHOT-{{.ShortCommit}}"
