@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/DopplerHQ/cli/version"
 )
 
 // QueryParam a url query parameter. ex: ?foo=bar
@@ -98,8 +100,8 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
-	req.Header.Set("client-version", ProgramVersion)
-	req.Header.Set("user-agent", "doppler-go-cli-"+ProgramVersion)
+	req.Header.Set("client-version", version.ProgramVersion)
+	req.Header.Set("user-agent", "doppler-go-cli-"+version.ProgramVersion)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 

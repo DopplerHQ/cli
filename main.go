@@ -17,11 +17,8 @@ package main
 
 import (
 	"github.com/DopplerHQ/cli/cmd"
-	"github.com/DopplerHQ/cli/utils"
 )
 
 func main() {
-	utils.ProgramVersion = ProgramVersion
-
 	cmd.Execute()
 }

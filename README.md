@@ -8,7 +8,17 @@ TODO: this section
 
 ## Development
 
-Build the app with `go build`
+Build the app:
+
+`go build`
+
+To specify the version at build time:
+
+`go build -ldflags '-X github.com/DopplerHQ/cli/version.ProgramVersion=YOUR_VERSION'`
+
+Or even at run time:
+
+`go run -ldflags '-X github.com/DopplerHQ/cli/version.ProgramVersion=YOUR_VERSION'` main.go YOUR_ARGS
 
 ### Generate a GPG key
 

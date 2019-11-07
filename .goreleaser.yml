@@ -31,6 +31,8 @@ builds:
       goarch: "386"
     - goos: freebsd
       goarch: "386"
+    ldflags:
+      - -X github.com/DopplerHQ/cli/version.ProgramVersion=v{{.Version}}
 
 archives:
 -

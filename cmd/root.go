@@ -20,6 +20,7 @@ import (
 
 	"github.com/DopplerHQ/cli/configuration"
 	"github.com/DopplerHQ/cli/utils"
+	"github.com/DopplerHQ/cli/version"
 	"github.com/spf13/cobra"
 )
 
@@ -33,8 +34,6 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	args := os.Args[1:]
-	rootCmd.Version = utils.ProgramVersion
-	rootCmd.SetVersionTemplate("v" + rootCmd.Version + "\n")
 	rootCmd.ParseFlags(args)
 
 	if rootCmd.Flags().Changed("debug") {
@@ -53,6 +52,9 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Version = version.ProgramVersion
+	rootCmd.SetVersionTemplate(rootCmd.Version + "\n")
+
 	rootCmd.PersistentFlags().String("key", "", "doppler api key")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")

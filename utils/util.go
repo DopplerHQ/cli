@@ -26,9 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ProgramVersion the current version of this program
-var ProgramVersion = ""
-
 // ConfigDir get configuration directory
 func ConfigDir() string {
 	dir, err := os.UserConfigDir()
