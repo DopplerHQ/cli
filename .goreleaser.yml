@@ -5,7 +5,7 @@ before:
     - go mod tidy
 
 builds:
-  - id: cli
+  -
     binary: doppler
     env:
       - CGO_ENABLED=0
@@ -71,6 +71,20 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+
+dockers:
+  -
+    binaries:
+      - cli
+    image_templates:
+      - "DopplerHQ/cli:latest"
+      - "DopplerHQ/cli:{{ .Tag }}"                  # Ex: v1.4.2
+      - "DopplerHQ/cli:v{{ .Major }}"               # Ex: v1
+      - "DopplerHQ/cli:v{{ .Major }}.{{ .Minor }}"  # Ex: v1.4
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"
 
 brews:
   - name: doppler
