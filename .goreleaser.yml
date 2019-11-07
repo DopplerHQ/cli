@@ -78,6 +78,17 @@ brews:
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets and config"
 
+scoop:
+  bucket:
+    owner: DopplerHQ
+    name: scoop-bucket
+  commit_author:
+    name: "Doppler Bot"
+    email: support@doppler.com
+  homepage: "https://doppler.com"
+  description: "The official Doppler CLI for managing your secrets and config"
+  license: Apache-2.0
+
 snapcrafts:
   - name: doppler
     id: doppler
