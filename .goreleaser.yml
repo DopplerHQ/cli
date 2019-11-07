@@ -74,7 +74,7 @@ brews:
   - name: doppler
     github:
       owner: DopplerHQ
-      name: homebrew-tap
+      name: homebrew-cli
     commit_author:
       name: "Doppler Bot"
       email: support@doppler.com
