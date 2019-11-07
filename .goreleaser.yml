@@ -127,3 +127,13 @@ snapcrafts:
           - $HOME/.doppler.json
         write:
           - $HOME/.config/.doppler.yaml
+
+nfpms:
+  - id: cli
+    homepage: "https://doppler.com"
+    maintainer: Doppler Bot <support@doppler.com>
+    description: "The official Doppler CLI for managing your secrets and config"
+    license: Apache-2.0
+    formats:
+      - deb
+      - rpm
