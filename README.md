@@ -42,12 +42,9 @@ Test building for all targets:
 ### Release
 
 ```
-vi version.go  # bump the version
-git add version.go && git commit -m "Bump version to vX.Y.Z" && git push
-git status # confirm clean workspace
-git tag vX.Y.Z -a -m "The release message"
+git tag -a vX.Y.Z -m "The release message"
 git push --tags
-GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain goreleaser release --rm-dist
+GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain) goreleaser release --rm-dist
 ```
 
 Note: The release will automatically fail if the tag and HEAD have diverged
