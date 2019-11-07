@@ -83,8 +83,8 @@ dockers:
     image_templates:
       - "dopplerhq/cli:latest"
       - "dopplerhq/cli:{{ .Tag }}"                  # Ex: v1.4.2
-      - "dopplerhq/cli:v{{ .Major }}"               # Ex: v1
       - "dopplerhq/cli:v{{ .Major }}.{{ .Minor }}"  # Ex: v1.4
+      - "dopplerhq/cli:v{{ .Major }}"               # Ex: v1
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
