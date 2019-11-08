@@ -75,16 +75,28 @@ changelog:
     - '^Merge pull request'
 
 dockers:
-  -
+  - dockerfile: docker/alpine
     goos: linux
     goarch: amd64
     binaries:
       - doppler
     image_templates:
-      - "dopplerhq/cli:latest"
-      - "dopplerhq/cli:{{ .Tag }}"                  # Ex: v1.4.2
-      - "dopplerhq/cli:v{{ .Major }}.{{ .Minor }}"  # Ex: v1.4
-      - "dopplerhq/cli:v{{ .Major }}"               # Ex: v1
+      - "dopplerhq/cli:{{ .Version }}"             # Ex: 1.4.2
+      - "dopplerhq/cli:{{ .Major }}.{{ .Minor }}"  # Ex: 1.4
+      - "dopplerhq/cli:{{ .Major }}"               # Ex: 1
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"
+  - dockerfile: docker/node:alpine
+    goos: linux
+    goarch: amd64
+    binaries:
+      - doppler
+    image_templates:
+      - "dopplerhq/cli:{{ .Version }}-node"             # Ex: 1.4.2
+      - "dopplerhq/cli:{{ .Major }}.{{ .Minor }}-node"  # Ex: 1.4
+      - "dopplerhq/cli:{{ .Major }}-node"               # Ex: 1
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
