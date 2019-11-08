@@ -157,3 +157,9 @@ nfpms:
     formats:
       - deb
       - rpm
+
+blobs:
+  -
+    provider: gs
+    bucket: dopplerhq_cli_releases
+    folder: "{{ .Tag }}"
