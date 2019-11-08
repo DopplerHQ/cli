@@ -64,7 +64,7 @@ signs:
       - "${artifact}"
 
 snapshot:
-  name_template: "SNAPSHOT-{{.ShortCommit}}"
+  name_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
