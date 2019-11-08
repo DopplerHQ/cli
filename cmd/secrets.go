@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/DopplerHQ/cli/api"
@@ -151,7 +151,7 @@ doppler secrets download /root/test.env`,
 		metadata := utils.GetBoolFlag(cmd, "metadata")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
-		filePath := path.Join(".", "doppler.env")
+		filePath := filepath.Join(".", "doppler.env")
 		if len(args) > 0 {
 			filePath = utils.GetFilePath(args[0], filePath)
 		}

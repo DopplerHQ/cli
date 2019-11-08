@@ -19,7 +19,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -38,9 +37,9 @@ func init() {
 	fileName := ".doppler.yaml"
 	configDir := utils.ConfigDir()
 	if utils.Exists(configDir) {
-		ConfigFile = path.Join(configDir, fileName)
+		ConfigFile = filepath.Join(configDir, fileName)
 	} else {
-		ConfigFile = path.Join(utils.HomeDir(), fileName)
+		ConfigFile = filepath.Join(utils.HomeDir(), fileName)
 	}
 
 	if !exists() {
@@ -64,12 +63,12 @@ func Get(scope string) models.ScopedConfig {
 	if err != nil {
 		utils.Err(err)
 	}
-	scope = path.Join(scope, "/")
+	scope = filepath.Join(scope, "/")
 	var scopedConfig models.ScopedConfig
 
 	for confScope, conf := range configContents {
 		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
-		if confScope != "*" && !strings.HasPrefix(scope, path.Join(confScope, "/")) {
+		if confScope != "*" && !strings.HasPrefix(scope, filepath.Join(confScope, "/")) {
 			continue
 		}
 
@@ -267,7 +266,7 @@ func readYAML() map[string]models.Config {
 }
 
 func parseScope(scope string) (string, error) {
-	absScope, err := filepath.Abs(path.Clean(scope))
+	absScope, err := filepath.Abs(scope)
 	if err != nil {
 		return "", err
 	}

@@ -18,7 +18,6 @@ package utils
 import (
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strconv"
 
@@ -60,7 +59,7 @@ func Cwd() string {
 	if err != nil {
 		Err(err, "")
 	}
-	return path.Dir(cwd)
+	return filepath.Dir(cwd)
 }
 
 // RunCommand runs the specified command
@@ -110,12 +109,12 @@ func GetFilePath(fullPath string, defaultPath string) string {
 	parsedPath := filepath.Dir(fullPath)
 	parsedName := filepath.Base(fullPath)
 
-	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/")
+	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/") && (parsedName != string(filepath.Separator))
 	if !isNameValid {
 		return defaultPath
 	}
 
-	return path.Join(parsedPath, parsedName)
+	return filepath.Join(parsedPath, parsedName)
 }
 
 // ConfirmationPrompt prompt user to confirm yes/no
