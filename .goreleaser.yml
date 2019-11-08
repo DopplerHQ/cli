@@ -84,6 +84,7 @@ dockers:
       - "dopplerhq/cli:{{ .Version }}"             # Ex: 1.4.2
       - "dopplerhq/cli:{{ .Major }}.{{ .Minor }}"  # Ex: 1.4
       - "dopplerhq/cli:{{ .Major }}"               # Ex: 1
+      - "dopplerhq/cli:latest"
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
@@ -97,6 +98,7 @@ dockers:
       - "dopplerhq/cli:{{ .Version }}-node"             # Ex: 1.4.2
       - "dopplerhq/cli:{{ .Major }}.{{ .Minor }}-node"  # Ex: 1.4
       - "dopplerhq/cli:{{ .Major }}-node"               # Ex: 1
+      - "dopplerhq/cli:node"
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
