@@ -63,12 +63,12 @@ func Get(scope string) models.ScopedConfig {
 	if err != nil {
 		utils.Err(err)
 	}
-	scope = filepath.Join(scope, "/")
+	scope = filepath.Clean(scope) + string(filepath.Separator)
 	var scopedConfig models.ScopedConfig
 
 	for confScope, conf := range configContents {
 		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
-		if confScope != "*" && !strings.HasPrefix(scope, filepath.Join(confScope, "/")) {
+		if confScope != "*" && !strings.HasPrefix(scope, filepath.Clean(confScope)+string(filepath.Separator)) {
 			continue
 		}
 
