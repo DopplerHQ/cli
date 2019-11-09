@@ -56,6 +56,7 @@ signs:
   -
     artifacts: checksum
     args:
+      - "--batch"
       - "-u"
       - "B70BD7FCA460C4A3D0EEB965D3D593D50EE79DEC"
       - "--output"
