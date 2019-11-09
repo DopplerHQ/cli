@@ -165,7 +165,7 @@ blobs:
     folder: "{{ .Tag }}"
 
 puts:
-  - name: "generic"
-    target: https://bintray.com/dopplerhq/doppler
+  - name: bintray
+    target: https://api.bintray.com/content/dopplerhq/doppler/{{ .ProjectName }}/{{ .Version }}/
     checksum: true
     signature: true
