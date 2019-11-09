@@ -165,7 +165,7 @@ blobs:
     folder: "{{ .Tag }}"
 
 puts:
-  - name: bintray
+  - name: generic
     target: https://api.bintray.com/content/dopplerhq/doppler/{{ .ProjectName }}/{{ .Version }}/
     mode: binary
     checksum: true
