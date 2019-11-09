@@ -62,6 +62,8 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
+      - "--passphrase"
+      - "$GPG_PASSPHRASE"
 
 snapshot:
   name_template: "{{ .Tag }}-next"
