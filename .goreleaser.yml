@@ -163,3 +163,9 @@ blobs:
     provider: gs
     bucket: dopplerhq_cli_releases
     folder: "{{ .Tag }}"
+
+puts:
+  - name: "generic"
+    target: https://bintray.com/dopplerhq/doppler
+    checksum: true
+    signature: true
