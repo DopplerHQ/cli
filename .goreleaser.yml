@@ -3,7 +3,6 @@ project_name: cli
 before:
   hooks:
     - go mod tidy
-    - echo $(doppler secrets get GOOGLE_APPLICATION_CREDENTIALS_CONTENT --plain) > $(doppler secrets get GOOGLE_APPLICATION_CREDENTIALS --plain)
 
 builds:
   -
