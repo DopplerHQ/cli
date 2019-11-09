@@ -57,14 +57,14 @@ signs:
     artifacts: checksum
     args:
       - "--batch"
+      - "--passphrase"
+      - "${GPG_PASSPHRASE}"
       - "-u"
       - "B70BD7FCA460C4A3D0EEB965D3D593D50EE79DEC"
       - "--output"
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
-      - "--passphrase"
-      - "${GPG_PASSPHRASE}"
 
 snapshot:
   name_template: "{{ .Tag }}-next"
