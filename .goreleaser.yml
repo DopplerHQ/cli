@@ -5,7 +5,7 @@ before:
     - go mod tidy
 
 builds:
-  -
+  - id: cli
     binary: doppler
     env:
       - CGO_ENABLED=0
@@ -168,7 +168,16 @@ blobs:
 
 puts:
   - name: generic
-    target: https://api.bintray.com/content/dopplerhq/doppler-deb/{{ .ProjectName }}/{{ .Version }}/
+    target: https://api.bintray.com/content/dopplerhq/doppler-deb/{{ .ProjectName }}/{{ .Version }}/publish
     mode: binary
+    ids:
+      - cli
+    checksum: true
+    signature: true
+  - name: generic
+    target: https://api.bintray.com/content/dopplerhq/doppler-rpm/{{ .ProjectName }}/{{ .Version }}/publish
+    mode: binary
+    ids:
+      - cli
     checksum: true
     signature: true
