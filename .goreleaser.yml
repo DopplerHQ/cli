@@ -168,12 +168,12 @@ blobs:
 
 puts:
   - name: generic
-    target: https://api.bintray.com/content/dopplerhq/doppler-deb/{{ .ProjectName }}/{{ .Version }}/publish
+    target: https://api.bintray.com/content/dopplerhq/doppler-deb/{{ .ProjectName }}/{{ .Version }}
     mode: binary
     checksum: true
     signature: true
   - name: generic
-    target: https://api.bintray.com/content/dopplerhq/doppler-rpm/{{ .ProjectName }}/{{ .Version }}/publish
+    target: https://api.bintray.com/content/dopplerhq/doppler-rpm/{{ .ProjectName }}/{{ .Version }}
     mode: binary
     checksum: true
     signature: true
