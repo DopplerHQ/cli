@@ -26,7 +26,10 @@ import (
 
 	"github.com/DopplerHQ/cli/models"
 	"github.com/jedib0t/go-pretty/table"
+	"github.com/jedib0t/go-pretty/text"
 )
+
+const maxTableWidth = 100
 
 // PrintTable prints table
 func PrintTable(headers []string, rows [][]string) {
@@ -42,7 +45,7 @@ func PrintTable(headers []string, rows [][]string) {
 	for _, row := range rows {
 		tableRow := table.Row{}
 		for _, val := range row {
-			tableRow = append(tableRow, val)
+			tableRow = append(tableRow, text.WrapText(val, maxTableWidth))
 		}
 		t.AppendRow(tableRow)
 	}
