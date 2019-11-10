@@ -115,6 +115,8 @@ brews:
     folder: Formula
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets and config"
+    test: |
+      system "#{bin}/doppler --version"
 
 scoop:
   bucket:
