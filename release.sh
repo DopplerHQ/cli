@@ -18,6 +18,7 @@ fi
 
 echo "Using version $TAGNAME"
 
+git push
 git tag -a "$TAGNAME" -m "$TAGNAME"
 git push origin "$TAGNAME"
 
