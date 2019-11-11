@@ -41,11 +41,13 @@ Test building for all targets:
 
 ### Release
 
+To release a new version, run:
+
 ```
-git tag -a vX.Y.Z -m "The release message"
-git push --tags
-GITHUB_TOKEN=$(doppler secrets get GITHUB_TOKEN --plain) goreleaser release --rm-dist
+make release VERSION=vX.Y.Z
 ```
+
+This command will push local changes to Origin, create a new tag, and push the tag to Origin. It will then build and release the doppler binaries.
 
 Note: The release will automatically fail if the tag and HEAD have diverged
 `   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
