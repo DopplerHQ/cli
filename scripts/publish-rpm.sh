@@ -6,7 +6,7 @@ set -e
 
 SUBJECT="dopplerhq"
 REPO="doppler-rpm"
-PACKAGE="cli"
+PACKAGE="doppler"
 
 if [ -z "$BINTRAY_USER" ]; then
   echo "BINTRAY_USER is not set"

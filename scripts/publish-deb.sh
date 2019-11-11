@@ -6,7 +6,7 @@ set -e
 
 SUBJECT="dopplerhq"
 REPO="doppler-deb"
-PACKAGE="cli"
+PACKAGE="doppler"
 DISTRIBUTIONS="stable"
 COMPONENTS="main"
 
