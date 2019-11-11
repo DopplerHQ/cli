@@ -151,7 +151,6 @@ nfpms:
   - id: doppler
     replacements:
       386: i386
-      amd64: x86_64
     homepage: "https://doppler.com"
     maintainer: Doppler Bot <support@doppler.com>
     description: "The official Doppler CLI for managing your secrets and config"

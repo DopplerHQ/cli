@@ -34,13 +34,9 @@ bintrayUpload () {
   for i in $FILES; do
     FILENAME=${i##*/}
     ARCH=$(echo ${FILENAME##*_} | cut -d '.' -f 1)
-    if [ $ARCH == "64" ]; then
-      ARCH="x86_64"
-    fi
-
     URL="https://api.bintray.com/content/$SUBJECT/$REPO/$PACKAGE/$VERSION/$ARCH/$FILENAME?publish=1&override=1"
-    echo "Uploading $URL"
 
+    echo "Uploading $URL"
     RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
     if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
       echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
@@ -54,9 +50,6 @@ bintraySetDownloads () {
   for i in $FILES; do
     FILENAME=${i##*/}
     ARCH=$(echo ${FILENAME##*_} | cut -d '.' -f 1)
-    if [ $ARCH == "64" ]; then
-      ARCH="x86_64"
-    fi
     URL="https://api.bintray.com/file_metadata/$SUBJECT/$REPO/$ARCH/$FILENAME"
 
     echo "Putting $FILENAME in $PACKAGE's download list"
