@@ -70,4 +70,5 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "Get the version of the Doppler CLI")
 }
