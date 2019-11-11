@@ -1,4 +1,4 @@
-project_name: cli
+project_name: doppler
 
 before:
   hooks:
@@ -148,7 +148,7 @@ snapcrafts:
           - $HOME/.config/.doppler.yaml
 
 nfpms:
-  - id: cli
+  - id: doppler
     replacements:
       386: i386
       amd64: x86_64
