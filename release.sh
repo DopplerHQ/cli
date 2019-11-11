@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 function finish {
   rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 }
