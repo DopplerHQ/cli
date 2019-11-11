@@ -171,5 +171,5 @@ puts:
     target: https://api.bintray.com/content/dopplerhq/doppler-deb/{{ .ProjectName }}/{{ .Version }}
     mode: binary
   - name: rpm
-    target: https://api.bintray.com/content/dopplerhq/doppler-rpm/{{ .ProjectName }}/{{ .Version }}
+    target: https://api.bintray.com/content/dopplerhq/doppler-rpm/{{ .ProjectName }}/{{ .Version }}/{{ .Architecture }}
     mode: binary
