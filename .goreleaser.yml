@@ -111,7 +111,7 @@ brews:
       name: homebrew-cli
     commit_author:
       name: "Doppler Bot"
-      email: support@doppler.com
+      email: bot@doppler.com
     folder: Formula
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets and config"
@@ -124,7 +124,7 @@ scoop:
     name: scoop-doppler
   commit_author:
     name: "Doppler Bot"
-    email: support@doppler.com
+    email: bot@doppler.com
   homepage: "https://doppler.com"
   description: "The official Doppler CLI for managing your secrets and config"
   license: Apache-2.0
@@ -152,7 +152,7 @@ nfpms:
     replacements:
       386: i386
     homepage: "https://doppler.com"
-    maintainer: Doppler Bot <support@doppler.com>
+    maintainer: Doppler Bot <bot@doppler.com>
     description: "The official Doppler CLI for managing your secrets and config"
     license: Apache-2.0
     formats:
