@@ -109,7 +109,7 @@ brews:
   - name: doppler
     github:
       owner: DopplerHQ
-      name: homebrew-cli
+      name: homebrew-doppler
     commit_author:
       name: "Doppler Bot"
       email: bot@doppler.com
