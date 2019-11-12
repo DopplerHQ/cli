@@ -2,4 +2,4 @@ build:
 	go build -o doppler main.go
 
 release:
-	doppler run -- ./release.sh $(VERSION)
+	doppler run -- ./release.sh $(V)
