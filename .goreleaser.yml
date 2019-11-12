@@ -72,7 +72,8 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
-    - '^Merge pull request'
+    - Merge pull request
+    - Merge branch
 
 dockers:
   - dockerfile: docker/alpine
