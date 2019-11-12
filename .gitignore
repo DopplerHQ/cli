@@ -18,3 +18,4 @@ doppler
 
 # credentials
 google.json
+.docker-config/
