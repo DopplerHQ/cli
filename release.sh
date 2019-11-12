@@ -7,6 +7,11 @@ function finish {
 }
 trap finish EXIT
 
+if [ ! -z "$(git status --porcelain)" ]; then
+  echo "The git workspace must be clean"
+  exit 1
+fi
+
 if [ $# -eq 0 ]; then
   echo "You must specify a version"
   exit 1
