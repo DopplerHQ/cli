@@ -32,6 +32,17 @@ listDebianArtifacts() {
   FILES=$(find dist/*.deb  -type f)
 }
 
+bintrayCreateVersion () {
+  URL="https://api.bintray.com/packages/$SUBJECT/$REPO/$PACKAGE/versions"
+  echo "Creating package version $VERSION"
+  RESPONSE_CODE=$(curl -X POST -d '{ "name": "$VERSION", "github_use_tag_release_notes": false, "vcs_tag": "$VERSION" }' -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
+  if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
+    echo "Unable to create package version, HTTP response code: $RESPONSE_CODE"
+    exit 1
+  fi
+  echo "HTTP response code: $RESPONSE_CODE"
+}
+
 bintrayUpload () {
   for i in $FILES; do
     FILENAME=${i##*/}
@@ -84,6 +95,7 @@ cleanArtifacts
 listDebianArtifacts
 getVersion
 printMeta
+bintrayCreateVersion
 setUploadDirPath
 bintrayUpload
 snooze
