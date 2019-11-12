@@ -2,7 +2,7 @@
 
 set -e
 
-function finish {
+function cleanup {
   # delete google creds from filesystem
   rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
@@ -12,7 +12,7 @@ function finish {
   set -e
   rm -rf "$DOCKER_CONFIG"
 }
-trap finish EXIT
+trap cleanup EXIT
 
 # save google creds to filesystem
 echo "$GOOGLE_CREDS" > "$GOOGLE_APPLICATION_CREDENTIALS"
