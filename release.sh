@@ -41,6 +41,7 @@ git push origin "$TAGNAME"
 echo "$GOOGLE_CREDS" > "$GOOGLE_APPLICATION_CREDENTIALS"
 # config will be saved to location explicitly specified in $DOCKER_CONFIG (set by Doppler)
 echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USER --password-stdin $DOCKER_REGISTRY
+echo $GOOGLE_CREDS | docker login -u $GCR_USER --password-stdin $GCR_REGISTRY
 goreleaser release --rm-dist
 
 scripts/publish-deb.sh
