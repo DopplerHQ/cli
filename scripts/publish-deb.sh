@@ -44,6 +44,18 @@ bintrayCreateVersion () {
   echo "HTTP response code: $RESPONSE_CODE"
 }
 
+bintrayUseGitHubReleaseNotes () {
+  URL="https://api.bintray.com/packages/$SUBJECT/$REPO/$PACKAGE/versions/$VERSION"
+  BODY="{ \"vcs_tag\": \"v0.0.33\", \"github_use_tag_release_notes\": \"true\" }"
+  echo "Creating package version $VERSION"
+  RESPONSE_CODE=$(curl -X PATCH -d "$BODY" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
+  if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
+    echo "Unable to create package version, HTTP response code: $RESPONSE_CODE"
+    exit 1
+  fi
+  echo "HTTP response code: $RESPONSE_CODE"
+}
+
 bintrayUpload () {
   for i in $FILES; do
     FILENAME=${i##*/}
@@ -97,6 +109,7 @@ listDebianArtifacts
 getVersion
 printMeta
 bintrayCreateVersion
+bintrayUseGitHubReleaseNotes
 setUploadDirPath
 bintrayUpload
 snooze
