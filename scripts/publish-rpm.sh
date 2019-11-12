@@ -20,10 +20,6 @@ fi
 
 getVersion () {
   VERSION=$(git describe);
-  if [ "${VERSION:0:1}" == "v" ]
-  then
-    VERSION="${VERSION:1}"
-  fi
 }
 
 listRpmArtifacts() {
