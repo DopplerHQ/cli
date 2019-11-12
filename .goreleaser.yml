@@ -60,6 +60,12 @@ signs:
       - "B70BD7FCA460C4A3D0EEB965D3D593D50EE79DEC"
       - "--output"
       - "${signature}"
+      - "--batch"
+      - "--yes"
+      - "--pinentry-mode"
+      - "loopback"
+      - "--passphrase"
+      - "$GPG_PASSPHRASE"
       - "--detach-sign"
       - "${artifact}"
 
