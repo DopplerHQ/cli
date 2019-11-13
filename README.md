@@ -98,6 +98,24 @@ You can download all binaries and release artifacts from the [Releases](https://
 
 You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
 
+## Usage
+
+Once installed, you can access the Doppler CLI with the `doppler` command.
+
+```sh
+$ doppler configure set key=$YOUR_API_KEY  # set local credentials
+$ doppler setup                            # select your project and config
+$ doppler configure --all                  # (optional) view local configuration
+```
+
+The first command will save your api key to the local configuration file, and it will be scoped to the current directory. You can modify this scope by specifying the `--scope` flag. See `doppler help configure set` for more info, or run `doppler configure --all` to view your current configuration.
+
+For a list of all commands:
+
+```sh
+$ doppler help
+```
+
 ## Development
 
 ### Build
