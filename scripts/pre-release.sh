@@ -12,6 +12,12 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$GIT_BRANCH" != "master" ]; then
+  echo "You must be on the master branch"
+  exit 1
+fi
+
 RELEASE_TYPE=$1
 PREV_VERSION=$(git describe --abbrev=0)
 
