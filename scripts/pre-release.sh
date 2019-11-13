@@ -13,8 +13,8 @@ if [ $# -eq 0 ]; then
 fi
 
 TAGNAME=$1
-if [ "${TAGNAME:0:1}" != "v" ]; then
-  echo "Version is incorrect; must match format vX.Y.Z"
+if [ "${TAGNAME:0:1}" == "v" ]; then
+  echo "Version is incorrect; must match format X.Y.Z"
   exit 1
 fi
 
