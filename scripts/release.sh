@@ -19,6 +19,6 @@ echo "Using Docker config $DOCKER_CONFIG"
 echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USER --password-stdin $DOCKER_REGISTRY
 echo $GOOGLE_CREDS | docker login -u $GCR_USER --password-stdin $GCR_REGISTRY
 
-GOOGLE_APPLICATION_CREDENTIALS="<(echo $GOOGLE_CREDS)" goreleaser release --rm-dist
+GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist
 scripts/publish-deb.sh
 scripts/publish-rpm.sh
