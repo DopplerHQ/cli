@@ -36,7 +36,7 @@ var config string
 
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
-	Short: "A brief description of your command",
+	Short: "Run a command with secrets injected into the environment",
 	Long: `Run a command with secrets injected into the environment
 
 Usage:
