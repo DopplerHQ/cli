@@ -36,12 +36,16 @@ $ doppler --version
 ```sh
 # add Bintray's GPG key
 $ sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D401AB61
+
 # add Doppler's apt repo
 $ sudo echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" > /etc/apt/sources.list.d/dopplerhq-doppler-deb.list
+
 # fetch latest packages
 $ sudo apt-get update
+
 # install doppler cli
 $ sudo apt-get install doppler
+
 # execute the cli
 $ doppler --version
 ```
@@ -51,10 +55,13 @@ $ doppler --version
 ```sh
 # add Doppler's yum repo
 $ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler-rpm.repo
+
 # fetch latest packages
 $ sudo yum update
+
 # install doppler cli
 $ sudo yum install doppler
+
 # execute the cli
 $ doppler --version
 ```
