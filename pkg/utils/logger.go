@@ -45,7 +45,7 @@ func ErrExit(e error, exitCode int, messages ...string) {
 	if JSON {
 		resp, err := json.Marshal(map[string]string{"error": e.Error()})
 		if err != nil {
-			panic(err)	
+			panic(err)
 		}
 		fmt.Println(string(resp))
 	} else {
