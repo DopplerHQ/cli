@@ -9,6 +9,7 @@ function cleanup {
   # delete docker creds
   set +e
   docker logout $DOCKER_REGISTRY
+  docker logout $GCR_REGISTRY
   set -e
   rm -rf "$DOCKER_CONFIG"
 }
