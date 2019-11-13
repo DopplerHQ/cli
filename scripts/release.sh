@@ -15,6 +15,8 @@ function cleanup {
 }
 trap cleanup EXIT
 
+echo "Using Docker config $DOCKER_CONFIG"
+
 # save google creds to filesystem
 echo "$GOOGLE_CREDS" > "$GOOGLE_APPLICATION_CREDENTIALS"
 # config will be saved to location explicitly specified in $DOCKER_CONFIG (set by Doppler)
