@@ -84,12 +84,10 @@ Here's an example Dockerfile showing how you can build on top of Doppler's base 
 ```dockerfile
 FROM dopplerhq/cli:node
 
-COPY . .
-
 # doppler args are passed at runtime
-ENV DOPPLER_API_KEY ""
-ENV DOPPLER_PROJECT ""
-ENV DOPPLER_CONFIG ""
+ENV DOPPLER_API_KEY="" DOPPLER_PROJECT="" DOPPLER_CONFIG=""
+
+COPY . .
 
 ENTRYPOINT doppler run --key="$DOPPLER_API_KEY" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
 ```
