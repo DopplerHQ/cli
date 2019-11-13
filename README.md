@@ -149,7 +149,7 @@ Store the keys and passphrase in your doppler config
 ```
 $ gpg --full-generate-key
 $ gpg --list-secret-keys  # copy the key's 40-character ID
-$ gpg --output secret.key --armor --export-secret-key KEY_ID
-$ gpg --output public.key --armor --export KEY_ID
+$ gpg --armor --export-secret-key KEY_ID
+$ gpg --armor --export KEY_ID
 $ gpg --keyserver pgp.mit.edu --send-key LAST_8_DIGITS_OF_KEY_ID
 ```
