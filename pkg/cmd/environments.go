@@ -16,9 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/api"
-	"github.com/DopplerHQ/cli/configuration"
-	"github.com/DopplerHQ/cli/utils"
+	"github.com/DopplerHQ/cli/pkg/api"
+	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 

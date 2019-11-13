@@ -18,9 +18,9 @@ package cmd
 import (
 	"os"
 
-	"github.com/DopplerHQ/cli/configuration"
-	"github.com/DopplerHQ/cli/utils"
-	"github.com/DopplerHQ/cli/version"
+	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
 )
 

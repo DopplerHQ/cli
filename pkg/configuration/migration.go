@@ -20,8 +20,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/DopplerHQ/cli/models"
-	"github.com/DopplerHQ/cli/utils"
+	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 type oldConfig struct {

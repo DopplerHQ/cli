@@ -18,8 +18,8 @@ package api
 import (
 	"encoding/json"
 
-	"github.com/DopplerHQ/cli/models"
-	"github.com/DopplerHQ/cli/utils"
+	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 

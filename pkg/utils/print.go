@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DopplerHQ/cli/models"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
 )

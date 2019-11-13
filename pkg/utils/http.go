@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DopplerHQ/cli/version"
+	"github.com/DopplerHQ/cli/pkg/version"
 )
 
 // QueryParam a url query parameter. ex: ?foo=bar

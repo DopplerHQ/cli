@@ -16,7 +16,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/DopplerHQ/cli/cmd"
+	"github.com/DopplerHQ/cli/pkg/cmd"
 )
 
 func main() {

@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/DopplerHQ/cli/utils"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
