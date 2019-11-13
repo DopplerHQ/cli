@@ -19,6 +19,7 @@ if [ -z "$BINTRAY_API_KEY" ]; then
 fi
 
 getVersion () {
+  # use --abbrev=0 to ensure the returned tag was explicitly set
   VERSION=$(git describe --abbrev=0);
 }
 
