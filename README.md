@@ -100,6 +100,22 @@ You can download all binaries and release artifacts from the [Releases](https://
 
 You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
 
+## Usage
+
+Once installed, you can access the Doppler CLI with the `doppler` command.
+
+```sh
+$ doppler login            # generate local credentials
+$ doppler setup            # select your project and config
+$ doppler configure --all  # (optional) view local configuration
+```
+
+For a list of all commands:
+
+```sh
+$ doppler help
+```
+
 ## Development
 
 ### Build
