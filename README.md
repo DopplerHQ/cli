@@ -105,9 +105,9 @@ You can also directly download the generated `.deb` and `.rpm` packages. If a bi
 Once installed, you can access the Doppler CLI with the `doppler` command.
 
 ```sh
-$ doppler login            # generate local credentials
-$ doppler setup            # select your project and config
-$ doppler configure --all  # (optional) view local configuration
+$ doppler configure set key=$YOUR_API_KEY  # set local credentials
+$ doppler setup                            # select your project and config
+$ doppler configure --all                  # (optional) view local configuration
 ```
 
 For a list of all commands:
