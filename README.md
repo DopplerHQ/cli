@@ -130,9 +130,16 @@ Note: The release will automatically fail if the tag and HEAD have diverged:
 
 #### Issues
 
-Issue: `gpg: signing failed: Inappropriate ioctl for device`
+- Issue: `gpg: signing failed: Inappropriate ioctl for device`
 
-Fix: `export GPG_TTY=$(tty)`
+    Fix: `export GPG_TTY=$(tty)`
+
+
+- Issue: After releasing, your personal account is logged out of the docker daemon
+
+    Fix: Log in again with this registry manually specified: `docker login https://docker.io`
+
+    Why: The release script explicitly scopes the `dopplerbot` docker login to `https://index.docker.io/v1/`. By explicitly scoping your personal login, you ensure these two logins don't conflict (and thus your personal login doesn't get removed on script cleanup). If not specified, `docker` treats these two registries as aliases.
 
 
 #### Generate a GPG key
