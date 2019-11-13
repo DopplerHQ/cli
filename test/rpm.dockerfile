@@ -6,4 +6,4 @@ RUN sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O bintray-dopplerhq
     && sudo yum update -y \
     && sudo yum install -y doppler
 
-ENTRYPOINT doppler --version
+ENTRYPOINT ["doppler"]

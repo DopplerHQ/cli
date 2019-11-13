@@ -10,4 +10,4 @@ RUN sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D40
     && sudo apt-get update \
     && sudo apt-get install -y doppler
 
-ENTRYPOINT doppler --version
+ENTRYPOINT ["doppler"]
