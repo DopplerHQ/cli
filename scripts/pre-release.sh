@@ -18,9 +18,10 @@ if [ "${TAGNAME:0:1}" == "v" ]; then
   exit 1
 fi
 
-echo "Using version $TAGNAME"
+VERSION="v$TAGNAME"
+echo "Using version $VERSION"
 
 # get git in order
 git push
-git tag -a "$TAGNAME" -m "$TAGNAME"
-git push origin "$TAGNAME"
+git tag -a "$VERSION" -m "$VERSION"
+git push origin "$VERSION"  # push only this tag
