@@ -21,7 +21,7 @@ if [ -z "$BINTRAY_API_KEY" ]; then
 fi
 
 getVersion () {
-  VERSION=$(git describe);
+  VERSION=$(git describe --abbrev=0);
 }
 
 setUploadDirPath () {
