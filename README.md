@@ -2,57 +2,147 @@
 
 ## Warning: This tool is current pre-release. For the current stable version, please use the [node-cli](https://github.com/DopplerHQ/node-cli).
 
+The Doppler CLI is the official tool for interacting with your Doppler secrets and configuration.
+
+**You can:**
+
+- Manage your secrets, projects, and environments
+- View activity and audit logs
+- Execute applications with your secrets injected into the environment
+
 ## Install
 
-TODO: this section
+The Doppler CLI is available in several popular package managers. It's also available as a standalone binary on the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page.
+
+### macOS
+
+```sh
+$ brew install dopplerhq/cli/doppler
+$ doppler --version
+```
+
+### Windows
+
+```sh
+$ scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
+$ scoop install doppler
+$ doppler --version
+```
+
+### Linux
+
+#### Debian/Ubuntu (apt)
+
+```sh
+# add Bintray's GPG key
+$ sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D401AB61
+
+# add Doppler's apt repo
+$ sudo echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" > /etc/apt/sources.list.d/dopplerhq-doppler-deb.list
+
+# fetch latest packages
+$ sudo apt-get update
+
+# install doppler cli
+$ sudo apt-get install doppler
+
+# execute the cli
+$ doppler --version
+```
+
+#### RedHat/CentOS (yum)
+
+```sh
+# add Doppler's yum repo
+$ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler-rpm.repo
+
+# fetch latest packages
+$ sudo yum update
+
+# install doppler cli
+$ sudo yum install doppler
+
+# execute the cli
+$ doppler --version
+```
+
+### Other
+
+You can download binaries and other release artifact from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are generated for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures. You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
+
+### Docker
+
+Docker containers are currently built using two base images: `alpine` and `node:lts-alpine`.
+
+Example:
+
+```sh
+$ docker run --rm -it dopplerhq/cli --version
+v1.0.0
+```
+
+Here's an example Dockerfile that shows how you can build on top of one of Doppler's base images:
+
+```dockerfile
+FROM dopplerhq/cli:node
+
+COPY . .
+
+ENV DOPPLER_API_KEY ""
+ENV DOPPLER_PROJECT ""
+ENV DOPPLER_CONFIG ""
+
+ENTRYPOINT doppler run --key="$DOPPLER_API_KEY" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
+```
 
 ## Development
 
-Build the app:
+### Build
 
-`go build`
-
-To specify the version at build time:
-
-`go build -ldflags '-X github.com/DopplerHQ/cli/version.ProgramVersion=YOUR_VERSION'`
-
-Or even at run time:
-
-`go run -ldflags '-X github.com/DopplerHQ/cli/version.ProgramVersion=YOUR_VERSION'` main.go YOUR_ARGS
-
-### Generate a GPG key
-
-Store the keys and passphrase in your doppler config
-
-```
-gpg --full-generate-key
-gpg --list-secret-keys  # copy the key's 40-character ID
-gpg --output secret.key --armor --export-secret-key KEY_ID
-gpg --output public.key --armor --export KEY_ID
-gpg --keyserver pgp.mit.edu --send-key LAST_8_DIGITS_OF_KEY_ID
+```sh
+$ make build
+$ ./doppler --version
 ```
 
 ### Test
 
-Test building for all targets:
+Build for all release targets:
 
-`goreleaser release --snapshot --skip-publish --rm-dist`
-
+```
+$ make test-release
+```
 
 ### Release
 
 To release a new version, run:
 
 ```
-make release VERSION=vX.Y.Z
+$ make release V=vX.Y.Z
 ```
 
 This command will push local changes to Origin, create a new tag, and push the tag to Origin. It will then build and release the doppler binaries.
 
-Note: The release will automatically fail if the tag and HEAD have diverged
+Note: The release will automatically fail if the tag and HEAD have diverged:
+
 `   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
 
 ### Help
 
+#### Issues
+
 Issue: `gpg: signing failed: Inappropriate ioctl for device`
+
 Fix: `export GPG_TTY=$(tty)`
+
+
+#### Generate a GPG key
+
+Store the keys and passphrase in your doppler config
+
+```
+$ gpg --full-generate-key
+$ gpg --list-secret-keys  # copy the key's 40-character ID
+$ gpg --output secret.key --armor --export-secret-key KEY_ID
+$ gpg --output public.key --armor --export KEY_ID
+$ gpg --keyserver pgp.mit.edu --send-key LAST_8_DIGITS_OF_KEY_ID
+```
