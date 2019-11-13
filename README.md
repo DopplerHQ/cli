@@ -66,12 +66,6 @@ $ sudo yum install doppler
 $ doppler --version
 ```
 
-### Other
-
-You can download binaries and other release artifact from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are generated for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
-
-You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
-
 ### Docker
 
 Docker containers are currently built using two base images: `alpine` and `node:lts-alpine`.
@@ -81,21 +75,30 @@ Example:
 ```sh
 $ docker run --rm -it dopplerhq/cli --version
 v1.0.0
+$ docker run --rm -it dopplerhq/cli:node --version
+v1.0.0
 ```
 
-Here's an example Dockerfile that shows how you can build on top of one of Doppler's base images:
+Here's an example Dockerfile showing how you can build on top of Doppler's base images:
 
 ```dockerfile
 FROM dopplerhq/cli:node
 
 COPY . .
 
+# doppler args are passed at runtime
 ENV DOPPLER_API_KEY ""
 ENV DOPPLER_PROJECT ""
 ENV DOPPLER_CONFIG ""
 
 ENTRYPOINT doppler run --key="$DOPPLER_API_KEY" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
 ```
+
+### Other
+
+You can download binaries and other release artifact from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are generated for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
+
+You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
 
 ## Development
 
@@ -129,8 +132,6 @@ Note: The release will automatically fail if the tag and HEAD have diverged:
 `   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
 
 ### Help
-
-#### Issues
 
 **Issue**: `gpg: signing failed: Inappropriate ioctl for device`
 
