@@ -68,7 +68,9 @@ $ doppler --version
 
 ### Other
 
-You can download binaries and other release artifact from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are generated for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures. You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
+You can download binaries and other release artifact from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are generated for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
+
+You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
 
 ### Docker
 
