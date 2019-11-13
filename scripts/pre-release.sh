@@ -36,6 +36,6 @@ echo "Using version $VERSION"
 echo "Previous version: $PREV_VERSION"
 
 # get git in order
-git push
+git push --quiet
 git tag -a "$VERSION" -m "$VERSION"
 git push origin "$VERSION"  # push only this tag
