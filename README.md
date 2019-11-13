@@ -110,6 +110,8 @@ $ doppler setup                            # select your project and config
 $ doppler configure --all                  # (optional) view local configuration
 ```
 
+The first command will save your api key to the local configuration file, and it will be scoped to the current directory. You can modify this scope by specifying the `--scope` flag. See `doppler help configure set` for more info, or run `doppler configure --all` to view your current configuration.
+
 For a list of all commands:
 
 ```sh
