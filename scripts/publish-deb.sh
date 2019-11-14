@@ -36,13 +36,12 @@ listDebianArtifacts() {
 bintrayCreateVersion () {
   URL="https://api.bintray.com/packages/$SUBJECT/$REPO/$PACKAGE/versions"
   BODY="{ \"name\": \"$VERSION\", \"github_use_tag_release_notes\": false, \"vcs_tag\": \"$VERSION\" }"
-  echo "Creating package version $VERSION"
+  echo "Creating deb package version $VERSION"
   RESPONSE_CODE=$(curl -X POST -d "$BODY" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
   if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
     echo "Unable to create package version, HTTP response code: $RESPONSE_CODE"
     exit 1
   fi
-  echo "HTTP response code: $RESPONSE_CODE"
 }
 
 bintrayUseGitHubReleaseNotes () {
@@ -54,7 +53,6 @@ bintrayUseGitHubReleaseNotes () {
     echo "Unable to create package version, HTTP response code: $RESPONSE_CODE"
     exit 1
   fi
-  echo "HTTP response code: $RESPONSE_CODE"
 }
 
 bintrayUpload () {
@@ -69,7 +67,6 @@ bintrayUpload () {
       echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
       exit 1
     fi
-    echo "HTTP response code: $RESPONSE_CODE"
   done;
 }
 
@@ -86,7 +83,6 @@ bintraySetDownloads () {
         echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
         exit 1
     fi
-    echo "HTTP response code: $RESPONSE_CODE"
   done
 }
 
