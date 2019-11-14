@@ -60,7 +60,7 @@ func init() {
 	rootCmd.Version = version.ProgramVersion
 	rootCmd.SetVersionTemplate(rootCmd.Version + "\n")
 
-	rootCmd.PersistentFlags().String("key", "", "doppler api key")
+	rootCmd.PersistentFlags().StringP("key", "k", "", "doppler api key")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
 	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections with invalid certificate")

@@ -91,8 +91,8 @@ var setupCmd = &cobra.Command{
 }
 
 func init() {
-	setupCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	setupCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "don't output the response")
 	rootCmd.AddCommand(setupCmd)
 }

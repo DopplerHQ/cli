@@ -57,7 +57,7 @@ var environmentsGetCmd = &cobra.Command{
 }
 
 func init() {
-	environmentsGetCmd.Flags().String("project", "", "output json")
+	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
 	rootCmd.AddCommand(environmentsCmd)
