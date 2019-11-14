@@ -23,6 +23,11 @@ $ brew install dopplerhq/cli/doppler
 $ doppler --version
 ```
 
+To update:
+```sh
+$ brew upgrade doppler
+```
+
 Alternatively, you can install the doppler `pkg` file from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Note that this installation method does not support easy updates. To update, you'll need to install the new `pkg` file.
 
 ### Windows
@@ -31,6 +36,12 @@ Alternatively, you can install the doppler `pkg` file from the [Releases](https:
 $ scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
 $ scoop install doppler
 $ doppler --version
+```
+
+To update:
+
+```sh
+$ scoop update doppler
 ```
 
 ### Linux
@@ -54,13 +65,19 @@ $ sudo apt-get install doppler
 $ doppler --version
 ```
 
+To update:
+
+```sh
+$ sudo apt-get update && sudo apt-get upgrade doppler
+```
+
 #### RedHat/CentOS (yum)
 
 ```sh
 # add Doppler's yum repo
 $ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler-rpm.repo
 
-# fetch latest packages
+# fetch and update latest packages
 $ sudo yum update
 
 # install doppler cli
@@ -68,6 +85,12 @@ $ sudo yum install doppler
 
 # execute the cli
 $ doppler --version
+```
+
+To update:
+
+```sh
+$ sudo yum update doppler
 ```
 
 ### Docker
