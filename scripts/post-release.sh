@@ -21,6 +21,7 @@ rm "dist/$pkg_name"
 
 # upload the package
 echo "Upload macOS pkg to GitHub"
+URL="https://uploads.github.com/repos/DopplerHQ/cli/releases/$github_release_id/assets?name=$final_pkg_name"
 RESPONSE_CODE=$(curl -T "dist/$final_pkg_name" -X POST -u "$GITHUB_USER:$GITHUB_TOKEN" -H "Content-Type: application/octet-stream" $URL -s -w "%{http_code}" -o /dev/null)
 if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
   echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
