@@ -16,10 +16,14 @@ The Doppler CLI is available in several popular package managers. It's also avai
 
 ### macOS
 
+Using brew is recommended:
+
 ```sh
 $ brew install dopplerhq/cli/doppler
 $ doppler --version
 ```
+
+Alternatively, you can install the doppler `pkg` file from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Note that this installation method does not support easy updates. To update, you'll need to install the new `pkg` file.
 
 ### Windows
 
