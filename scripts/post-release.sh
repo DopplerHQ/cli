@@ -26,3 +26,7 @@ if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
   echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
   exit 1
 fi
+
+# publish binaries to bintray
+scripts/publish-deb.sh
+scripts/publish-rpm.sh
