@@ -2,7 +2,7 @@
 
 ## Warning: This tool is current pre-release. For the current stable version, please use the [node-cli](https://github.com/DopplerHQ/node-cli).
 
-The Doppler CLI is the official tool for interacting with your Doppler secrets and configuration.
+The Doppler CLI is the official tool for interacting with your Enclave secrets and configuration.
 
 **You can:**
 
@@ -189,7 +189,7 @@ Note: The release will automatically fail if the tag and HEAD have diverged:
 
 #### Generate a GPG key
 
-Store the keys and passphrase in your doppler config
+Store the keys and passphrase in your enclave config
 
 ```
 $ gpg --full-generate-key
