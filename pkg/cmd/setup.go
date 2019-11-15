@@ -33,7 +33,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		_, projects := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Key.Value)
+		_, projects := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
 
 		project := ""
 		if cmd.Flags().Changed("project") {
@@ -64,7 +64,7 @@ var setupCmd = &cobra.Command{
 		if cmd.Flags().Changed("config") {
 			config = localConfig.Config.Value
 		} else {
-			_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project)
+			_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
 
 			var configOptions []string
 			for _, val := range configs {
@@ -84,15 +84,15 @@ var setupCmd = &cobra.Command{
 		if !silent {
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
-			rows := [][]string{{"key", conf.Key.Value, conf.Key.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
+			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
 			utils.PrintTable([]string{"name", "value", "scope"}, rows)
 		}
 	},
 }
 
 func init() {
-	setupCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	setupCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "don't output the response")
 	rootCmd.AddCommand(setupCmd)
 }

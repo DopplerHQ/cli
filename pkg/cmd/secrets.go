@@ -34,7 +34,7 @@ type secretsResponse struct {
 
 var secretsCmd = &cobra.Command{
 	Use:   "secrets",
-	Short: "Fetch all Doppler secrets",
+	Short: "Fetch all Enclave secrets",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
@@ -43,7 +43,7 @@ var secretsCmd = &cobra.Command{
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		if onlyNames {
 			utils.PrintSecretsNames(secrets, jsonFlag, plain)
@@ -67,7 +67,7 @@ doppler secrets get api_key crypto_key`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
 	},
@@ -100,7 +100,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+		_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 		if !silent {
 			utils.PrintSecrets(response, keys, jsonFlag, plain, raw)
@@ -130,7 +130,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			localConfig := configuration.LocalConfig(cmd)
-			_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+			_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 			if !silent {
 				utils.PrintSecrets(response, []string{}, jsonFlag, plain, raw)
@@ -157,7 +157,7 @@ doppler secrets download /root/test.env`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
@@ -171,35 +171,35 @@ doppler secrets download /root/test.env`,
 }
 
 func init() {
-	secretsCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	secretsCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	secretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	secretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
-	secretsGetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	secretsGetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	secretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	secretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.AddCommand(secretsGetCmd)
 
-	secretsSetCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	secretsSetCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	secretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	secretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsSetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsSetCmd)
 
-	secretsDeleteCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	secretsDeleteCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsDeleteCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
-	secretsDownloadCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	secretsDownloadCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
 	secretsDownloadCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)

@@ -2,7 +2,7 @@
 
 ## Warning: This tool is current pre-release. For the current stable version, please use the [node-cli](https://github.com/DopplerHQ/node-cli).
 
-The Doppler CLI is the official tool for interacting with your Doppler secrets and configuration.
+The Doppler CLI is the official tool for interacting with your Enclave secrets and configuration.
 
 **You can:**
 
@@ -112,11 +112,11 @@ Here's an example Dockerfile showing how you can build on top of Doppler's base 
 FROM dopplerhq/cli:node
 
 # doppler args are passed at runtime
-ENV DOPPLER_API_KEY="" DOPPLER_PROJECT="" DOPPLER_CONFIG=""
+ENV DOPPLER_TOKEN="" DOPPLER_PROJECT="" DOPPLER_CONFIG=""
 
 COPY . .
 
-ENTRYPOINT doppler run --key="$DOPPLER_API_KEY" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
+ENTRYPOINT doppler run --token="$DOPPLER_TOKEN" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
 ```
 
 ### Other
@@ -130,12 +130,12 @@ You can also directly download the generated `.deb` and `.rpm` packages. If a bi
 Once installed, you can access the Doppler CLI with the `doppler` command.
 
 ```sh
-$ doppler configure set key=$YOUR_API_KEY  # set local credentials
+$ doppler configure set token=$YOUR_TOKEN  # set local credentials
 $ doppler setup                            # select your project and config
 $ doppler configure --all                  # (optional) view local configuration
 ```
 
-The first command will save your api key to the local configuration file, and it will be scoped to the current directory. You can modify this scope by specifying the `--scope` flag. See `doppler help configure set` for more info, or run `doppler configure --all` to view your current configuration.
+The first command will save your api token to the local configuration file, and it will be scoped to the current directory. You can modify this scope by specifying the `--scope` flag. See `doppler help configure set` for more info, or run `doppler configure --all` to view your current configuration.
 
 For a list of all commands:
 
@@ -189,7 +189,7 @@ Note: The release will automatically fail if the tag and HEAD have diverged:
 
 #### Generate a GPG key
 
-Store the keys and passphrase in your doppler config
+Store the keys and passphrase in your enclave config
 
 ```
 $ gpg --full-generate-key

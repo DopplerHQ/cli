@@ -85,7 +85,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 	if !useFallbackFile && err != nil {
 		utils.Err(err)
@@ -128,8 +128,8 @@ func readFallbackFile(path string) map[string]string {
 }
 
 func init() {
-	runCmd.Flags().String("project", "", "doppler project (e.g. backend)")
-	runCmd.Flags().String("config", "", "doppler config (e.g. dev)")
+	runCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 
 	runCmd.Flags().String("fallback", "", "write secrets to this file after connecting to Doppler. secrets will be read from this file if future connection attempts are unsuccessful.")
 	runCmd.Flags().Bool("fallback-readonly", false, "don't update or modify the fallback file")

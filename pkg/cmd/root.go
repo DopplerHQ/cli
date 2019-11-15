@@ -60,12 +60,12 @@ func init() {
 	rootCmd.Version = version.ProgramVersion
 	rootCmd.SetVersionTemplate(rootCmd.Version + "\n")
 
-	rootCmd.PersistentFlags().String("key", "", "doppler api key")
+	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
 	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections with invalid certificate")
 
-	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read doppler config from the environment")
+	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")

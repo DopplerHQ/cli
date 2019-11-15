@@ -56,8 +56,8 @@ var configureCmd = &cobra.Command{
 		if jsonFlag {
 			confMap := make(map[string]map[string]string)
 
-			if config.Key != (models.Pair{}) {
-				storeInMap(&confMap, "key", config.Key)
+			if config.Token != (models.Pair{}) {
+				storeInMap(&confMap, "token", config.Token)
 			}
 
 			if config.Project != (models.Pair{}) {

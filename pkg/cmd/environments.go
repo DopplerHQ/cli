@@ -35,7 +35,7 @@ var environmentsCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		_, info := api.GetAPIEnvironments(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project)
+		_, info := api.GetAPIEnvironments(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
 
 		utils.PrintEnvironmentsInfo(info, jsonFlag)
 	},
@@ -50,14 +50,14 @@ var environmentsGetCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
 
-		_, info := api.GetAPIEnvironment(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, environment)
+		_, info := api.GetAPIEnvironment(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, environment)
 
 		utils.PrintEnvironmentInfo(info, jsonFlag)
 	},
 }
 
 func init() {
-	environmentsGetCmd.Flags().String("project", "", "output json")
+	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
 	rootCmd.AddCommand(environmentsCmd)

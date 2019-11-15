@@ -72,10 +72,10 @@ func Get(scope string) models.ScopedConfig {
 			continue
 		}
 
-		if conf.Key != "" {
-			if scopedConfig.Key == (models.Pair{}) || len(confScope) > len(scopedConfig.Key.Scope) {
-				scopedConfig.Key.Value = conf.Key
-				scopedConfig.Key.Scope = confScope
+		if conf.Token != "" {
+			if scopedConfig.Token == (models.Pair{}) || len(confScope) > len(scopedConfig.Token.Scope) {
+				scopedConfig.Token.Value = conf.Token
+				scopedConfig.Token.Scope = confScope
 			}
 		}
 
@@ -118,10 +118,10 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 
 	// environment variables
 	if !utils.GetBoolFlag(cmd, "no-read-env") {
-		key := os.Getenv("DOPPLER_API_KEY")
-		if key != "" {
-			localConfig.Key.Value = key
-			localConfig.Key.Scope = ""
+		token := os.Getenv("DOPPLER_TOKEN")
+		if token != "" {
+			localConfig.Token.Value = token
+			localConfig.Token.Scope = ""
 		}
 
 		project := os.Getenv("DOPPLER_PROJECT")
@@ -150,9 +150,9 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("key") || localConfig.Key.Value == "" {
-		localConfig.Key.Value = cmd.Flag("key").Value.String()
-		localConfig.Key.Scope = ""
+	if cmd.Flags().Changed("token") || localConfig.Token.Value == "" {
+		localConfig.Token.Value = cmd.Flag("token").Value.String()
+		localConfig.Token.Scope = ""
 	}
 
 	if cmd.Flags().Changed("project") || localConfig.Project.Value == "" {
@@ -276,13 +276,13 @@ func parseScope(scope string) (string, error) {
 
 // IsValidConfigOption whether the specified key is a valid option
 func IsValidConfigOption(key string) bool {
-	return key == "key" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
+	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
 func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string) {
-	if key == "key" {
-		return conf.Key.Value, conf.Key.Scope
+	if key == "token" {
+		return conf.Token.Value, conf.Token.Scope
 	}
 	if key == "project" {
 		return conf.Project.Value, conf.Project.Scope
@@ -302,8 +302,8 @@ func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string)
 
 // SetConfigValue set the value for the specified key in the config
 func SetConfigValue(conf *models.Config, key string, value string) {
-	if key == "key" {
-		(*conf).Key = value
+	if key == "token" {
+		(*conf).Token = value
 	} else if key == "project" {
 		(*conf).Project = value
 	} else if key == "config" {

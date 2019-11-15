@@ -17,18 +17,18 @@ package models
 
 // Config options
 type Config struct {
+	Token      string `json:"token"`
 	Project    string `json:"project"`
 	Config     string `json:"config"`
-	Key        string `json:"key"`
 	APIHost    string `json:"api-host"`
 	DeployHost string `json:"deploy-host"`
 }
 
 // ScopedConfig options with their scope
 type ScopedConfig struct {
+	Token      Pair `json:"token"`
 	Project    Pair `json:"project"`
 	Config     Pair `json:"config"`
-	Key        Pair `json:"key"`
 	APIHost    Pair `json:"api-host"`
 	DeployHost Pair `json:"deploy-host"`
 }
