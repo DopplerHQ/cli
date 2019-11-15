@@ -35,7 +35,7 @@ var configsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
-		_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value)
+		_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
 
 		utils.PrintConfigsInfo(configs, jsonFlag)
 	},
@@ -54,7 +54,7 @@ var configsGetCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		_, configInfo := api.GetAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, config)
+		_, configInfo := api.GetAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
 
 		utils.PrintConfigInfo(configInfo, jsonFlag)
 	},
@@ -76,7 +76,7 @@ var configsCreateCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.CreateAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, name, environment, defaults)
+		_, info := api.CreateAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
 
 		if !silent {
 			utils.PrintConfigInfo(info, jsonFlag)
@@ -100,10 +100,10 @@ var configsDeleteCmd = &cobra.Command{
 		}
 
 		if yes || utils.ConfirmationPrompt("Delete config "+config) {
-			api.DeleteAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, config)
+			api.DeleteAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
 
 			if !silent {
-				_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value)
+				_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
 				utils.PrintConfigsInfo(configs, jsonFlag)
 			}
 		}
@@ -125,7 +125,7 @@ var configsUpdateCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		_, info := api.UpdateAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, config, name)
+		_, info := api.UpdateAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config, name)
 
 		if !silent {
 			utils.PrintConfigInfo(info, jsonFlag)
@@ -142,7 +142,7 @@ var configsLogsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
-		_, logs := api.GetAPIConfigLogs(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, logs := api.GetAPIConfigLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		utils.PrintLogs(logs, number, jsonFlag)
 	},
@@ -161,7 +161,7 @@ var configsLogsGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		_, configLog := api.GetAPIConfigLog(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		_, configLog := api.GetAPIConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 
 		// TODO print diff (like node cli environments:logs:view command)
 		utils.PrintLog(configLog, jsonFlag)
@@ -182,7 +182,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		_, configLog := api.RollbackAPIConfigLog(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		_, configLog := api.RollbackAPIConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 
 		if !silent {
 			// TODO print diff (like node cli environments:logs:view command)

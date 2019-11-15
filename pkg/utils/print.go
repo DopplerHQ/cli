@@ -302,8 +302,8 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 func PrintScopedConfig(conf models.ScopedConfig) {
 	var rows [][]string
 
-	if conf.Key != (models.Pair{}) {
-		rows = append(rows, []string{"key", conf.Key.Value, conf.Key.Scope})
+	if conf.Token != (models.Pair{}) {
+		rows = append(rows, []string{"token", conf.Token.Value, conf.Token.Scope})
 	}
 	if conf.Project != (models.Pair{}) {
 		rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
@@ -330,8 +330,8 @@ func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 
 	var rows [][]string
 	for scope, config := range configs {
-		if config.Key != "" {
-			rows = append(rows, []string{"key", config.Key, scope})
+		if config.Token != "" {
+			rows = append(rows, []string{"token", config.Token, scope})
 		}
 		if config.Project != "" {
 			rows = append(rows, []string{"project", config.Project, scope})

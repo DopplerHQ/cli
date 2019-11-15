@@ -34,7 +34,7 @@ type secretsResponse struct {
 
 var secretsCmd = &cobra.Command{
 	Use:   "secrets",
-	Short: "Fetch all Doppler secrets",
+	Short: "Fetch all Enclave secrets",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
@@ -43,7 +43,7 @@ var secretsCmd = &cobra.Command{
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		if onlyNames {
 			utils.PrintSecretsNames(secrets, jsonFlag, plain)
@@ -67,7 +67,7 @@ doppler secrets get api_key crypto_key`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+		_, secrets := api.GetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
 	},
@@ -100,7 +100,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+		_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 		if !silent {
 			utils.PrintSecrets(response, keys, jsonFlag, plain, raw)
@@ -130,7 +130,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			localConfig := configuration.LocalConfig(cmd)
-			_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+			_, response := api.SetAPISecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 
 			if !silent {
 				utils.PrintSecrets(response, []string{}, jsonFlag, plain, raw)
@@ -157,7 +157,7 @@ doppler secrets download /root/test.env`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {

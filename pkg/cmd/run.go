@@ -85,7 +85,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Key.Value, localConfig.Project.Value, localConfig.Config.Value)
+	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 
 	if !useFallbackFile && err != nil {
 		utils.Err(err)

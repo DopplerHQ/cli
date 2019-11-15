@@ -47,7 +47,7 @@ func convertOldConfig(oldConfig map[string]oldConfig) map[string]models.Config {
 	config := make(map[string]models.Config)
 
 	for key, val := range oldConfig {
-		config[key] = models.Config{Project: val.Pipeline, Config: val.Environment, Key: val.Key}
+		config[key] = models.Config{Project: val.Pipeline, Config: val.Environment, Token: val.Key}
 	}
 
 	return config

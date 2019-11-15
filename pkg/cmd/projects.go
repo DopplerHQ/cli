@@ -30,7 +30,7 @@ var projectsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Key.Value)
+		_, info := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
 
 		utils.PrintProjectsInfo(info, jsonFlag)
 	},
@@ -49,7 +49,7 @@ var projectsGetCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		_, info := api.GetAPIProject(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project)
+		_, info := api.GetAPIProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
 
 		utils.PrintProjectInfo(info, jsonFlag)
 	},
@@ -70,7 +70,7 @@ var projectsCreateCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.CreateAPIProject(cmd, localConfig.APIHost.Value, localConfig.Key.Value, name, description)
+		_, info := api.CreateAPIProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, name, description)
 
 		if !silent {
 			utils.PrintProjectInfo(info, jsonFlag)
@@ -94,10 +94,10 @@ var projectsDeleteCmd = &cobra.Command{
 		}
 
 		if yes || utils.ConfirmationPrompt("Delete project "+project) {
-			api.DeleteAPIProject(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project)
+			api.DeleteAPIProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
 
 			if !silent {
-				_, info := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Key.Value)
+				_, info := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
 				utils.PrintProjectsInfo(info, jsonFlag)
 			}
 		}
@@ -121,7 +121,7 @@ var projectsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		description := cmd.Flag("description").Value.String()
 
-		_, info := api.UpdateAPIProject(cmd, localConfig.APIHost.Value, localConfig.Key.Value, project, name, description)
+		_, info := api.UpdateAPIProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project, name, description)
 
 		if !silent {
 			utils.PrintProjectInfo(info, jsonFlag)
