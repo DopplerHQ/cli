@@ -93,7 +93,7 @@ var projectsDeleteCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		if yes || utils.ConfirmationPrompt("Delete project "+project) {
+		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
 			api.DeleteAPIProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
 
 			if !silent {

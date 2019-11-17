@@ -118,10 +118,11 @@ func GetFilePath(fullPath string, defaultPath string) string {
 }
 
 // ConfirmationPrompt prompt user to confirm yes/no
-func ConfirmationPrompt(message string) bool {
+func ConfirmationPrompt(message string, defaultValue bool) bool {
 	confirm := false
 	prompt := &survey.Confirm{
 		Message: message,
+		Default: defaultValue,
 	}
 
 	survey.AskOne(prompt, &confirm)
