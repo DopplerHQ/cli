@@ -136,6 +136,7 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 
 		if Debug {
 			fmt.Println("Request ID:", resp.Header.Get("x-request-id"))
+			fmt.Println("Request URL:", req.URL)
 		}
 
 		if isSuccess(resp.StatusCode) {
