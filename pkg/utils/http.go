@@ -129,7 +129,7 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 			if Debug {
 				fmt.Println(err)
 			}
-			return StopRetry{errors.New("Unable to reach host " + req.Host + ". Please ensure you are connected to the internet.")}
+			return StopRetry{err}
 		}
 
 		response = resp

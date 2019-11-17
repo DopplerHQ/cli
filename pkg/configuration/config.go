@@ -183,7 +183,7 @@ func AllConfigs() map[string]models.Config {
 	return configContents
 }
 
-// Set a local config
+// Set properties on a scoped config
 func Set(scope string, options map[string]string) {
 	if scope != "*" {
 		var err error
