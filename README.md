@@ -12,11 +12,11 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 
 ## Install
 
-The Doppler CLI is available in several popular package managers. It's also available as a standalone binary on the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page.
+The Doppler CLI is available in several popular package managers. It's also [available](https://github.com/DopplerHQ/cli/releases/latest) as a standalone binary.
 
 ### macOS
 
-Using brew is recommended:
+Using [brew](https://brew.sh/) is recommended:
 
 ```sh
 $ brew install dopplerhq/cli/doppler
@@ -28,9 +28,11 @@ To update:
 $ brew upgrade doppler
 ```
 
-Alternatively, you can install the doppler `pkg` file from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Note that this installation method does not support easy updates. To update, you'll need to install the new `pkg` file.
+Alternatively, you can download the doppler `pkg` file from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. This will install the doppler binary in `/usr/local/bin`. Note that this installation method does not support seamless updates. To update, you'll need to download and run the new `pkg` file.
 
 ### Windows
+
+Using [scoop](https://scoop.sh/) is recommended:
 
 ```sh
 $ scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
@@ -53,15 +55,12 @@ $ scoop update doppler
 $ sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D401AB61
 
 # add Doppler's apt repo
-$ sudo echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" > /etc/apt/sources.list.d/dopplerhq-doppler-deb.list
+$ sudo echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" > /etc/apt/sources.list.d/dopplerhq-doppler.list
 
-# fetch latest packages
-$ sudo apt-get update
+# fetch and install latest doppler cli
+$ sudo apt-get update && sudo apt-get install doppler
 
-# install doppler cli
-$ sudo apt-get install doppler
-
-# execute the cli
+# (optional) print cli version
 $ doppler --version
 ```
 
@@ -75,15 +74,12 @@ $ sudo apt-get update && sudo apt-get upgrade doppler
 
 ```sh
 # add Doppler's yum repo
-$ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler-rpm.repo
+$ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler.repo
 
-# fetch and update latest packages
-$ sudo yum update
+# update packages and install latest doppler cli
+$ sudo yum update && sudo yum install doppler
 
-# install doppler cli
-$ sudo yum install doppler
-
-# execute the cli
+# (optional) print cli version
 $ doppler --version
 ```
 
@@ -127,21 +123,16 @@ You can also directly download the generated `.deb` and `.rpm` packages. If a bi
 
 ## Usage
 
-Once installed, you can access the Doppler CLI with the `doppler` command.
+Once installed, setup should only take a minute. You'll authorize the CLI to access your Doppler worplace, and then select your project and config.
 
 ```sh
-$ doppler configure set token=$YOUR_TOKEN  # set local credentials
-$ doppler setup                            # select your project and config
-$ doppler configure --all                  # (optional) view local configuration
+$ doppler login                     # generate auth credentials
+$ doppler setup                     # select your project and config
+# optional
+$ doppler configure --all           # view local configuration
 ```
 
-The first command will save your api token to the local configuration file, and it will be scoped to the current directory. You can modify this scope by specifying the `--scope` flag. See `doppler help configure set` for more info, or run `doppler configure --all` to view your current configuration.
-
-For a list of all commands:
-
-```sh
-$ doppler help
-```
+By default, `doppler login` and `doppler setup` will scope your configuration to the current directory. You can modify the scope by specifying the `--scope` flag. Run `doppler help` for more information.
 
 ## Development
 
