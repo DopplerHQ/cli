@@ -25,23 +25,6 @@ bintrayCreateVersion () {
   fi
 }
 
-bintrayUpload () {
-  uri=$1
-
-  for i in $FILES; do
-    FILENAME=${i##*/}
-    ARCH=$(echo ${FILENAME##*_} | cut -d '.' -f 1)
-    URL="https://api.bintray.com/content/$SUBJECT/$REPO/$PACKAGE/$VERSION/$uri"
-
-    echo "Uploading $URL"
-    RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
-    if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
-      echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
-      exit 1
-    fi
-  done;
-}
-
 bintrayUseGitHubReleaseNotes () {
   URL="https://api.bintray.com/packages/$SUBJECT/$REPO/$PACKAGE/versions/$VERSION"
   BODY="{ \"vcs_tag\": \"v$VERSION\", \"github_use_tag_release_notes\": \"true\" }"
