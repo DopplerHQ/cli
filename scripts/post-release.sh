@@ -29,5 +29,5 @@ if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
 fi
 
 # publish binaries to bintray
-scripts/publish-deb.sh
-scripts/publish-rpm.sh
+scripts/publish/deb.sh
+scripts/publish/rpm.sh
