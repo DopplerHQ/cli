@@ -38,7 +38,7 @@ bintrayUpload () {
   for i in $FILES; do
     FILENAME=${i##*/}
     ARCH=$(echo ${FILENAME##*_} | cut -d '.' -f 1)
-    URL="https://api.bintray.com/content/$SUBJECT/$REPO/$PACKAGE/$VERSION/$UPLOADDIRPATH/$FILENAME;deb_distribution=$DISTRIBUTIONS;deb_component=$COMPONENTS;deb_architecture=$ARCH?publish=1&override=1"
+    URL="https://api.bintray.com/content/$SUBJECT/$REPO/$PACKAGE/$VERSION/$UPLOADDIRPATH/$FILENAME;deb_distribution=$DISTRIBUTIONS;deb_component=$COMPONENTS;deb_architecture=$ARCH?publish=1"
 
     echo "Uploading $URL"
     RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
