@@ -74,12 +74,23 @@ var loginCmd = &cobra.Command{
 			time.Sleep(2 * time.Second)
 		}
 
-		fname := response["fname"].(string)
-		token := response["token"].(string)
-		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
-		if !silent {
-			fmt.Println("")
-			fmt.Println("Welcome, " + fname)
+		if response["success"].(bool) {
+			fname := response["fname"].(string)
+			token := response["token"].(string)
+
+			configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
+			if !silent {
+				fmt.Println("")
+				fmt.Println("Welcome, " + fname)
+			}
+		} else {
+			message := response["message"].(string)
+			if !silent {
+				fmt.Println("")
+				fmt.Println(message)
+			}
+
+			os.Exit(1)
 		}
 	},
 }
