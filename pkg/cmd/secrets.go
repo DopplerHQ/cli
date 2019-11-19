@@ -123,7 +123,7 @@ doppler secrets delete api_key crypto_key`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 
-		if yes || utils.ConfirmationPrompt("Delete secret(s)") {
+		if yes || utils.ConfirmationPrompt("Delete secret(s)", false) {
 			secrets := make(map[string]interface{})
 			for _, arg := range args {
 				secrets[arg] = nil

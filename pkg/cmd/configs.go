@@ -99,7 +99,7 @@ var configsDeleteCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		if yes || utils.ConfirmationPrompt("Delete config "+config) {
+		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
 			api.DeleteAPIConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
 
 			if !silent {

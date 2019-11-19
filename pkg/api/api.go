@@ -20,8 +20,77 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
 )
+
+// GetAPIGenerateAuthCode generate an auth code
+func GetAPIGenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) ([]byte, map[string]interface{}) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "hostname", Value: hostname})
+	params = append(params, utils.QueryParam{Key: "version", Value: version.ProgramVersion})
+	params = append(params, utils.QueryParam{Key: "os", Value: os})
+	params = append(params, utils.QueryParam{Key: "arch", Value: arch})
+
+	response, err := utils.GetRequest(host, "/auth/v1/cli/generate", params, "")
+	if err != nil {
+		utils.Err(err, "Unable to fetch auth code")
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	return response, result
+}
+
+// GetAPIAuthToken get an auth token
+func GetAPIAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[string]interface{}) {
+	reqBody := make(map[string]interface{})
+	reqBody["code"] = code
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, nil
+	}
+
+	response, err := utils.PostRequest(host, "/auth/v1/cli/authorize", []utils.QueryParam{}, "", body)
+	if err != nil {
+		return nil, nil
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, nil
+	}
+
+	return response, result
+}
+
+// RevokeAuthToken revoke an auth token
+func RevokeAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map[string]interface{}) {
+	reqBody := make(map[string]interface{})
+	reqBody["token"] = token
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		utils.Err(err, "Invalid auth token")
+	}
+
+	response, err := utils.PostRequest(host, "/auth/v1/cli/revoke", []utils.QueryParam{}, "", body)
+	if err != nil {
+		utils.Err(err, "Unable to revoke auth token")
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	return response, result
+}
 
 // GetAPISecrets for specified project and config
 func GetAPISecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, map[string]models.ComputedSecret) {

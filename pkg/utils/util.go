@@ -19,9 +19,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 )
 
@@ -118,12 +120,49 @@ func GetFilePath(fullPath string, defaultPath string) string {
 }
 
 // ConfirmationPrompt prompt user to confirm yes/no
-func ConfirmationPrompt(message string) bool {
+func ConfirmationPrompt(message string, defaultValue bool) bool {
 	confirm := false
 	prompt := &survey.Confirm{
 		Message: message,
+		Default: defaultValue,
 	}
 
 	survey.AskOne(prompt, &confirm)
 	return confirm
+}
+
+// CopyToClipboard copies text to the user's clipboard
+func CopyToClipboard(text string) {
+	if !clipboard.Unsupported {
+		clipboard.WriteAll(text)
+	}
+}
+
+// HostOS the host OS
+func HostOS() string {
+	os := runtime.GOOS
+
+	switch os {
+	case "darwin":
+		return "macOS"
+	case "windows":
+		return "Windows"
+	}
+
+	return os
+}
+
+// HostArch the host architecture
+func HostArch() string {
+	arch := runtime.GOARCH
+
+	switch arch {
+	case "amd64":
+		return "64-bit"
+	case "amd64p32":
+	case "386":
+		return "32-bit"
+	}
+
+	return arch
 }
