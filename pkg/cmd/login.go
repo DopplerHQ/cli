@@ -45,8 +45,9 @@ var loginCmd = &cobra.Command{
 			fmt.Println("Your auth code is", code)
 		}
 
-		if silent || utils.ConfirmationPrompt("Copy this code to your clipboard?", true) {
-			utils.CopyToClipboard(code)
+		utils.CopyToClipboard(code)
+		if !silent {
+			fmt.Println(("This has been copied to your clipboard"))
 		}
 
 		if !silent {
@@ -77,6 +78,7 @@ var loginCmd = &cobra.Command{
 		token := response["token"].(string)
 		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
 		if !silent {
+			fmt.Println("")
 			fmt.Println("Welcome, " + fname)
 		}
 	},
