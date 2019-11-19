@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/api"
@@ -34,10 +35,9 @@ var loginCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		scope := cmd.Flag("scope").Value.String()
 		silent := utils.GetBoolFlag(cmd, "silent")
-		os := utils.HostOS()
-		arch := utils.HostArch()
+		hostname, _ := os.Hostname()
 
-		_, response := api.GetAPIGenerateAuthCode(cmd, localConfig.APIHost.Value, os, arch)
+		_, response := api.GetAPIGenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
 

@@ -25,8 +25,9 @@ import (
 )
 
 // GetAPIGenerateAuthCode generate an auth code
-func GetAPIGenerateAuthCode(cmd *cobra.Command, host string, os string, arch string) ([]byte, map[string]interface{}) {
+func GetAPIGenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) ([]byte, map[string]interface{}) {
 	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "hostname", Value: hostname})
 	params = append(params, utils.QueryParam{Key: "version", Value: version.ProgramVersion})
 	params = append(params, utils.QueryParam{Key: "os", Value: os})
 	params = append(params, utils.QueryParam{Key: "arch", Value: arch})
