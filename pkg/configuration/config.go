@@ -150,27 +150,27 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("token") || localConfig.Token.Value == "" {
+	if cmd.Flags().Changed("token") {
 		localConfig.Token.Value = cmd.Flag("token").Value.String()
 		localConfig.Token.Scope = ""
 	}
 
-	if cmd.Flags().Changed("project") || localConfig.Project.Value == "" {
+	if cmd.Flags().Changed("project") {
 		localConfig.Project.Value = cmd.Flag("project").Value.String()
 		localConfig.Project.Scope = ""
 	}
 
-	if cmd.Flags().Changed("config") || localConfig.Config.Value == "" {
+	if cmd.Flags().Changed("config") {
 		localConfig.Config.Value = cmd.Flag("config").Value.String()
 		localConfig.Config.Scope = ""
 	}
 
-	if cmd.Flags().Changed("api-host") || localConfig.APIHost.Value == "" {
+	if cmd.Flags().Changed("api-host") {
 		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
 		localConfig.APIHost.Scope = ""
 	}
 
-	if cmd.Flags().Changed("deploy-host") || localConfig.DeployHost.Value == "" {
+	if cmd.Flags().Changed("deploy-host") {
 		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
 		localConfig.DeployHost.Scope = ""
 	}
