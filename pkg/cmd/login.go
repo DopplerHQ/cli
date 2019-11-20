@@ -35,6 +35,7 @@ var loginCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		scope := cmd.Flag("scope").Value.String()
 		silent := utils.GetBoolFlag(cmd, "silent")
+		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
 		_, response := api.GetAPIGenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
@@ -45,9 +46,8 @@ var loginCmd = &cobra.Command{
 			fmt.Println("Your auth code is", code)
 		}
 
-		utils.CopyToClipboard(code)
-		if !silent {
-			fmt.Println(("This has been copied to your clipboard"))
+		if copyAuthCode {
+			utils.CopyToClipboard(code)
 		}
 
 		if !silent {
@@ -74,12 +74,23 @@ var loginCmd = &cobra.Command{
 			time.Sleep(2 * time.Second)
 		}
 
-		fname := response["fname"].(string)
-		token := response["token"].(string)
-		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
-		if !silent {
-			fmt.Println("")
-			fmt.Println("Welcome, " + fname)
+		if response["success"].(bool) {
+			fname := response["fname"].(string)
+			token := response["token"].(string)
+
+			configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
+			if !silent {
+				fmt.Println("")
+				fmt.Println("Welcome, " + fname)
+			}
+		} else {
+			message := response["message"].(string)
+			if !silent {
+				fmt.Println("")
+				fmt.Println(message)
+			}
+
+			os.Exit(1)
 		}
 	},
 }
@@ -113,8 +124,11 @@ var loginRevokeCmd = &cobra.Command{
 
 func init() {
 	loginCmd.Flags().Bool("silent", false, "don't output any text")
+	loginCmd.Flags().Bool("no-copy", false, "don't copy the auth code to the clipboard")
+	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
 
 	loginRevokeCmd.Flags().Bool("silent", false, "don't output any text")
+	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "don't remove the revoked token from any saved configs")
 	loginCmd.AddCommand(loginRevokeCmd)
 
