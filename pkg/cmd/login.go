@@ -129,8 +129,12 @@ The old token will be revoked. Functionally, nothing will change.`,
 
 var loginRevokeCmd = &cobra.Command{
 	Use:   "revoke",
-	Short: "Revoke an auth token",
-	Args:  cobra.NoArgs,
+	Short: "Revoke your auth token",
+	Long: `Revoke your auth token
+
+Your auth token will be immediately revoked.
+This is like logging out.`,
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -139,17 +143,17 @@ var loginRevokeCmd = &cobra.Command{
 		token := localConfig.Token.Value
 		api.RevokeAuthToken(cmd, localConfig.APIHost.Value, token)
 
-		if !silent {
-			fmt.Println("Auth token has been revoked")
-		}
-
 		if updateConfig {
-			// remove key from any configs
+			// remove key from config
 			for scope, config := range configuration.AllConfigs() {
 				if config.Token == token {
 					configuration.Set(scope, map[string]string{"token": ""})
 				}
 			}
+		}
+
+		if !silent {
+			fmt.Println("Auth token has been revoked")
 		}
 	},
 }
@@ -166,7 +170,7 @@ func init() {
 
 	loginRevokeCmd.Flags().Bool("silent", false, "don't output any text")
 	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	loginRevokeCmd.Flags().Bool("no-update-config", false, "don't remove the revoked token from any saved configs")
+	loginRevokeCmd.Flags().Bool("no-update-config", false, "don't remove the revoked token from the config file")
 	loginCmd.AddCommand(loginRevokeCmd)
 
 	rootCmd.AddCommand(loginCmd)
