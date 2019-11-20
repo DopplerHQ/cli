@@ -124,8 +124,10 @@ var loginRevokeCmd = &cobra.Command{
 
 func init() {
 	loginCmd.Flags().Bool("silent", false, "don't output any text")
+	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
 
 	loginRevokeCmd.Flags().Bool("silent", false, "don't output any text")
+	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "don't remove the revoked token from any saved configs")
 	loginCmd.AddCommand(loginRevokeCmd)
 
