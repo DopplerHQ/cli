@@ -95,6 +95,38 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+var loginRollCmd = &cobra.Command{
+	Use:   "roll",
+	Short: "Roll your auth token",
+	Long: `Roll your auth token
+
+This will generate a new token for your immediate use.
+The old token will be revoked. Functionally, nothing will change.`,
+	Args: cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		localConfig := configuration.LocalConfig(cmd)
+		silent := utils.GetBoolFlag(cmd, "silent")
+		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
+
+		oldToken := localConfig.Token.Value
+		_, response := api.RollAuthToken(cmd, localConfig.APIHost.Value, oldToken)
+		newToken := response["token"].(string)
+
+		if updateConfig {
+			// update token in config
+			for scope, config := range configuration.AllConfigs() {
+				if config.Token == oldToken {
+					configuration.Set(scope, map[string]string{"token": newToken})
+				}
+			}
+		}
+
+		if !silent {
+			fmt.Println("Auth token has been rolled")
+		}
+	},
+}
+
 var loginRevokeCmd = &cobra.Command{
 	Use:   "revoke",
 	Short: "Revoke an auth token",
@@ -126,6 +158,11 @@ func init() {
 	loginCmd.Flags().Bool("silent", false, "don't output any text")
 	loginCmd.Flags().Bool("no-copy", false, "don't copy the auth code to the clipboard")
 	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
+
+	loginRollCmd.Flags().Bool("silent", false, "don't output any text")
+	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginRollCmd.Flags().Bool("no-update-config", false, "don't update the rolled token in the config file")
+	loginCmd.AddCommand(loginRollCmd)
 
 	loginRevokeCmd.Flags().Bool("silent", false, "don't output any text")
 	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")

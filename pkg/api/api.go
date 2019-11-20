@@ -69,6 +69,29 @@ func GetAPIAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[
 	return response, result
 }
 
+// RollAuthToken roll an auth token
+func RollAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map[string]interface{}) {
+	reqBody := make(map[string]interface{})
+	reqBody["token"] = token
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		utils.Err(err, "Invalid auth token")
+	}
+
+	response, err := utils.PostRequest(host, "/auth/v1/cli/roll", []utils.QueryParam{}, "", body)
+	if err != nil {
+		utils.Err(err, "Unable to roll auth token")
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		utils.Err(err)
+	}
+
+	return response, result
+}
+
 // RevokeAuthToken revoke an auth token
 func RevokeAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map[string]interface{}) {
 	reqBody := make(map[string]interface{})
