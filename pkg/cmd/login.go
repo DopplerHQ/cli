@@ -64,8 +64,10 @@ var loginCmd = &cobra.Command{
 		}
 
 		response = nil
+		// TODO can we use our existing retry function here instead??
 		for {
 			_, resp := api.GetAPIAuthToken(cmd, localConfig.APIHost.Value, code)
+			// TODO prob should stop if get a 500 or can't connect to server
 			if resp != nil {
 				response = resp
 				break
@@ -75,13 +77,13 @@ var loginCmd = &cobra.Command{
 		}
 
 		if response["success"].(bool) {
-			fname := response["fname"].(string)
+			name := response["name"].(string)
 			token := response["token"].(string)
 
 			configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
 			if !silent {
 				fmt.Println("")
-				fmt.Println("Welcome, " + fname)
+				fmt.Println("Welcome, " + name)
 			}
 		} else {
 			message := response["message"].(string)
