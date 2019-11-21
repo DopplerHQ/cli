@@ -148,7 +148,7 @@ Ex: download the file to /root and name it test.env:
 doppler secrets download /root/test.env`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		metadata := utils.GetBoolFlag(cmd, "metadata")
+		metadata := !utils.GetBoolFlag(cmd, "no-metadata")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
 		filePath := filepath.Join(".", "doppler.env")
@@ -200,7 +200,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDownloadCmd.Flags().Bool("metadata", true, "add metadata to the downloaded file (helps cache busting)")
+	secretsDownloadCmd.Flags().Bool("no-metadata", false, "don't add metadata to the downloaded file (helps cache busting)")
 	secretsDownloadCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 

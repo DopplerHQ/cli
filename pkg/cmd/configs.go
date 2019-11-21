@@ -67,7 +67,7 @@ var configsCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		silent := utils.GetBoolFlag(cmd, "silent")
-		defaults := utils.GetBoolFlag(cmd, "defaults")
+		defaults := !utils.GetBoolFlag(cmd, "no-defaults")
 		environment := cmd.Flag("environment").Value.String()
 
 		name := cmd.Flag("name").Value.String()
@@ -201,7 +201,7 @@ func init() {
 	configsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCreateCmd.Flags().Bool("defaults", true, "populate config with environment's default secrets")
+	configsCreateCmd.Flags().Bool("no-defaults", false, "don't populate config with environment's default secrets")
 	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsCreateCmd.MarkFlagRequired("environment")
 	configsCmd.AddCommand(configsCreateCmd)
