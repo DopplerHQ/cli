@@ -200,7 +200,7 @@ func init() {
 
 	configsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
-	configsCreateCmd.Flags().String("environment", "", "config environment")
+	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
 	configsCreateCmd.Flags().Bool("defaults", true, "populate config with environment's default secrets")
 	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
 	configsCreateCmd.MarkFlagRequired("environment")
