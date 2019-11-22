@@ -110,6 +110,13 @@ The old token will be revoked. Functionally, nothing will change.`,
 		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
 
 		oldToken := localConfig.Token.Value
+		if oldToken == "" {
+			if !silent {
+				fmt.Println("You must provide an auth token")
+			}
+			os.Exit(1)
+		}
+
 		_, response := api.RollAuthToken(cmd, localConfig.APIHost.Value, oldToken)
 		newToken := response["token"].(string)
 
@@ -134,7 +141,7 @@ var loginRevokeCmd = &cobra.Command{
 	Long: `Revoke your auth token
 
 Your auth token will be immediately revoked.
-This is like logging out.`,
+This is the CLI equivalent to logging out.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
@@ -142,6 +149,13 @@ This is like logging out.`,
 		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
 
 		token := localConfig.Token.Value
+		if token == "" {
+			if !silent {
+				fmt.Println("You must provide an auth token")
+			}
+			os.Exit(1)
+		}
+
 		api.RevokeAuthToken(cmd, localConfig.APIHost.Value, token)
 
 		if updateConfig {
