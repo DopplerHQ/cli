@@ -42,6 +42,7 @@ type errorResponse struct {
 
 // Insecure whether we should support https connections without a valid cert
 var Insecure = false
+var Timeout = true
 
 // GetRequest perform HTTP GET
 func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
@@ -113,7 +114,10 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	req.URL.RawQuery = query.Encode()
 
 	// set timeout and tls config
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{}
+	if Timeout {
+		client.Timeout = 10 * time.Second
+	}
 	if Insecure {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
