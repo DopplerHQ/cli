@@ -76,6 +76,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Token == (models.Pair{}) || len(confScope) > len(scopedConfig.Token.Scope) {
 				scopedConfig.Token.Value = conf.Token
 				scopedConfig.Token.Scope = confScope
+				scopedConfig.Token.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -83,6 +84,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Project == (models.Pair{}) || len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
 				scopedConfig.Project.Scope = confScope
+				scopedConfig.Project.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -90,6 +92,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Config == (models.Pair{}) || len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
 				scopedConfig.Config.Scope = confScope
+				scopedConfig.Config.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -97,6 +100,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.APIHost == (models.Pair{}) || len(confScope) > len(scopedConfig.APIHost.Scope) {
 				scopedConfig.APIHost.Value = conf.APIHost
 				scopedConfig.APIHost.Scope = confScope
+				scopedConfig.APIHost.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -104,6 +108,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.DeployHost == (models.Pair{}) || len(confScope) > len(scopedConfig.DeployHost.Scope) {
 				scopedConfig.DeployHost.Value = conf.DeployHost
 				scopedConfig.DeployHost.Scope = confScope
+				scopedConfig.DeployHost.Source = models.ConfigFileSource.String()
 			}
 		}
 	}
@@ -121,59 +126,99 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 		token := os.Getenv("DOPPLER_TOKEN")
 		if token != "" {
 			localConfig.Token.Value = token
-			localConfig.Token.Scope = ""
+			localConfig.Token.Scope = "*"
+			localConfig.Token.Source = models.EnvironmentSource.String()
 		}
 
 		project := os.Getenv("DOPPLER_PROJECT")
 		if project != "" {
 			localConfig.Project.Value = project
-			localConfig.Project.Scope = ""
+			localConfig.Project.Scope = "*"
+			localConfig.Project.Source = models.EnvironmentSource.String()
 		}
 
 		config := os.Getenv("DOPPLER_CONFIG")
 		if config != "" {
 			localConfig.Config.Value = config
-			localConfig.Config.Scope = ""
+			localConfig.Config.Scope = "*"
+			localConfig.Config.Source = models.EnvironmentSource.String()
 		}
 
 		apiHost := os.Getenv("DOPPLER_API_HOST")
 		if apiHost != "" {
 			localConfig.APIHost.Value = apiHost
-			localConfig.APIHost.Scope = ""
+			localConfig.APIHost.Scope = "*"
+			localConfig.APIHost.Source = models.EnvironmentSource.String()
 		}
 
 		deployHost := os.Getenv("DOPPLER_DEPLOY_HOST")
 		if deployHost != "" {
 			localConfig.DeployHost.Value = deployHost
-			localConfig.DeployHost.Scope = ""
+			localConfig.DeployHost.Scope = "*"
+			localConfig.DeployHost.Source = models.EnvironmentSource.String()
 		}
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("token") || localConfig.Token.Value == "" {
+	flagSet := cmd.Flags().Changed("token")
+	if flagSet || localConfig.Token.Value == "" {
 		localConfig.Token.Value = cmd.Flag("token").Value.String()
-		localConfig.Token.Scope = ""
+		localConfig.Token.Scope = "*"
+
+		if flagSet {
+			localConfig.Token.Source = models.FlagSource.String()
+		} else {
+			localConfig.Token.Source = models.DefaultValueSource.String()
+		}
 	}
 
-	if cmd.Flags().Changed("api-host") || localConfig.APIHost.Value == "" {
+	flagSet = cmd.Flags().Changed("api-host")
+	if flagSet || localConfig.APIHost.Value == "" {
 		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
-		localConfig.APIHost.Scope = ""
+		localConfig.APIHost.Scope = "*"
+
+		if flagSet {
+			localConfig.APIHost.Source = models.FlagSource.String()
+		} else {
+			localConfig.APIHost.Source = models.DefaultValueSource.String()
+		}
 	}
 
-	if cmd.Flags().Changed("deploy-host") || localConfig.DeployHost.Value == "" {
+	flagSet = cmd.Flags().Changed("deploy-host")
+	if flagSet || localConfig.DeployHost.Value == "" {
 		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
-		localConfig.DeployHost.Scope = ""
+		localConfig.DeployHost.Scope = "*"
+
+		if flagSet {
+			localConfig.DeployHost.Source = models.FlagSource.String()
+		} else {
+			localConfig.DeployHost.Source = models.DefaultValueSource.String()
+		}
 	}
 
 	// these flags below don't have a default value and should only be used if specified by the user (or will cause invalid memory access)
-	if cmd.Flags().Changed("project") {
+	flagSet = cmd.Flags().Changed("project")
+	if flagSet {
 		localConfig.Project.Value = cmd.Flag("project").Value.String()
-		localConfig.Project.Scope = ""
+		localConfig.Project.Scope = "*"
+
+		if flagSet {
+			localConfig.Project.Source = models.FlagSource.String()
+		} else {
+			localConfig.Project.Source = models.DefaultValueSource.String()
+		}
 	}
 
-	if cmd.Flags().Changed("config") {
+	flagSet = cmd.Flags().Changed("config")
+	if flagSet {
 		localConfig.Config.Value = cmd.Flag("config").Value.String()
-		localConfig.Config.Scope = ""
+		localConfig.Config.Scope = "*"
+
+		if flagSet {
+			localConfig.Config.Source = models.FlagSource.String()
+		} else {
+			localConfig.Config.Source = models.DefaultValueSource.String()
+		}
 	}
 
 	return localConfig

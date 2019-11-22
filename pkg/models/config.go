@@ -35,6 +35,21 @@ type ScopedConfig struct {
 
 // Pair value and its scope
 type Pair struct {
-	Value string `json:"value"`
-	Scope string `json:"scope"`
+	Value  string `json:"value"`
+	Scope  string `json:"scope"`
+	Source string `json:"source"`
+}
+
+// Source where the value came from
+type Source int
+
+const (
+	FlagSource Source = iota
+	ConfigFileSource
+	EnvironmentSource
+	DefaultValueSource
+)
+
+func (s Source) String() string {
+	return [...]string{"Flag", "Config File", "Environment", "Default Value"}[s]
 }
