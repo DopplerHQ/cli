@@ -50,7 +50,7 @@ func Execute() {
 	}
 
 	if rootCmd.Flags().Changed("configuration") {
-		configuration.ConfigFile = rootCmd.Flag("configuration").Value.String()
+		configuration.UserConfigPath = rootCmd.Flag("configuration").Value.String()
 	}
 	configuration.LoadConfig()
 
@@ -71,7 +71,7 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
-	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
+	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigPath, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Get the version of the Doppler CLI")

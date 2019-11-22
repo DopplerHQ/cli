@@ -28,8 +28,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigFile path to the user's configuration file
-var ConfigFile string
+// UserConfigPath path to the user's configuration file
+var UserConfigPath string
 
 var configContents map[string]models.Config
 
@@ -37,9 +37,9 @@ func init() {
 	fileName := ".doppler.yaml"
 	configDir := utils.ConfigDir()
 	if utils.Exists(configDir) {
-		ConfigFile = filepath.Join(configDir, fileName)
+		UserConfigPath = filepath.Join(configDir, fileName)
 	} else {
-		ConfigFile = filepath.Join(utils.HomeDir(), fileName)
+		UserConfigPath = filepath.Join(utils.HomeDir(), fileName)
 	}
 
 	if !exists() {
@@ -245,18 +245,18 @@ func writeYAML(config map[string]models.Config) {
 		utils.Err(err)
 	}
 
-	err = ioutil.WriteFile(ConfigFile, bytes, os.FileMode(0600))
+	err = ioutil.WriteFile(UserConfigPath, bytes, os.FileMode(0600))
 	if err != nil {
 		utils.Err(err)
 	}
 }
 
 func exists() bool {
-	return utils.Exists(ConfigFile)
+	return utils.Exists(UserConfigPath)
 }
 
 func readYAML() map[string]models.Config {
-	fileContents, err := ioutil.ReadFile(ConfigFile)
+	fileContents, err := ioutil.ReadFile(UserConfigPath)
 	if err != nil {
 		utils.Err(err)
 	}
