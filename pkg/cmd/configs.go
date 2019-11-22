@@ -16,6 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -73,6 +76,18 @@ var configsCreateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		if len(args) > 0 {
 			name = args[0]
+		}
+
+		if name == "" {
+			utils.Err(errors.New("you must specify a name"))
+		}
+
+		if environment == "" && strings.Index(name, "_") != -1 {
+			environment = name[0:strings.Index(name, "_")]
+		}
+
+		if environment == "" {
+			utils.Err(errors.New("you must specify an environment"))
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
@@ -203,7 +218,6 @@ func init() {
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
 	configsCreateCmd.Flags().Bool("no-defaults", false, "don't populate config with environment's default secrets")
 	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
-	configsCreateCmd.MarkFlagRequired("environment")
 	configsCmd.AddCommand(configsCreateCmd)
 
 	configsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
