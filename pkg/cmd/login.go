@@ -101,8 +101,8 @@ var loginRollCmd = &cobra.Command{
 	Short: "Roll your auth token",
 	Long: `Roll your auth token
 
-This will generate a new token for your immediate use.
-The old token will be revoked. Functionally, nothing will change.`,
+This will generate a new token and revoke the old one.
+Your saved configuration will be updated.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
