@@ -43,44 +43,39 @@ var configureCmd = &cobra.Command{
 		scope := cmd.Flag("scope").Value.String()
 		config := configuration.Get(scope)
 
-		storeInMap := func(confMap *map[string]map[string]string, key string, pair models.Pair) {
-			scope := pair.Scope
-			value := pair.Value
-
-			if (*confMap)[scope] == nil {
-				(*confMap)[scope] = make(map[string]string)
-			}
-			(*confMap)[scope][key] = value
-		}
-
 		if jsonFlag {
 			confMap := make(map[string]map[string]string)
 
 			if config.Token != (models.Pair{}) {
-				storeInMap(&confMap, "token", config.Token)
+				scopeBucket := confMap[config.Token.Scope]
+				scopeBucket["token"] = config.Token.Value
 			}
 
 			if config.Project != (models.Pair{}) {
-				storeInMap(&confMap, "project", config.Project)
+				scopeBucket := confMap[config.Project.Scope]
+				scopeBucket["project"] = config.Project.Value
 			}
 
 			if config.Config != (models.Pair{}) {
-				storeInMap(&confMap, "config", config.Config)
+				scopeBucket := confMap[config.Config.Scope]
+				scopeBucket["config"] = config.Config.Value
 			}
 
 			if config.APIHost != (models.Pair{}) {
-				storeInMap(&confMap, "api-host", config.APIHost)
+				scopeBucket := confMap[config.APIHost.Scope]
+				scopeBucket["api-host"] = config.APIHost.Value
 			}
 
 			if config.DeployHost != (models.Pair{}) {
-				storeInMap(&confMap, "deploy-host", config.DeployHost)
+				scopeBucket := confMap[config.DeployHost.Scope]
+				scopeBucket["deploy-host"] = config.DeployHost.Value
 			}
 
 			utils.PrintJSON(confMap)
 			return
 		}
 
-		utils.PrintScopedConfig(configuration.Get(scope))
+		utils.PrintScopedConfig(config)
 	},
 }
 
