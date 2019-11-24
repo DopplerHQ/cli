@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -74,6 +75,10 @@ var loginCmd = &cobra.Command{
 			}
 
 			time.Sleep(2 * time.Second)
+		}
+
+		if response == nil {
+			utils.Err(errors.New("unable to authenticate"))
 		}
 
 		if err, ok := response["error"]; ok {
