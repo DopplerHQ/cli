@@ -86,21 +86,17 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 	}
 
 	response, err := api.GetDeploySecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
-
-	if !useFallbackFile && err != nil {
+	if err != nil {
+		if useFallbackFile {
+			return readFallbackFile(fallbackPath)
+		}
 		utils.Err(err)
 	}
 
-	if useFallbackFile {
+	if useFallbackFile && !fallbackReadonly {
+		err := ioutil.WriteFile(fallbackPath, response, 0600)
 		if err != nil {
-			return readFallbackFile(fallbackPath)
-		}
-
-		if !fallbackReadonly {
-			err := ioutil.WriteFile(fallbackPath, response, 0600)
-			if err != nil {
-				utils.Err(err, "Unable to write fallback file")
-			}
+			utils.Err(err, "Unable to write fallback file")
 		}
 	}
 
