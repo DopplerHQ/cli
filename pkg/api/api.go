@@ -52,7 +52,7 @@ func GetAPIAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[
 	reqBody["code"] = code
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, nil
+		utils.Err(err, "Invalid auth code")
 	}
 
 	response, err := utils.PostRequest(host, "/auth/v1/cli/authorize", []utils.QueryParam{}, "", body)
@@ -63,7 +63,7 @@ func GetAPIAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		return nil, nil
+		utils.Err(err, "Unable to fetch auth token")
 	}
 
 	return response, result
