@@ -24,7 +24,7 @@ import (
 
 var environmentsCmd = &cobra.Command{
 	Use:   "environments",
-	Short: "List environments",
+	Short: "List Enclave environments",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON

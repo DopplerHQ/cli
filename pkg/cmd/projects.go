@@ -24,7 +24,7 @@ import (
 
 var projectsCmd = &cobra.Command{
 	Use:   "projects",
-	Short: "List projects",
+	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON

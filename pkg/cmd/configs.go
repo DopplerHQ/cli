@@ -32,7 +32,7 @@ type configsResponse struct {
 
 var configsCmd = &cobra.Command{
 	Use:   "configs",
-	Short: "List configs",
+	Short: "List Enclave configs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON

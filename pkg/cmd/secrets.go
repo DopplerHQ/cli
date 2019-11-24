@@ -34,7 +34,7 @@ type secretsResponse struct {
 
 var secretsCmd = &cobra.Command{
 	Use:   "secrets",
-	Short: "Fetch all Enclave secrets",
+	Short: "List Enclave secrets",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
