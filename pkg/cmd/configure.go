@@ -231,7 +231,7 @@ doppler configure unset key otherkey`,
 }
 
 func init() {
-	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified	")
+	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified")
 	configureCmd.AddCommand(configureGetCmd)
 
 	configureSetCmd.Flags().Bool("silent", false, "don't output the new config")
