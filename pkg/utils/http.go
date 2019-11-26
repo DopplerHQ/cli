@@ -42,7 +42,12 @@ type errorResponse struct {
 
 // Insecure whether we should support https connections without a valid cert
 var Insecure = false
-var Timeout = true
+
+// UseTimeout whether to timeout long-running requests
+var UseTimeout = true
+
+// TimeoutDuration how long to wait for a request to complete before timing out
+var TimeoutDuration = 10 * time.Second
 
 // GetRequest perform HTTP GET
 func GetRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
@@ -124,8 +129,8 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 
 	// set timeout and tls config
 	client := &http.Client{}
-	if Timeout {
-		client.Timeout = 10 * time.Second
+	if UseTimeout {
+		client.Timeout = TimeoutDuration
 	}
 	if Insecure {
 		client.Transport = &http.Transport{
