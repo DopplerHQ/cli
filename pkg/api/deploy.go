@@ -15,13 +15,6 @@ limitations under the License.
 */
 package api
 
-import (
-	"strconv"
-
-	"github.com/DopplerHQ/cli/pkg/utils"
-	"github.com/spf13/cobra"
-)
-
 type errorResponse struct {
 	messages []string
 	success  bool
@@ -31,20 +24,4 @@ type errorResponse struct {
 type Secret struct {
 	Name  string
 	Value string
-}
-
-// DownloadSecrets for specified project and config
-func DownloadSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, metadata bool) []byte {
-	var params []utils.QueryParam
-	params = append(params, utils.QueryParam{Key: "environment", Value: config})
-	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
-	params = append(params, utils.QueryParam{Key: "format", Value: "file"})
-	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
-
-	response, err := utils.GetRequest(host, nil, "/v1/variables", params, apiKey)
-	if err != nil {
-		utils.Err(err, "Unable to download secrets")
-	}
-
-	return response
 }

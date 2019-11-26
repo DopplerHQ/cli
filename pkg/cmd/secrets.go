@@ -177,11 +177,14 @@ doppler secrets download /root/test.env`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body := api.DownloadSecrets(cmd, localConfig.DeployHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		body, apiError := api.DownloadSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		if !apiError.IsNil() {
+			utils.Err(apiError.Unwrap(), apiError.Message)
+		}
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
-			utils.Err(err)
+			utils.Err(err, "Unable to save file")
 		}
 
 		if !silent {

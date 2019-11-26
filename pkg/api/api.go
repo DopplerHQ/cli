@@ -17,6 +17,7 @@ package api
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -127,13 +128,28 @@ func RevokeAuthToken(cmd *cobra.Command, host string, token string) (map[string]
 	return result, Error{}
 }
 
+// DownloadSecrets for specified project and config
+func DownloadSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, metadata bool) ([]byte, Error) {
+	var params []utils.QueryParam
+	params = append(params, utils.QueryParam{Key: "environment", Value: config})
+	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
+	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
+
+	response, err := utils.GetRequest(host, map[string]string{"Accept": "text/plain"}, "/v2/variables", params, apiKey)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to download secrets"}
+	}
+
+	return response, Error{}
+}
+
 // GetSecrets for specified project and config
 func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	response, err := utils.GetRequest(host, nil, "/v2/variables", params, apiKey)
+	response, err := utils.GetRequest(host, map[string]string{"Accept": "application/json"}, "/v2/variables", params, apiKey)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch secrets"}
 	}
