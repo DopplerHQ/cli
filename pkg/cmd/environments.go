@@ -35,7 +35,10 @@ var environmentsCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		_, info := api.GetEnvironments(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+		info, err := api.GetEnvironments(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		utils.PrintEnvironmentsInfo(info, jsonFlag)
 	},
@@ -50,7 +53,10 @@ var environmentsGetCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
 
-		_, info := api.GetEnvironment(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, environment)
+		info, err := api.GetEnvironment(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, environment)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		utils.PrintEnvironmentInfo(info, jsonFlag)
 	},

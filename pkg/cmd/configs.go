@@ -38,7 +38,10 @@ var configsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
-		_, configs := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+		configs, err := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		utils.PrintConfigsInfo(configs, jsonFlag)
 	},
@@ -57,7 +60,10 @@ var configsGetCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		_, configInfo := api.GetConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+		configInfo, err := api.GetConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		utils.PrintConfigInfo(configInfo, jsonFlag)
 	},
@@ -91,7 +97,10 @@ var configsCreateCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		_, info := api.CreateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
+		info, err := api.CreateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		if !silent {
 			utils.PrintConfigInfo(info, jsonFlag)
@@ -115,10 +124,17 @@ var configsDeleteCmd = &cobra.Command{
 		}
 
 		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
-			api.DeleteConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+			err := api.DeleteConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+			if !err.IsNil() {
+				utils.Err(err.Unwrap(), err.Message)
+			}
 
 			if !silent {
-				_, configs := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+				configs, err := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+				if !err.IsNil() {
+					utils.Err(err.Unwrap(), err.Message)
+				}
+
 				utils.PrintConfigsInfo(configs, jsonFlag)
 			}
 		}
@@ -140,7 +156,10 @@ var configsUpdateCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		_, info := api.UpdateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config, name)
+		info, err := api.UpdateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config, name)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		if !silent {
 			utils.PrintConfigInfo(info, jsonFlag)
@@ -157,7 +176,10 @@ var configsLogsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
-		_, logs := api.GetConfigLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		logs, err := api.GetConfigLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		utils.PrintLogs(logs, number, jsonFlag)
 	},
@@ -176,7 +198,10 @@ var configsLogsGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		_, configLog := api.GetConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		configLog, err := api.GetConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		// TODO print diff (like node cli environments:logs:view command)
 		utils.PrintLog(configLog, jsonFlag)
@@ -197,7 +222,10 @@ var configsLogsRollbackCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		_, configLog := api.RollbackConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		configLog, err := api.RollbackConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		if !silent {
 			// TODO print diff (like node cli environments:logs:view command)

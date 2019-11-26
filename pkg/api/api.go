@@ -24,8 +24,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Error API errors
+type Error struct {
+	Err     error
+	Message string
+}
+
+// Unwrap get the original error
+func (e *Error) Unwrap() error { return e.Err }
+
+// IsNil whether the error is nil
+func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
+
 // GenerateAuthCode generate an auth code
-func GenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) ([]byte, map[string]interface{}) {
+func GenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) (map[string]interface{}, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "hostname", Value: hostname})
 	params = append(params, utils.QueryParam{Key: "version", Value: version.ProgramVersion})
@@ -34,102 +46,102 @@ func GenerateAuthCode(cmd *cobra.Command, host string, hostname string, os strin
 
 	response, err := utils.GetRequest(host, "/auth/v1/cli/generate", params, "")
 	if err != nil {
-		utils.Err(err, "Unable to fetch auth code")
+		return nil, Error{Err: err, Message: "Unable to fetch auth code"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
-	return response, result
+	return result, Error{}
 }
 
 // GetAuthToken get an auth token
-func GetAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[string]interface{}) {
+func GetAuthToken(cmd *cobra.Command, host string, code string) (map[string]interface{}, Error) {
 	reqBody := make(map[string]interface{})
 	reqBody["code"] = code
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		utils.Err(err, "Invalid auth code")
+		return nil, Error{Err: err, Message: "Invalid auth code"}
 	}
 
 	response, err := utils.PostRequest(host, "/auth/v1/cli/authorize", []utils.QueryParam{}, "", body)
 	if err != nil {
-		return nil, nil
+		return nil, Error{Err: err, Message: "Unable to fetch auth code"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err, "Unable to fetch auth token")
+		return nil, Error{Err: err, Message: "Unable to fetch auth token"}
 	}
 
-	return response, result
+	return result, Error{}
 }
 
 // RollAuthToken roll an auth token
-func RollAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map[string]interface{}) {
+func RollAuthToken(cmd *cobra.Command, host string, token string) (map[string]interface{}, Error) {
 	reqBody := make(map[string]interface{})
 	reqBody["token"] = token
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		utils.Err(err, "Invalid auth token")
+		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
 	response, err := utils.PostRequest(host, "/auth/v1/cli/roll", []utils.QueryParam{}, "", body)
 	if err != nil {
-		utils.Err(err, "Unable to roll auth token")
+		return nil, Error{Err: err, Message: "Unable to roll auth token"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
-	return response, result
+	return result, Error{}
 }
 
 // RevokeAuthToken revoke an auth token
-func RevokeAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map[string]interface{}) {
+func RevokeAuthToken(cmd *cobra.Command, host string, token string) (map[string]interface{}, Error) {
 	reqBody := make(map[string]interface{})
 	reqBody["token"] = token
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		utils.Err(err, "Invalid auth token")
+		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
 	response, err := utils.PostRequest(host, "/auth/v1/cli/revoke", []utils.QueryParam{}, "", body)
 	if err != nil {
-		utils.Err(err, "Unable to revoke auth token")
+		return nil, Error{Err: err, Message: "Unable to revoke auth token"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
-	return response, result
+	return result, Error{}
 }
 
 // GetSecrets for specified project and config
-func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, map[string]models.ComputedSecret) {
+func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) (map[string]models.ComputedSecret, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/variables", params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch secrets")
+		return nil, Error{Err: err, Message: "Unable to fetch secrets"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -140,16 +152,16 @@ func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, 
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
-	return response, computed
+	return computed, Error{}
 }
 
 // SetSecrets for specified project and config
-func SetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, secrets map[string]interface{}) ([]byte, map[string]models.ComputedSecret) {
+func SetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, secrets map[string]interface{}) (map[string]models.ComputedSecret, Error) {
 	reqBody := make(map[string]interface{})
 	reqBody["variables"] = secrets
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		utils.Err(err, "Invalid secrets")
+		return nil, Error{Err: err, Message: "Invalid secrets"}
 	}
 
 	var params []utils.QueryParam
@@ -158,13 +170,13 @@ func SetSecrets(cmd *cobra.Command, host string, apiKey string, project string, 
 
 	response, err := utils.PostRequest(host, "/v2/variables", params, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to set secrets")
+		return nil, Error{Err: err, Message: "Unable to set secrets"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	computed := make(map[string]models.ComputedSecret)
@@ -173,59 +185,59 @@ func SetSecrets(cmd *cobra.Command, host string, apiKey string, project string, 
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
-	return response, computed
+	return computed, Error{}
 }
 
 // GetWorkplaceSettings get specified workplace settings
-func GetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) ([]byte, models.WorkplaceSettings) {
+func GetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) (models.WorkplaceSettings, Error) {
 	response, err := utils.GetRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch workplace settings")
+		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to fetch workplace settings"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
-	return response, settings
+	return settings, Error{}
 }
 
 // SetWorkplaceSettings set workplace settings
-func SetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, values models.WorkplaceSettings) ([]byte, models.WorkplaceSettings) {
+func SetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, values models.WorkplaceSettings) (models.WorkplaceSettings, Error) {
 	body, err := json.Marshal(values)
 	if err != nil {
-		utils.Err(err, "Invalid workplace settings")
+		return models.WorkplaceSettings{}, Error{Err: err, Message: "Invalid workplace settings"}
 	}
 
 	response, err := utils.PostRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to update workplace settings")
+		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to update workplace settings"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
-	return response, settings
+	return settings, Error{}
 }
 
 // GetProjects get projects
-func GetProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.ProjectInfo) {
+func GetProjects(cmd *cobra.Command, host string, apiKey string) ([]models.ProjectInfo, Error) {
 	response, err := utils.GetRequest(host, "/v2/pipelines", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch projects")
+		return nil, Error{Err: err, Message: "Unable to fetch projects"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	var info []models.ProjectInfo
@@ -233,100 +245,102 @@ func GetProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []mode
 		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
 		info = append(info, projectInfo)
 	}
-	return response, info
+	return info, Error{}
 }
 
 // GetProject get specified project
-func GetProject(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, models.ProjectInfo) {
+func GetProject(cmd *cobra.Command, host string, apiKey string, project string) (models.ProjectInfo, Error) {
 	response, err := utils.GetRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch project")
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to fetch project"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
-	return response, projectInfo
+	return projectInfo, Error{}
 }
 
 // CreateProject create a project
-func CreateProject(cmd *cobra.Command, host string, apiKey string, name string, description string) ([]byte, models.ProjectInfo) {
+func CreateProject(cmd *cobra.Command, host string, apiKey string, name string, description string) (models.ProjectInfo, Error) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		utils.Err(err, "Invalid project info")
+		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
 	response, err := utils.PostRequest(host, "/v2/pipelines/", []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to create project")
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to create project"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
-	return response, projectInfo
+	return projectInfo, Error{}
 }
 
 // UpdateProject update a project
-func UpdateProject(cmd *cobra.Command, host string, apiKey string, project string, name string, description string) ([]byte, models.ProjectInfo) {
+func UpdateProject(cmd *cobra.Command, host string, apiKey string, project string, name string, description string) (models.ProjectInfo, Error) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		utils.Err(err, "Invalid project info")
+		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
 	response, err := utils.PostRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to update project")
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to update project"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
-	return response, projectInfo
+	return projectInfo, Error{}
 }
 
 // DeleteProject create a project
-func DeleteProject(cmd *cobra.Command, host string, apiKey string, project string) {
+func DeleteProject(cmd *cobra.Command, host string, apiKey string, project string) Error {
 	response, err := utils.DeleteRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to delete project")
+		return Error{Err: err, Message: "Unable to delete project"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return Error{Err: err, Message: "Unable to parse API response"}
 	}
+
+	return Error{}
 }
 
 // GetEnvironments get environments
-func GetEnvironments(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.EnvironmentInfo) {
+func GetEnvironments(cmd *cobra.Command, host string, apiKey string, project string) ([]models.EnvironmentInfo, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/stages", params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch environments")
+		return nil, Error{Err: err, Message: "Unable to fetch environments"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	var info []models.EnvironmentInfo
@@ -334,43 +348,43 @@ func GetEnvironments(cmd *cobra.Command, host string, apiKey string, project str
 		environmentInfo := models.ParseEnvironmentInfo(environment.(map[string]interface{}))
 		info = append(info, environmentInfo)
 	}
-	return response, info
+	return info, Error{}
 }
 
 // GetEnvironment get specified environment
-func GetEnvironment(cmd *cobra.Command, host string, apiKey string, project string, environment string) ([]byte, models.EnvironmentInfo) {
+func GetEnvironment(cmd *cobra.Command, host string, apiKey string, project string, environment string) (models.EnvironmentInfo, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/stages/"+environment, params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch environment")
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to fetch environment"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	info := models.ParseEnvironmentInfo(result["stage"].(map[string]interface{}))
-	return response, info
+	return info, Error{}
 }
 
 // GetConfigs get configs
-func GetConfigs(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.ConfigInfo) {
+func GetConfigs(cmd *cobra.Command, host string, apiKey string, project string) ([]models.ConfigInfo, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/environments", params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch configs")
+		return nil, Error{Err: err, Message: "Unable to fetch configs"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	var info []models.ConfigInfo
@@ -378,35 +392,35 @@ func GetConfigs(cmd *cobra.Command, host string, apiKey string, project string) 
 		configInfo := models.ParseConfigInfo(config.(map[string]interface{}))
 		info = append(info, configInfo)
 	}
-	return response, info
+	return info, Error{}
 }
 
 // GetConfig get a config
-func GetConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, models.ConfigInfo) {
+func GetConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) (models.ConfigInfo, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch configs")
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to fetch configs"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
-	return response, info
+	return info, Error{}
 }
 
 // CreateConfig create a config
-func CreateConfig(cmd *cobra.Command, host string, apiKey string, project string, name string, environment string, defaults bool) ([]byte, models.ConfigInfo) {
+func CreateConfig(cmd *cobra.Command, host string, apiKey string, project string, name string, environment string, defaults bool) (models.ConfigInfo, Error) {
 	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		utils.Err(err, "Invalid config info")
+		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
 	}
 
 	var params []utils.QueryParam
@@ -414,42 +428,44 @@ func CreateConfig(cmd *cobra.Command, host string, apiKey string, project string
 
 	response, err := utils.PostRequest(host, "/v2/environments", params, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to create config")
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to create config"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
-	return response, info
+	return info, Error{}
 }
 
 // DeleteConfig create a config
-func DeleteConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) {
+func DeleteConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) Error {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.DeleteRequest(host, "/v2/environments/"+config, params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to delete config")
+		return Error{Err: err, Message: "Unable to delete config"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return Error{Err: err, Message: "Unable to parse API response"}
 	}
+
+	return Error{}
 }
 
 // UpdateConfig create a config
-func UpdateConfig(cmd *cobra.Command, host string, apiKey string, project string, config string, name string) ([]byte, models.ConfigInfo) {
+func UpdateConfig(cmd *cobra.Command, host string, apiKey string, project string, config string, name string) (models.ConfigInfo, Error) {
 	postBody := map[string]interface{}{"name": name}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		utils.Err(err, "Invalid config info")
+		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
 	}
 
 	var params []utils.QueryParam
@@ -457,30 +473,30 @@ func UpdateConfig(cmd *cobra.Command, host string, apiKey string, project string
 
 	response, err := utils.PostRequest(host, "/v2/environments/"+config, params, apiKey, body)
 	if err != nil {
-		utils.Err(err, "Unable to update config")
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
-	return response, info
+	return info, Error{}
 }
 
 // GetActivityLogs get activity logs
-func GetActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.Log) {
+func GetActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]models.Log, Error) {
 	response, err := utils.GetRequest(host, "/v2/logs", []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch activity logs")
+		return nil, Error{Err: err, Message: "Unable to fetch activity logs"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	var logs []models.Log
@@ -488,40 +504,40 @@ func GetActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte, []
 		parsedLog := models.ParseLog(log.(map[string]interface{}))
 		logs = append(logs, parsedLog)
 	}
-	return response, logs
+	return logs, Error{}
 }
 
 // GetActivityLog get specified activity log
-func GetActivityLog(cmd *cobra.Command, host string, apiKey string, log string) ([]byte, models.Log) {
+func GetActivityLog(cmd *cobra.Command, host string, apiKey string, log string) (models.Log, Error) {
 	response, err := utils.GetRequest(host, "/v2/logs/"+log, []utils.QueryParam{}, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch activity log")
+		return models.Log{}, Error{Err: err, Message: "Unable to fetch activity log"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.Log{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
-	return response, parsedLog
+	return parsedLog, Error{}
 }
 
 // GetConfigLogs get config audit logs
-func GetConfigLogs(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, []models.Log) {
+func GetConfigLogs(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]models.Log, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs", params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch config logs")
+		return nil, Error{Err: err, Message: "Unable to fetch config logs"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	var logs []models.Log
@@ -529,45 +545,45 @@ func GetConfigLogs(cmd *cobra.Command, host string, apiKey string, project strin
 		parsedLog := models.ParseLog(log.(map[string]interface{}))
 		logs = append(logs, parsedLog)
 	}
-	return response, logs
+	return logs, Error{}
 }
 
 // GetConfigLog get config audit log
-func GetConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+func GetConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) (models.Log, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.GetRequest(host, "/v2/environments/"+config+"/logs/"+log, params, apiKey)
 	if err != nil {
-		utils.Err(err, "Unable to fetch config log")
+		return models.Log{}, Error{Err: err, Message: "Unable to fetch config log"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.Log{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
-	return response, parsedLog
+	return parsedLog, Error{}
 }
 
 // RollbackConfigLog rollback a config log
-func RollbackConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+func RollbackConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) (models.Log, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
 	response, err := utils.PostRequest(host, "/v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
 	if err != nil {
-		utils.Err(err, "Unable to rollback config log")
+		return models.Log{}, Error{Err: err, Message: "Unable to rollback config log"}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		utils.Err(err)
+		return models.Log{}, Error{Err: err, Message: "Unable to parse API response"}
 	}
 
 	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
-	return response, parsedLog
+	return parsedLog, Error{}
 }

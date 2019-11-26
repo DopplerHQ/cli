@@ -39,7 +39,10 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
-		_, response := api.GenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
+		response, err := api.GenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
 
@@ -67,7 +70,11 @@ var loginCmd = &cobra.Command{
 		response = nil
 		// TODO can we use our existing retry function here instead??
 		for {
-			_, resp := api.GetAuthToken(cmd, localConfig.APIHost.Value, code)
+			resp, err := api.GetAuthToken(cmd, localConfig.APIHost.Value, code)
+			if !err.IsNil() {
+				continue
+			}
+
 			// TODO prob should stop if get a 500 or can't connect to server
 			if resp != nil {
 				response = resp
@@ -122,7 +129,11 @@ Your saved configuration will be updated.`,
 			os.Exit(1)
 		}
 
-		_, response := api.RollAuthToken(cmd, localConfig.APIHost.Value, oldToken)
+		response, err := api.RollAuthToken(cmd, localConfig.APIHost.Value, oldToken)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
+
 		newToken := response["token"].(string)
 
 		if updateConfig {
@@ -161,7 +172,10 @@ This is the CLI equivalent to logging out.`,
 			os.Exit(1)
 		}
 
-		api.RevokeAuthToken(cmd, localConfig.APIHost.Value, token)
+		_, err := api.RevokeAuthToken(cmd, localConfig.APIHost.Value, token)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		if updateConfig {
 			// remove key from config
