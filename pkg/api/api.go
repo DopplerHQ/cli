@@ -24,8 +24,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetAPIGenerateAuthCode generate an auth code
-func GetAPIGenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) ([]byte, map[string]interface{}) {
+// GenerateAuthCode generate an auth code
+func GenerateAuthCode(cmd *cobra.Command, host string, hostname string, os string, arch string) ([]byte, map[string]interface{}) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "hostname", Value: hostname})
 	params = append(params, utils.QueryParam{Key: "version", Value: version.ProgramVersion})
@@ -46,8 +46,8 @@ func GetAPIGenerateAuthCode(cmd *cobra.Command, host string, hostname string, os
 	return response, result
 }
 
-// GetAPIAuthToken get an auth token
-func GetAPIAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[string]interface{}) {
+// GetAuthToken get an auth token
+func GetAuthToken(cmd *cobra.Command, host string, code string) ([]byte, map[string]interface{}) {
 	reqBody := make(map[string]interface{})
 	reqBody["code"] = code
 	body, err := json.Marshal(reqBody)
@@ -115,8 +115,8 @@ func RevokeAuthToken(cmd *cobra.Command, host string, token string) ([]byte, map
 	return response, result
 }
 
-// GetAPISecrets for specified project and config
-func GetAPISecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, map[string]models.ComputedSecret) {
+// GetSecrets for specified project and config
+func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, map[string]models.ComputedSecret) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
@@ -143,8 +143,8 @@ func GetAPISecrets(cmd *cobra.Command, host string, apiKey string, project strin
 	return response, computed
 }
 
-// SetAPISecrets for specified project and config
-func SetAPISecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, secrets map[string]interface{}) ([]byte, map[string]models.ComputedSecret) {
+// SetSecrets for specified project and config
+func SetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string, secrets map[string]interface{}) ([]byte, map[string]models.ComputedSecret) {
 	reqBody := make(map[string]interface{})
 	reqBody["variables"] = secrets
 	body, err := json.Marshal(reqBody)
@@ -176,8 +176,8 @@ func SetAPISecrets(cmd *cobra.Command, host string, apiKey string, project strin
 	return response, computed
 }
 
-// GetAPIWorkplaceSettings get specified workplace settings
-func GetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) ([]byte, models.WorkplaceSettings) {
+// GetWorkplaceSettings get specified workplace settings
+func GetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) ([]byte, models.WorkplaceSettings) {
 	response, err := utils.GetRequest(host, "/v2/workplace", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch workplace settings")
@@ -193,8 +193,8 @@ func GetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string) ([]
 	return response, settings
 }
 
-// SetAPIWorkplaceSettings set workplace settings
-func SetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, values models.WorkplaceSettings) ([]byte, models.WorkplaceSettings) {
+// SetWorkplaceSettings set workplace settings
+func SetWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, values models.WorkplaceSettings) ([]byte, models.WorkplaceSettings) {
 	body, err := json.Marshal(values)
 	if err != nil {
 		utils.Err(err, "Invalid workplace settings")
@@ -215,8 +215,8 @@ func SetAPIWorkplaceSettings(cmd *cobra.Command, host string, apiKey string, val
 	return response, settings
 }
 
-// GetAPIProjects get projects
-func GetAPIProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.ProjectInfo) {
+// GetProjects get projects
+func GetProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.ProjectInfo) {
 	response, err := utils.GetRequest(host, "/v2/pipelines", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch projects")
@@ -236,8 +236,8 @@ func GetAPIProjects(cmd *cobra.Command, host string, apiKey string) ([]byte, []m
 	return response, info
 }
 
-// GetAPIProject get specified project
-func GetAPIProject(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, models.ProjectInfo) {
+// GetProject get specified project
+func GetProject(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, models.ProjectInfo) {
 	response, err := utils.GetRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch project")
@@ -253,8 +253,8 @@ func GetAPIProject(cmd *cobra.Command, host string, apiKey string, project strin
 	return response, projectInfo
 }
 
-// CreateAPIProject create a project
-func CreateAPIProject(cmd *cobra.Command, host string, apiKey string, name string, description string) ([]byte, models.ProjectInfo) {
+// CreateProject create a project
+func CreateProject(cmd *cobra.Command, host string, apiKey string, name string, description string) ([]byte, models.ProjectInfo) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -276,8 +276,8 @@ func CreateAPIProject(cmd *cobra.Command, host string, apiKey string, name strin
 	return response, projectInfo
 }
 
-// UpdateAPIProject update a project
-func UpdateAPIProject(cmd *cobra.Command, host string, apiKey string, project string, name string, description string) ([]byte, models.ProjectInfo) {
+// UpdateProject update a project
+func UpdateProject(cmd *cobra.Command, host string, apiKey string, project string, name string, description string) ([]byte, models.ProjectInfo) {
 	postBody := map[string]string{"name": name, "description": description}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -299,8 +299,8 @@ func UpdateAPIProject(cmd *cobra.Command, host string, apiKey string, project st
 	return response, projectInfo
 }
 
-// DeleteAPIProject create a project
-func DeleteAPIProject(cmd *cobra.Command, host string, apiKey string, project string) {
+// DeleteProject create a project
+func DeleteProject(cmd *cobra.Command, host string, apiKey string, project string) {
 	response, err := utils.DeleteRequest(host, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to delete project")
@@ -313,8 +313,8 @@ func DeleteAPIProject(cmd *cobra.Command, host string, apiKey string, project st
 	}
 }
 
-// GetAPIEnvironments get environments
-func GetAPIEnvironments(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.EnvironmentInfo) {
+// GetEnvironments get environments
+func GetEnvironments(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.EnvironmentInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -337,8 +337,8 @@ func GetAPIEnvironments(cmd *cobra.Command, host string, apiKey string, project 
 	return response, info
 }
 
-// GetAPIEnvironment get specified environment
-func GetAPIEnvironment(cmd *cobra.Command, host string, apiKey string, project string, environment string) ([]byte, models.EnvironmentInfo) {
+// GetEnvironment get specified environment
+func GetEnvironment(cmd *cobra.Command, host string, apiKey string, project string, environment string) ([]byte, models.EnvironmentInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -357,8 +357,8 @@ func GetAPIEnvironment(cmd *cobra.Command, host string, apiKey string, project s
 	return response, info
 }
 
-// GetAPIConfigs get configs
-func GetAPIConfigs(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.ConfigInfo) {
+// GetConfigs get configs
+func GetConfigs(cmd *cobra.Command, host string, apiKey string, project string) ([]byte, []models.ConfigInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -381,8 +381,8 @@ func GetAPIConfigs(cmd *cobra.Command, host string, apiKey string, project strin
 	return response, info
 }
 
-// GetAPIConfig get a config
-func GetAPIConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, models.ConfigInfo) {
+// GetConfig get a config
+func GetConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, models.ConfigInfo) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -401,8 +401,8 @@ func GetAPIConfig(cmd *cobra.Command, host string, apiKey string, project string
 	return response, info
 }
 
-// CreateAPIConfig create a config
-func CreateAPIConfig(cmd *cobra.Command, host string, apiKey string, project string, name string, environment string, defaults bool) ([]byte, models.ConfigInfo) {
+// CreateConfig create a config
+func CreateConfig(cmd *cobra.Command, host string, apiKey string, project string, name string, environment string, defaults bool) ([]byte, models.ConfigInfo) {
 	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -427,8 +427,8 @@ func CreateAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	return response, info
 }
 
-// DeleteAPIConfig create a config
-func DeleteAPIConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) {
+// DeleteConfig create a config
+func DeleteConfig(cmd *cobra.Command, host string, apiKey string, project string, config string) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -444,8 +444,8 @@ func DeleteAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	}
 }
 
-// UpdateAPIConfig create a config
-func UpdateAPIConfig(cmd *cobra.Command, host string, apiKey string, project string, config string, name string) ([]byte, models.ConfigInfo) {
+// UpdateConfig create a config
+func UpdateConfig(cmd *cobra.Command, host string, apiKey string, project string, config string, name string) ([]byte, models.ConfigInfo) {
 	postBody := map[string]interface{}{"name": name}
 	body, err := json.Marshal(postBody)
 	if err != nil {
@@ -470,8 +470,8 @@ func UpdateAPIConfig(cmd *cobra.Command, host string, apiKey string, project str
 	return response, info
 }
 
-// GetAPIActivityLogs get activity logs
-func GetAPIActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.Log) {
+// GetActivityLogs get activity logs
+func GetActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte, []models.Log) {
 	response, err := utils.GetRequest(host, "/v2/logs", []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch activity logs")
@@ -491,8 +491,8 @@ func GetAPIActivityLogs(cmd *cobra.Command, host string, apiKey string) ([]byte,
 	return response, logs
 }
 
-// GetAPIActivityLog get specified activity log
-func GetAPIActivityLog(cmd *cobra.Command, host string, apiKey string, log string) ([]byte, models.Log) {
+// GetActivityLog get specified activity log
+func GetActivityLog(cmd *cobra.Command, host string, apiKey string, log string) ([]byte, models.Log) {
 	response, err := utils.GetRequest(host, "/v2/logs/"+log, []utils.QueryParam{}, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to fetch activity log")
@@ -508,8 +508,8 @@ func GetAPIActivityLog(cmd *cobra.Command, host string, apiKey string, log strin
 	return response, parsedLog
 }
 
-// GetAPIConfigLogs get config audit logs
-func GetAPIConfigLogs(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, []models.Log) {
+// GetConfigLogs get config audit logs
+func GetConfigLogs(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, []models.Log) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -532,8 +532,8 @@ func GetAPIConfigLogs(cmd *cobra.Command, host string, apiKey string, project st
 	return response, logs
 }
 
-// GetAPIConfigLog get config audit log
-func GetAPIConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+// GetConfigLog get config audit log
+func GetConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
@@ -552,8 +552,8 @@ func GetAPIConfigLog(cmd *cobra.Command, host string, apiKey string, project str
 	return response, parsedLog
 }
 
-// RollbackAPIConfigLog rollback a config log
-func RollbackAPIConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
+// RollbackConfigLog rollback a config log
+func RollbackConfigLog(cmd *cobra.Command, host string, apiKey string, project string, config string, log string) ([]byte, models.Log) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 

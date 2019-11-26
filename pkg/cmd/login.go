@@ -39,7 +39,7 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
-		_, response := api.GetAPIGenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
+		_, response := api.GenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
 
@@ -67,7 +67,7 @@ var loginCmd = &cobra.Command{
 		response = nil
 		// TODO can we use our existing retry function here instead??
 		for {
-			_, resp := api.GetAPIAuthToken(cmd, localConfig.APIHost.Value, code)
+			_, resp := api.GetAuthToken(cmd, localConfig.APIHost.Value, code)
 			// TODO prob should stop if get a 500 or can't connect to server
 			if resp != nil {
 				response = resp
