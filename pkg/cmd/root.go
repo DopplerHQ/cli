@@ -68,7 +68,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
-	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
 	rootCmd.PersistentFlags().Bool("insecure", utils.Insecure, "support TLS connections with invalid certificate")
 	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
 	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")

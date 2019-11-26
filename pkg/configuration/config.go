@@ -103,14 +103,6 @@ func Get(scope string) models.ScopedConfig {
 				scopedConfig.APIHost.Source = models.ConfigFileSource.String()
 			}
 		}
-
-		if conf.DeployHost != "" {
-			if scopedConfig.DeployHost == (models.Pair{}) || len(confScope) > len(scopedConfig.DeployHost.Scope) {
-				scopedConfig.DeployHost.Value = conf.DeployHost
-				scopedConfig.DeployHost.Scope = confScope
-				scopedConfig.DeployHost.Source = models.ConfigFileSource.String()
-			}
-		}
 	}
 
 	return scopedConfig
@@ -150,13 +142,6 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.APIHost.Scope = "*"
 			localConfig.APIHost.Source = models.EnvironmentSource.String()
 		}
-
-		deployHost := os.Getenv("DOPPLER_DEPLOY_HOST")
-		if deployHost != "" {
-			localConfig.DeployHost.Value = deployHost
-			localConfig.DeployHost.Scope = "*"
-			localConfig.DeployHost.Source = models.EnvironmentSource.String()
-		}
 	}
 
 	// individual flags (highest priority)
@@ -181,18 +166,6 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.APIHost.Source = models.FlagSource.String()
 		} else {
 			localConfig.APIHost.Source = models.DefaultValueSource.String()
-		}
-	}
-
-	flagSet = cmd.Flags().Changed("deploy-host")
-	if flagSet || localConfig.DeployHost.Value == "" {
-		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
-		localConfig.DeployHost.Scope = "*"
-
-		if flagSet {
-			localConfig.DeployHost.Source = models.FlagSource.String()
-		} else {
-			localConfig.DeployHost.Source = models.DefaultValueSource.String()
 		}
 	}
 
@@ -322,7 +295,7 @@ func parseScope(scope string) (string, error) {
 
 // IsValidConfigOption whether the specified key is a valid option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
+	return key == "token" || key == "project" || key == "config" || key == "api-host"
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
@@ -339,9 +312,6 @@ func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string)
 	if key == "api-host" {
 		return conf.APIHost.Value, conf.APIHost.Scope
 	}
-	if key == "deploy-host" {
-		return conf.DeployHost.Value, conf.DeployHost.Scope
-	}
 
 	return "", ""
 }
@@ -356,7 +326,5 @@ func SetConfigValue(conf *models.Config, key string, value string) {
 		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
-	} else if key == "deploy-host" {
-		(*conf).DeployHost = value
 	}
 }

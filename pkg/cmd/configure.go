@@ -66,11 +66,6 @@ var configureCmd = &cobra.Command{
 				scopeBucket["api-host"] = config.APIHost.Value
 			}
 
-			if config.DeployHost != (models.Pair{}) {
-				scopeBucket := confMap[config.DeployHost.Scope]
-				scopeBucket["deploy-host"] = config.DeployHost.Value
-			}
-
 			utils.PrintJSON(confMap)
 			return
 		}

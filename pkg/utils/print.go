@@ -314,9 +314,6 @@ func PrintScopedConfig(conf models.ScopedConfig) {
 	if conf.APIHost != (models.Pair{}) {
 		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
 	}
-	if conf.DeployHost != (models.Pair{}) {
-		rows = append(rows, []string{"deploy-host", conf.DeployHost.Value, conf.DeployHost.Scope})
-	}
 
 	PrintTable([]string{"name", "value", "scope"}, rows)
 }
@@ -341,9 +338,6 @@ func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 		}
 		if config.APIHost != "" {
 			rows = append(rows, []string{"api-host", config.APIHost, scope})
-		}
-		if config.DeployHost != "" {
-			rows = append(rows, []string{"deploy-host", config.DeployHost, scope})
 		}
 	}
 
