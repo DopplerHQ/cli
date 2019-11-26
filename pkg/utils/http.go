@@ -45,7 +45,7 @@ var Insecure = false
 var Timeout = true
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func GetRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -53,6 +53,9 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err := performRequest(req, params)
 	if err != nil {
@@ -63,7 +66,7 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
+func PostRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -71,6 +74,9 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err = performRequest(req, params)
 	if err != nil {
@@ -81,7 +87,7 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func DeleteRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -89,6 +95,9 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err := performRequest(req, params)
 	if err != nil {

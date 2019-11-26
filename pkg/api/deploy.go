@@ -41,7 +41,7 @@ func DownloadSecrets(cmd *cobra.Command, host string, apiKey string, project str
 	params = append(params, utils.QueryParam{Key: "format", Value: "file"})
 	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
 
-	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
+	response, err := utils.GetRequest(host, nil, "/v1/variables", params, apiKey)
 	if err != nil {
 		utils.Err(err, "Unable to download secrets")
 	}
