@@ -40,8 +40,8 @@ type errorResponse struct {
 	Success  bool
 }
 
-// Insecure whether we should support https connections without a valid cert
-var Insecure = false
+// NoVerifyTLS whether we should support https connections without a valid cert
+var NoVerifyTLS = false
 
 // UseTimeout whether to timeout long-running requests
 var UseTimeout = true
@@ -134,7 +134,7 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	if UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
-	if Insecure {
+	if NoVerifyTLS {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
