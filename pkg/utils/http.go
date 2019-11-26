@@ -117,7 +117,9 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
 	req.Header.Set("user-agent", "doppler-go-cli-"+version.ProgramVersion)
-	req.Header.Set("Accept", "application/json")
+	if req.Header.Get("Accept") == "" {
+		req.Header.Set("Accept", "application/json")
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	// set url query parameters
