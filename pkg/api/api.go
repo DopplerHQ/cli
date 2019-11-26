@@ -128,7 +128,7 @@ func RevokeAuthToken(cmd *cobra.Command, host string, token string) (map[string]
 }
 
 // GetSecrets for specified project and config
-func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) (map[string]models.ComputedSecret, Error) {
+func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, Error) {
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
@@ -138,8 +138,13 @@ func GetSecrets(cmd *cobra.Command, host string, apiKey string, project string, 
 		return nil, Error{Err: err, Message: "Unable to fetch secrets"}
 	}
 
+	return response, Error{}
+}
+
+// ParseSecrets for specified project and config
+func ParseSecrets(response []byte) (map[string]models.ComputedSecret, Error) {
 	var result map[string]interface{}
-	err = json.Unmarshal(response, &result)
+	err := json.Unmarshal(response, &result)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to parse API response"}
 	}

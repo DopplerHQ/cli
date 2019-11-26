@@ -43,7 +43,11 @@ var secretsCmd = &cobra.Command{
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
 		localConfig := configuration.LocalConfig(cmd)
-		secrets, err := api.GetSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		response, err := api.GetSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
+		secrets, err := api.ParseSecrets(response)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -70,7 +74,11 @@ doppler secrets get api_key crypto_key`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		secrets, err := api.GetSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		response, err := api.GetSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
+		secrets, err := api.ParseSecrets(response)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

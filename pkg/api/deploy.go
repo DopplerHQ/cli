@@ -16,7 +16,6 @@ limitations under the License.
 package api
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -32,38 +31,6 @@ type errorResponse struct {
 type Secret struct {
 	Name  string
 	Value string
-}
-
-// ParseDeploySecrets parse deploy secrets
-func ParseDeploySecrets(response []byte) (map[string]string, error) {
-	var result map[string]interface{}
-	err := json.Unmarshal(response, &result)
-	if err != nil {
-		return nil, err
-	}
-
-	parsedSecrets := make(map[string]string)
-	secrets := result["variables"].(map[string]interface{})
-	for name, value := range secrets {
-		parsedSecrets[name] = value.(string)
-	}
-
-	return parsedSecrets, nil
-}
-
-// GetDeploySecrets for specified project and config
-func GetDeploySecrets(cmd *cobra.Command, host string, apiKey string, project string, config string) ([]byte, error) {
-	var params []utils.QueryParam
-	params = append(params, utils.QueryParam{Key: "environment", Value: config})
-	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
-
-	response, err := utils.GetRequest(host, "/v1/variables", params, apiKey)
-	if err != nil {
-		utils.Log("Unable to fetch secrets")
-		return nil, err
-	}
-
-	return response, nil
 }
 
 // DownloadSecrets for specified project and config
