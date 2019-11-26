@@ -48,6 +48,9 @@ func Execute() {
 	if rootCmd.Flags().Changed("no-timeout") {
 		utils.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
 	}
+	if rootCmd.Flags().Changed("timeout") {
+		utils.TimeoutDuration = utils.GetDurationFlag(rootCmd, "timeout")
+	}
 
 	if rootCmd.Flags().Changed("configuration") {
 		configuration.UserConfigPath = rootCmd.Flag("configuration").Value.String()
@@ -68,6 +71,7 @@ func init() {
 	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
 	rootCmd.PersistentFlags().Bool("insecure", utils.Insecure, "support TLS connections with invalid certificate")
 	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
+	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")

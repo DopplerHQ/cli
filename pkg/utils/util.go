@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/atotto/clipboard"
@@ -100,6 +101,14 @@ func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	}
 
 	return int(number)
+}
+
+func GetDurationFlag(cmd *cobra.Command, flag string) time.Duration {
+	value, err := time.ParseDuration(cmd.Flag(flag).Value.String())
+	if err != nil {
+		Err(err, "")
+	}
+	return value
 }
 
 // GetFilePath verify file path and name are provided
