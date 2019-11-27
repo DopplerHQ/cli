@@ -42,15 +42,18 @@ func Execute() {
 	if rootCmd.Flags().Changed("json") {
 		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
 	}
-	if rootCmd.Flags().Changed("insecure") {
-		utils.Insecure = utils.GetBoolFlag(rootCmd, "insecure")
+	if rootCmd.Flags().Changed("no-verify-tls") {
+		utils.NoVerifyTLS = utils.GetBoolFlag(rootCmd, "no-verify-tls")
 	}
 	if rootCmd.Flags().Changed("no-timeout") {
-		utils.Timeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
+		utils.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
+	}
+	if rootCmd.Flags().Changed("timeout") {
+		utils.TimeoutDuration = utils.GetDurationFlag(rootCmd, "timeout")
 	}
 
 	if rootCmd.Flags().Changed("configuration") {
-		configuration.ConfigFile = rootCmd.Flag("configuration").Value.String()
+		configuration.UserConfigPath = rootCmd.Flag("configuration").Value.String()
 	}
 	configuration.LoadConfig()
 
@@ -65,13 +68,13 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
-	rootCmd.PersistentFlags().String("deploy-host", "https://deploy.doppler.com", "deploy host")
-	rootCmd.PersistentFlags().Bool("insecure", false, "support TLS connections with invalid certificate")
-	rootCmd.PersistentFlags().Bool("no-timeout", false, "don't timeout long-running requests")
+	rootCmd.PersistentFlags().Bool("no-verify-tls", utils.NoVerifyTLS, "don't verify the validity of TLS certificates on HTTP requests")
+	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
+	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
-	rootCmd.PersistentFlags().String("configuration", configuration.ConfigFile, "config file")
+	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigPath, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "Get the version of the Doppler CLI")

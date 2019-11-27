@@ -40,12 +40,17 @@ type errorResponse struct {
 	Success  bool
 }
 
-// Insecure whether we should support https connections without a valid cert
-var Insecure = false
-var Timeout = true
+// NoVerifyTLS whether we should support https connections without a valid cert
+var NoVerifyTLS = false
+
+// UseTimeout whether to timeout long-running requests
+var UseTimeout = true
+
+// TimeoutDuration how long to wait for a request to complete before timing out
+var TimeoutDuration = 10 * time.Second
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func GetRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -53,6 +58,9 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err := performRequest(req, params)
 	if err != nil {
@@ -63,7 +71,7 @@ func GetRequest(host string, uri string, params []QueryParam, apiKey string) ([]
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
+func PostRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -71,6 +79,9 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err = performRequest(req, params)
 	if err != nil {
@@ -81,7 +92,7 @@ func PostRequest(host string, uri string, params []QueryParam, apiKey string, bo
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func DeleteRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -89,6 +100,9 @@ func DeleteRequest(host string, uri string, params []QueryParam, apiKey string) 
 	}
 
 	req.Header.Set("api-key", apiKey)
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 
 	body, err := performRequest(req, params)
 	if err != nil {
@@ -103,7 +117,9 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
 	req.Header.Set("user-agent", "doppler-go-cli-"+version.ProgramVersion)
-	req.Header.Set("Accept", "application/json")
+	if req.Header.Get("Accept") == "" {
+		req.Header.Set("Accept", "application/json")
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	// set url query parameters
@@ -115,10 +131,10 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 
 	// set timeout and tls config
 	client := &http.Client{}
-	if Timeout {
-		client.Timeout = 10 * time.Second
+	if UseTimeout {
+		client.Timeout = TimeoutDuration
 	}
-	if Insecure {
+	if NoVerifyTLS {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}

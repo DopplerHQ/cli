@@ -17,24 +17,37 @@ package models
 
 // Config options
 type Config struct {
-	Token      string `json:"token"`
-	Project    string `json:"project"`
-	Config     string `json:"config"`
-	APIHost    string `json:"api-host"`
-	DeployHost string `json:"deploy-host"`
+	Token   string `json:"token"`
+	Project string `json:"project"`
+	Config  string `json:"config"`
+	APIHost string `json:"api-host"`
 }
 
 // ScopedConfig options with their scope
 type ScopedConfig struct {
-	Token      Pair `json:"token"`
-	Project    Pair `json:"project"`
-	Config     Pair `json:"config"`
-	APIHost    Pair `json:"api-host"`
-	DeployHost Pair `json:"deploy-host"`
+	Token   Pair `json:"token"`
+	Project Pair `json:"project"`
+	Config  Pair `json:"config"`
+	APIHost Pair `json:"api-host"`
 }
 
 // Pair value and its scope
 type Pair struct {
-	Value string `json:"value"`
-	Scope string `json:"scope"`
+	Value  string `json:"value"`
+	Scope  string `json:"scope"`
+	Source string `json:"source"`
+}
+
+// Source where the value came from
+type Source int
+
+const (
+	FlagSource Source = iota
+	ConfigFileSource
+	EnvironmentSource
+	DefaultValueSource
+)
+
+func (s Source) String() string {
+	return [...]string{"Flag", "Config File", "Environment", "Default Value"}[s]
 }

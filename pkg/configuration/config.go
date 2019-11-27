@@ -28,8 +28,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigFile path to the user's configuration file
-var ConfigFile string
+// UserConfigPath path to the user's configuration file
+var UserConfigPath string
 
 var configContents map[string]models.Config
 
@@ -37,9 +37,9 @@ func init() {
 	fileName := ".doppler.yaml"
 	configDir := utils.ConfigDir()
 	if utils.Exists(configDir) {
-		ConfigFile = filepath.Join(configDir, fileName)
+		UserConfigPath = filepath.Join(configDir, fileName)
 	} else {
-		ConfigFile = filepath.Join(utils.HomeDir(), fileName)
+		UserConfigPath = filepath.Join(utils.HomeDir(), fileName)
 	}
 
 	if !exists() {
@@ -76,6 +76,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Token == (models.Pair{}) || len(confScope) > len(scopedConfig.Token.Scope) {
 				scopedConfig.Token.Value = conf.Token
 				scopedConfig.Token.Scope = confScope
+				scopedConfig.Token.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -83,6 +84,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Project == (models.Pair{}) || len(confScope) > len(scopedConfig.Project.Scope) {
 				scopedConfig.Project.Value = conf.Project
 				scopedConfig.Project.Scope = confScope
+				scopedConfig.Project.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -90,6 +92,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.Config == (models.Pair{}) || len(confScope) > len(scopedConfig.Config.Scope) {
 				scopedConfig.Config.Value = conf.Config
 				scopedConfig.Config.Scope = confScope
+				scopedConfig.Config.Source = models.ConfigFileSource.String()
 			}
 		}
 
@@ -97,13 +100,7 @@ func Get(scope string) models.ScopedConfig {
 			if scopedConfig.APIHost == (models.Pair{}) || len(confScope) > len(scopedConfig.APIHost.Scope) {
 				scopedConfig.APIHost.Value = conf.APIHost
 				scopedConfig.APIHost.Scope = confScope
-			}
-		}
-
-		if conf.DeployHost != "" {
-			if scopedConfig.DeployHost == (models.Pair{}) || len(confScope) > len(scopedConfig.DeployHost.Scope) {
-				scopedConfig.DeployHost.Value = conf.DeployHost
-				scopedConfig.DeployHost.Scope = confScope
+				scopedConfig.APIHost.Source = models.ConfigFileSource.String()
 			}
 		}
 	}
@@ -121,59 +118,80 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 		token := os.Getenv("DOPPLER_TOKEN")
 		if token != "" {
 			localConfig.Token.Value = token
-			localConfig.Token.Scope = ""
+			localConfig.Token.Scope = "*"
+			localConfig.Token.Source = models.EnvironmentSource.String()
 		}
 
 		project := os.Getenv("DOPPLER_PROJECT")
 		if project != "" {
 			localConfig.Project.Value = project
-			localConfig.Project.Scope = ""
+			localConfig.Project.Scope = "*"
+			localConfig.Project.Source = models.EnvironmentSource.String()
 		}
 
 		config := os.Getenv("DOPPLER_CONFIG")
 		if config != "" {
 			localConfig.Config.Value = config
-			localConfig.Config.Scope = ""
+			localConfig.Config.Scope = "*"
+			localConfig.Config.Source = models.EnvironmentSource.String()
 		}
 
 		apiHost := os.Getenv("DOPPLER_API_HOST")
 		if apiHost != "" {
 			localConfig.APIHost.Value = apiHost
-			localConfig.APIHost.Scope = ""
-		}
-
-		deployHost := os.Getenv("DOPPLER_DEPLOY_HOST")
-		if deployHost != "" {
-			localConfig.DeployHost.Value = deployHost
-			localConfig.DeployHost.Scope = ""
+			localConfig.APIHost.Scope = "*"
+			localConfig.APIHost.Source = models.EnvironmentSource.String()
 		}
 	}
 
 	// individual flags (highest priority)
-	if cmd.Flags().Changed("token") || localConfig.Token.Value == "" {
+	flagSet := cmd.Flags().Changed("token")
+	if flagSet || localConfig.Token.Value == "" {
 		localConfig.Token.Value = cmd.Flag("token").Value.String()
-		localConfig.Token.Scope = ""
+		localConfig.Token.Scope = "*"
+
+		if flagSet {
+			localConfig.Token.Source = models.FlagSource.String()
+		} else {
+			localConfig.Token.Source = models.DefaultValueSource.String()
+		}
 	}
 
-	if cmd.Flags().Changed("api-host") || localConfig.APIHost.Value == "" {
+	flagSet = cmd.Flags().Changed("api-host")
+	if flagSet || localConfig.APIHost.Value == "" {
 		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
-		localConfig.APIHost.Scope = ""
-	}
+		localConfig.APIHost.Scope = "*"
 
-	if cmd.Flags().Changed("deploy-host") || localConfig.DeployHost.Value == "" {
-		localConfig.DeployHost.Value = cmd.Flag("deploy-host").Value.String()
-		localConfig.DeployHost.Scope = ""
+		if flagSet {
+			localConfig.APIHost.Source = models.FlagSource.String()
+		} else {
+			localConfig.APIHost.Source = models.DefaultValueSource.String()
+		}
 	}
 
 	// these flags below don't have a default value and should only be used if specified by the user (or will cause invalid memory access)
-	if cmd.Flags().Changed("project") {
+	flagSet = cmd.Flags().Changed("project")
+	if flagSet {
 		localConfig.Project.Value = cmd.Flag("project").Value.String()
-		localConfig.Project.Scope = ""
+		localConfig.Project.Scope = "*"
+
+		if flagSet {
+			localConfig.Project.Source = models.FlagSource.String()
+		} else {
+			localConfig.Project.Source = models.DefaultValueSource.String()
+		}
 	}
 
-	if cmd.Flags().Changed("config") {
+	flagSet = cmd.Flags().Changed("config")
+	if flagSet {
 		localConfig.Config.Value = cmd.Flag("config").Value.String()
-		localConfig.Config.Scope = ""
+		localConfig.Config.Scope = "*"
+
+		if flagSet {
+			localConfig.Config.Source = models.FlagSource.String()
+		} else {
+			localConfig.Config.Source = models.DefaultValueSource.String()
+		}
 	}
 
 	return localConfig
@@ -245,18 +263,18 @@ func writeYAML(config map[string]models.Config) {
 		utils.Err(err)
 	}
 
-	err = ioutil.WriteFile(ConfigFile, bytes, os.FileMode(0600))
+	err = ioutil.WriteFile(UserConfigPath, bytes, os.FileMode(0600))
 	if err != nil {
 		utils.Err(err)
 	}
 }
 
 func exists() bool {
-	return utils.Exists(ConfigFile)
+	return utils.Exists(UserConfigPath)
 }
 
 func readYAML() map[string]models.Config {
-	fileContents, err := ioutil.ReadFile(ConfigFile)
+	fileContents, err := ioutil.ReadFile(UserConfigPath)
 	if err != nil {
 		utils.Err(err)
 	}
@@ -277,7 +295,7 @@ func parseScope(scope string) (string, error) {
 
 // IsValidConfigOption whether the specified key is a valid option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "deploy-host"
+	return key == "token" || key == "project" || key == "config" || key == "api-host"
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
@@ -294,9 +312,6 @@ func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string)
 	if key == "api-host" {
 		return conf.APIHost.Value, conf.APIHost.Scope
 	}
-	if key == "deploy-host" {
-		return conf.DeployHost.Value, conf.DeployHost.Scope
-	}
 
 	return "", ""
 }
@@ -311,7 +326,5 @@ func SetConfigValue(conf *models.Config, key string, value string) {
 		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
-	} else if key == "deploy-host" {
-		(*conf).DeployHost = value
 	}
 }

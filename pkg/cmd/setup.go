@@ -27,13 +27,16 @@ import (
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Setup the doppler cli",
+	Short: "Setup the Doppler cli",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		_, projects := api.GetAPIProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		projects, err := api.GetProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		if !err.IsNil() {
+			utils.Err(err.Unwrap(), err.Message)
+		}
 
 		project := ""
 		if cmd.Flags().Changed("project") {
@@ -64,7 +67,10 @@ var setupCmd = &cobra.Command{
 		if cmd.Flags().Changed("config") {
 			config = localConfig.Config.Value
 		} else {
-			_, configs := api.GetAPIConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+			configs, apiError := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+			if !apiError.IsNil() {
+				utils.Err(apiError.Unwrap(), apiError.Message)
+			}
 
 			var configOptions []string
 			for _, val := range configs {
