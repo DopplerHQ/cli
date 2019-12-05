@@ -59,7 +59,7 @@ and the config file (in order from highest to lowest precedence)`,
 		jsonFlag := utils.JSON
 
 		config := configuration.LocalConfig(cmd)
-		utils.PrintScopedConfigSource(config, jsonFlag, true)
+		utils.PrintScopedConfigSource(config, "", jsonFlag, true)
 	},
 }
 
@@ -125,7 +125,7 @@ doppler configure get key otherkey`,
 			rows = append(rows, []string{arg, value, scope})
 		}
 
-		utils.PrintTable([]string{"name", "value", "scope"}, rows)
+		utils.PrintTable([]string{"name", "value", "scope"}, rows, "")
 	},
 }
 
@@ -241,5 +241,5 @@ func printScopedConfigArgs(conf models.ScopedOptions, args []string) {
 		}
 	}
 
-	utils.PrintTable([]string{"name", "value", "scope"}, rows)
+	utils.PrintTable([]string{"name", "value", "scope"}, rows, "")
 }
