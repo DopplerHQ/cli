@@ -64,3 +64,24 @@ func Pairs(conf Config) map[string]string {
 		"verify-tls": conf.VerifyTLS,
 	}
 }
+
+// ScopedPairs get the pairs for the given scoped config
+func ScopedPairs(conf *ScopedConfig) map[string]*Pair {
+	return map[string]*Pair{
+		"token":      &conf.Token,
+		"project":    &conf.Project,
+		"config":     &conf.Config,
+		"api-host":   &conf.APIHost,
+		"verify-tls": &conf.VerifyTLS,
+	}
+}
+
+func EnvPairs(conf *ScopedConfig) map[string]*Pair {
+	return map[string]*Pair{
+		"DOPPLER_TOKEN":      &conf.Token,
+		"DOPPLER_PROJECT":    &conf.Project,
+		"DOPPLER_CONFIG":     &conf.Config,
+		"DOPPLER_API_HOST":   &conf.APIHost,
+		"DOPPLER_VERIFY_TLS": &conf.VerifyTLS,
+	}
+}

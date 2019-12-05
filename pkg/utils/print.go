@@ -299,42 +299,21 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 
 // PrintScopedConfig print scoped config
 func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
+	pairs := models.ScopedPairs(&conf)
+
 	if jsonFlag {
-		confMap := make(map[string]map[string]string)
+		confMap := map[string]map[string]string{}
 
-		if conf.Token != (models.Pair{}) {
-			if confMap[conf.Token.Scope] == nil {
-				confMap[conf.Token.Scope] = make(map[string]string)
-			}
-			confMap[conf.Token.Scope]["token"] = conf.Token.Value
-		}
+		for name, pair := range pairs {
+			if *pair != (models.Pair{}) {
+				scope := pair.Scope
+				value := pair.Value
 
-		if conf.Project != (models.Pair{}) {
-			if confMap[conf.Project.Scope] == nil {
-				confMap[conf.Project.Scope] = make(map[string]string)
+				if confMap[scope] == nil {
+					confMap[scope] = map[string]string{}
+				}
+				confMap[scope][name] = value
 			}
-			confMap[conf.Project.Scope]["project"] = conf.Project.Value
-		}
-
-		if conf.Config != (models.Pair{}) {
-			if confMap[conf.Config.Scope] == nil {
-				confMap[conf.Config.Scope] = make(map[string]string)
-			}
-			confMap[conf.Config.Scope]["config"] = conf.Config.Value
-		}
-
-		if conf.APIHost != (models.Pair{}) {
-			if confMap[conf.APIHost.Scope] == nil {
-				confMap[conf.APIHost.Scope] = make(map[string]string)
-			}
-			confMap[conf.APIHost.Scope]["api-host"] = conf.APIHost.Value
-		}
-
-		if conf.VerifyTLS != (models.Pair{}) {
-			if confMap[conf.VerifyTLS.Scope] == nil {
-				confMap[conf.VerifyTLS.Scope] = make(map[string]string)
-			}
-			confMap[conf.VerifyTLS.Scope]["verify-tls"] = conf.VerifyTLS.Value
 		}
 
 		PrintJSON(confMap)
@@ -343,20 +322,10 @@ func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
 
 	var rows [][]string
 
-	if conf.Token != (models.Pair{}) {
-		rows = append(rows, []string{"token", conf.Token.Value, conf.Token.Scope})
-	}
-	if conf.Project != (models.Pair{}) {
-		rows = append(rows, []string{"project", conf.Project.Value, conf.Project.Scope})
-	}
-	if conf.Config != (models.Pair{}) {
-		rows = append(rows, []string{"config", conf.Config.Value, conf.Config.Scope})
-	}
-	if conf.APIHost != (models.Pair{}) {
-		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
-	}
-	if conf.VerifyTLS != (models.Pair{}) {
-		rows = append(rows, []string{"verify-tls", conf.VerifyTLS.Value, conf.VerifyTLS.Source})
+	for name, pair := range pairs {
+		if *pair != (models.Pair{}) {
+			rows = append(rows, []string{name, pair.Value, pair.Scope})
+		}
 	}
 
 	PrintTable([]string{"name", "value", "scope"}, rows)
@@ -370,21 +339,13 @@ func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 	}
 
 	var rows [][]string
-	for scope, config := range configs {
-		if config.Token != "" {
-			rows = append(rows, []string{"token", config.Token, scope})
-		}
-		if config.Project != "" {
-			rows = append(rows, []string{"project", config.Project, scope})
-		}
-		if config.Config != "" {
-			rows = append(rows, []string{"config", config.Config, scope})
-		}
-		if config.APIHost != "" {
-			rows = append(rows, []string{"api-host", config.APIHost, scope})
-		}
-		if config.VerifyTLS != "" {
-			rows = append(rows, []string{"verify-tls", config.VerifyTLS, scope})
+	for scope, conf := range configs {
+		pairs := models.Pairs(conf)
+
+		for name, value := range pairs {
+			if value != "" {
+				rows = append(rows, []string{name, value, scope})
+			}
 		}
 	}
 
