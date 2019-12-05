@@ -23,6 +23,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -47,9 +48,9 @@ var secretsCmd = &cobra.Command{
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
-		secrets, err := api.ParseSecrets(response)
-		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.Err(parseErr, "Unable to parse API response")
 		}
 
 		if onlyNames {
@@ -78,9 +79,9 @@ doppler secrets get api_key crypto_key`,
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
-		secrets, err := api.ParseSecrets(response)
-		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.Err(parseErr, "Unable to parse API response")
 		}
 
 		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)

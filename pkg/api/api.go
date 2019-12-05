@@ -157,25 +157,6 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return response, Error{}
 }
 
-// ParseSecrets for specified project and config
-func ParseSecrets(response []byte) (map[string]models.ComputedSecret, Error) {
-	var result map[string]interface{}
-	err := json.Unmarshal(response, &result)
-	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to parse API response"}
-	}
-
-	computed := map[string]models.ComputedSecret{}
-	secrets := result["variables"].(map[string]interface{})
-	// fmt.Println("secret1", secrets)
-	for key, secret := range secrets {
-		val := secret.(map[string]interface{})
-		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
-	}
-
-	return computed, Error{}
-}
-
 // SetSecrets for specified project and config
 func SetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets map[string]interface{}) (map[string]models.ComputedSecret, Error) {
 	reqBody := map[string]interface{}{}

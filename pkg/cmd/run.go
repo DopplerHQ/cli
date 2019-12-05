@@ -100,9 +100,9 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 		}
 	}
 
-	secrets, err := api.ParseSecrets(response)
-	if err != (api.Error{}) {
-		utils.Err(err.Unwrap(), err.Message)
+	secrets, parseErr := models.ParseSecrets(response)
+	if parseErr != nil {
+		utils.Err(parseErr, "Unable to parse API response")
 	}
 
 	secretsStrings := map[string]string{}
@@ -120,9 +120,9 @@ func readFallbackFile(path string) map[string]string {
 		utils.Err(err, "Unable to read fallback file")
 	}
 
-	secrets, apiError := api.ParseSecrets(response)
-	if apiError != (api.Error{}) {
-		utils.Err(apiError.Unwrap(), "Unable to parse fallback file")
+	secrets, err := models.ParseSecrets(response)
+	if err != nil {
+		utils.Err(err, "Unable to parse fallback file")
 	}
 
 	secretsStrings := map[string]string{}
