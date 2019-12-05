@@ -328,6 +328,10 @@ func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
 		}
 	}
 
+	// sort by name
+	sort.Slice(rows, func(a, b int) bool {
+		return rows[a][0] < rows[b][0]
+	})
 	PrintTable([]string{"name", "value", "scope"}, rows)
 }
 
@@ -348,6 +352,14 @@ func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 			}
 		}
 	}
+
+	// sort by scope, then by name
+	sort.Slice(rows, func(a, b int) bool {
+		if rows[a][2] != rows[b][2] {
+			return rows[a][2] < rows[b][2]
+		}
+		return rows[a][0] < rows[b][0]
+	})
 
 	PrintTable([]string{"name", "value", "scope"}, rows)
 }
