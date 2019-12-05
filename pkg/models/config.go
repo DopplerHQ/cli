@@ -17,20 +17,22 @@ package models
 
 // Config options
 type Config struct {
-	Token     string `json:"token"`
-	Project   string `json:"project"`
-	Config    string `json:"config"`
-	APIHost   string `json:"api-host"`
-	VerifyTLS string `json:"verify-tls"`
+	Token         string `json:"token"`
+	Project       string `json:"project"`
+	Config        string `json:"config"`
+	APIHost       string `json:"api-host"`
+	DashboardHost string `json:"dashboard-host"`
+	VerifyTLS     string `json:"verify-tls"`
 }
 
 // ScopedConfig options with their scope
 type ScopedConfig struct {
-	Token     Pair `json:"token"`
-	Project   Pair `json:"project"`
-	Config    Pair `json:"config"`
-	APIHost   Pair `json:"api-host"`
-	VerifyTLS Pair `json:"verify-tls"`
+	Token         Pair `json:"token"`
+	Project       Pair `json:"project"`
+	Config        Pair `json:"config"`
+	APIHost       Pair `json:"api-host"`
+	DashboardHost Pair `json:"dashboard-host"`
+	VerifyTLS     Pair `json:"verify-tls"`
 }
 
 // Pair value and its scope
@@ -57,31 +59,35 @@ func (s Source) String() string {
 // Pairs get the pairs for the given config
 func Pairs(conf Config) map[string]string {
 	return map[string]string{
-		"token":      conf.Token,
-		"project":    conf.Project,
-		"config":     conf.Config,
-		"api-host":   conf.APIHost,
-		"verify-tls": conf.VerifyTLS,
+		"token":          conf.Token,
+		"project":        conf.Project,
+		"config":         conf.Config,
+		"api-host":       conf.APIHost,
+		"dashboard-host": conf.DashboardHost,
+		"verify-tls":     conf.VerifyTLS,
 	}
 }
 
 // ScopedPairs get the pairs for the given scoped config
 func ScopedPairs(conf *ScopedConfig) map[string]*Pair {
 	return map[string]*Pair{
-		"token":      &conf.Token,
-		"project":    &conf.Project,
-		"config":     &conf.Config,
-		"api-host":   &conf.APIHost,
-		"verify-tls": &conf.VerifyTLS,
+		"token":          &conf.Token,
+		"project":        &conf.Project,
+		"config":         &conf.Config,
+		"api-host":       &conf.APIHost,
+		"dashboard-host": &conf.DashboardHost,
+		"verify-tls":     &conf.VerifyTLS,
 	}
 }
 
+// EnvPairs get the scoped config pairs for each environment variable
 func EnvPairs(conf *ScopedConfig) map[string]*Pair {
 	return map[string]*Pair{
-		"DOPPLER_TOKEN":      &conf.Token,
-		"DOPPLER_PROJECT":    &conf.Project,
-		"DOPPLER_CONFIG":     &conf.Config,
-		"DOPPLER_API_HOST":   &conf.APIHost,
-		"DOPPLER_VERIFY_TLS": &conf.VerifyTLS,
+		"DOPPLER_TOKEN":          &conf.Token,
+		"DOPPLER_PROJECT":        &conf.Project,
+		"DOPPLER_CONFIG":         &conf.Config,
+		"DOPPLER_API_HOST":       &conf.APIHost,
+		"DOPPLER_DASHBOARD_HOST": &conf.DashboardHost,
+		"DOPPLER_VERIFY_TLS":     &conf.VerifyTLS,
 	}
 }

@@ -133,6 +133,18 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 		}
 	}
 
+	flagSet = cmd.Flags().Changed("dashboard-host")
+	if flagSet || localConfig.DashboardHost.Value == "" {
+		localConfig.DashboardHost.Value = cmd.Flag("dashboard-host").Value.String()
+		localConfig.DashboardHost.Scope = "*"
+
+		if flagSet {
+			localConfig.DashboardHost.Source = models.FlagSource.String()
+		} else {
+			localConfig.DashboardHost.Source = models.DefaultValueSource.String()
+		}
+	}
+
 	flagSet = cmd.Flags().Changed("no-verify-tls")
 	if flagSet || localConfig.VerifyTLS.Value == "" {
 		noVerifyTLS := cmd.Flag("no-verify-tls").Value.String()
@@ -278,7 +290,8 @@ func parseScope(scope string) (string, error) {
 
 // IsValidConfigOption whether the specified key is a valid option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "verify-tls"
+	return key == "token" || key == "project" || key == "config" || key == "api-host" ||
+		key == "dashboard-host" || key == "verify-tls"
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
@@ -303,6 +316,8 @@ func SetConfigValue(conf *models.Config, key string, value string) {
 		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
+	} else if key == "dashboard-host" {
+		(*conf).DashboardHost = value
 	} else if key == "verify-tls" {
 		(*conf).VerifyTLS = value
 	}
