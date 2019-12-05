@@ -304,28 +304,38 @@ func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
 		confMap := make(map[string]map[string]string)
 
 		if conf.Token != (models.Pair{}) {
-			scopeBucket := confMap[conf.Token.Scope]
-			scopeBucket["token"] = conf.Token.Value
+			if confMap[conf.Token.Scope] == nil {
+				confMap[conf.Token.Scope] = make(map[string]string)
+			}
+			confMap[conf.Token.Scope]["token"] = conf.Token.Value
 		}
 
 		if conf.Project != (models.Pair{}) {
-			scopeBucket := confMap[conf.Project.Scope]
-			scopeBucket["project"] = conf.Project.Value
+			if confMap[conf.Project.Scope] == nil {
+				confMap[conf.Project.Scope] = make(map[string]string)
+			}
+			confMap[conf.Project.Scope]["project"] = conf.Project.Value
 		}
 
 		if conf.Config != (models.Pair{}) {
-			scopeBucket := confMap[conf.Config.Scope]
-			scopeBucket["config"] = conf.Config.Value
+			if confMap[conf.Config.Scope] == nil {
+				confMap[conf.Config.Scope] = make(map[string]string)
+			}
+			confMap[conf.Config.Scope]["config"] = conf.Config.Value
 		}
 
 		if conf.APIHost != (models.Pair{}) {
-			scopeBucket := confMap[conf.APIHost.Scope]
-			scopeBucket["api-host"] = conf.APIHost.Value
+			if confMap[conf.APIHost.Scope] == nil {
+				confMap[conf.APIHost.Scope] = make(map[string]string)
+			}
+			confMap[conf.APIHost.Scope]["api-host"] = conf.APIHost.Value
 		}
 
 		if conf.VerifyTLS != (models.Pair{}) {
-			scopeBucket := confMap[conf.VerifyTLS.Scope]
-			scopeBucket["verify-tls"] = conf.VerifyTLS.Value
+			if confMap[conf.VerifyTLS.Scope] == nil {
+				confMap[conf.VerifyTLS.Scope] = make(map[string]string)
+			}
+			confMap[conf.VerifyTLS.Scope]["verify-tls"] = conf.VerifyTLS.Value
 		}
 
 		PrintJSON(confMap)
