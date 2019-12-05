@@ -298,14 +298,14 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 }
 
 // PrintScopedConfig print scoped config
-func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
+func PrintScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
 	pairs := models.ScopedPairs(&conf)
 
 	if jsonFlag {
 		confMap := map[string]map[string]string{}
 
 		for name, pair := range pairs {
-			if *pair != (models.Pair{}) {
+			if *pair != (models.ScopedOption{}) {
 				scope := pair.Scope
 				value := pair.Value
 
@@ -323,7 +323,7 @@ func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
 	var rows [][]string
 
 	for name, pair := range pairs {
-		if *pair != (models.Pair{}) {
+		if *pair != (models.ScopedOption{}) {
 			rows = append(rows, []string{name, pair.Value, pair.Scope})
 		}
 	}
@@ -336,7 +336,7 @@ func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
 }
 
 // PrintConfigs print configs
-func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
+func PrintConfigs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 	if jsonFlag {
 		PrintJSON(configs)
 		return

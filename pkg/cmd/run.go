@@ -79,7 +79,7 @@ doppler run --key=123 -- printenv`,
 	},
 }
 
-func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPath string, fallbackReadonly bool, fallbackOnly bool) map[string]string {
+func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, fallbackPath string, fallbackReadonly bool, fallbackOnly bool) map[string]string {
 	useFallbackFile := (fallbackPath != "")
 	if useFallbackFile && fallbackOnly {
 		return readFallbackFile(fallbackPath)

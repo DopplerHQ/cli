@@ -213,7 +213,7 @@ func init() {
 	rootCmd.AddCommand(configureCmd)
 }
 
-func printScopedConfigArgs(conf models.ScopedConfig, args []string) {
+func printScopedConfigArgs(conf models.ScopedOptions, args []string) {
 	var rows [][]string
 	for _, arg := range args {
 		if configuration.IsValidConfigOption(arg) {
