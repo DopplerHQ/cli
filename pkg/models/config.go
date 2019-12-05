@@ -22,22 +22,22 @@ type ConfigFile struct {
 
 // FileScopedOptions config options
 type FileScopedOptions struct {
-	Token         string `json:"token"`
-	Project       string `json:"project"`
-	Config        string `json:"config"`
-	APIHost       string `json:"api-host"`
-	DashboardHost string `json:"dashboard-host"`
-	VerifyTLS     string `json:"verify-tls"`
+	Token         string `json:"token,omitempty"`
+	Project       string `json:"project,omitempty"`
+	Config        string `json:"config,omitempty"`
+	APIHost       string `json:"api-host,omitempty"`
+	DashboardHost string `json:"dashboard-host,omitempty"`
+	VerifyTLS     string `json:"verify-tls,omitempty"`
 }
 
 // ScopedOptions options with their scope
 type ScopedOptions struct {
-	Token         ScopedOption `json:"token"`
-	Project       ScopedOption `json:"project"`
-	Config        ScopedOption `json:"config"`
-	APIHost       ScopedOption `json:"api-host"`
-	DashboardHost ScopedOption `json:"dashboard-host"`
-	VerifyTLS     ScopedOption `json:"verify-tls"`
+	Token         ScopedOption `json:"token,omitempty"`
+	Project       ScopedOption `json:"project,omitempty"`
+	Config        ScopedOption `json:"config,omitempty"`
+	APIHost       ScopedOption `json:"api-host,omitempty"`
+	DashboardHost ScopedOption `json:"dashboard-host,omitempty"`
+	VerifyTLS     ScopedOption `json:"verify-tls,omitempty"`
 }
 
 // ScopedOption value and its scope
