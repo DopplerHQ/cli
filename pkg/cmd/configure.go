@@ -93,7 +93,7 @@ doppler configure get key otherkey`,
 		}
 
 		if jsonFlag {
-			filteredConfMap := make(map[string]string)
+			filteredConfMap := map[string]string{}
 			for _, arg := range args {
 				filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
 			}
@@ -152,7 +152,7 @@ doppler configure set key=123 otherkey=456`,
 		if !strings.Contains(args[0], "=") {
 			configuration.Set(scope, map[string]string{args[0]: args[1]})
 		} else {
-			options := make(map[string]string)
+			options := map[string]string{}
 			for _, option := range args {
 				arr := strings.Split(option, "=")
 				options[arr[0]] = arr[1]

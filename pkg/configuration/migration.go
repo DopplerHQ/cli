@@ -44,7 +44,7 @@ func migrateJSONToYaml() {
 }
 
 func convertOldConfig(oldConfig map[string]oldConfig) map[string]models.Config {
-	config := make(map[string]models.Config)
+	config := map[string]models.Config{}
 
 	for key, val := range oldConfig {
 		config[key] = models.Config{Project: val.Pipeline, Config: val.Environment, Token: val.Key}

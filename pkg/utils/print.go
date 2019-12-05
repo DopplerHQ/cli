@@ -184,11 +184,10 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 	}
 
 	if jsonFlag {
-		secretsMap := make(map[string]map[string]string)
+		secretsMap := map[string]map[string]string{}
 		for _, name := range secretsToPrint {
 			if secrets[name] != (models.ComputedSecret{}) {
-				secretsMap[name] = make(map[string]string)
-				secretsMap[name]["computed"] = secrets[name].ComputedValue
+				secretsMap[name] = map[string]string{"computed": secrets[name].ComputedValue}
 				if raw {
 					secretsMap[name]["raw"] = secrets[name].RawValue
 				}
@@ -254,7 +253,7 @@ func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, 
 	sort.Strings(secretsNames)
 
 	if jsonFlag {
-		secretsMap := make(map[string]map[string]string)
+		secretsMap := map[string]map[string]string{}
 		for _, name := range secretsNames {
 			secretsMap[name] = map[string]string{}
 		}

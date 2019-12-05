@@ -101,7 +101,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
-		secrets := make(map[string]interface{})
+		secrets := map[string]interface{}{}
 		var keys []string
 		for _, arg := range args {
 			secretArr := strings.Split(arg, "=")
@@ -141,7 +141,7 @@ doppler secrets delete api_key crypto_key`,
 		yes := utils.GetBoolFlag(cmd, "yes")
 
 		if yes || utils.ConfirmationPrompt("Delete secret(s)", false) {
-			secrets := make(map[string]interface{})
+			secrets := map[string]interface{}{}
 			for _, arg := range args {
 				secrets[arg] = nil
 			}

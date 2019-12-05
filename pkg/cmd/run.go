@@ -105,7 +105,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 		utils.Err(err.Unwrap(), err.Message)
 	}
 
-	secretsStrings := make(map[string]string)
+	secretsStrings := map[string]string{}
 	for key, value := range secrets {
 		secretsStrings[key] = value.ComputedValue
 	}
@@ -125,7 +125,7 @@ func readFallbackFile(path string) map[string]string {
 		utils.Err(apiError.Unwrap(), "Unable to parse fallback file")
 	}
 
-	secretsStrings := make(map[string]string)
+	secretsStrings := map[string]string{}
 	for key, value := range secrets {
 		secretsStrings[key] = value.ComputedValue
 	}
