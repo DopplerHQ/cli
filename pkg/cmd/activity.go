@@ -29,14 +29,14 @@ var activityCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
-		number := utils.GetIntFlag(cmd, "number", 16)
+		// number := utils.GetIntFlag(cmd, "number", 16)
 
 		activity, err := api.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(activity, number, jsonFlag)
+		utils.PrintLogs(activity, len(activity), jsonFlag)
 	},
 }
 
@@ -66,6 +66,7 @@ func init() {
 	activityGetCmd.Flags().String("log", "", "activity log id")
 	activityCmd.AddCommand(activityGetCmd)
 
-	activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	// TODO: hide this flag until the api supports it
+	// activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	rootCmd.AddCommand(activityCmd)
 }

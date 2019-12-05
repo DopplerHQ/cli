@@ -174,14 +174,14 @@ var configsLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
-		number := utils.GetIntFlag(cmd, "number", 16)
+		// number := utils.GetIntFlag(cmd, "number", 16)
 
 		logs, err := api.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(logs, number, jsonFlag)
+		utils.PrintLogs(logs, len(logs), jsonFlag)
 	},
 }
 
@@ -263,7 +263,8 @@ func init() {
 
 	configsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	// TODO: hide this flag until the api supports it
+	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
