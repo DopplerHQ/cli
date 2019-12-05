@@ -35,6 +35,7 @@ const maxTableWidth = 100
 func PrintTable(headers []string, rows [][]string, title string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
+	t.SetStyle(table.StyleLight)
 
 	if title != "" {
 		t.SetTitle(title)
