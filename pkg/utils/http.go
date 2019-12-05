@@ -40,9 +40,6 @@ type errorResponse struct {
 	Success  bool
 }
 
-// NoVerifyTLS whether we should support https connections without a valid cert
-var NoVerifyTLS = false
-
 // UseTimeout whether to timeout long-running requests
 var UseTimeout = true
 

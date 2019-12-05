@@ -66,6 +66,11 @@ var configureCmd = &cobra.Command{
 				scopeBucket["api-host"] = config.APIHost.Value
 			}
 
+			if config.VerifyTLS != (models.Pair{}) {
+				scopeBucket := confMap[config.VerifyTLS.Scope]
+				scopeBucket["verify-tls"] = config.VerifyTLS.Value
+			}
+
 			utils.PrintJSON(confMap)
 			return
 		}

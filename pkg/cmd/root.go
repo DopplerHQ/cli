@@ -42,9 +42,6 @@ func Execute() {
 	if rootCmd.Flags().Changed("json") {
 		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
 	}
-	if rootCmd.Flags().Changed("no-verify-tls") {
-		utils.NoVerifyTLS = utils.GetBoolFlag(rootCmd, "no-verify-tls")
-	}
 	if rootCmd.Flags().Changed("no-timeout") {
 		utils.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
 	}
@@ -68,7 +65,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
-	rootCmd.PersistentFlags().Bool("no-verify-tls", utils.NoVerifyTLS, "don't verify the validity of TLS certificates on HTTP requests")
+	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "don't verify the validity of TLS certificates on HTTP requests")
 	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
 	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")
 

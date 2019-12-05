@@ -314,6 +314,9 @@ func PrintScopedConfig(conf models.ScopedConfig) {
 	if conf.APIHost != (models.Pair{}) {
 		rows = append(rows, []string{"api-host", conf.APIHost.Value, conf.APIHost.Scope})
 	}
+	if conf.VerifyTLS != (models.Pair{}) {
+		rows = append(rows, []string{"verify-tls", conf.VerifyTLS.Value, conf.VerifyTLS.Source})
+	}
 
 	PrintTable([]string{"name", "value", "scope"}, rows)
 }
@@ -338,6 +341,9 @@ func PrintConfigs(configs map[string]models.Config, jsonFlag bool) {
 		}
 		if config.APIHost != "" {
 			rows = append(rows, []string{"api-host", config.APIHost, scope})
+		}
+		if config.VerifyTLS != "" {
+			rows = append(rows, []string{"verify-tls", config.VerifyTLS, scope})
 		}
 	}
 

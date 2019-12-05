@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -103,6 +104,14 @@ func Get(scope string) models.ScopedConfig {
 				scopedConfig.APIHost.Source = models.ConfigFileSource.String()
 			}
 		}
+
+		if conf.VerifyTLS != "" {
+			if scopedConfig.VerifyTLS == (models.Pair{}) || len(confScope) > len(scopedConfig.VerifyTLS.Scope) {
+				scopedConfig.VerifyTLS.Value = conf.VerifyTLS
+				scopedConfig.VerifyTLS.Scope = confScope
+				scopedConfig.VerifyTLS.Source = models.ConfigFileSource.String()
+			}
+		}
 	}
 
 	return scopedConfig
@@ -142,6 +151,13 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.APIHost.Scope = "*"
 			localConfig.APIHost.Source = models.EnvironmentSource.String()
 		}
+
+		verifyTLS := os.Getenv("DOPPLER_VERIFY_TLS")
+		if verifyTLS != "" {
+			localConfig.VerifyTLS.Value = strconv.FormatBool(utils.GetBool(verifyTLS, true))
+			localConfig.VerifyTLS.Scope = "*"
+			localConfig.VerifyTLS.Source = models.EnvironmentSource.String()
+		}
 	}
 
 	// individual flags (highest priority)
@@ -166,6 +182,19 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.APIHost.Source = models.FlagSource.String()
 		} else {
 			localConfig.APIHost.Source = models.DefaultValueSource.String()
+		}
+	}
+
+	flagSet = cmd.Flags().Changed("no-verify-tls")
+	if flagSet || localConfig.VerifyTLS.Value == "" {
+		noVerifyTLS := cmd.Flag("no-verify-tls").Value.String()
+		localConfig.VerifyTLS.Value = strconv.FormatBool(!utils.GetBool(noVerifyTLS, false))
+		localConfig.VerifyTLS.Scope = "*"
+
+		if flagSet {
+			localConfig.VerifyTLS.Source = models.FlagSource.String()
+		} else {
+			localConfig.VerifyTLS.Source = models.DefaultValueSource.String()
 		}
 	}
 
@@ -295,7 +324,7 @@ func parseScope(scope string) (string, error) {
 
 // IsValidConfigOption whether the specified key is a valid option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host"
+	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "verify-tls"
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
@@ -312,6 +341,9 @@ func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string)
 	if key == "api-host" {
 		return conf.APIHost.Value, conf.APIHost.Scope
 	}
+	if key == "verify-tls" {
+		return conf.VerifyTLS.Value, conf.VerifyTLS.Scope
+	}
 
 	return "", ""
 }
@@ -326,5 +358,7 @@ func SetConfigValue(conf *models.Config, key string, value string) {
 		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
+	} else if key == "verify-tls" {
+		(*conf).VerifyTLS = value
 	}
 }

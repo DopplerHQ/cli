@@ -100,7 +100,7 @@ var loginCmd = &cobra.Command{
 		token := response["token"].(string)
 		name := response["name"].(string)
 
-		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value})
+		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value, "verify-tls": localConfig.VerifyTLS.Value})
 		if !silent {
 			fmt.Println("")
 			fmt.Println("Welcome, " + name)
