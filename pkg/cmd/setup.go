@@ -33,7 +33,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		projects, err := api.GetProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		projects, err := api.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -67,7 +67,7 @@ var setupCmd = &cobra.Command{
 		if cmd.Flags().Changed("config") {
 			config = localConfig.Config.Value
 		} else {
-			configs, apiError := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+			configs, apiError := api.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
 				utils.Err(apiError.Unwrap(), apiError.Message)
 			}

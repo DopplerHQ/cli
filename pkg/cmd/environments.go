@@ -35,7 +35,7 @@ var environmentsCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		info, err := api.GetEnvironments(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+		info, err := api.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -53,7 +53,7 @@ var environmentsGetCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
 
-		info, err := api.GetEnvironment(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, environment)
+		info, err := api.GetEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, environment)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

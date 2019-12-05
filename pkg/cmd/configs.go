@@ -38,7 +38,7 @@ var configsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
-		configs, err := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+		configs, err := api.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -60,7 +60,7 @@ var configsGetCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		configInfo, err := api.GetConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+		configInfo, err := api.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -97,7 +97,7 @@ var configsCreateCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		info, err := api.CreateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
+		info, err := api.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -124,13 +124,13 @@ var configsDeleteCmd = &cobra.Command{
 		}
 
 		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
-			err := api.DeleteConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config)
+			err := api.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config)
 			if !err.IsNil() {
 				utils.Err(err.Unwrap(), err.Message)
 			}
 
 			if !silent {
-				configs, err := api.GetConfigs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value)
+				configs, err := api.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value)
 				if !err.IsNil() {
 					utils.Err(err.Unwrap(), err.Message)
 				}
@@ -156,7 +156,7 @@ var configsUpdateCmd = &cobra.Command{
 			config = args[0]
 		}
 
-		info, err := api.UpdateConfig(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, config, name)
+		info, err := api.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config, name)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -174,14 +174,14 @@ var configsLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
-		number := utils.GetIntFlag(cmd, "number", 16)
+		// number := utils.GetIntFlag(cmd, "number", 16)
 
-		logs, err := api.GetConfigLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		logs, err := api.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(logs, number, jsonFlag)
+		utils.PrintLogs(logs, len(logs), jsonFlag)
 	},
 }
 
@@ -198,7 +198,7 @@ var configsLogsGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		configLog, err := api.GetConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		configLog, err := api.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -222,7 +222,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		configLog, err := api.RollbackConfigLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
+		configLog, err := api.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -263,7 +263,8 @@ func init() {
 
 	configsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	// TODO: hide this flag until the api supports it
+	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")

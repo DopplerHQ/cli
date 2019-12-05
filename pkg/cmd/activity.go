@@ -27,16 +27,16 @@ var activityCmd = &cobra.Command{
 	Short: "Get workplace activity logs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
-		number := utils.GetIntFlag(cmd, "number", 16)
+		// number := utils.GetIntFlag(cmd, "number", 16)
 
-		activity, err := api.GetActivityLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		activity, err := api.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(activity, number, jsonFlag)
+		utils.PrintLogs(activity, len(activity), jsonFlag)
 	},
 }
 
@@ -45,7 +45,7 @@ var activityGetCmd = &cobra.Command{
 	Short: "Get workplace activity log",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
@@ -53,7 +53,7 @@ var activityGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		activity, err := api.GetActivityLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, log)
+		activity, err := api.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -66,6 +66,7 @@ func init() {
 	activityGetCmd.Flags().String("log", "", "activity log id")
 	activityCmd.AddCommand(activityGetCmd)
 
-	activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	// TODO: hide this flag until the api supports it
+	// activityCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	rootCmd.AddCommand(activityCmd)
 }

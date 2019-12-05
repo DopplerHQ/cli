@@ -85,7 +85,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedConfig, fallbackPat
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := api.GetSecrets(cmd, localConfig.APIHost.Value, localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+	response, err := api.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 	if err != (api.Error{}) {
 		if useFallbackFile {
 			return readFallbackFile(fallbackPath)

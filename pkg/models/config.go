@@ -17,18 +17,20 @@ package models
 
 // Config options
 type Config struct {
-	Token   string `json:"token"`
-	Project string `json:"project"`
-	Config  string `json:"config"`
-	APIHost string `json:"api-host"`
+	Token     string `json:"token"`
+	Project   string `json:"project"`
+	Config    string `json:"config"`
+	APIHost   string `json:"api-host"`
+	VerifyTLS string `json:"verify-tls"`
 }
 
 // ScopedConfig options with their scope
 type ScopedConfig struct {
-	Token   Pair `json:"token"`
-	Project Pair `json:"project"`
-	Config  Pair `json:"config"`
-	APIHost Pair `json:"api-host"`
+	Token     Pair `json:"token"`
+	Project   Pair `json:"project"`
+	Config    Pair `json:"config"`
+	APIHost   Pair `json:"api-host"`
+	VerifyTLS Pair `json:"verify-tls"`
 }
 
 // Pair value and its scope
