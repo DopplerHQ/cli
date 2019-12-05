@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -31,7 +32,8 @@ var openDashboardCmd = &cobra.Command{
 	Short: "open the Doppler dashboard",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := open.Run("https://doppler.com")
+		localConfig := configuration.LocalConfig(cmd)
+		err := open.Run(localConfig.DashboardHost.Value)
 		if err != nil {
 			utils.Err(err)
 		}

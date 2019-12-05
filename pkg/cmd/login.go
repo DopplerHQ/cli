@@ -23,6 +23,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -98,8 +99,10 @@ var loginCmd = &cobra.Command{
 
 		token := response["token"].(string)
 		name := response["name"].(string)
+		dashboard := response["dashboard_url"].(string)
+		configuration.SetFromConfig(scope, models.Config{Token: token, APIHost: localConfig.APIHost.Value,
+			DashboardHost: dashboard, VerifyTLS: localConfig.VerifyTLS.Value})
 
-		configuration.Set(scope, map[string]string{"token": token, "api-host": localConfig.APIHost.Value, "verify-tls": localConfig.VerifyTLS.Value})
 		if !silent {
 			fmt.Println("")
 			fmt.Println("Welcome, " + name)

@@ -15,6 +15,8 @@ limitations under the License.
 */
 package models
 
+import "encoding/json"
+
 // ParseWorkplaceSettings parse workplace settings
 func ParseWorkplaceSettings(info map[string]interface{}) WorkplaceSettings {
 	var workplaceInfo WorkplaceSettings
@@ -152,4 +154,22 @@ func ParseLog(log map[string]interface{}) Log {
 	}
 
 	return parsedLog
+}
+
+// ParseSecrets for specified project and config
+func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
+	var result map[string]interface{}
+	err := json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	computed := map[string]ComputedSecret{}
+	secrets := result["variables"].(map[string]interface{})
+	for key, secret := range secrets {
+		val := secret.(map[string]interface{})
+		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
+	}
+
+	return computed, nil
 }

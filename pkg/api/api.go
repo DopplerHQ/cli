@@ -61,7 +61,7 @@ func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, a
 
 // GetAuthToken get an auth token
 func GetAuthToken(host string, verifyTLS bool, code string) (map[string]interface{}, Error) {
-	reqBody := make(map[string]interface{})
+	reqBody := map[string]interface{}{}
 	reqBody["code"] = code
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -84,7 +84,7 @@ func GetAuthToken(host string, verifyTLS bool, code string) (map[string]interfac
 
 // RollAuthToken roll an auth token
 func RollAuthToken(host string, verifyTLS bool, token string) (map[string]interface{}, Error) {
-	reqBody := make(map[string]interface{})
+	reqBody := map[string]interface{}{}
 	reqBody["token"] = token
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -107,7 +107,7 @@ func RollAuthToken(host string, verifyTLS bool, token string) (map[string]interf
 
 // RevokeAuthToken revoke an auth token
 func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]interface{}, Error) {
-	reqBody := make(map[string]interface{})
+	reqBody := map[string]interface{}{}
 	reqBody["token"] = token
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -157,28 +157,9 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return response, Error{}
 }
 
-// ParseSecrets for specified project and config
-func ParseSecrets(response []byte) (map[string]models.ComputedSecret, Error) {
-	var result map[string]interface{}
-	err := json.Unmarshal(response, &result)
-	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to parse API response"}
-	}
-
-	computed := make(map[string]models.ComputedSecret)
-	secrets := result["variables"].(map[string]interface{})
-	// fmt.Println("secret1", secrets)
-	for key, secret := range secrets {
-		val := secret.(map[string]interface{})
-		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
-	}
-
-	return computed, Error{}
-}
-
 // SetSecrets for specified project and config
 func SetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets map[string]interface{}) (map[string]models.ComputedSecret, Error) {
-	reqBody := make(map[string]interface{})
+	reqBody := map[string]interface{}{}
 	reqBody["variables"] = secrets
 	body, err := json.Marshal(reqBody)
 	if err != nil {
@@ -200,7 +181,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	computed := make(map[string]models.ComputedSecret)
+	computed := map[string]models.ComputedSecret{}
 	for key, secret := range result["variables"].(map[string]interface{}) {
 		val := secret.(map[string]interface{})
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}

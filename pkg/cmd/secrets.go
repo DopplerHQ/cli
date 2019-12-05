@@ -23,6 +23,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -47,9 +48,9 @@ var secretsCmd = &cobra.Command{
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
-		secrets, err := api.ParseSecrets(response)
-		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.Err(parseErr, "Unable to parse API response")
 		}
 
 		if onlyNames {
@@ -78,9 +79,9 @@ doppler secrets get api_key crypto_key`,
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
-		secrets, err := api.ParseSecrets(response)
-		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.Err(parseErr, "Unable to parse API response")
 		}
 
 		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
@@ -101,7 +102,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
-		secrets := make(map[string]interface{})
+		secrets := map[string]interface{}{}
 		var keys []string
 		for _, arg := range args {
 			secretArr := strings.Split(arg, "=")
@@ -141,7 +142,7 @@ doppler secrets delete api_key crypto_key`,
 		yes := utils.GetBoolFlag(cmd, "yes")
 
 		if yes || utils.ConfirmationPrompt("Delete secret(s)", false) {
-			secrets := make(map[string]interface{})
+			secrets := map[string]interface{}{}
 			for _, arg := range args {
 				secrets[arg] = nil
 			}

@@ -64,7 +64,8 @@ func init() {
 	rootCmd.SetVersionTemplate(rootCmd.Version + "\n")
 
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
-	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "api host")
+	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "The host address for the Doppler API")
+	rootCmd.PersistentFlags().String("dashboard-host", "https://doppler.com", "The host address for the Doppler Dashboard")
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "don't verify the validity of TLS certificates on HTTP requests")
 	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
 	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")

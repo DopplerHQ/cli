@@ -68,48 +68,21 @@ func Get(scope string) models.ScopedConfig {
 	var scopedConfig models.ScopedConfig
 
 	for confScope, conf := range configContents {
-		// both paths should end in / to prevent martial match (e.g. /test matching /test123)
+		// both paths should end in / to prevent partial match (e.g. /test matching /test123)
 		if confScope != "*" && !strings.HasPrefix(scope, filepath.Clean(confScope)+string(filepath.Separator)) {
 			continue
 		}
 
-		if conf.Token != "" {
-			if scopedConfig.Token == (models.Pair{}) || len(confScope) > len(scopedConfig.Token.Scope) {
-				scopedConfig.Token.Value = conf.Token
-				scopedConfig.Token.Scope = confScope
-				scopedConfig.Token.Source = models.ConfigFileSource.String()
-			}
-		}
-
-		if conf.Project != "" {
-			if scopedConfig.Project == (models.Pair{}) || len(confScope) > len(scopedConfig.Project.Scope) {
-				scopedConfig.Project.Value = conf.Project
-				scopedConfig.Project.Scope = confScope
-				scopedConfig.Project.Source = models.ConfigFileSource.String()
-			}
-		}
-
-		if conf.Config != "" {
-			if scopedConfig.Config == (models.Pair{}) || len(confScope) > len(scopedConfig.Config.Scope) {
-				scopedConfig.Config.Value = conf.Config
-				scopedConfig.Config.Scope = confScope
-				scopedConfig.Config.Source = models.ConfigFileSource.String()
-			}
-		}
-
-		if conf.APIHost != "" {
-			if scopedConfig.APIHost == (models.Pair{}) || len(confScope) > len(scopedConfig.APIHost.Scope) {
-				scopedConfig.APIHost.Value = conf.APIHost
-				scopedConfig.APIHost.Scope = confScope
-				scopedConfig.APIHost.Source = models.ConfigFileSource.String()
-			}
-		}
-
-		if conf.VerifyTLS != "" {
-			if scopedConfig.VerifyTLS == (models.Pair{}) || len(confScope) > len(scopedConfig.VerifyTLS.Scope) {
-				scopedConfig.VerifyTLS.Value = conf.VerifyTLS
-				scopedConfig.VerifyTLS.Scope = confScope
-				scopedConfig.VerifyTLS.Source = models.ConfigFileSource.String()
+		pairs := models.Pairs(conf)
+		scopedPairs := models.ScopedPairs(&scopedConfig)
+		for name, pair := range pairs {
+			if pair != "" {
+				scopedPair := scopedPairs[name]
+				if *scopedPair == (models.Pair{}) || len(confScope) > len(scopedPair.Scope) {
+					scopedPair.Value = pair
+					scopedPair.Scope = confScope
+					scopedPair.Source = models.ConfigFileSource.String()
+				}
 			}
 		}
 	}
@@ -124,39 +97,14 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 
 	// environment variables
 	if !utils.GetBoolFlag(cmd, "no-read-env") {
-		token := os.Getenv("DOPPLER_TOKEN")
-		if token != "" {
-			localConfig.Token.Value = token
-			localConfig.Token.Scope = "*"
-			localConfig.Token.Source = models.EnvironmentSource.String()
-		}
-
-		project := os.Getenv("DOPPLER_PROJECT")
-		if project != "" {
-			localConfig.Project.Value = project
-			localConfig.Project.Scope = "*"
-			localConfig.Project.Source = models.EnvironmentSource.String()
-		}
-
-		config := os.Getenv("DOPPLER_CONFIG")
-		if config != "" {
-			localConfig.Config.Value = config
-			localConfig.Config.Scope = "*"
-			localConfig.Config.Source = models.EnvironmentSource.String()
-		}
-
-		apiHost := os.Getenv("DOPPLER_API_HOST")
-		if apiHost != "" {
-			localConfig.APIHost.Value = apiHost
-			localConfig.APIHost.Scope = "*"
-			localConfig.APIHost.Source = models.EnvironmentSource.String()
-		}
-
-		verifyTLS := os.Getenv("DOPPLER_VERIFY_TLS")
-		if verifyTLS != "" {
-			localConfig.VerifyTLS.Value = strconv.FormatBool(utils.GetBool(verifyTLS, true))
-			localConfig.VerifyTLS.Scope = "*"
-			localConfig.VerifyTLS.Source = models.EnvironmentSource.String()
+		pairs := models.EnvPairs(&localConfig)
+		for envVar, pair := range pairs {
+			envValue := os.Getenv(envVar)
+			if envValue != "" {
+				pair.Value = envValue
+				pair.Scope = "*"
+				pair.Source = models.EnvironmentSource.String()
+			}
 		}
 	}
 
@@ -182,6 +130,18 @@ func LocalConfig(cmd *cobra.Command) models.ScopedConfig {
 			localConfig.APIHost.Source = models.FlagSource.String()
 		} else {
 			localConfig.APIHost.Source = models.DefaultValueSource.String()
+		}
+	}
+
+	flagSet = cmd.Flags().Changed("dashboard-host")
+	if flagSet || localConfig.DashboardHost.Value == "" {
+		localConfig.DashboardHost.Value = cmd.Flag("dashboard-host").Value.String()
+		localConfig.DashboardHost.Scope = "*"
+
+		if flagSet {
+			localConfig.DashboardHost.Source = models.FlagSource.String()
+		} else {
+			localConfig.DashboardHost.Source = models.DefaultValueSource.String()
 		}
 	}
 
@@ -254,6 +214,12 @@ func Set(scope string, options map[string]string) {
 	writeYAML(configContents)
 }
 
+// SetFromConfig set properties on a scoped config using a config object
+func SetFromConfig(scope string, config models.Config) {
+	pairs := models.Pairs(config)
+	Set(scope, pairs)
+}
+
 // Unset a local config
 func Unset(scope string, options []string) {
 	if scope != "*" {
@@ -322,27 +288,28 @@ func parseScope(scope string) (string, error) {
 	return absScope, nil
 }
 
-// IsValidConfigOption whether the specified key is a valid option
+// IsValidConfigOption whether the specified key is a valid config option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host" || key == "verify-tls"
+	configOptions := map[string]interface{}{
+		"token":          nil,
+		"project":        nil,
+		"config":         nil,
+		"api-host":       nil,
+		"dashboard-host": nil,
+		"verify-tls":     nil,
+	}
+
+	_, exists := configOptions[key]
+	return exists
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
 func GetScopedConfigValue(conf models.ScopedConfig, key string) (string, string) {
-	if key == "token" {
-		return conf.Token.Value, conf.Token.Scope
-	}
-	if key == "project" {
-		return conf.Project.Value, conf.Project.Scope
-	}
-	if key == "config" {
-		return conf.Config.Value, conf.Config.Scope
-	}
-	if key == "api-host" {
-		return conf.APIHost.Value, conf.APIHost.Scope
-	}
-	if key == "verify-tls" {
-		return conf.VerifyTLS.Value, conf.VerifyTLS.Scope
+	pairs := models.ScopedPairs(&conf)
+	for name, pair := range pairs {
+		if key == name {
+			return pair.Value, pair.Scope
+		}
 	}
 
 	return "", ""
@@ -358,6 +325,8 @@ func SetConfigValue(conf *models.Config, key string, value string) {
 		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
+	} else if key == "dashboard-host" {
+		(*conf).DashboardHost = value
 	} else if key == "verify-tls" {
 		(*conf).VerifyTLS = value
 	}
