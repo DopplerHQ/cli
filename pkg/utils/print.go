@@ -299,6 +299,11 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 
 // PrintScopedConfig print scoped config
 func PrintScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
+	PrintScopedConfigSource(conf, jsonFlag, false)
+}
+
+// PrintScopedConfigSource print scoped config with source
+func PrintScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 	pairs := models.ScopedPairs(&conf)
 
 	if jsonFlag {
@@ -324,7 +329,11 @@ func PrintScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
 
 	for name, pair := range pairs {
 		if *pair != (models.ScopedOption{}) {
-			rows = append(rows, []string{name, pair.Value, pair.Scope})
+			row := []string{name, pair.Value, pair.Scope}
+			if source {
+				row = append(row, pair.Source)
+			}
+			rows = append(rows, row)
 		}
 	}
 
@@ -332,7 +341,13 @@ func PrintScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
 	sort.Slice(rows, func(a, b int) bool {
 		return rows[a][0] < rows[b][0]
 	})
-	PrintTable([]string{"name", "value", "scope"}, rows)
+
+	headers := []string{"name", "value", "scope"}
+	if source {
+		headers = append(headers, "source")
+	}
+
+	PrintTable(headers, rows)
 }
 
 // PrintConfigs print configs

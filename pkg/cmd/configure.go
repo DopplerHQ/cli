@@ -28,7 +28,7 @@ import (
 
 var configureCmd = &cobra.Command{
 	Use:   "configure",
-	Short: "View cli configuration",
+	Short: "View the config file",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		all := utils.GetBoolFlag(cmd, "all")
@@ -46,10 +46,27 @@ var configureCmd = &cobra.Command{
 	},
 }
 
+var configureDebugCmd = &cobra.Command{
+	Use:   "debug",
+	Short: "View active configuration utilizing all config sources",
+	Long: `View active configuration utilizing all config sources.
+
+This prints the active configuration that will be used by other CLI commands.
+This factors in command line flags (--token=123), environment variables (DOPPLER_TOKEN=123),
+and the config file (in order from highest to lowest precedence)`,
+	Args: cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.JSON
+
+		config := configuration.LocalConfig(cmd)
+		utils.PrintScopedConfigSource(config, jsonFlag, true)
+	},
+}
+
 var configureGetCmd = &cobra.Command{
 	Use:   "get [options]",
-	Short: "Get the value of one or more config options",
-	Long: `Get the value of one or more config options.
+	Short: "Get the value of one or more options in the config file",
+	Long: `Get the value of one or more options in the config file.
 
 Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
@@ -114,8 +131,8 @@ doppler configure get key otherkey`,
 
 var configureSetCmd = &cobra.Command{
 	Use:   "set [options]",
-	Short: "Set the value of one or more config options",
-	Long: `Set the value of one or more config options.
+	Short: "Set the value of one or more options in the config file",
+	Long: `Set the value of one or more options in the config file.
 
 Ex: set the options "key" and "otherkey":
 doppler configure set key=123 otherkey=456`,
@@ -168,8 +185,8 @@ doppler configure set key=123 otherkey=456`,
 
 var configureUnsetCmd = &cobra.Command{
 	Use:   "unset [options]",
-	Short: "Unset the value of one or more config options",
-	Long: `Unset the value of one or more config options.
+	Short: "Unset the value of one or more options in the config file",
+	Long: `Unset the value of one or more options in the config file.
 
 Ex: unset the options "key" and "otherkey":
 doppler configure unset key otherkey`,
@@ -200,6 +217,8 @@ doppler configure unset key otherkey`,
 }
 
 func init() {
+	configureCmd.AddCommand(configureDebugCmd)
+
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified")
 	configureCmd.AddCommand(configureGetCmd)
 
