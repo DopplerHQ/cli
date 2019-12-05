@@ -288,10 +288,19 @@ func parseScope(scope string) (string, error) {
 	return absScope, nil
 }
 
-// IsValidConfigOption whether the specified key is a valid option
+// IsValidConfigOption whether the specified key is a valid config option
 func IsValidConfigOption(key string) bool {
-	return key == "token" || key == "project" || key == "config" || key == "api-host" ||
-		key == "dashboard-host" || key == "verify-tls"
+	configOptions := map[string]interface{}{
+		"token":          nil,
+		"project":        nil,
+		"config":         nil,
+		"api-host":       nil,
+		"dashboard-host": nil,
+		"verify-tls":     nil,
+	}
+
+	_, exists := configOptions[key]
+	return exists
 }
 
 // GetScopedConfigValue get the value of the specified key within the config
