@@ -53,3 +53,14 @@ const (
 func (s Source) String() string {
 	return [...]string{"Flag", "Config File", "Environment", "Default Value"}[s]
 }
+
+// Pairs get the pairs for the given config
+func Pairs(conf Config) map[string]string {
+	return map[string]string{
+		"token":      conf.Token,
+		"project":    conf.Project,
+		"config":     conf.Config,
+		"api-host":   conf.APIHost,
+		"verify-tls": conf.VerifyTLS,
+	}
+}

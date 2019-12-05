@@ -254,6 +254,12 @@ func Set(scope string, options map[string]string) {
 	writeYAML(configContents)
 }
 
+// SetFromConfig set properties on a scoped config using a config object
+func SetFromConfig(scope string, config models.Config) {
+	pairs := models.Pairs(config)
+	Set(scope, pairs)
+}
+
 // Unset a local config
 func Unset(scope string, options []string) {
 	if scope != "*" {
