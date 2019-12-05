@@ -31,7 +31,7 @@ var activityCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
-		activity, err := api.GetActivityLogs(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		activity, err := api.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -53,7 +53,7 @@ var activityGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		activity, err := api.GetActivityLog(cmd, localConfig.APIHost.Value, localConfig.Token.Value, log)
+		activity, err := api.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

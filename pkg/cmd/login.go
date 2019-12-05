@@ -39,7 +39,7 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
-		response, err := api.GenerateAuthCode(cmd, localConfig.APIHost.Value, hostname, utils.HostOS(), utils.HostArch())
+		response, err := api.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -70,7 +70,7 @@ var loginCmd = &cobra.Command{
 		response = nil
 		// TODO can we use our existing retry function here instead??
 		for {
-			resp, err := api.GetAuthToken(cmd, localConfig.APIHost.Value, code)
+			resp, err := api.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
 			if !err.IsNil() {
 				continue
 			}
@@ -129,7 +129,7 @@ Your saved configuration will be updated.`,
 			os.Exit(1)
 		}
 
-		response, err := api.RollAuthToken(cmd, localConfig.APIHost.Value, oldToken)
+		response, err := api.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -172,7 +172,7 @@ This is the CLI equivalent to logging out.`,
 			os.Exit(1)
 		}
 
-		_, err := api.RevokeAuthToken(cmd, localConfig.APIHost.Value, token)
+		_, err := api.RevokeAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), token)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

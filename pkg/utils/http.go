@@ -47,11 +47,11 @@ var UseTimeout = true
 var TimeoutDuration = 10 * time.Second
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	req.Header.Set("api-key", apiKey)
@@ -59,20 +59,20 @@ func GetRequest(host string, headers map[string]string, uri string, params []Que
 		req.Header.Set(key, value)
 	}
 
-	body, err := performRequest(req, params)
+	statusCode, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return body, err
+		return statusCode, body, err
 	}
 
-	return body, nil
+	return statusCode, body, nil
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string, body []byte) ([]byte, error) {
+func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string, body []byte) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	req.Header.Set("api-key", apiKey)
@@ -80,20 +80,20 @@ func PostRequest(host string, headers map[string]string, uri string, params []Qu
 		req.Header.Set(key, value)
 	}
 
-	body, err = performRequest(req, params)
+	statusCode, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return body, err
+		return statusCode, body, err
 	}
 
-	return body, nil
+	return statusCode, body, nil
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, headers map[string]string, uri string, params []QueryParam, apiKey string) ([]byte, error) {
+func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	req.Header.Set("api-key", apiKey)
@@ -101,15 +101,15 @@ func DeleteRequest(host string, headers map[string]string, uri string, params []
 		req.Header.Set(key, value)
 	}
 
-	body, err := performRequest(req, params)
+	statusCode, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return body, err
+		return statusCode, body, err
 	}
 
-	return body, nil
+	return statusCode, body, nil
 }
 
-func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
+func performRequest(req *http.Request, verifyTLS bool, params []QueryParam) (int, []byte, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -131,7 +131,7 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	if UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
-	if NoVerifyTLS {
+	if !verifyTLS {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -169,26 +169,26 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 	})
 
 	if requestErr != nil && response == nil {
-		return nil, requestErr
+		return 0, nil, requestErr
 	}
 
 	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return response.StatusCode, nil, err
 	}
 
 	// success
 	if requestErr == nil {
-		return body, nil
+		return response.StatusCode, body, nil
 	}
 
 	// print the response body error messages
 	var errResponse errorResponse
 	err = json.Unmarshal(body, &errResponse)
 	if err != nil {
-		return nil, err
+		return response.StatusCode, nil, err
 	}
 
 	var sb strings.Builder
@@ -199,7 +199,7 @@ func performRequest(req *http.Request, params []QueryParam) ([]byte, error) {
 		sb.WriteString(message)
 	}
 
-	return body, errors.New(sb.String())
+	return response.StatusCode, body, errors.New(sb.String())
 }
 
 func isSuccess(statusCode int) bool {

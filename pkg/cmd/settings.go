@@ -33,7 +33,7 @@ var settingsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
-		info, err := api.GetWorkplaceSettings(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		info, err := api.GetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -69,7 +69,7 @@ var settingsUpdateCmd = &cobra.Command{
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 
 		localConfig := configuration.LocalConfig(cmd)
-		info, err := api.SetWorkplaceSettings(cmd, localConfig.APIHost.Value, localConfig.Token.Value, settings)
+		info, err := api.SetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, settings)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

@@ -30,7 +30,7 @@ var projectsCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 
 		localConfig := configuration.LocalConfig(cmd)
-		info, err := api.GetProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+		info, err := api.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -52,7 +52,7 @@ var projectsGetCmd = &cobra.Command{
 			project = args[0]
 		}
 
-		info, err := api.GetProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+		info, err := api.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -76,7 +76,7 @@ var projectsCreateCmd = &cobra.Command{
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		info, err := api.CreateProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, name, description)
+		info, err := api.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -103,13 +103,13 @@ var projectsDeleteCmd = &cobra.Command{
 		}
 
 		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
-			err := api.DeleteProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project)
+			err := api.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !err.IsNil() {
 				utils.Err(err.Unwrap(), err.Message)
 			}
 
 			if !silent {
-				info, err := api.GetProjects(cmd, localConfig.APIHost.Value, localConfig.Token.Value)
+				info, err := api.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 				if !err.IsNil() {
 					utils.Err(err.Unwrap(), err.Message)
 				}
@@ -137,7 +137,7 @@ var projectsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		description := cmd.Flag("description").Value.String()
 
-		info, err := api.UpdateProject(cmd, localConfig.APIHost.Value, localConfig.Token.Value, project, name, description)
+		info, err := api.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
