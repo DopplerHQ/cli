@@ -100,7 +100,7 @@ var loginCmd = &cobra.Command{
 		token := response["token"].(string)
 		name := response["name"].(string)
 		dashboard := response["dashboard_url"].(string)
-		configuration.SetFromConfig(scope, models.Config{Token: token, APIHost: localConfig.APIHost.Value,
+		configuration.SetFromConfig(scope, models.FileScopedOptions{Token: token, APIHost: localConfig.APIHost.Value,
 			DashboardHost: dashboard, VerifyTLS: localConfig.VerifyTLS.Value})
 
 		if !silent {

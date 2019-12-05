@@ -43,14 +43,14 @@ func migrateJSONToYaml() {
 	writeYAML(newConfig)
 }
 
-func convertOldConfig(oldConfig map[string]oldConfig) map[string]models.Config {
-	config := map[string]models.Config{}
+func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
+	config := map[string]models.FileScopedOptions{}
 
 	for key, val := range oldConfig {
-		config[key] = models.Config{Project: val.Pipeline, Config: val.Environment, Token: val.Key}
+		config[key] = models.FileScopedOptions{Project: val.Pipeline, Config: val.Environment, Token: val.Key}
 	}
 
-	return config
+	return models.ConfigFile{ScopedOptions: config}
 }
 
 func parseJSONConfig() map[string]oldConfig {
