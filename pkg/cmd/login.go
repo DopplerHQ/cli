@@ -72,16 +72,15 @@ var loginCmd = &cobra.Command{
 		for {
 			resp, err := api.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
 			if !err.IsNil() {
-				continue
+				if err.Code == 409 {
+					time.Sleep(2 * time.Second)
+					continue
+				}
+				utils.Err(err.Unwrap(), err.Message)
 			}
 
-			// TODO prob should stop if get a 500 or can't connect to server
-			if resp != nil {
-				response = resp
-				break
-			}
-
-			time.Sleep(2 * time.Second)
+			response = resp
+			break
 		}
 
 		if response == nil {
