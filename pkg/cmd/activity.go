@@ -27,7 +27,7 @@ var activityCmd = &cobra.Command{
 	Short: "Get workplace activity logs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 		number := utils.GetIntFlag(cmd, "number", 16)
 
@@ -45,7 +45,7 @@ var activityGetCmd = &cobra.Command{
 	Short: "Get workplace activity log",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.GetBoolFlag(cmd, "json")
+		jsonFlag := utils.JSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
