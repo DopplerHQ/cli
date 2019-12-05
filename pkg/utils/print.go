@@ -299,7 +299,39 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 }
 
 // PrintScopedConfig print scoped config
-func PrintScopedConfig(conf models.ScopedConfig) {
+func PrintScopedConfig(conf models.ScopedConfig, jsonFlag bool) {
+	if jsonFlag {
+		confMap := make(map[string]map[string]string)
+
+		if conf.Token != (models.Pair{}) {
+			scopeBucket := confMap[conf.Token.Scope]
+			scopeBucket["token"] = conf.Token.Value
+		}
+
+		if conf.Project != (models.Pair{}) {
+			scopeBucket := confMap[conf.Project.Scope]
+			scopeBucket["project"] = conf.Project.Value
+		}
+
+		if conf.Config != (models.Pair{}) {
+			scopeBucket := confMap[conf.Config.Scope]
+			scopeBucket["config"] = conf.Config.Value
+		}
+
+		if conf.APIHost != (models.Pair{}) {
+			scopeBucket := confMap[conf.APIHost.Scope]
+			scopeBucket["api-host"] = conf.APIHost.Value
+		}
+
+		if conf.VerifyTLS != (models.Pair{}) {
+			scopeBucket := confMap[conf.VerifyTLS.Scope]
+			scopeBucket["verify-tls"] = conf.VerifyTLS.Value
+		}
+
+		PrintJSON(confMap)
+		return
+	}
+
 	var rows [][]string
 
 	if conf.Token != (models.Pair{}) {
