@@ -62,7 +62,7 @@ func PrintLogs(logs []models.Log, number int, jsonFlag bool) {
 		return
 	}
 
-	for _, log := range logs {
+	for _, log := range logs[0:maxLogs] {
 		PrintLog(log, false)
 	}
 }
