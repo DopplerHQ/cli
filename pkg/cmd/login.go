@@ -69,7 +69,6 @@ var loginCmd = &cobra.Command{
 		}
 
 		response = nil
-		// TODO can we use our existing retry function here instead??
 		for {
 			resp, err := http.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
 			if !err.IsNil() {

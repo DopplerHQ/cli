@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -57,10 +58,10 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 	tag, err := getLatestVersion()
 	if err != nil {
 		if debug && !json {
-			fmt.Println("Error:", err)
+			fmt.Fprintln(os.Stderr, "Error:", err)
 		}
 		if !silent && !json {
-			fmt.Println("Unable to check for CLI updates")
+			fmt.Fprintln(os.Stderr, "Unable to check for CLI updates")
 		}
 		return models.VersionCheck{}
 	}
