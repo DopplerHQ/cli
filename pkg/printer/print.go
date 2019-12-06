@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package utils
+package printer
 
 import (
 	"encoding/json"
@@ -25,19 +25,20 @@ import (
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
 )
 
 const maxTableWidth = 100
 
-// PrintTable print table
-func PrintTable(headers []string, rows [][]string) {
-	PrintTableWithTitle(headers, rows, "")
+// Table print table
+func Table(headers []string, rows [][]string) {
+	TableWithTitle(headers, rows, "")
 }
 
-// PrintTableWithTitle print table with a title
-func PrintTableWithTitle(headers []string, rows [][]string, title string) {
+// TableWithTitle print table with a title
+func TableWithTitle(headers []string, rows [][]string, title string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.SetStyle(table.StyleLight)
@@ -63,24 +64,24 @@ func PrintTableWithTitle(headers []string, rows [][]string, title string) {
 	t.Render()
 }
 
-// PrintLogs print logs
-func PrintLogs(logs []models.Log, number int, jsonFlag bool) {
+// Logs print logs
+func Logs(logs []models.Log, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
 
 	if jsonFlag {
-		PrintJSON(logs[0:maxLogs])
+		JSON(logs[0:maxLogs])
 		return
 	}
 
 	for _, log := range logs[0:maxLogs] {
-		PrintLog(log, false)
+		Log(log, false)
 	}
 }
 
-// PrintLog print log
-func PrintLog(log models.Log, jsonFlag bool) {
+// Log print log
+func Log(log models.Log, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(log)
+		JSON(log)
 		return
 	}
 
@@ -96,31 +97,31 @@ func PrintLog(log models.Log, jsonFlag bool) {
 	fmt.Println("")
 }
 
-// PrintJSON print object as json
-func PrintJSON(structure interface{}) {
+// JSON print object as json
+func JSON(structure interface{}) {
 	resp, err := json.Marshal(structure)
 	if err != nil {
-		Err(err, "")
+		utils.HandleError(err, "")
 	}
 
 	fmt.Println(string(resp))
 }
 
-// PrintConfigInfo print config
-func PrintConfigInfo(info models.ConfigInfo, jsonFlag bool) {
+// ConfigInfo print config
+func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
 	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
+	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }
 
-// PrintConfigsInfo print configs
-func PrintConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
+// ConfigsInfo print configs
+func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
@@ -129,13 +130,13 @@ func PrintConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
+	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }
 
-// PrintEnvironmentsInfo print environments
-func PrintEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
+// EnvironmentsInfo print environments
+func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
@@ -144,25 +145,25 @@ func PrintEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
 			environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
 	}
-	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
-// PrintEnvironmentInfo print environment
-func PrintEnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
+// EnvironmentInfo print environment
+func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
-	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
-// PrintProjectsInfo print projects info
+// highest print projects info
 // highest availability secrets storage on the planet
-func PrintProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
+func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
@@ -170,22 +171,22 @@ func PrintProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	for _, projectInfo := range info {
 		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
 	}
-	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
+	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }
 
-// PrintProjectInfo print project info
-func PrintProjectInfo(info models.ProjectInfo, jsonFlag bool) {
+// ProjectInfo print project info
+func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(info)
+		JSON(info)
 		return
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
+	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }
 
-// PrintSecrets print secrets
-func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
+// Secrets print secrets
+func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
 	if len(secretsToPrint) == 0 {
 		for name := range secrets {
 			secretsToPrint = append(secretsToPrint, name)
@@ -204,7 +205,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 			}
 		}
 
-		PrintJSON(secretsMap)
+		JSON(secretsMap)
 		return
 	}
 
@@ -251,11 +252,11 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 		rows = append(rows, row)
 	}
 
-	PrintTable(headers, rows)
+	Table(headers, rows)
 }
 
-// PrintSecretsNames print secrets
-func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain bool) {
+// SecretsNames print secrets
+func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain bool) {
 	var secretsNames []string
 	for name := range secrets {
 		secretsNames = append(secretsNames, name)
@@ -268,7 +269,7 @@ func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, 
 			secretsMap[name] = map[string]string{}
 		}
 
-		PrintJSON(secretsMap)
+		JSON(secretsMap)
 		return
 	}
 
@@ -293,27 +294,27 @@ func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, 
 	for _, name := range secretsNames {
 		rows = append(rows, []string{name})
 	}
-	PrintTable([]string{"name"}, rows)
+	Table([]string{"name"}, rows)
 }
 
-// PrintSettings print settings
-func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
+// Settings print settings
+func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(settings)
+		JSON(settings)
 		return
 	}
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	PrintTable([]string{"id", "name", "billing_email"}, rows)
+	Table([]string{"id", "name", "billing_email"}, rows)
 }
 
-// PrintScopedConfig print scoped config
-func PrintScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
-	PrintScopedConfigSource(conf, "", jsonFlag, false)
+// ScopedConfig print scoped config
+func ScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
+	ScopedConfigSource(conf, "", jsonFlag, false)
 }
 
-// PrintScopedConfigSource print scoped config with source
-func PrintScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, source bool) {
+// ScopedConfigSource print scoped config with source
+func ScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, source bool) {
 	pairs := models.ScopedPairs(&conf)
 
 	if jsonFlag {
@@ -331,7 +332,7 @@ func PrintScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag b
 			}
 		}
 
-		PrintJSON(confMap)
+		JSON(confMap)
 		return
 	}
 
@@ -357,13 +358,13 @@ func PrintScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag b
 		headers = append(headers, "source")
 	}
 
-	PrintTableWithTitle(headers, rows, title)
+	TableWithTitle(headers, rows, title)
 }
 
-// PrintConfigs print configs
-func PrintConfigs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
+// Configs print configs
+func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 	if jsonFlag {
-		PrintJSON(configs)
+		JSON(configs)
 		return
 	}
 
@@ -386,5 +387,5 @@ func PrintConfigs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 		return rows[a][0] < rows[b][0]
 	})
 
-	PrintTable([]string{"name", "value", "scope"}, rows)
+	Table([]string{"name", "value", "scope"}, rows)
 }

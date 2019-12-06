@@ -22,6 +22,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -32,16 +33,16 @@ var configureCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		all := utils.GetBoolFlag(cmd, "all")
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		if all {
-			utils.PrintConfigs(configuration.AllConfigs(), jsonFlag)
+			printer.Configs(configuration.AllConfigs(), jsonFlag)
 			return
 		}
 
 		scope := cmd.Flag("scope").Value.String()
 		config := configuration.Get(scope)
-		utils.PrintScopedConfig(config, jsonFlag)
+		printer.ScopedConfig(config, jsonFlag)
 	},
 }
 
@@ -55,10 +56,10 @@ This factors in command line flags (--token=123), environment variables (DOPPLER
 and the config file (in order from highest to lowest precedence)`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		config := configuration.LocalConfig(cmd)
-		utils.PrintScopedConfigSource(config, "", jsonFlag, true)
+		printer.ScopedConfigSource(config, "", jsonFlag, true)
 	},
 }
 
@@ -83,7 +84,7 @@ doppler configure get key otherkey`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 
 		scope := cmd.Flag("scope").Value.String()
@@ -114,7 +115,7 @@ doppler configure get key otherkey`,
 				filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
 			}
 
-			utils.PrintJSON(filteredConfMap)
+			printer.JSON(filteredConfMap)
 			return
 		}
 
@@ -124,7 +125,7 @@ doppler configure get key otherkey`,
 			rows = append(rows, []string{arg, value, scope})
 		}
 
-		utils.PrintTable([]string{"name", "value", "scope"}, rows)
+		printer.Table([]string{"name", "value", "scope"}, rows)
 	},
 }
 
@@ -163,7 +164,7 @@ doppler configure set key=123 otherkey=456`,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		if !strings.Contains(args[0], "=") {
 			configuration.Set(scope, map[string]string{args[0]: args[1]})
@@ -177,7 +178,7 @@ doppler configure set key=123 otherkey=456`,
 		}
 
 		if !silent {
-			utils.PrintScopedConfig(configuration.Get(scope), jsonFlag)
+			printer.ScopedConfig(configuration.Get(scope), jsonFlag)
 		}
 	},
 }
@@ -204,13 +205,13 @@ doppler configure unset key otherkey`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		scope := cmd.Flag("scope").Value.String()
 		configuration.Unset(scope, args)
 
 		if !silent {
-			utils.PrintScopedConfig(configuration.Get(scope), jsonFlag)
+			printer.ScopedConfig(configuration.Get(scope), jsonFlag)
 		}
 	},
 }
@@ -240,5 +241,5 @@ func printScopedConfigArgs(conf models.ScopedOptions, args []string) {
 		}
 	}
 
-	utils.PrintTable([]string{"name", "value", "scope"}, rows)
+	printer.Table([]string{"name", "value", "scope"}, rows)
 }

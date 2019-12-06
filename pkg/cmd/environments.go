@@ -18,6 +18,7 @@ package cmd
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ var environmentsCmd = &cobra.Command{
 	Short: "List Enclave environments",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		project := localConfig.Project.Value
@@ -37,10 +38,10 @@ var environmentsCmd = &cobra.Command{
 
 		info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintEnvironmentsInfo(info, jsonFlag)
+		printer.EnvironmentsInfo(info, jsonFlag)
 	},
 }
 
@@ -49,16 +50,16 @@ var environmentsGetCmd = &cobra.Command{
 	Short: "Get info for an environment",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
 
 		info, err := http.GetEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, environment)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintEnvironmentInfo(info, jsonFlag)
+		printer.EnvironmentInfo(info, jsonFlag)
 	},
 }
 

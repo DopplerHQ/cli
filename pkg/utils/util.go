@@ -32,7 +32,7 @@ import (
 func ConfigDir() string {
 	dir, err := os.UserConfigDir()
 	if err != nil {
-		Err(err, "Unable to determine configuration directory")
+		HandleError(err, "Unable to determine configuration directory")
 	}
 
 	return dir
@@ -42,7 +42,7 @@ func ConfigDir() string {
 func HomeDir() string {
 	dir, err := os.UserHomeDir()
 	if err != nil {
-		Err(err, "Unable to determine home directory")
+		HandleError(err, "Unable to determine home directory")
 	}
 
 	return dir
@@ -60,7 +60,7 @@ func Exists(path string) bool {
 func Cwd() string {
 	cwd, err := os.Executable()
 	if err != nil {
-		Err(err, "")
+		HandleError(err, "")
 	}
 	return filepath.Dir(cwd)
 }
@@ -97,7 +97,7 @@ func GetBool(value string, def bool) bool {
 func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	b, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
 	if err != nil {
-		Err(err, "")
+		HandleError(err, "")
 	}
 	return b
 }
@@ -106,7 +106,7 @@ func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
 	if err != nil {
-		Err(err, "")
+		HandleError(err, "")
 	}
 
 	return int(number)
@@ -115,7 +115,7 @@ func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 func GetDurationFlag(cmd *cobra.Command, flag string) time.Duration {
 	value, err := time.ParseDuration(cmd.Flag(flag).Value.String())
 	if err != nil {
-		Err(err, "")
+		HandleError(err, "")
 	}
 	return value
 }

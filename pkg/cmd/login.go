@@ -42,7 +42,7 @@ var loginCmd = &cobra.Command{
 
 		response, err := http.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
@@ -76,7 +76,7 @@ var loginCmd = &cobra.Command{
 					time.Sleep(2 * time.Second)
 					continue
 				}
-				utils.Err(err.Unwrap(), err.Message)
+				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
 			response = resp
@@ -84,7 +84,7 @@ var loginCmd = &cobra.Command{
 		}
 
 		if response == nil {
-			utils.Err(errors.New("unable to authenticate"))
+			utils.HandleError(errors.New("unable to authenticate"))
 		}
 
 		if err, ok := response["error"]; ok {
@@ -132,7 +132,7 @@ Your saved configuration will be updated.`,
 
 		response, err := http.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		newToken := response["token"].(string)
@@ -175,7 +175,7 @@ This is the CLI equivalent to logging out.`,
 
 		_, err := http.RevokeAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), token)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if updateConfig {

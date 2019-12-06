@@ -50,7 +50,7 @@ doppler run --key=123 -- printenv`,
 		fallbackPath := utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
 
 		if cmd.Flags().Changed("fallback") && fallbackPath == "" {
-			utils.Err(errors.New("invalid fallback file path"), "")
+			utils.HandleError(errors.New("invalid fallback file path"), "")
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
@@ -90,19 +90,19 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, fallbackPa
 		if useFallbackFile {
 			return readFallbackFile(fallbackPath)
 		}
-		utils.Err(err.Unwrap(), err.Message)
+		utils.HandleError(err.Unwrap(), err.Message)
 	}
 
 	if useFallbackFile && !fallbackReadonly {
 		err := ioutil.WriteFile(fallbackPath, response, 0600)
 		if err != nil {
-			utils.Err(err, "Unable to write fallback file")
+			utils.HandleError(err, "Unable to write fallback file")
 		}
 	}
 
 	secrets, parseErr := models.ParseSecrets(response)
 	if parseErr != nil {
-		utils.Err(parseErr, "Unable to parse API response")
+		utils.HandleError(parseErr, "Unable to parse API response")
 	}
 
 	secretsStrings := map[string]string{}
@@ -117,12 +117,12 @@ func readFallbackFile(path string) map[string]string {
 	utils.Log("Using fallback file")
 	response, err := ioutil.ReadFile(path)
 	if err != nil {
-		utils.Err(err, "Unable to read fallback file")
+		utils.HandleError(err, "Unable to read fallback file")
 	}
 
 	secrets, err := models.ParseSecrets(response)
 	if err != nil {
-		utils.Err(err, "Unable to parse fallback file")
+		utils.HandleError(err, "Unable to parse fallback file")
 	}
 
 	secretsStrings := map[string]string{}
