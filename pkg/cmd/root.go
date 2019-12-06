@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if utils.Debug {
-			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "Active configuration", utils.JSON, true)
+			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", utils.JSON, true)
 		}
 	},
 }
