@@ -91,7 +91,7 @@ var setupCmd = &cobra.Command{
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
-			utils.PrintTable([]string{"name", "value", "scope"}, rows, "")
+			utils.PrintTable([]string{"name", "value", "scope"}, rows)
 		}
 	},
 }

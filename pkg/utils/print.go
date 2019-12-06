@@ -31,8 +31,13 @@ import (
 
 const maxTableWidth = 100
 
-// PrintTable prints table
-func PrintTable(headers []string, rows [][]string, title string) {
+// PrintTable print table
+func PrintTable(headers []string, rows [][]string) {
+	PrintTableWithTitle(headers, rows, "")
+}
+
+// PrintTableWithTitle print table with a title
+func PrintTableWithTitle(headers []string, rows [][]string, title string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.SetStyle(table.StyleLight)
@@ -109,7 +114,7 @@ func PrintConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, "")
+	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }
 
 // PrintConfigsInfo print configs
@@ -124,7 +129,7 @@ func PrintConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, "")
+	PrintTable([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
 }
 
 // PrintEnvironmentsInfo print environments
@@ -139,7 +144,7 @@ func PrintEnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
 			environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
 	}
-	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, "")
+	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
 // PrintEnvironmentInfo print environment
@@ -150,7 +155,7 @@ func PrintEnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
-	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, "")
+	PrintTable([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
 // PrintProjectsInfo print projects info
@@ -165,7 +170,7 @@ func PrintProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	for _, projectInfo := range info {
 		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
 	}
-	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows, "")
+	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }
 
 // PrintProjectInfo print project info
@@ -176,7 +181,7 @@ func PrintProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows, "")
+	PrintTable([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
 }
 
 // PrintSecrets print secrets
@@ -246,7 +251,7 @@ func PrintSecrets(secrets map[string]models.ComputedSecret, secretsToPrint []str
 		rows = append(rows, row)
 	}
 
-	PrintTable(headers, rows, "")
+	PrintTable(headers, rows)
 }
 
 // PrintSecretsNames print secrets
@@ -288,7 +293,7 @@ func PrintSecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, 
 	for _, name := range secretsNames {
 		rows = append(rows, []string{name})
 	}
-	PrintTable([]string{"name"}, rows, "")
+	PrintTable([]string{"name"}, rows)
 }
 
 // PrintSettings print settings
@@ -299,7 +304,7 @@ func PrintSettings(settings models.WorkplaceSettings, jsonFlag bool) {
 	}
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	PrintTable([]string{"id", "name", "billing_email"}, rows, "")
+	PrintTable([]string{"id", "name", "billing_email"}, rows)
 }
 
 // PrintScopedConfig print scoped config
@@ -352,7 +357,7 @@ func PrintScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag b
 		headers = append(headers, "source")
 	}
 
-	PrintTable(headers, rows, title)
+	PrintTableWithTitle(headers, rows, title)
 }
 
 // PrintConfigs print configs
@@ -381,5 +386,5 @@ func PrintConfigs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 		return rows[a][0] < rows[b][0]
 	})
 
-	PrintTable([]string{"name", "value", "scope"}, rows, "")
+	PrintTable([]string{"name", "value", "scope"}, rows)
 }
