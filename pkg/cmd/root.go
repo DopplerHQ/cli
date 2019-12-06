@@ -28,6 +28,11 @@ var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
 	Args:  cobra.NoArgs,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if utils.Debug {
+			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "Active configuration", utils.JSON, true)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
