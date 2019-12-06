@@ -17,7 +17,7 @@ package models
 
 // ConfigFile structure of the config file
 type ConfigFile struct {
-	ScopedOptions map[string]FileScopedOptions `yaml:"scoped"`
+	Scoped       map[string]FileScopedOptions `yaml:"scoped"`
 }
 
 // FileScopedOptions config options

@@ -48,14 +48,14 @@ func init() {
 			migrateJSONToYaml()
 		} else {
 			var blankConfig models.ConfigFile
-			writeYAML(blankConfig)
+			writeConfig(blankConfig)
 		}
 	}
 }
 
 // LoadConfig load the configuration file
 func LoadConfig() {
-	configContents = readYAML()
+	configContents = readConfig()
 }
 
 // Get the config at the specified scope
@@ -67,7 +67,7 @@ func Get(scope string) models.ScopedOptions {
 	scope = filepath.Clean(scope) + string(filepath.Separator)
 	var scopedConfig models.ScopedOptions
 
-	for confScope, conf := range configContents.ScopedOptions {
+	for confScope, conf := range configContents.Scoped {
 		// both paths should end in / to prevent partial match (e.g. /test matching /test123)
 		if confScope != "*" && !strings.HasPrefix(scope, filepath.Clean(confScope)+string(filepath.Separator)) {
 			continue
@@ -188,7 +188,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 
 // AllConfigs get all configs we know about
 func AllConfigs() map[string]models.FileScopedOptions {
-	return configContents.ScopedOptions
+	return configContents.Scoped
 }
 
 // Set properties on a scoped config
@@ -206,12 +206,12 @@ func Set(scope string, options map[string]string) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
 
-		config := configContents.ScopedOptions[scope]
+		config := configContents.Scoped[scope]
 		SetConfigValue(&config, key, value)
-		configContents.ScopedOptions[scope] = config
+		configContents.Scoped[scope] = config
 	}
 
-	writeYAML(configContents)
+	writeConfig(configContents)
 }
 
 // SetFromConfig set properties on a scoped config using a config object
@@ -230,7 +230,7 @@ func Unset(scope string, options []string) {
 		}
 	}
 
-	if configContents.ScopedOptions[scope] == (models.FileScopedOptions{}) {
+	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
 		return
 	}
 
@@ -239,20 +239,20 @@ func Unset(scope string, options []string) {
 			utils.Err(errors.New("invalid option "+key), "")
 		}
 
-		config := configContents.ScopedOptions[scope]
+		config := configContents.Scoped[scope]
 		SetConfigValue(&config, key, "")
-		configContents.ScopedOptions[scope] = config
+		configContents.Scoped[scope] = config
 	}
 
-	if configContents.ScopedOptions[scope] == (models.FileScopedOptions{}) {
-		delete(configContents.ScopedOptions, scope)
+	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
+		delete(configContents.Scoped, scope)
 	}
 
-	writeYAML(configContents)
+	writeConfig(configContents)
 }
 
 // Write config to filesystem
-func writeYAML(config models.ConfigFile) {
+func writeConfig(config models.ConfigFile) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		utils.Err(err)
@@ -268,7 +268,7 @@ func exists() bool {
 	return utils.Exists(UserConfigPath)
 }
 
-func readYAML() models.ConfigFile {
+func readConfig() models.ConfigFile {
 	fileContents, err := ioutil.ReadFile(UserConfigPath)
 	if err != nil {
 		utils.Err(err)
