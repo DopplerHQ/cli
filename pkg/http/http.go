@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -141,7 +142,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		resp, err := client.Do(req)
 		if err != nil {
 			if utils.Debug {
-				fmt.Println(err)
+				fmt.Fprintln(os.Stderr, err)
 			}
 			return StopRetry{err}
 		}

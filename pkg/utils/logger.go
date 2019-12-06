@@ -47,17 +47,17 @@ func ErrExit(e error, exitCode int, messages ...string) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(string(resp))
+		fmt.Fprintln(os.Stderr, string(resp))
 	} else {
 		for _, message := range messages {
-			fmt.Println(message)
+			fmt.Fprintln(os.Stderr, message)
 		}
 
-		fmt.Println("Error:", e)
+		fmt.Fprintln(os.Stderr, "Error:", e)
 	}
 
 	if Debug {
-		fmt.Println("")
+		fmt.Fprintln(os.Stderr, "\nStacktrace:")
 		debug.PrintStack()
 	}
 
