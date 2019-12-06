@@ -21,8 +21,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
@@ -40,7 +40,7 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
-		response, err := api.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
+		response, err := http.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -71,7 +71,7 @@ var loginCmd = &cobra.Command{
 		response = nil
 		// TODO can we use our existing retry function here instead??
 		for {
-			resp, err := api.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
+			resp, err := http.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
 			if !err.IsNil() {
 				if err.Code == 409 {
 					time.Sleep(2 * time.Second)
@@ -131,7 +131,7 @@ Your saved configuration will be updated.`,
 			os.Exit(1)
 		}
 
-		response, err := api.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
+		response, err := http.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -174,7 +174,7 @@ This is the CLI equivalent to logging out.`,
 			os.Exit(1)
 		}
 
-		_, err := api.RevokeAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), token)
+		_, err := http.RevokeAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), token)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

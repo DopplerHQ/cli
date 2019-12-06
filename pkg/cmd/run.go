@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -85,8 +85,8 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, fallbackPa
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := api.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
-	if err != (api.Error{}) {
+	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+	if err != (http.Error{}) {
 		if useFallbackFile {
 			return readFallbackFile(fallbackPath)
 		}

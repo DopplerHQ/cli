@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package utils
+package http
 
 import (
 	"bytes"
@@ -26,11 +26,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 )
 
-// QueryParam a url query parameter. ex: ?foo=bar
-type QueryParam struct {
+type queryParam struct {
 	Key   string
 	Value string
 }
@@ -47,7 +47,7 @@ var UseTimeout = true
 var TimeoutDuration = 10 * time.Second
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam) (int, []byte, error) {
+func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -67,7 +67,7 @@ func GetRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, body []byte) (int, []byte, error) {
+func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -87,7 +87,7 @@ func PostRequest(host string, verifyTLS bool, headers map[string]string, uri str
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam) (int, []byte, error) {
+func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri s
 	return statusCode, body, nil
 }
 
-func performRequest(req *http.Request, verifyTLS bool, params []QueryParam) (int, []byte, error) {
+func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int, []byte, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -140,7 +140,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []QueryParam) (int
 	requestErr := retry(5, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
-			if Debug {
+			if utils.Debug {
 				fmt.Println(err)
 			}
 			return StopRetry{err}
@@ -148,7 +148,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []QueryParam) (int
 
 		response = resp
 
-		if Debug {
+		if utils.Debug {
 			fmt.Println("Request ID:", resp.Header.Get("x-request-id"))
 			fmt.Println("Request URL:", req.URL)
 		}

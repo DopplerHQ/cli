@@ -16,8 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ var activityCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		// number := utils.GetIntFlag(cmd, "number", 16)
 
-		activity, err := api.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+		activity, err := http.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -53,7 +53,7 @@ var activityGetCmd = &cobra.Command{
 			log = args[0]
 		}
 
-		activity, err := api.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
+		activity, err := http.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}

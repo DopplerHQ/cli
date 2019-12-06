@@ -19,8 +19,8 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/DopplerHQ/cli/pkg/api"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		projects, err := api.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+		projects, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.Err(err.Unwrap(), err.Message)
 		}
@@ -67,7 +67,7 @@ var setupCmd = &cobra.Command{
 		if cmd.Flags().Changed("config") {
 			config = localConfig.Config.Value
 		} else {
-			configs, apiError := api.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
+			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
 				utils.Err(apiError.Unwrap(), apiError.Message)
 			}
