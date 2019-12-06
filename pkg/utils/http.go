@@ -47,14 +47,13 @@ var UseTimeout = true
 var TimeoutDuration = 10 * time.Second
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string) (int, []byte, error) {
+func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	req.Header.Set("api-key", apiKey)
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
@@ -68,14 +67,13 @@ func GetRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string, body []byte) (int, []byte, error) {
+func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, body []byte) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, err
 	}
 
-	req.Header.Set("api-key", apiKey)
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
@@ -89,14 +87,13 @@ func PostRequest(host string, verifyTLS bool, headers map[string]string, uri str
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam, apiKey string) (int, []byte, error) {
+func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []QueryParam) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return 0, nil, err
 	}
 
-	req.Header.Set("api-key", apiKey)
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}

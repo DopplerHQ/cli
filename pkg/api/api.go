@@ -37,6 +37,10 @@ func (e *Error) Unwrap() error { return e.Err }
 // IsNil whether the error is nil
 func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
 
+func apiKeyHeader(apiKey string) map[string]string {
+	return map[string]string{"api-key": apiKey}
+}
+
 // GenerateAuthCode generate an auth code
 func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, arch string) (map[string]interface{}, Error) {
 	var params []utils.QueryParam
@@ -45,7 +49,7 @@ func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, a
 	params = append(params, utils.QueryParam{Key: "os", Value: os})
 	params = append(params, utils.QueryParam{Key: "arch", Value: arch})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/auth/v1/cli/generate", params, "")
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/auth/v1/cli/generate", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth code", Code: statusCode}
 	}
@@ -68,7 +72,7 @@ func GetAuthToken(host string, verifyTLS bool, code string) (map[string]interfac
 		return nil, Error{Err: err, Message: "Invalid auth code"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/authorize", []utils.QueryParam{}, "", body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/authorize", []utils.QueryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth token", Code: statusCode}
 	}
@@ -91,7 +95,7 @@ func RollAuthToken(host string, verifyTLS bool, token string) (map[string]interf
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/roll", []utils.QueryParam{}, "", body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/roll", []utils.QueryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to roll auth token", Code: statusCode}
 	}
@@ -114,7 +118,7 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/revoke", []utils.QueryParam{}, "", body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/auth/v1/cli/revoke", []utils.QueryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to revoke auth token", Code: statusCode}
 	}
@@ -135,7 +139,9 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 	params = append(params, utils.QueryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, map[string]string{"Accept": "text/plain"}, "/v2/variables", params, apiKey)
+	headers := apiKeyHeader(apiKey)
+	headers["Accept"] = "text/plain"
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, headers, "/v2/variables", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
 	}
@@ -149,7 +155,9 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, map[string]string{"Accept": "application/json"}, "/v2/variables", params, apiKey)
+	headers := apiKeyHeader(apiKey)
+	headers["Accept"] = "application/json"
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, headers, "/v2/variables", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch secrets", Code: statusCode}
 	}
@@ -170,7 +178,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	params = append(params, utils.QueryParam{Key: "environment", Value: config})
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/variables", params, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/variables", params, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to set secrets", Code: statusCode}
 	}
@@ -192,7 +200,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 // GetWorkplaceSettings get specified workplace settings
 func GetWorkplaceSettings(host string, verifyTLS bool, apiKey string) (models.WorkplaceSettings, Error) {
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/workplace", []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/workplace", []utils.QueryParam{})
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to fetch workplace settings", Code: statusCode}
 	}
@@ -214,7 +222,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Invalid workplace settings"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/workplace", []utils.QueryParam{}, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/workplace", []utils.QueryParam{}, body)
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to update workplace settings", Code: statusCode}
 	}
@@ -231,7 +239,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 
 // GetProjects get projects
 func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/pipelines", []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines", []utils.QueryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch projects", Code: statusCode}
 	}
@@ -252,7 +260,7 @@ func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectIn
 
 // GetProject get specified project
 func GetProject(host string, verifyTLS bool, apiKey string, project string) (models.ProjectInfo, Error) {
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []utils.QueryParam{})
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to fetch project", Code: statusCode}
 	}
@@ -275,7 +283,7 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/pipelines/", []utils.QueryParam{}, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/", []utils.QueryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to create project", Code: statusCode}
 	}
@@ -298,7 +306,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []utils.QueryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to update project", Code: statusCode}
 	}
@@ -315,7 +323,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 
 // DeleteProject create a project
 func DeleteProject(host string, verifyTLS bool, apiKey string, project string) Error {
-	statusCode, response, err := utils.DeleteRequest(host, verifyTLS, nil, "/v2/pipelines/"+project, []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []utils.QueryParam{})
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete project", Code: statusCode}
 	}
@@ -334,7 +342,7 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/stages", params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/stages", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch environments", Code: statusCode}
 	}
@@ -358,7 +366,7 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/stages/"+environment, params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/stages/"+environment, params)
 	if err != nil {
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to fetch environment", Code: statusCode}
 	}
@@ -378,7 +386,7 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/environments", params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -402,7 +410,7 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/environments/"+config, params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -428,7 +436,7 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/environments", params, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to create config", Code: statusCode}
 	}
@@ -448,7 +456,7 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.DeleteRequest(host, verifyTLS, nil, "/v2/environments/"+config, params, apiKey)
+	statusCode, response, err := utils.DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete config", Code: statusCode}
 	}
@@ -473,7 +481,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/environments/"+config, params, apiKey, body)
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
 	}
@@ -490,7 +498,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 
 // GetActivityLogs get activity logs
 func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Log, Error) {
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/logs", []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/logs", []utils.QueryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch activity logs", Code: statusCode}
 	}
@@ -511,7 +519,7 @@ func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Log, 
 
 // GetActivityLog get specified activity log
 func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (models.Log, Error) {
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/logs/"+log, []utils.QueryParam{}, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/logs/"+log, []utils.QueryParam{})
 	if err != nil {
 		return models.Log{}, Error{Err: err, Message: "Unable to fetch activity log", Code: statusCode}
 	}
@@ -531,7 +539,7 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/environments/"+config+"/logs", params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch config logs", Code: statusCode}
 	}
@@ -555,7 +563,7 @@ func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, co
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.GetRequest(host, verifyTLS, nil, "/v2/environments/"+config+"/logs/"+log, params, apiKey)
+	statusCode, response, err := utils.GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log, params)
 	if err != nil {
 		return models.Log{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
 	}
@@ -575,7 +583,7 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 	var params []utils.QueryParam
 	params = append(params, utils.QueryParam{Key: "pipeline", Value: project})
 
-	statusCode, response, err := utils.PostRequest(host, verifyTLS, nil, "/v2/environments/"+config+"/logs/"+log+"/rollback", params, apiKey, []byte{})
+	statusCode, response, err := utils.PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log+"/rollback", params, []byte{})
 	if err != nil {
 		return models.Log{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
