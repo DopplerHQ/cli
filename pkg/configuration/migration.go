@@ -40,7 +40,7 @@ func jsonExists() bool {
 func migrateJSONToYaml() {
 	jsonConfig := parseJSONConfig()
 	newConfig := convertOldConfig(jsonConfig)
-	writeYAML(newConfig)
+	writeConfig(newConfig)
 }
 
 func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
@@ -50,7 +50,7 @@ func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
 		config[key] = models.FileScopedOptions{Project: val.Pipeline, Config: val.Environment, Token: val.Key}
 	}
 
-	return models.ConfigFile{ScopedOptions: config}
+	return models.ConfigFile{Scoped: config}
 }
 
 func parseJSONConfig() map[string]oldConfig {

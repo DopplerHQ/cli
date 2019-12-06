@@ -35,8 +35,7 @@ var configureCmd = &cobra.Command{
 		jsonFlag := utils.JSON
 
 		if all {
-			allConfigs := configuration.AllConfigs()
-			utils.PrintConfigs(allConfigs, jsonFlag)
+			utils.PrintConfigs(configuration.AllConfigs(), jsonFlag)
 			return
 		}
 

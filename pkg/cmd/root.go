@@ -16,9 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
@@ -30,7 +33,20 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if utils.Debug {
-			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "Active configuration", utils.JSON, true)
+			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", utils.JSON, true)
+		}
+
+		// disable version checking on the "run" command
+		if version.PerformVersionCheck && cmd.CalledAs() != "run" {
+			silent := cmd.Flags().Changed("silent") && utils.GetBoolFlag(cmd, "silent")
+			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.JSON, utils.Debug)
+			if versionCheck != (models.VersionCheck{}) {
+				if version.ProgramVersion != versionCheck.LatestVersion && !silent && !utils.JSON {
+					fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
+				}
+
+				configuration.SetVersionCheck(versionCheck)
+			}
 		}
 	},
 }
@@ -47,11 +63,14 @@ func Execute() {
 	if rootCmd.Flags().Changed("json") {
 		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
 	}
+	if rootCmd.Flags().Changed("no-version-check") {
+		version.PerformVersionCheck = !utils.GetBoolFlag(rootCmd, "no-version-check")
+	}
 	if rootCmd.Flags().Changed("no-timeout") {
-		utils.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
+		http.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
 	}
 	if rootCmd.Flags().Changed("timeout") {
-		utils.TimeoutDuration = utils.GetDurationFlag(rootCmd, "timeout")
+		http.TimeoutDuration = utils.GetDurationFlag(rootCmd, "timeout")
 	}
 
 	if rootCmd.Flags().Changed("configuration") {
@@ -71,9 +90,10 @@ func init() {
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "The host address for the Doppler API")
 	rootCmd.PersistentFlags().String("dashboard-host", "https://doppler.com", "The host address for the Doppler Dashboard")
+	rootCmd.PersistentFlags().Bool("no-version-check", !version.PerformVersionCheck, "don't check for updates to the Doppler CLI")
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "don't verify the validity of TLS certificates on HTTP requests")
-	rootCmd.PersistentFlags().Bool("no-timeout", !utils.UseTimeout, "don't timeout long-running requests")
-	rootCmd.PersistentFlags().Duration("timeout", utils.TimeoutDuration, "how long to wait for a request to complete before timing out")
+	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "don't timeout long-running requests")
+	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "how long to wait for a request to complete before timing out")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "don't read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
