@@ -17,3 +17,6 @@ package version
 
 // ProgramVersion the current version of this program
 var ProgramVersion = "master"
+
+// PerformVersionCheck whether to check for new versions of the Doppler CLI
+var PerformVersionCheck = true

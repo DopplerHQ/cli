@@ -58,6 +58,17 @@ func LoadConfig() {
 	configContents = readConfig()
 }
 
+// VersionCheck the last version check
+func VersionCheck() models.VersionCheck {
+	return configContents.VersionCheck
+}
+
+// SetVersionCheck the last version check
+func SetVersionCheck(version models.VersionCheck) {
+	configContents.VersionCheck = version
+	writeConfig(configContents)
+}
+
 // Get the config at the specified scope
 func Get(scope string) models.ScopedOptions {
 	scope, err := parseScope(scope)

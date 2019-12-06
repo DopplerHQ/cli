@@ -15,9 +15,12 @@ limitations under the License.
 */
 package models
 
+import "time"
+
 // ConfigFile structure of the config file
 type ConfigFile struct {
 	Scoped       map[string]FileScopedOptions `yaml:"scoped"`
+	VersionCheck VersionCheck                 `yaml:"version-check"`
 }
 
 // FileScopedOptions config options
@@ -28,6 +31,12 @@ type FileScopedOptions struct {
 	APIHost       string `json:"api-host,omitempty" yaml:"api-host,omitempty"`
 	DashboardHost string `json:"dashboard-host,omitempty" yaml:"dashboard-host,omitempty"`
 	VerifyTLS     string `json:"verify-tls,omitempty" yaml:"verify-tls,omitempty"`
+}
+
+// VersionCheck info about the last check for the latest cli version
+type VersionCheck struct {
+	LatestVersion string    `yaml:"latest-version,omitempty"`
+	CheckedAt     time.Time `yaml:"checked-at,omitempty"`
 }
 
 // ScopedOptions options with their scope
