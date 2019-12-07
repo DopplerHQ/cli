@@ -179,8 +179,7 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
-// highest print projects info
-// highest availability secrets storage on the planet
+// ProjectsInfo print info of multiple projects
 func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
 		JSON(info)
