@@ -48,7 +48,7 @@ var projectsGetCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
-		project := localConfig.Project.Value
+		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
@@ -98,7 +98,7 @@ var projectsDeleteCmd = &cobra.Command{
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
-		project := localConfig.Project.Value
+		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
@@ -130,7 +130,7 @@ var projectsUpdateCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
-		project := localConfig.Project.Value
+		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}

@@ -41,7 +41,7 @@ var setupCmd = &cobra.Command{
 
 		project := ""
 		if cmd.Flags().Changed("project") {
-			project = localConfig.Project.Value
+			project = localConfig.EnclaveProject.Value
 		} else {
 			var projectOptions []string
 			for _, val := range projects {
@@ -66,7 +66,7 @@ var setupCmd = &cobra.Command{
 
 		config := ""
 		if cmd.Flags().Changed("config") {
-			config = localConfig.Config.Value
+			config = localConfig.EnclaveConfig.Value
 		} else {
 			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
@@ -91,7 +91,7 @@ var setupCmd = &cobra.Command{
 		if !silent {
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
-			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
+			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.EnclaveProject.Value, conf.EnclaveProject.Scope}, {"config", conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope}}
 			printer.Table([]string{"name", "value", "scope"}, rows)
 		}
 	},

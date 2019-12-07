@@ -25,12 +25,12 @@ type ConfigFile struct {
 
 // FileScopedOptions config options
 type FileScopedOptions struct {
-	Token         string `json:"token,omitempty" yaml:"token,omitempty"`
-	Project       string `json:"project,omitempty" yaml:"project,omitempty"`
-	Config        string `json:"config,omitempty" yaml:"config,omitempty"`
-	APIHost       string `json:"api-host,omitempty" yaml:"api-host,omitempty"`
-	DashboardHost string `json:"dashboard-host,omitempty" yaml:"dashboard-host,omitempty"`
-	VerifyTLS     string `json:"verify-tls,omitempty" yaml:"verify-tls,omitempty"`
+	Token          string `json:"token,omitempty" yaml:"token,omitempty"`
+	APIHost        string `json:"api-host,omitempty" yaml:"api-host,omitempty"`
+	DashboardHost  string `json:"dashboard-host,omitempty" yaml:"dashboard-host,omitempty"`
+	VerifyTLS      string `json:"verify-tls,omitempty" yaml:"verify-tls,omitempty"`
+	EnclaveProject string `json:"enclave.project,omitempty" yaml:"enclave.project,omitempty"`
+	EnclaveConfig  string `json:"enclave.config,omitempty" yaml:"enclave.config,omitempty"`
 }
 
 // VersionCheck info about the last check for the latest cli version
@@ -41,12 +41,12 @@ type VersionCheck struct {
 
 // ScopedOptions options with their scope
 type ScopedOptions struct {
-	Token         ScopedOption `json:"token,omitempty" yaml:"token,omitempty"`
-	Project       ScopedOption `json:"project,omitempty" yaml:"project,omitempty"`
-	Config        ScopedOption `json:"config,omitempty" yaml:"config,omitempty"`
-	APIHost       ScopedOption `json:"api-host,omitempty" yaml:"api-host,omitempty"`
-	DashboardHost ScopedOption `json:"dashboard-host,omitempty" yaml:"dashboard-host,omitempty"`
-	VerifyTLS     ScopedOption `json:"verify-tls,omitempty" yaml:"verify-tls,omitempty"`
+	Token          ScopedOption `json:"token,omitempty" yaml:"token,omitempty"`
+	APIHost        ScopedOption `json:"api-host,omitempty" yaml:"api-host,omitempty"`
+	DashboardHost  ScopedOption `json:"dashboard-host,omitempty" yaml:"dashboard-host,omitempty"`
+	VerifyTLS      ScopedOption `json:"verify-tls,omitempty" yaml:"verify-tls,omitempty"`
+	EnclaveProject ScopedOption `json:"enclave.project,omitempty" yaml:"enclave.project,omitempty"`
+	EnclaveConfig  ScopedOption `json:"enclave.config,omitempty" yaml:"enclave.config,omitempty"`
 }
 
 // ScopedOption value and its scope
@@ -74,34 +74,34 @@ func (s Source) String() string {
 // ConfigOptions all supported options
 var ConfigOptions = []string{
 	"token",
-	"project",
-	"config",
 	"api-host",
 	"dashboard-host",
 	"verify-tls",
+	"enclave.project",
+	"enclave.config",
 }
 
 // Pairs get the pairs for the given config
 func Pairs(conf FileScopedOptions) map[string]string {
 	return map[string]string{
-		"token":          conf.Token,
-		"project":        conf.Project,
-		"config":         conf.Config,
-		"api-host":       conf.APIHost,
-		"dashboard-host": conf.DashboardHost,
-		"verify-tls":     conf.VerifyTLS,
+		"token":           conf.Token,
+		"api-host":        conf.APIHost,
+		"dashboard-host":  conf.DashboardHost,
+		"verify-tls":      conf.VerifyTLS,
+		"enclave.project": conf.EnclaveProject,
+		"enclave.config":  conf.EnclaveConfig,
 	}
 }
 
 // ScopedPairs get the pairs for the given scoped config
 func ScopedPairs(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{
-		"token":          &conf.Token,
-		"project":        &conf.Project,
-		"config":         &conf.Config,
-		"api-host":       &conf.APIHost,
-		"dashboard-host": &conf.DashboardHost,
-		"verify-tls":     &conf.VerifyTLS,
+		"token":           &conf.Token,
+		"api-host":        &conf.APIHost,
+		"dashboard-host":  &conf.DashboardHost,
+		"verify-tls":      &conf.VerifyTLS,
+		"enclave.project": &conf.EnclaveProject,
+		"enclave.config":  &conf.EnclaveConfig,
 	}
 }
 
@@ -112,7 +112,7 @@ func EnvPairs(conf *ScopedOptions) map[string]*ScopedOption {
 		"DOPPLER_API_HOST":       &conf.APIHost,
 		"DOPPLER_DASHBOARD_HOST": &conf.DashboardHost,
 		"DOPPLER_VERIFY_TLS":     &conf.VerifyTLS,
-		"ENCLAVE_PROJECT":        &conf.Project,
-		"ENCLAVE_CONFIG":         &conf.Config,
+		"ENCLAVE_PROJECT":        &conf.EnclaveProject,
+		"ENCLAVE_CONFIG":         &conf.EnclaveConfig,
 	}
 }

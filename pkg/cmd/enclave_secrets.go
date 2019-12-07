@@ -45,7 +45,7 @@ var secretsCmd = &cobra.Command{
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
 		localConfig := configuration.LocalConfig(cmd)
-		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
@@ -76,7 +76,7 @@ doppler secrets get api_key crypto_key`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
-		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
@@ -116,7 +116,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
@@ -149,7 +149,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			localConfig := configuration.LocalConfig(cmd)
-			response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
+			response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -179,7 +179,7 @@ doppler secrets download /root/test.env`,
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
+		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, metadata)
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
