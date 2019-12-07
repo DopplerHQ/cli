@@ -91,7 +91,11 @@ $ sudo yum update doppler
 
 ### Docker
 
-Docker containers are currently built using two base images: `alpine` and `node:lts-alpine`.
+Docker containers are currently built using several base images:
+- `alpine`
+- `node:lts-alpine`
+- `python:3-alpine`
+- `ruby:2-alpine`
 
 Example:
 
