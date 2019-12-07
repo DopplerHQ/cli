@@ -57,6 +57,9 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	// catch any panics
 	defer func() {
+		if version.IsDevelopment() {
+			return
+		}
 		if err := recover(); err != nil {
 			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
 			os.Exit(1)
