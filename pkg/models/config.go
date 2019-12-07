@@ -99,10 +99,10 @@ func ScopedPairs(conf *ScopedOptions) map[string]*ScopedOption {
 func EnvPairs(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{
 		"DOPPLER_TOKEN":          &conf.Token,
-		"DOPPLER_PROJECT":        &conf.Project,
-		"DOPPLER_CONFIG":         &conf.Config,
 		"DOPPLER_API_HOST":       &conf.APIHost,
 		"DOPPLER_DASHBOARD_HOST": &conf.DashboardHost,
 		"DOPPLER_VERIFY_TLS":     &conf.VerifyTLS,
+		"ENCLAVE_PROJECT":        &conf.Project,
+		"ENCLAVE_CONFIG":         &conf.Config,
 	}
 }

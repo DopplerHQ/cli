@@ -108,11 +108,11 @@ Here's an example Dockerfile showing how you can build on top of Doppler's base 
 FROM dopplerhq/cli:node
 
 # doppler args are passed at runtime
-ENV DOPPLER_TOKEN="" DOPPLER_PROJECT="" DOPPLER_CONFIG=""
+ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
 
 COPY . .
 
-ENTRYPOINT doppler run --token="$DOPPLER_TOKEN" --project="$DOPPLER_PROJECT" --config="$DOPPLER_CONFIG" -- node index.js
+ENTRYPOINT doppler run --token="$DOPPLER_TOKEN" --project="$ENCLAVE_PROJECT" --config="$ENCLAVE_CONFIG" -- node index.js
 ```
 
 ### Other
