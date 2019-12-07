@@ -42,7 +42,9 @@ var runCmd = &cobra.Command{
 Usage:
 doppler run printenv
 doppler run -- printenv
-doppler run --key=123 -- printenv`,
+doppler run --key=123 -- printenv
+
+To view the CLI's active configuration, run ` + "`doppler configure debug`",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
@@ -85,7 +87,7 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, fallbackPa
 		return readFallbackFile(fallbackPath)
 	}
 
-	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
+	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 	if err != (http.Error{}) {
 		if useFallbackFile {
 			return readFallbackFile(fallbackPath)

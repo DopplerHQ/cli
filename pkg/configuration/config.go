@@ -172,25 +172,25 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	// these flags below don't have a default value and should only be used if specified by the user (or will cause invalid memory access)
 	flagSet = cmd.Flags().Changed("project")
 	if flagSet {
-		localConfig.Project.Value = cmd.Flag("project").Value.String()
-		localConfig.Project.Scope = "*"
+		localConfig.EnclaveProject.Value = cmd.Flag("project").Value.String()
+		localConfig.EnclaveProject.Scope = "*"
 
 		if flagSet {
-			localConfig.Project.Source = models.FlagSource.String()
+			localConfig.EnclaveProject.Source = models.FlagSource.String()
 		} else {
-			localConfig.Project.Source = models.DefaultValueSource.String()
+			localConfig.EnclaveProject.Source = models.DefaultValueSource.String()
 		}
 	}
 
 	flagSet = cmd.Flags().Changed("config")
 	if flagSet {
-		localConfig.Config.Value = cmd.Flag("config").Value.String()
-		localConfig.Config.Scope = "*"
+		localConfig.EnclaveConfig.Value = cmd.Flag("config").Value.String()
+		localConfig.EnclaveConfig.Scope = "*"
 
 		if flagSet {
-			localConfig.Config.Source = models.FlagSource.String()
+			localConfig.EnclaveConfig.Source = models.FlagSource.String()
 		} else {
-			localConfig.Config.Source = models.DefaultValueSource.String()
+			localConfig.EnclaveConfig.Source = models.DefaultValueSource.String()
 		}
 	}
 
@@ -302,12 +302,12 @@ func parseScope(scope string) (string, error) {
 // IsValidConfigOption whether the specified key is a valid config option
 func IsValidConfigOption(key string) bool {
 	configOptions := map[string]interface{}{
-		"token":          nil,
-		"project":        nil,
-		"config":         nil,
-		"api-host":       nil,
-		"dashboard-host": nil,
-		"verify-tls":     nil,
+		"token":           nil,
+		"api-host":        nil,
+		"dashboard-host":  nil,
+		"verify-tls":      nil,
+		"enclave.project": nil,
+		"enclave.config":  nil,
 	}
 
 	_, exists := configOptions[key]
@@ -330,15 +330,15 @@ func GetScopedConfigValue(conf models.ScopedOptions, key string) (string, string
 func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 	if key == "token" {
 		(*conf).Token = value
-	} else if key == "project" {
-		(*conf).Project = value
-	} else if key == "config" {
-		(*conf).Config = value
 	} else if key == "api-host" {
 		(*conf).APIHost = value
 	} else if key == "dashboard-host" {
 		(*conf).DashboardHost = value
 	} else if key == "verify-tls" {
 		(*conf).VerifyTLS = value
+	} else if key == "enclave.project" {
+		(*conf).EnclaveProject = value
+	} else if key == "enclave.config" {
+		(*conf).EnclaveConfig = value
 	}
 }
