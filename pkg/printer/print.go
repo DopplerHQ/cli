@@ -30,6 +30,8 @@ import (
 	"github.com/jedib0t/go-pretty/text"
 )
 
+import "gopkg.in/gookit/color.v1"
+
 const maxTableWidth = 100
 
 // Table print table
@@ -105,11 +107,11 @@ func Log(log models.Log, jsonFlag bool, diff bool) {
 			}
 
 			if logDiff.Name == "" {
-				fmt.Println("-", logDiff.Removed)
-				fmt.Println("+", logDiff.Added)
+				color.Red.Println(logDiff.Removed)
+				color.Green.Println(logDiff.Added)
 			} else {
-				fmt.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
-				fmt.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
+				color.Red.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
+				color.Green.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
 			}
 		}
 	}
