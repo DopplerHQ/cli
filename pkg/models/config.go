@@ -71,6 +71,16 @@ func (s Source) String() string {
 	return [...]string{"Flag", "Config File", "Environment", "Default Value"}[s]
 }
 
+// ConfigOptions all supported options
+var ConfigOptions = []string{
+	"token",
+	"project",
+	"config",
+	"api-host",
+	"dashboard-host",
+	"verify-tls",
+}
+
 // Pairs get the pairs for the given config
 func Pairs(conf FileScopedOptions) map[string]string {
 	return map[string]string{

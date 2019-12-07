@@ -389,3 +389,17 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 
 	Table([]string{"name", "value", "scope"}, rows)
 }
+
+// ConfigOptionNames prints all supported config options
+func ConfigOptionNames(options []string, jsonFlag bool) {
+	if jsonFlag {
+		JSON(options)
+		return
+	}
+
+	rows := [][]string{}
+	for _, option := range options {
+		rows = append(rows, []string{option})
+	}
+	Table([]string{"name"}, rows)
+}
