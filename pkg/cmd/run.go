@@ -42,7 +42,9 @@ var runCmd = &cobra.Command{
 Usage:
 doppler run printenv
 doppler run -- printenv
-doppler run --key=123 -- printenv`,
+doppler run --key=123 -- printenv
+
+To view the CLI's active configuration, run ` + "`doppler configure debug`",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")

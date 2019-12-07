@@ -51,7 +51,7 @@ var configureDebugCmd = &cobra.Command{
 	Short: "View active configuration utilizing all config sources",
 	Long: `View active configuration utilizing all config sources.
 
-This prints the active configuration that will be used by other CLI commands.
+This prints the active configuration that will be used by the CLI.
 This factors in command line flags (--token=123), environment variables (DOPPLER_TOKEN=123),
 and the config file (in order from highest to lowest precedence)`,
 	Args: cobra.NoArgs,
