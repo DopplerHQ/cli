@@ -15,7 +15,9 @@ limitations under the License.
 */
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // ParseWorkplaceSettings parse workplace settings
 func ParseWorkplaceSettings(info map[string]interface{}) WorkplaceSettings {
@@ -151,6 +153,22 @@ func ParseLog(log map[string]interface{}) Log {
 		parsedLog.User.Name = user["name"].(string)
 		parsedLog.User.Username = user["username"].(string)
 		parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+	}
+	if log["diff"] != nil {
+		for _, diff := range log["diff"].([]interface{}) {
+			diffMap := diff.(map[string]interface{})
+			d := LogDiff{}
+			if diffMap["name"] != nil {
+				d.Name = diffMap["name"].(string)
+			}
+			if diffMap["added"] != nil {
+				d.Added = diffMap["added"].(string)
+			}
+			if diffMap["removed"] != nil {
+				d.Removed = diffMap["removed"].(string)
+			}
+			parsedLog.Diff = append(parsedLog.Diff, d)
+		}
 	}
 
 	return parsedLog

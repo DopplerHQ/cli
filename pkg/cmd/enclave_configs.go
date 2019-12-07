@@ -204,8 +204,7 @@ var configsLogsGetCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		// TODO print diff (like node cli environments:logs:view command)
-		printer.Log(configLog, jsonFlag)
+		printer.Log(configLog, jsonFlag, true)
 	},
 }
 
@@ -229,8 +228,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 		}
 
 		if !silent {
-			// TODO print diff (like node cli environments:logs:view command)
-			printer.Log(configLog, jsonFlag)
+			printer.Log(configLog, jsonFlag, true)
 		}
 	},
 }

@@ -74,12 +74,12 @@ func Logs(logs []models.Log, number int, jsonFlag bool) {
 	}
 
 	for _, log := range logs[0:maxLogs] {
-		Log(log, false)
+		Log(log, false, false)
 	}
 }
 
 // Log print log
-func Log(log models.Log, jsonFlag bool) {
+func Log(log models.Log, jsonFlag bool, diff bool) {
 	if jsonFlag {
 		JSON(log)
 		return
@@ -95,6 +95,24 @@ func Log(log models.Log, jsonFlag bool) {
 	fmt.Println("")
 	fmt.Println("\t" + log.Text)
 	fmt.Println("")
+
+	if diff && len(log.Diff) > 0 {
+		fmt.Println("")
+
+		for i, logDiff := range log.Diff {
+			if i != 0 {
+				fmt.Print("\n")
+			}
+
+			if logDiff.Name == "" {
+				fmt.Println("-", logDiff.Removed)
+				fmt.Println("+", logDiff.Added)
+			} else {
+				fmt.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
+				fmt.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
+			}
+		}
+	}
 }
 
 // JSON print object as json

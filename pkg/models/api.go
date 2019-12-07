@@ -61,14 +61,15 @@ type ConfigInfo struct {
 
 // Log a log
 type Log struct {
-	ID          string `json:"id"`
-	Text        string `json:"text"`
-	HTML        string `json:"html"`
-	CreatedAt   string `json:"created_at"`
-	Config      string `json:"environment"`
-	Environment string `json:"stage"`
-	Project     string `json:"pipeline"`
-	User        User   `json:"user"`
+	ID          string    `json:"id"`
+	Text        string    `json:"text"`
+	HTML        string    `json:"html"`
+	CreatedAt   string    `json:"created_at"`
+	Config      string    `json:"environment"`
+	Environment string    `json:"stage"`
+	Project     string    `json:"pipeline"`
+	User        User      `json:"user"`
+	Diff        []LogDiff `json:"diff"`
 }
 
 // User user profile
@@ -77,4 +78,11 @@ type User struct {
 	Name         string `json:"name"`
 	Username     string `json:"username"`
 	ProfileImage string `json:"profile_image_url"`
+}
+
+// LogDiff diff of log entries
+type LogDiff struct {
+	Name    string `json:"name"`
+	Added   string `json:"added"`
+	Removed string `json:"removed"`
 }
