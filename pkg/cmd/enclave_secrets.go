@@ -21,9 +21,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +39,7 @@ var secretsCmd = &cobra.Command{
 	Short: "List Enclave secrets",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
@@ -46,17 +47,17 @@ var secretsCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 		secrets, parseErr := models.ParseSecrets(response)
 		if parseErr != nil {
-			utils.Err(parseErr, "Unable to parse API response")
+			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
 		if onlyNames {
-			utils.PrintSecretsNames(secrets, jsonFlag, plain)
+			printer.SecretsNames(secrets, jsonFlag, plain)
 		} else {
-			utils.PrintSecrets(secrets, []string{}, jsonFlag, plain, raw)
+			printer.Secrets(secrets, []string{}, jsonFlag, plain, raw)
 		}
 	},
 }
@@ -70,21 +71,21 @@ Ex: output the secrets "api_key" and "crypto_key":
 doppler secrets get api_key crypto_key`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
 		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 		secrets, parseErr := models.ParseSecrets(response)
 		if parseErr != nil {
-			utils.Err(parseErr, "Unable to parse API response")
+			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
-		utils.PrintSecrets(secrets, args, jsonFlag, plain, raw)
+		printer.Secrets(secrets, args, jsonFlag, plain, raw)
 	},
 }
 
@@ -97,7 +98,7 @@ Ex: set the secrets "api_key" and "crypto_key":
 doppler secrets set api_key=123 crypto_key=456`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -117,11 +118,11 @@ doppler secrets set api_key=123 crypto_key=456`,
 		localConfig := configuration.LocalConfig(cmd)
 		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintSecrets(response, keys, jsonFlag, plain, raw)
+			printer.Secrets(response, keys, jsonFlag, plain, raw)
 		}
 	},
 }
@@ -135,7 +136,7 @@ Ex: delete the secrets "api_key" and "crypto_key":
 doppler secrets delete api_key crypto_key`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -150,11 +151,11 @@ doppler secrets delete api_key crypto_key`,
 			localConfig := configuration.LocalConfig(cmd)
 			response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, secrets)
 			if !err.IsNil() {
-				utils.Err(err.Unwrap(), err.Message)
+				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
 			if !silent {
-				utils.PrintSecrets(response, []string{}, jsonFlag, plain, raw)
+				printer.Secrets(response, []string{}, jsonFlag, plain, raw)
 			}
 		}
 	},
@@ -180,12 +181,12 @@ doppler secrets download /root/test.env`,
 		localConfig := configuration.LocalConfig(cmd)
 		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, metadata)
 		if !apiError.IsNil() {
-			utils.Err(apiError.Unwrap(), apiError.Message)
+			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
 
 		err := ioutil.WriteFile(filePath, body, 0600)
 		if err != nil {
-			utils.Err(err, "Unable to save file")
+			utils.HandleError(err, "Unable to save file")
 		}
 
 		if !silent {
@@ -228,5 +229,5 @@ func init() {
 	secretsDownloadCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
-	rootCmd.AddCommand(secretsCmd)
+	enclaveCmd.AddCommand(secretsCmd)
 }

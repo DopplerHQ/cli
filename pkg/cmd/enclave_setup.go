@@ -21,13 +21,14 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Setup the Doppler cli",
+	Short: "Setup the Doppler CLI for Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -35,7 +36,7 @@ var setupCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		projects, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		project := ""
@@ -52,7 +53,7 @@ var setupCmd = &cobra.Command{
 			}
 			err := survey.AskOne(prompt, &project)
 			if err != nil {
-				utils.Err(err)
+				utils.HandleError(err)
 			}
 
 			for _, val := range projects {
@@ -69,7 +70,7 @@ var setupCmd = &cobra.Command{
 		} else {
 			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
-				utils.Err(apiError.Unwrap(), apiError.Message)
+				utils.HandleError(apiError.Unwrap(), apiError.Message)
 			}
 
 			var configOptions []string
@@ -82,7 +83,7 @@ var setupCmd = &cobra.Command{
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
-				utils.Err(err)
+				utils.HandleError(err)
 			}
 		}
 
@@ -91,7 +92,7 @@ var setupCmd = &cobra.Command{
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.Project.Value, conf.Project.Scope}, {"config", conf.Config.Value, conf.Config.Scope}}
-			utils.PrintTable([]string{"name", "value", "scope"}, rows)
+			printer.Table([]string{"name", "value", "scope"}, rows)
 		}
 	},
 }
@@ -100,5 +101,5 @@ func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "don't output the response")
-	rootCmd.AddCommand(setupCmd)
+	enclaveCmd.AddCommand(setupCmd)
 }

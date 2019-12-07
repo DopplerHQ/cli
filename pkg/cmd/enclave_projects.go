@@ -18,6 +18,7 @@ package cmd
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -27,15 +28,15 @@ var projectsCmd = &cobra.Command{
 	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintProjectsInfo(info, jsonFlag)
+		printer.ProjectsInfo(info, jsonFlag)
 	},
 }
 
@@ -44,7 +45,7 @@ var projectsGetCmd = &cobra.Command{
 	Short: "Get info for a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		project := localConfig.Project.Value
@@ -54,10 +55,10 @@ var projectsGetCmd = &cobra.Command{
 
 		info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintProjectInfo(info, jsonFlag)
+		printer.ProjectInfo(info, jsonFlag)
 	},
 }
 
@@ -66,7 +67,7 @@ var projectsCreateCmd = &cobra.Command{
 	Short: "Create a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		description := cmd.Flag("description").Value.String()
 
@@ -78,11 +79,11 @@ var projectsCreateCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintProjectInfo(info, jsonFlag)
+			printer.ProjectInfo(info, jsonFlag)
 		}
 	},
 }
@@ -92,7 +93,7 @@ var projectsDeleteCmd = &cobra.Command{
 	Short: "Delete a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
@@ -105,16 +106,16 @@ var projectsDeleteCmd = &cobra.Command{
 		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
 			err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !err.IsNil() {
-				utils.Err(err.Unwrap(), err.Message)
+				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
 			if !silent {
 				info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 				if !err.IsNil() {
-					utils.Err(err.Unwrap(), err.Message)
+					utils.HandleError(err.Unwrap(), err.Message)
 				}
 
-				utils.PrintProjectsInfo(info, jsonFlag)
+				printer.ProjectsInfo(info, jsonFlag)
 			}
 		}
 	},
@@ -125,7 +126,7 @@ var projectsUpdateCmd = &cobra.Command{
 	Short: "Update a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -139,11 +140,11 @@ var projectsUpdateCmd = &cobra.Command{
 
 		info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintProjectInfo(info, jsonFlag)
+			printer.ProjectInfo(info, jsonFlag)
 		}
 	},
 }
@@ -170,5 +171,5 @@ func init() {
 	projectsUpdateCmd.MarkFlagRequired("description")
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
-	rootCmd.AddCommand(projectsCmd)
+	enclaveCmd.AddCommand(projectsCmd)
 }

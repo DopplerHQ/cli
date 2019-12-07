@@ -21,6 +21,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -35,15 +36,15 @@ var configsCmd = &cobra.Command{
 	Short: "List Enclave configs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintConfigsInfo(configs, jsonFlag)
+		printer.ConfigsInfo(configs, jsonFlag)
 	},
 }
 
@@ -52,7 +53,7 @@ var configsGetCmd = &cobra.Command{
 	Short: "Get info for a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		config := localConfig.Config.Value
@@ -62,10 +63,10 @@ var configsGetCmd = &cobra.Command{
 
 		configInfo, err := http.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintConfigInfo(configInfo, jsonFlag)
+		printer.ConfigInfo(configInfo, jsonFlag)
 	},
 }
 
@@ -74,7 +75,7 @@ var configsCreateCmd = &cobra.Command{
 	Short: "Create a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		defaults := !utils.GetBoolFlag(cmd, "no-defaults")
 		environment := cmd.Flag("environment").Value.String()
@@ -85,7 +86,7 @@ var configsCreateCmd = &cobra.Command{
 		}
 
 		if name == "" {
-			utils.Err(errors.New("you must specify a name"))
+			utils.HandleError(errors.New("you must specify a name"))
 		}
 
 		if environment == "" && strings.Index(name, "_") != -1 {
@@ -93,17 +94,17 @@ var configsCreateCmd = &cobra.Command{
 		}
 
 		if environment == "" {
-			utils.Err(errors.New("you must specify an environment"))
+			utils.HandleError(errors.New("you must specify an environment"))
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, name, environment, defaults)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintConfigInfo(info, jsonFlag)
+			printer.ConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -113,7 +114,7 @@ var configsDeleteCmd = &cobra.Command{
 	Short: "Delete a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
@@ -126,16 +127,16 @@ var configsDeleteCmd = &cobra.Command{
 		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
 			err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config)
 			if !err.IsNil() {
-				utils.Err(err.Unwrap(), err.Message)
+				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
 			if !silent {
 				configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value)
 				if !err.IsNil() {
-					utils.Err(err.Unwrap(), err.Message)
+					utils.HandleError(err.Unwrap(), err.Message)
 				}
 
-				utils.PrintConfigsInfo(configs, jsonFlag)
+				printer.ConfigsInfo(configs, jsonFlag)
 			}
 		}
 	},
@@ -146,7 +147,7 @@ var configsUpdateCmd = &cobra.Command{
 	Short: "Update a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
@@ -158,11 +159,11 @@ var configsUpdateCmd = &cobra.Command{
 
 		info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, config, name)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintConfigInfo(info, jsonFlag)
+			printer.ConfigInfo(info, jsonFlag)
 		}
 	},
 }
@@ -172,16 +173,16 @@ var configsLogsCmd = &cobra.Command{
 	Short: "List config audit logs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 		// number := utils.GetIntFlag(cmd, "number", 16)
 
 		logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(logs, len(logs), jsonFlag)
+		printer.Logs(logs, len(logs), jsonFlag)
 	},
 }
 
@@ -190,7 +191,7 @@ var configsLogsGetCmd = &cobra.Command{
 	Short: "Get config audit log",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
@@ -200,11 +201,11 @@ var configsLogsGetCmd = &cobra.Command{
 
 		configLog, err := http.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		// TODO print diff (like node cli environments:logs:view command)
-		utils.PrintLog(configLog, jsonFlag)
+		printer.Log(configLog, jsonFlag)
 	},
 }
 
@@ -213,7 +214,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 	Short: "Rollback a config change",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -224,12 +225,12 @@ var configsLogsRollbackCmd = &cobra.Command{
 
 		configLog, err := http.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.Project.Value, localConfig.Config.Value, log)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
 			// TODO print diff (like node cli environments:logs:view command)
-			utils.PrintLog(configLog, jsonFlag)
+			printer.Log(configLog, jsonFlag)
 		}
 	},
 }
@@ -278,5 +279,5 @@ func init() {
 	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
-	rootCmd.AddCommand(configsCmd)
+	enclaveCmd.AddCommand(configsCmd)
 }

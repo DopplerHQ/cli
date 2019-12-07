@@ -21,6 +21,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -30,15 +31,15 @@ var settingsCmd = &cobra.Command{
 	Short: "Get workplace settings",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.GetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintSettings(info, jsonFlag)
+		printer.Settings(info, jsonFlag)
 	},
 }
 
@@ -64,18 +65,18 @@ var settingsUpdateCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 
 		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.SetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, settings)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !silent {
-			utils.PrintSettings(info, jsonFlag)
+			printer.Settings(info, jsonFlag)
 		}
 	},
 }

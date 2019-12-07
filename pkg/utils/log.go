@@ -25,24 +25,24 @@ import (
 // Debug whether we're running in debug mode
 var Debug = false
 
-// JSON whether to print JSON
-var JSON = false
+// OutputJSON whether to print OutputJSON
+var OutputJSON = false
 
 // Log info
 func Log(info string) {
-	if !JSON {
+	if !OutputJSON {
 		fmt.Println(info)
 	}
 }
 
-// Err prints the error and exits with code 1
-func Err(e error, messages ...string) {
+// HandleError prints the error and exits with code 1
+func HandleError(e error, messages ...string) {
 	ErrExit(e, 1, messages...)
 }
 
 // ErrExit prints the error and exits with the specified code
 func ErrExit(e error, exitCode int, messages ...string) {
-	if JSON {
+	if OutputJSON {
 		resp, err := json.Marshal(map[string]string{"error": e.Error()})
 		if err != nil {
 			panic(err)

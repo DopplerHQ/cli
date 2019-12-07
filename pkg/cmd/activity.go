@@ -18,6 +18,7 @@ package cmd
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -27,16 +28,16 @@ var activityCmd = &cobra.Command{
 	Short: "Get workplace activity logs",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 		// number := utils.GetIntFlag(cmd, "number", 16)
 
 		activity, err := http.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLogs(activity, len(activity), jsonFlag)
+		printer.Logs(activity, len(activity), jsonFlag)
 	},
 }
 
@@ -45,7 +46,7 @@ var activityGetCmd = &cobra.Command{
 	Short: "Get workplace activity log",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.JSON
+		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
 		log := cmd.Flag("log").Value.String()
@@ -55,10 +56,10 @@ var activityGetCmd = &cobra.Command{
 
 		activity, err := http.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
 		if !err.IsNil() {
-			utils.Err(err.Unwrap(), err.Message)
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		utils.PrintLog(activity, jsonFlag)
+		printer.Log(activity, jsonFlag)
 	},
 }
 

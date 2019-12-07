@@ -73,7 +73,7 @@ func SetVersionCheck(version models.VersionCheck) {
 func Get(scope string) models.ScopedOptions {
 	scope, err := parseScope(scope)
 	if err != nil {
-		utils.Err(err)
+		utils.HandleError(err)
 	}
 	scope = filepath.Clean(scope) + string(filepath.Separator)
 	var scopedConfig models.ScopedOptions
@@ -208,13 +208,13 @@ func Set(scope string, options map[string]string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
+			utils.HandleError(err)
 		}
 	}
 
 	for key, value := range options {
 		if !IsValidConfigOption(key) {
-			utils.Err(errors.New("invalid option "+key), "")
+			utils.HandleError(errors.New("invalid option "+key), "")
 		}
 
 		config := configContents.Scoped[scope]
@@ -237,7 +237,7 @@ func Unset(scope string, options []string) {
 		var err error
 		scope, err = parseScope(scope)
 		if err != nil {
-			utils.Err(err)
+			utils.HandleError(err)
 		}
 	}
 
@@ -247,7 +247,7 @@ func Unset(scope string, options []string) {
 
 	for _, key := range options {
 		if !IsValidConfigOption(key) {
-			utils.Err(errors.New("invalid option "+key), "")
+			utils.HandleError(errors.New("invalid option "+key), "")
 		}
 
 		config := configContents.Scoped[scope]
@@ -266,12 +266,12 @@ func Unset(scope string, options []string) {
 func writeConfig(config models.ConfigFile) {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
-		utils.Err(err)
+		utils.HandleError(err)
 	}
 
 	err = ioutil.WriteFile(UserConfigPath, bytes, os.FileMode(0600))
 	if err != nil {
-		utils.Err(err)
+		utils.HandleError(err)
 	}
 }
 
@@ -282,7 +282,7 @@ func exists() bool {
 func readConfig() models.ConfigFile {
 	fileContents, err := ioutil.ReadFile(UserConfigPath)
 	if err != nil {
-		utils.Err(err)
+		utils.HandleError(err)
 	}
 
 	var config models.ConfigFile

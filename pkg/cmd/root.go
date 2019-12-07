@@ -22,6 +22,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
@@ -33,15 +34,15 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if utils.Debug {
-			utils.PrintScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", utils.JSON, true)
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", utils.OutputJSON, true)
 		}
 
 		// disable version checking on the "run" command
 		if version.PerformVersionCheck && cmd.CalledAs() != "run" {
 			silent := cmd.Flags().Changed("silent") && utils.GetBoolFlag(cmd, "silent")
-			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.JSON, utils.Debug)
+			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
 			if versionCheck != (models.VersionCheck{}) {
-				if version.ProgramVersion != versionCheck.LatestVersion && !silent && !utils.JSON {
+				if version.ProgramVersion != versionCheck.LatestVersion && !silent && !utils.OutputJSON {
 					fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
 				}
 
@@ -69,7 +70,7 @@ func Execute() {
 		utils.Debug = utils.GetBoolFlag(rootCmd, "debug")
 	}
 	if rootCmd.Flags().Changed("json") {
-		utils.JSON = utils.GetBoolFlag(rootCmd, "json")
+		utils.OutputJSON = utils.GetBoolFlag(rootCmd, "json")
 	}
 	if rootCmd.Flags().Changed("no-version-check") {
 		version.PerformVersionCheck = !utils.GetBoolFlag(rootCmd, "no-version-check")
@@ -87,7 +88,7 @@ func Execute() {
 	configuration.LoadConfig()
 
 	if err := rootCmd.Execute(); err != nil {
-		utils.Err(err)
+		utils.HandleError(err)
 	}
 }
 
