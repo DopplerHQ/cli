@@ -279,5 +279,5 @@ func init() {
 	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
-	rootCmd.AddCommand(configsCmd)
+	enclaveCmd.AddCommand(configsCmd)
 }

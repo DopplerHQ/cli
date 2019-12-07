@@ -67,5 +67,5 @@ func init() {
 	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
-	rootCmd.AddCommand(environmentsCmd)
+	enclaveCmd.AddCommand(environmentsCmd)
 }

@@ -229,5 +229,5 @@ func init() {
 	secretsDownloadCmd.Flags().Bool("silent", false, "don't output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
-	rootCmd.AddCommand(secretsCmd)
+	enclaveCmd.AddCommand(secretsCmd)
 }

@@ -28,7 +28,7 @@ import (
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Setup the Doppler cli",
+	Short: "Setup the Doppler CLI for Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -101,5 +101,5 @@ func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "don't output the response")
-	rootCmd.AddCommand(setupCmd)
+	enclaveCmd.AddCommand(setupCmd)
 }

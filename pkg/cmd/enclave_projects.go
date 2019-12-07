@@ -171,5 +171,5 @@ func init() {
 	projectsUpdateCmd.MarkFlagRequired("description")
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
-	rootCmd.AddCommand(projectsCmd)
+	enclaveCmd.AddCommand(projectsCmd)
 }
