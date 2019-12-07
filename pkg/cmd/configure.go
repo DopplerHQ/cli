@@ -63,6 +63,16 @@ and the config file (in order from highest to lowest precedence)`,
 	},
 }
 
+var configureOptionsCmd = &cobra.Command{
+	Use:   "options",
+	Short: "List all supported config options",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.OutputJSON
+		printer.ConfigOptionNames(models.ConfigOptions, jsonFlag)
+	},
+}
+
 var configureGetCmd = &cobra.Command{
 	Use:   "get [options]",
 	Short: "Get the value of one or more options in the config file",
@@ -218,6 +228,8 @@ doppler configure unset key otherkey`,
 
 func init() {
 	configureCmd.AddCommand(configureDebugCmd)
+
+	configureCmd.AddCommand(configureOptionsCmd)
 
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified")
 	configureCmd.AddCommand(configureGetCmd)
