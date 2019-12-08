@@ -87,11 +87,11 @@ var setupCmd = &cobra.Command{
 			}
 		}
 
-		configuration.Set(scope, map[string]string{"project": project, "config": config})
+		configuration.Set(scope, map[string]string{"enclave.project": project, "enclave.config": config})
 		if !silent {
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
-			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.EnclaveProject.Value, conf.EnclaveProject.Scope}, {"config", conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope}}
+			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"enclave.project", conf.EnclaveProject.Value, conf.EnclaveProject.Scope}, {"enclave.config", conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope}}
 			printer.Table([]string{"name", "value", "scope"}, rows)
 		}
 	},
