@@ -69,7 +69,7 @@ var configureOptionsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		printer.ConfigOptionNames(models.ConfigOptions, jsonFlag)
+		printer.ConfigOptionNames(models.AllConfigOptions(), jsonFlag)
 	},
 }
 

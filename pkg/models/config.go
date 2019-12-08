@@ -56,23 +56,21 @@ type ScopedOption struct {
 	Source string `json:"source"`
 }
 
-// Source where the value came from
-type Source int
+type source int
 
 // the source of the value
 const (
-	FlagSource Source = iota
+	FlagSource source = iota
 	ConfigFileSource
 	EnvironmentSource
 	DefaultValueSource
 )
 
-func (s Source) String() string {
+func (s source) String() string {
 	return [...]string{"Flag", "Config File", "Environment", "Default Value"}[s]
 }
 
-// ConfigOptions all supported options
-var ConfigOptions = []string{
+var allConfigOptions = []string{
 	"token",
 	"api-host",
 	"dashboard-host",
@@ -81,27 +79,48 @@ var ConfigOptions = []string{
 	"enclave.config",
 }
 
+type configOption int
+
+// valid config options
+const (
+	ConfigToken configOption = iota
+	ConfigAPIHost
+	ConfigDashboardHost
+	ConfigVerifyTLS
+	ConfigEnclaveProject
+	ConfigEnclaveConfig
+)
+
+func (s configOption) String() string {
+	return allConfigOptions[s]
+}
+
+// AllConfigOptions all supported options
+func AllConfigOptions() []string {
+	return allConfigOptions
+}
+
 // Pairs get the pairs for the given config
 func Pairs(conf FileScopedOptions) map[string]string {
 	return map[string]string{
-		"token":           conf.Token,
-		"api-host":        conf.APIHost,
-		"dashboard-host":  conf.DashboardHost,
-		"verify-tls":      conf.VerifyTLS,
-		"enclave.project": conf.EnclaveProject,
-		"enclave.config":  conf.EnclaveConfig,
+		ConfigToken.String():          conf.Token,
+		ConfigAPIHost.String():        conf.APIHost,
+		ConfigDashboardHost.String():  conf.DashboardHost,
+		ConfigVerifyTLS.String():      conf.VerifyTLS,
+		ConfigEnclaveProject.String(): conf.EnclaveProject,
+		ConfigEnclaveConfig.String():  conf.EnclaveConfig,
 	}
 }
 
 // ScopedPairs get the pairs for the given scoped config
 func ScopedPairs(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{
-		"token":           &conf.Token,
-		"api-host":        &conf.APIHost,
-		"dashboard-host":  &conf.DashboardHost,
-		"verify-tls":      &conf.VerifyTLS,
-		"enclave.project": &conf.EnclaveProject,
-		"enclave.config":  &conf.EnclaveConfig,
+		ConfigToken.String():          &conf.Token,
+		ConfigAPIHost.String():        &conf.APIHost,
+		ConfigDashboardHost.String():  &conf.DashboardHost,
+		ConfigVerifyTLS.String():      &conf.VerifyTLS,
+		ConfigEnclaveProject.String(): &conf.EnclaveProject,
+		ConfigEnclaveConfig.String():  &conf.EnclaveConfig,
 	}
 }
 
