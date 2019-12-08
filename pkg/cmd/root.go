@@ -76,8 +76,8 @@ func Execute() {
 	if rootCmd.Flags().Changed("json") {
 		utils.OutputJSON = utils.GetBoolFlag(rootCmd, "json")
 	}
-	if rootCmd.Flags().Changed("no-version-check") {
-		version.PerformVersionCheck = !utils.GetBoolFlag(rootCmd, "no-version-check")
+	if rootCmd.Flags().Changed("no-check-version") {
+		version.PerformVersionCheck = !utils.GetBoolFlag(rootCmd, "no-check-version")
 	}
 	if rootCmd.Flags().Changed("no-timeout") {
 		http.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
@@ -103,7 +103,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "The host address for the Doppler API")
 	rootCmd.PersistentFlags().String("dashboard-host", "https://doppler.com", "The host address for the Doppler Dashboard")
-	rootCmd.PersistentFlags().Bool("no-version-check", !version.PerformVersionCheck, "do not check for updates to the Doppler CLI")
+	rootCmd.PersistentFlags().Bool("no-check-version", !version.PerformVersionCheck, "do not check for updates to the Doppler CLI")
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "do not verify the validity of TLS certificates on HTTP requests")
 	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "do not timeout long-running requests")
 	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "how long to wait for a request to complete before timing out")
