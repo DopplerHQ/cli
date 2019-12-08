@@ -108,8 +108,12 @@ var loginCmd = &cobra.Command{
 		token := response["token"].(string)
 		name := response["name"].(string)
 		dashboard := response["dashboard_url"].(string)
-		configuration.SetFromConfig(scope, models.FileScopedOptions{Token: token, APIHost: localConfig.APIHost.Value,
-			DashboardHost: dashboard, VerifyTLS: localConfig.VerifyTLS.Value})
+		configuration.Set(scope, map[string]string{
+			models.ConfigToken.String():         token,
+			models.ConfigAPIHost.String():       localConfig.APIHost.Value,
+			models.ConfigDashboardHost.String(): dashboard,
+			models.ConfigVerifyTLS.String():     localConfig.VerifyTLS.Value,
+		})
 
 		if !silent {
 			fmt.Println("")
@@ -150,7 +154,7 @@ Your saved configuration will be updated.`,
 			// update token in config
 			for scope, config := range configuration.AllConfigs() {
 				if config.Token == oldToken {
-					configuration.Set(scope, map[string]string{"token": newToken})
+					configuration.Set(scope, map[string]string{models.ConfigToken.String(): newToken})
 				}
 			}
 		}
@@ -191,7 +195,7 @@ This is the CLI equivalent to logging out.`,
 			// remove key from config
 			for scope, config := range configuration.AllConfigs() {
 				if config.Token == token {
-					configuration.Set(scope, map[string]string{"token": ""})
+					configuration.Set(scope, map[string]string{models.ConfigToken.String(): ""})
 				}
 			}
 		}

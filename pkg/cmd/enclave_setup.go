@@ -21,6 +21,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -87,11 +88,17 @@ var setupCmd = &cobra.Command{
 			}
 		}
 
-		configuration.Set(scope, map[string]string{"project": project, "config": config})
+		configuration.Set(scope, map[string]string{
+			models.ConfigEnclaveProject.String(): project,
+			models.ConfigEnclaveConfig.String():  config,
+		})
 		if !silent {
 			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
 			conf := configuration.Get(scope)
-			rows := [][]string{{"token", conf.Token.Value, conf.Token.Scope}, {"project", conf.EnclaveProject.Value, conf.EnclaveProject.Scope}, {"config", conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope}}
+			rows := [][]string{
+				{models.ConfigEnclaveProject.String(), conf.EnclaveProject.Value, conf.EnclaveProject.Scope},
+				{models.ConfigEnclaveConfig.String(), conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope},
+			}
 			printer.Table([]string{"name", "value", "scope"}, rows)
 		}
 	},

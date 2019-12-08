@@ -116,7 +116,8 @@ ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
 
 COPY . .
 
-ENTRYPOINT doppler run --token="$DOPPLER_TOKEN" --project="$ENCLAVE_PROJECT" --config="$ENCLAVE_CONFIG" -- node index.js
+# doppler will automatically use the DOPPLER_* and ENCLAVE_* environment variables
+ENTRYPOINT doppler run -- node index.js
 ```
 
 ### Other
@@ -131,12 +132,12 @@ Once installed, setup should only take a minute. You'll authorize the CLI to acc
 
 ```sh
 $ doppler login                     # generate auth credentials
-$ doppler setup                     # select your project and config
+$ doppler enclave setup             # select your project and config
 # optional
 $ doppler configure --all           # view local configuration
 ```
 
-By default, `doppler login` and `doppler setup` will scope your configuration to the current directory. You can modify the scope by specifying the `--scope` flag. Run `doppler help` for more information.
+By default, `doppler login` and `doppler enclave setup` will scope your configuration to the current directory. You can modify the scope by specifying the `--scope` flag. Run `doppler help` for more information.
 
 ## Development
 

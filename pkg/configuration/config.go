@@ -225,12 +225,6 @@ func Set(scope string, options map[string]string) {
 	writeConfig(configContents)
 }
 
-// SetFromConfig set properties on a scoped config using a config object
-func SetFromConfig(scope string, config models.FileScopedOptions) {
-	pairs := models.Pairs(config)
-	Set(scope, pairs)
-}
-
 // Unset a local config
 func Unset(scope string, options []string) {
 	if scope != "*" {
@@ -302,12 +296,12 @@ func parseScope(scope string) (string, error) {
 // IsValidConfigOption whether the specified key is a valid config option
 func IsValidConfigOption(key string) bool {
 	configOptions := map[string]interface{}{
-		"token":           nil,
-		"api-host":        nil,
-		"dashboard-host":  nil,
-		"verify-tls":      nil,
-		"enclave.project": nil,
-		"enclave.config":  nil,
+		models.ConfigToken.String():          nil,
+		models.ConfigAPIHost.String():        nil,
+		models.ConfigDashboardHost.String():  nil,
+		models.ConfigVerifyTLS.String():      nil,
+		models.ConfigEnclaveProject.String(): nil,
+		models.ConfigEnclaveConfig.String():  nil,
 	}
 
 	_, exists := configOptions[key]
@@ -328,17 +322,17 @@ func GetScopedConfigValue(conf models.ScopedOptions, key string) (string, string
 
 // SetConfigValue set the value for the specified key in the config
 func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
-	if key == "token" {
+	if key == models.ConfigToken.String() {
 		(*conf).Token = value
-	} else if key == "api-host" {
+	} else if key == models.ConfigAPIHost.String() {
 		(*conf).APIHost = value
-	} else if key == "dashboard-host" {
+	} else if key == models.ConfigDashboardHost.String() {
 		(*conf).DashboardHost = value
-	} else if key == "verify-tls" {
+	} else if key == models.ConfigVerifyTLS.String() {
 		(*conf).VerifyTLS = value
-	} else if key == "enclave.project" {
+	} else if key == models.ConfigEnclaveProject.String() {
 		(*conf).EnclaveProject = value
-	} else if key == "enclave.config" {
+	} else if key == models.ConfigEnclaveConfig.String() {
 		(*conf).EnclaveConfig = value
 	}
 }
