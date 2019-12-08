@@ -30,6 +30,8 @@ import (
 	"github.com/jedib0t/go-pretty/text"
 )
 
+import "gopkg.in/gookit/color.v1"
+
 const maxTableWidth = 100
 
 // Table print table
@@ -74,12 +76,12 @@ func Logs(logs []models.Log, number int, jsonFlag bool) {
 	}
 
 	for _, log := range logs[0:maxLogs] {
-		Log(log, false)
+		Log(log, false, false)
 	}
 }
 
 // Log print log
-func Log(log models.Log, jsonFlag bool) {
+func Log(log models.Log, jsonFlag bool, diff bool) {
 	if jsonFlag {
 		JSON(log)
 		return
@@ -95,6 +97,24 @@ func Log(log models.Log, jsonFlag bool) {
 	fmt.Println("")
 	fmt.Println("\t" + log.Text)
 	fmt.Println("")
+
+	if diff && len(log.Diff) > 0 {
+		fmt.Println("")
+
+		for i, logDiff := range log.Diff {
+			if i != 0 {
+				fmt.Print("\n")
+			}
+
+			if logDiff.Name == "" {
+				color.Red.Println(logDiff.Removed)
+				color.Green.Println(logDiff.Added)
+			} else {
+				color.Red.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
+				color.Green.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
+			}
+		}
+	}
 }
 
 // JSON print object as json
@@ -159,8 +179,7 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
 }
 
-// highest print projects info
-// highest availability secrets storage on the planet
+// ProjectsInfo print info of multiple projects
 func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	if jsonFlag {
 		JSON(info)

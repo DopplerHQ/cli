@@ -20,3 +20,8 @@ var ProgramVersion = "master"
 
 // PerformVersionCheck whether to check for new versions of the Doppler CLI
 var PerformVersionCheck = true
+
+// IsDevelopment whether the CLI is running in development mode (not a released version)
+func IsDevelopment() bool {
+	return ProgramVersion == "master"
+}
