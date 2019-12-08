@@ -18,6 +18,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -69,7 +70,10 @@ var configureOptionsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		printer.ConfigOptionNames(models.AllConfigOptions(), jsonFlag)
+
+		options := models.AllConfigOptions()
+		sort.Strings(options)
+		printer.ConfigOptionNames(options, jsonFlag)
 	},
 }
 
