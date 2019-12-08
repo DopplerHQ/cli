@@ -34,7 +34,8 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if utils.Debug {
-			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", utils.OutputJSON, true)
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", false, true)
+			fmt.Println("")
 		}
 
 		// disable version checking on the "run" command
