@@ -68,8 +68,17 @@ var loginCmd = &cobra.Command{
 			fmt.Println("Waiting...")
 		}
 
+		// auth flow must complete within 5 minutes
+		timeout := 5 * time.Minute
+		completeBy := time.Now().Add(timeout)
+
 		response = nil
 		for {
+			// we don't respect --no-timeout here
+			if time.Now().After(completeBy) {
+				utils.HandleError(fmt.Errorf("login timed out after %d minutes", int(timeout.Minutes())))
+			}
+
 			resp, err := http.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
 			if !err.IsNil() {
 				if err.Code == 409 {
