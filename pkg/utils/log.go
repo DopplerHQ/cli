@@ -28,9 +28,9 @@ var Debug = false
 // OutputJSON whether to print OutputJSON
 var OutputJSON = false
 
-// Log info
+// Log info to stdout
 func Log(info string) {
-	if !OutputJSON {
+	if !OutputJSON || Debug {
 		fmt.Println(info)
 	}
 }
