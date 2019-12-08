@@ -99,6 +99,7 @@ func Execute() {
 func init() {
 	rootCmd.Version = version.ProgramVersion
 	rootCmd.SetVersionTemplate(rootCmd.Version + "\n")
+	rootCmd.Flags().BoolP("version", "v", false, "Get the version of the Doppler CLI")
 
 	rootCmd.PersistentFlags().StringP("token", "t", "", "doppler token")
 	rootCmd.PersistentFlags().String("api-host", "https://api.doppler.com", "The host address for the Doppler API")
@@ -113,5 +114,4 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigPath, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
-	rootCmd.PersistentFlags().BoolP("version", "v", false, "Get the version of the Doppler CLI")
 }
