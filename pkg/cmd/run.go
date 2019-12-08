@@ -140,8 +140,8 @@ func init() {
 	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 
 	runCmd.Flags().String("fallback", "", "write secrets to this file after connecting to Doppler. secrets will be read from this file if future connection attempts are unsuccessful.")
-	runCmd.Flags().Bool("fallback-readonly", false, "don't update or modify the fallback file")
-	runCmd.Flags().Bool("fallback-only", false, "don't request secrets from Doppler. all secrets will be read directly from the fallback file")
+	runCmd.Flags().Bool("fallback-readonly", false, "do not update or modify the fallback file")
+	runCmd.Flags().Bool("fallback-only", false, "do not request secrets from Doppler. all secrets will be read directly from the fallback file")
 
 	rootCmd.AddCommand(runCmd)
 }

@@ -74,7 +74,7 @@ var loginCmd = &cobra.Command{
 
 		response = nil
 		for {
-			// we don't respect --no-timeout here
+			// we do not respect --no-timeout here
 			if time.Now().After(completeBy) {
 				utils.HandleError(fmt.Errorf("login timed out after %d minutes", int(timeout.Minutes())))
 			}
@@ -207,18 +207,18 @@ This is the CLI equivalent to logging out.`,
 }
 
 func init() {
-	loginCmd.Flags().Bool("silent", false, "don't output any text")
-	loginCmd.Flags().Bool("no-copy", false, "don't copy the auth code to the clipboard")
+	loginCmd.Flags().Bool("silent", false, "do not output any text")
+	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
 	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
 
-	loginRollCmd.Flags().Bool("silent", false, "don't output any text")
+	loginRollCmd.Flags().Bool("silent", false, "do not output any text")
 	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	loginRollCmd.Flags().Bool("no-update-config", false, "don't update the rolled token in the config file")
+	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
 	loginCmd.AddCommand(loginRollCmd)
 
-	loginRevokeCmd.Flags().Bool("silent", false, "don't output any text")
+	loginRevokeCmd.Flags().Bool("silent", false, "do not output any text")
 	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	loginRevokeCmd.Flags().Bool("no-update-config", false, "don't remove the revoked token from the config file")
+	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
 	loginCmd.AddCommand(loginRevokeCmd)
 
 	rootCmd.AddCommand(loginCmd)

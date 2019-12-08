@@ -124,7 +124,7 @@ ENTRYPOINT doppler run -- node index.js
 
 You can download all binaries and release artifacts from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are built for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
 
-You can also directly download the generated `.deb` and `.rpm` packages. If a binary doesn't exist for the OS/architecture you use, please open a GitHub Issue.
+You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not exist for the OS/architecture you use, please open a GitHub Issue.
 
 ## Usage
 
@@ -180,7 +180,7 @@ Note: The release will automatically fail if the tag and HEAD have diverged:
 
 - **Fix**: Log in again with this registry manually specified: `docker login https://docker.io`
 
-- **Why**: The release script explicitly scopes the `dopplerbot` docker login to `https://index.docker.io/v1/`. By explicitly scoping your personal login, you ensure these two logins don't conflict (and thus your personal login doesn't get removed on script cleanup). If not specified, `docker` treats these two registries as aliases.
+- **Why**: The release script explicitly scopes the `dopplerbot` docker login to `https://index.docker.io/v1/`. By explicitly scoping your personal login, you ensure these two logins do not conflict (and thus your personal login does not get removed on script cleanup). If not specified, `docker` treats these two registries as aliases.
 
 
 #### Generate a GPG key
