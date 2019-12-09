@@ -71,6 +71,7 @@ var loginCmd = &cobra.Command{
 		// auth flow must complete within 5 minutes
 		timeout := 5 * time.Minute
 		completeBy := time.Now().Add(timeout)
+		verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
 
 		response = nil
 		for {
@@ -79,7 +80,7 @@ var loginCmd = &cobra.Command{
 				utils.HandleError(fmt.Errorf("login timed out after %d minutes", int(timeout.Minutes())))
 			}
 
-			resp, err := http.GetAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), code)
+			resp, err := http.GetAuthToken(localConfig.APIHost.Value, verifyTLS, code)
 			if !err.IsNil() {
 				if err.Code == 409 {
 					time.Sleep(2 * time.Second)
@@ -108,12 +109,19 @@ var loginCmd = &cobra.Command{
 		token := response["token"].(string)
 		name := response["name"].(string)
 		dashboard := response["dashboard_url"].(string)
-		configuration.Set(scope, map[string]string{
+
+		options := map[string]string{
 			models.ConfigToken.String():         token,
 			models.ConfigAPIHost.String():       localConfig.APIHost.Value,
 			models.ConfigDashboardHost.String(): dashboard,
-			models.ConfigVerifyTLS.String():     localConfig.VerifyTLS.Value,
-		})
+		}
+
+		// only set verifytls if using non-default value
+		if !verifyTLS {
+			options[models.ConfigVerifyTLS.String()] = localConfig.VerifyTLS.Value
+		}
+
+		configuration.Set(scope, options)
 
 		if !silent {
 			fmt.Println("")
