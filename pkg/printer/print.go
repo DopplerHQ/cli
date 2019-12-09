@@ -28,26 +28,33 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
+	"gopkg.in/gookit/color.v1"
 )
 
-import "gopkg.in/gookit/color.v1"
+type tableOptions struct {
+	Title           string
+	ShowBorder      bool
+	SeparateHeader  bool
+	SeparateColumns bool
+}
 
 const maxTableWidth = 100
 
-// Table print table
-func Table(headers []string, rows [][]string) {
-	TableWithTitle(headers, rows, "")
+// TableOptions customize table display
+func TableOptions() tableOptions {
+	return tableOptions{ShowBorder: true, SeparateHeader: true, SeparateColumns: true}
 }
 
-// TableWithTitle print table with a title
-func TableWithTitle(headers []string, rows [][]string, title string) {
+// Table print table
+func Table(headers []string, rows [][]string, options tableOptions) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.SetStyle(table.StyleLight)
 
-	if title != "" {
-		t.SetTitle(title)
-	}
+	t.SetTitle(options.Title)
+	t.Style().Options.DrawBorder = options.ShowBorder
+	t.Style().Options.SeparateHeader = options.SeparateHeader
+	t.Style().Options.SeparateColumns = options.SeparateColumns
 
 	tableHeaders := table.Row{}
 	for _, header := range headers {
@@ -135,7 +142,7 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
+	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -150,7 +157,7 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows)
+	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
@@ -165,7 +172,7 @@ func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
 			environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
 	}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, TableOptions())
 }
 
 // EnvironmentInfo print environment
@@ -176,7 +183,7 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows)
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, TableOptions())
 }
 
 // ProjectsInfo print info of multiple projects
@@ -190,7 +197,7 @@ func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	for _, projectInfo := range info {
 		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
 	}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
+	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
 }
 
 // ProjectInfo print project info
@@ -201,7 +208,7 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows)
+	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
 }
 
 // Secrets print secrets
@@ -271,7 +278,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		rows = append(rows, row)
 	}
 
-	Table(headers, rows)
+	Table(headers, rows, TableOptions())
 }
 
 // SecretsNames print secrets
@@ -313,7 +320,7 @@ func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain
 	for _, name := range secretsNames {
 		rows = append(rows, []string{name})
 	}
-	Table([]string{"name"}, rows)
+	Table([]string{"name"}, rows, TableOptions())
 }
 
 // Settings print settings
@@ -324,7 +331,7 @@ func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	}
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	Table([]string{"id", "name", "billing_email"}, rows)
+	Table([]string{"id", "name", "billing_email"}, rows, TableOptions())
 }
 
 // ScopedConfig print scoped config
@@ -377,7 +384,9 @@ func ScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, 
 		headers = append(headers, "source")
 	}
 
-	TableWithTitle(headers, rows, title)
+	options := TableOptions()
+	options.Title = title
+	Table(headers, rows, options)
 }
 
 // Configs print configs
@@ -406,7 +415,7 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 		return rows[a][0] < rows[b][0]
 	})
 
-	Table([]string{"name", "value", "scope"}, rows)
+	Table([]string{"name", "value", "scope"}, rows, TableOptions())
 }
 
 // ConfigOptionNames prints all supported config options
@@ -420,5 +429,5 @@ func ConfigOptionNames(options []string, jsonFlag bool) {
 	for _, option := range options {
 		rows = append(rows, []string{option})
 	}
-	Table([]string{"name"}, rows)
+	Table([]string{"name"}, rows, TableOptions())
 }

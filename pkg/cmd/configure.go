@@ -139,7 +139,7 @@ doppler configure get key otherkey`,
 			rows = append(rows, []string{arg, value, scope})
 		}
 
-		printer.Table([]string{"name", "value", "scope"}, rows)
+		printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
 	},
 }
 
@@ -257,5 +257,5 @@ func printScopedConfigArgs(conf models.ScopedOptions, args []string) {
 		}
 	}
 
-	printer.Table([]string{"name", "value", "scope"}, rows)
+	printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
 }

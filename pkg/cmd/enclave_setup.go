@@ -99,7 +99,7 @@ var setupCmd = &cobra.Command{
 				{models.ConfigEnclaveProject.String(), conf.EnclaveProject.Value, conf.EnclaveProject.Scope},
 				{models.ConfigEnclaveConfig.String(), conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope},
 			}
-			printer.Table([]string{"name", "value", "scope"}, rows)
+			printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
 		}
 	},
 }
