@@ -1,7 +1,5 @@
 # Doppler CLI
 
-## Warning: This tool is current pre-release. For the current stable version, please use the [node-cli](https://github.com/DopplerHQ/node-cli).
-
 The Doppler CLI is the official tool for interacting with your Enclave secrets and configuration.
 
 **You can:**
