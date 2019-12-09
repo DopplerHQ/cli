@@ -141,8 +141,8 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.Name, strings.Join(info.MissingVariables, ", "), info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	rows := [][]string{{info.Name, info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
+	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -154,10 +154,10 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, strings.Join(configInfo.MissingVariables, ", "), configInfo.DeployedAt, configInfo.CreatedAt,
+		rows = append(rows, []string{configInfo.Name, configInfo.DeployedAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "missing_variables", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
@@ -170,9 +170,9 @@ func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 	var rows [][]string
 	for _, environmentInfo := range info {
 		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
-			environmentInfo.CreatedAt, strings.Join(environmentInfo.MissingVariables, ", "), environmentInfo.Project})
+			environmentInfo.CreatedAt, environmentInfo.Project})
 	}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, TableOptions())
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
 }
 
 // EnvironmentInfo print environment
@@ -182,8 +182,8 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, strings.Join(info.MissingVariables, ", "), info.Project}}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "missing_variables", "project"}, rows, TableOptions())
+	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, info.Project}}
+	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
 }
 
 // ProjectsInfo print info of multiple projects
