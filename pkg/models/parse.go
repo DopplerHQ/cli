@@ -81,13 +81,6 @@ func ParseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
 	if info["pipeline"] != nil {
 		environmentInfo.Project = info["pipeline"].(string)
 	}
-	if info["missing_variables"] != nil {
-		var missingVariables []string
-		for _, val := range info["missing_variables"].([]interface{}) {
-			missingVariables = append(missingVariables, val.(string))
-		}
-		environmentInfo.MissingVariables = missingVariables
-	}
 
 	return environmentInfo
 }
@@ -110,13 +103,6 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	}
 	if info["deployed_at"] != nil {
 		configInfo.DeployedAt = info["deployed_at"].(string)
-	}
-	if info["missing_variables"] != nil {
-		var missingVariables []string
-		for _, val := range info["missing_variables"].([]interface{}) {
-			missingVariables = append(missingVariables, val.(string))
-		}
-		configInfo.MissingVariables = missingVariables
 	}
 
 	return configInfo

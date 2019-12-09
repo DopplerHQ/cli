@@ -40,23 +40,21 @@ type ProjectInfo struct {
 
 // EnvironmentInfo environment info
 type EnvironmentInfo struct {
-	ID               string   `json:"id"`
-	Name             string   `json:"name"`
-	CreatedAt        string   `json:"created_at"`
-	FirstDeployAt    string   `json:"first_deploy_at"`
-	SetupAt          string   `json:"setup_at"`
-	Project          string   `json:"pipeline"`
-	MissingVariables []string `json:"missing_variables"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	CreatedAt     string `json:"created_at"`
+	FirstDeployAt string `json:"first_deploy_at"`
+	SetupAt       string `json:"setup_at"`
+	Project       string `json:"pipeline"`
 }
 
 // ConfigInfo project info
 type ConfigInfo struct {
-	Name             string   `json:"name"`
-	Environment      string   `json:"stage"`
-	Project          string   `json:"project"`
-	CreatedAt        string   `json:"created_at"`
-	DeployedAt       string   `json:"deployed_at"`
-	MissingVariables []string `json:"missing_variables"`
+	Name        string `json:"name"`
+	Environment string `json:"stage"`
+	Project     string `json:"project"`
+	CreatedAt   string `json:"created_at"`
+	DeployedAt  string `json:"deployed_at"`
 }
 
 // Log a log
