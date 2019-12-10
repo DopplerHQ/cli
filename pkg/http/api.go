@@ -134,13 +134,12 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 // DownloadSecrets for specified project and config
 func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, metadata bool) ([]byte, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "environment", Value: config})
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "metadata", Value: strconv.FormatBool(metadata)})
 
 	headers := apiKeyHeader(apiKey)
 	headers["Accept"] = "text/plain"
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v2/variables", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/enclave/v1/configs/"+config+"/secrets", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
 	}
@@ -151,12 +150,11 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 // GetSecrets for specified project and config
 func GetSecrets(host string, verifyTLS bool, apiKey string, project string, config string) ([]byte, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "environment", Value: config})
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
 	headers := apiKeyHeader(apiKey)
 	headers["Accept"] = "application/json"
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v2/variables", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/enclave/v1/configs/"+config+"/secrets", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch secrets", Code: statusCode}
 	}
@@ -167,17 +165,16 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 // SetSecrets for specified project and config
 func SetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets map[string]interface{}) (map[string]models.ComputedSecret, Error) {
 	reqBody := map[string]interface{}{}
-	reqBody["variables"] = secrets
+	reqBody["secrets"] = secrets
 	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Invalid secrets"}
 	}
 
 	var params []queryParam
-	params = append(params, queryParam{Key: "environment", Value: config})
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/variables", params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/secrets", params, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to set secrets", Code: statusCode}
 	}
@@ -189,7 +186,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	}
 
 	computed := map[string]models.ComputedSecret{}
-	for key, secret := range result["variables"].(map[string]interface{}) {
+	for key, secret := range result["secrets"].(map[string]interface{}) {
 		val := secret.(map[string]interface{})
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}

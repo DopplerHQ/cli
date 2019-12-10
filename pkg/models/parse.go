@@ -169,7 +169,7 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	}
 
 	computed := map[string]ComputedSecret{}
-	secrets := result["variables"].(map[string]interface{})
+	secrets := result["secrets"].(map[string]interface{})
 	for key, secret := range secrets {
 		val := secret.(map[string]interface{})
 		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
