@@ -62,9 +62,9 @@ type ConfigLog struct {
 	Text        string    `json:"text"`
 	HTML        string    `json:"html"`
 	CreatedAt   string    `json:"created_at"`
-	Config      string    `json:"environment"`
-	Environment string    `json:"stage"`
-	Project     string    `json:"pipeline"`
+	Config      string    `json:"config"`
+	Environment string    `json:"environment"`
+	Project     string    `json:"project"`
 	User        User      `json:"user"`
 	Diff        []LogDiff `json:"diff"`
 }

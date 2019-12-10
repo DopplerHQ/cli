@@ -121,14 +121,14 @@ func ParseConfigLog(log map[string]interface{}) ConfigLog {
 	if log["created_at"] != nil {
 		parsedLog.CreatedAt = log["created_at"].(string)
 	}
+	if log["config"] != nil {
+		parsedLog.Config = log["config"].(string)
+	}
 	if log["environment"] != nil {
-		parsedLog.Config = log["environment"].(string)
+		parsedLog.Environment = log["environment"].(string)
 	}
-	if log["stage"] != nil {
-		parsedLog.Environment = log["stage"].(string)
-	}
-	if log["pipeline"] != nil {
-		parsedLog.Project = log["pipeline"].(string)
+	if log["project"] != nil {
+		parsedLog.Project = log["project"].(string)
 	}
 	if log["user"] != nil {
 		user := log["user"].(map[string]interface{})

@@ -533,9 +533,9 @@ func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (mod
 // GetConfigLogs get config audit logs
 func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.ConfigLog, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch config logs", Code: statusCode}
 	}
@@ -557,9 +557,9 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 // GetConfigLog get config audit log
 func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log, params)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
 	}
@@ -577,9 +577,9 @@ func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, co
 // RollbackConfigLog rollback a config log
 func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log+"/rollback", params, []byte{})
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log+"/rollback", params, []byte{})
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
