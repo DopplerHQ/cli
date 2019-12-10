@@ -175,7 +175,7 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.Name, info.InitialFetchAt, info.LastFetchAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "initial_fetch_at", "last_fetch_at", "created_at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -190,7 +190,7 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		rows = append(rows, []string{configInfo.Name, configInfo.InitialFetchAt, configInfo.LastFetchAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "initial_fetch_at", "last_fetch_at", "created_at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
@@ -205,7 +205,7 @@ func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.InitialFetchAt,
 			environmentInfo.CreatedAt, environmentInfo.Project})
 	}
-	Table([]string{"id", "name", "initial_fetch_at", "created_at", "project"}, rows, TableOptions())
+	Table([]string{"id", "name", "initial fetch", "created at", "project"}, rows, TableOptions())
 }
 
 // EnvironmentInfo print environment
@@ -216,7 +216,7 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.InitialFetchAt, info.CreatedAt, info.Project}}
-	Table([]string{"id", "name", "initial_fetch_at", "created_at", "project"}, rows, TableOptions())
+	Table([]string{"id", "name", "initial fetch", "created at", "project"}, rows, TableOptions())
 }
 
 // ProjectsInfo print info of multiple projects
@@ -230,7 +230,7 @@ func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 	for _, projectInfo := range info {
 		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.CreatedAt})
 	}
-	Table([]string{"id", "name", "description", "created_at"}, rows, TableOptions())
+	Table([]string{"id", "name", "description", "created at"}, rows, TableOptions())
 }
 
 // ProjectInfo print project info
@@ -241,7 +241,7 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.ID, info.Name, info.Description, info.CreatedAt}}
-	Table([]string{"id", "name", "description", "created_at"}, rows, TableOptions())
+	Table([]string{"id", "name", "description", "created at"}, rows, TableOptions())
 }
 
 // Secrets print secrets
@@ -364,7 +364,7 @@ func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	}
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	Table([]string{"id", "name", "billing_email"}, rows, TableOptions())
+	Table([]string{"id", "name", "billing email"}, rows, TableOptions())
 }
 
 // ScopedConfig print scoped config
