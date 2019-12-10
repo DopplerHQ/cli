@@ -108,9 +108,9 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	return configInfo
 }
 
-// ParseLog parse log
-func ParseLog(log map[string]interface{}) Log {
-	var parsedLog Log
+// ParseConfigLog parse config log
+func ParseConfigLog(log map[string]interface{}) ConfigLog {
+	var parsedLog ConfigLog
 
 	if log["id"] != nil {
 		parsedLog.ID = log["id"].(string)

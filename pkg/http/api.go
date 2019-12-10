@@ -534,7 +534,7 @@ func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (mod
 }
 
 // GetConfigLogs get config audit logs
-func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.Log, Error) {
+func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "pipeline", Value: project})
 
@@ -549,50 +549,50 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	var logs []models.Log
+	var logs []models.ConfigLog
 	for _, log := range result["logs"].([]interface{}) {
-		parsedLog := models.ParseLog(log.(map[string]interface{}))
+		parsedLog := models.ParseConfigLog(log.(map[string]interface{}))
 		logs = append(logs, parsedLog)
 	}
 	return logs, Error{}
 }
 
 // GetConfigLog get config audit log
-func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.Log, Error) {
+func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "pipeline", Value: project})
 
 	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log, params)
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
+		return models.ConfigLog{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+		return models.ConfigLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	parsedLog := models.ParseConfigLog(result["log"].(map[string]interface{}))
 	return parsedLog, Error{}
 }
 
 // RollbackConfigLog rollback a config log
-func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.Log, Error) {
+func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "pipeline", Value: project})
 
 	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config+"/logs/"+log+"/rollback", params, []byte{})
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
+		return models.ConfigLog{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+		return models.ConfigLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	parsedLog := models.ParseConfigLog(result["log"].(map[string]interface{}))
 	return parsedLog, Error{}
 }

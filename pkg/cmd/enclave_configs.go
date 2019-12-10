@@ -182,7 +182,7 @@ var configsLogsCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.Logs(logs, len(logs), jsonFlag)
+		printer.ConfigLogs(logs, len(logs), jsonFlag)
 	},
 }
 
@@ -204,7 +204,7 @@ var configsLogsGetCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.Log(configLog, jsonFlag, true)
+		printer.ConfigLog(configLog, jsonFlag, true)
 	},
 }
 
@@ -228,7 +228,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 		}
 
 		if !silent {
-			printer.Log(configLog, jsonFlag, true)
+			printer.ConfigLog(configLog, jsonFlag, true)
 		}
 	},
 }

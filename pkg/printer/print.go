@@ -73,8 +73,8 @@ func Table(headers []string, rows [][]string, options tableOptions) {
 	t.Render()
 }
 
-// Logs print logs
-func Logs(logs []models.Log, number int, jsonFlag bool) {
+// ConfigLogs print config logs
+func ConfigLogs(logs []models.ConfigLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
 
 	if jsonFlag {
@@ -83,12 +83,12 @@ func Logs(logs []models.Log, number int, jsonFlag bool) {
 	}
 
 	for _, log := range logs[0:maxLogs] {
-		Log(log, false, false)
+		ConfigLog(log, false, false)
 	}
 }
 
-// Log print log
-func Log(log models.Log, jsonFlag bool, diff bool) {
+// ConfigLog print config log
+func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 	if jsonFlag {
 		JSON(log)
 		return
