@@ -117,8 +117,8 @@ func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 				color.Red.Println(logDiff.Removed)
 				color.Green.Println(logDiff.Added)
 			} else {
-				color.Red.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
-				color.Green.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
+				color.Red.Println("-", logDiff.Name, "=", logDiff.Removed)
+				color.Green.Println("+", logDiff.Name, "=", logDiff.Added)
 			}
 		}
 	}
