@@ -124,6 +124,39 @@ func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 	}
 }
 
+// ActivityLogs print activity logs
+func ActivityLogs(logs []models.ActivityLog, number int, jsonFlag bool) {
+	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+
+	if jsonFlag {
+		JSON(logs[0:maxLogs])
+		return
+	}
+
+	for _, log := range logs[0:maxLogs] {
+		ActivityLog(log, false, false)
+	}
+}
+
+// ActivityLog print activity log
+func ActivityLog(log models.ActivityLog, jsonFlag bool, diff bool) {
+	if jsonFlag {
+		JSON(log)
+		return
+	}
+
+	dateTime, err := time.Parse(time.RFC3339, log.CreatedAt)
+
+	fmt.Println("Log " + log.ID)
+	fmt.Println("User: " + log.User.Name + " <" + log.User.Email + ">")
+	if err == nil {
+		fmt.Println("Date: " + dateTime.In(time.Local).String())
+	}
+	fmt.Println("")
+	fmt.Println("\t" + log.Text)
+	fmt.Println("")
+}
+
 // JSON print object as json
 func JSON(structure interface{}) {
 	resp, err := json.Marshal(structure)

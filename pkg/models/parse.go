@@ -157,6 +157,42 @@ func ParseConfigLog(log map[string]interface{}) ConfigLog {
 	return parsedLog
 }
 
+// ParseActivityLog parse activity log
+func ParseActivityLog(log map[string]interface{}) ActivityLog {
+	var parsedLog ActivityLog
+
+	if log["id"] != nil {
+		parsedLog.ID = log["id"].(string)
+	}
+	if log["text"] != nil {
+		parsedLog.Text = log["text"].(string)
+	}
+	if log["html"] != nil {
+		parsedLog.HTML = log["html"].(string)
+	}
+	if log["created_at"] != nil {
+		parsedLog.CreatedAt = log["created_at"].(string)
+	}
+	if log["enclave_config"] != nil {
+		parsedLog.EnclaveConfig = log["enclave_config"].(string)
+	}
+	if log["enclave_environment"] != nil {
+		parsedLog.EnclaveEnvironment = log["enclave_environment"].(string)
+	}
+	if log["enclave_project"] != nil {
+		parsedLog.EnclaveProject = log["enclave_project"].(string)
+	}
+	if log["user"] != nil {
+		user := log["user"].(map[string]interface{})
+		parsedLog.User.Email = user["email"].(string)
+		parsedLog.User.Name = user["name"].(string)
+		parsedLog.User.Username = user["username"].(string)
+		parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+	}
+
+	return parsedLog
+}
+
 // ParseSecrets for specified project and config
 func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	var result map[string]interface{}

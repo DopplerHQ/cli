@@ -493,8 +493,8 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 }
 
 // GetActivityLogs get activity logs
-func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Log, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/logs", []queryParam{})
+func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.ActivityLog, Error) {
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch activity logs", Code: statusCode}
 	}
@@ -505,28 +505,28 @@ func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Log, 
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	var logs []models.Log
+	var logs []models.ActivityLog
 	for _, log := range result["logs"].([]interface{}) {
-		parsedLog := models.ParseLog(log.(map[string]interface{}))
+		parsedLog := models.ParseActivityLog(log.(map[string]interface{}))
 		logs = append(logs, parsedLog)
 	}
 	return logs, Error{}
 }
 
 // GetActivityLog get specified activity log
-func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (models.Log, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/logs/"+log, []queryParam{})
+func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (models.ActivityLog, Error) {
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1/"+log, []queryParam{})
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to fetch activity log", Code: statusCode}
+		return models.ActivityLog{}, Error{Err: err, Message: "Unable to fetch activity log", Code: statusCode}
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(response, &result)
 	if err != nil {
-		return models.Log{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+		return models.ActivityLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseLog(result["log"].(map[string]interface{}))
+	parsedLog := models.ParseActivityLog(result["log"].(map[string]interface{}))
 	return parsedLog, Error{}
 }
 

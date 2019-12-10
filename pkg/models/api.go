@@ -69,6 +69,18 @@ type ConfigLog struct {
 	Diff        []LogDiff `json:"diff"`
 }
 
+// ActivityLog an activity log
+type ActivityLog struct {
+	ID                 string `json:"id"`
+	Text               string `json:"text"`
+	HTML               string `json:"html"`
+	CreatedAt          string `json:"created_at"`
+	EnclaveConfig      string `json:"enclave_config"`
+	EnclaveEnvironment string `json:"enclave_environment"`
+	EnclaveProject     string `json:"enclave_project"`
+	User               User   `json:"user"`
+}
+
 // User user profile
 type User struct {
 	Email        string `json:"email"`
