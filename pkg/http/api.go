@@ -336,9 +336,9 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 // GetEnvironments get environments
 func GetEnvironments(host string, verifyTLS bool, apiKey string, project string) ([]models.EnvironmentInfo, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/stages", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/environments", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch environments", Code: statusCode}
 	}
@@ -350,7 +350,7 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 	}
 
 	var info []models.EnvironmentInfo
-	for _, environment := range result["stages"].([]interface{}) {
+	for _, environment := range result["environments"].([]interface{}) {
 		environmentInfo := models.ParseEnvironmentInfo(environment.(map[string]interface{}))
 		info = append(info, environmentInfo)
 	}
@@ -360,9 +360,9 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 // GetEnvironment get specified environment
 func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, environment string) (models.EnvironmentInfo, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/stages/"+environment, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/environments/"+environment, params)
 	if err != nil {
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to fetch environment", Code: statusCode}
 	}
@@ -373,7 +373,7 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseEnvironmentInfo(result["stage"].(map[string]interface{}))
+	info := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
 	return info, Error{}
 }
 

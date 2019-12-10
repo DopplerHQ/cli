@@ -169,10 +169,10 @@ func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, environmentInfo := range info {
-		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
+		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.InitialFetchAt,
 			environmentInfo.CreatedAt, environmentInfo.Project})
 	}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
+	Table([]string{"id", "name", "initial_fetch_at", "created_at", "project"}, rows, TableOptions())
 }
 
 // EnvironmentInfo print environment
@@ -182,8 +182,8 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, info.Project}}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
+	rows := [][]string{{info.ID, info.Name, info.InitialFetchAt, info.CreatedAt, info.Project}}
+	Table([]string{"id", "name", "initial_fetch_at", "created_at", "project"}, rows, TableOptions())
 }
 
 // ProjectsInfo print info of multiple projects

@@ -39,12 +39,11 @@ type ProjectInfo struct {
 
 // EnvironmentInfo environment info
 type EnvironmentInfo struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	CreatedAt     string `json:"created_at"`
-	FirstDeployAt string `json:"first_deploy_at"`
-	SetupAt       string `json:"setup_at"`
-	Project       string `json:"pipeline"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	CreatedAt      string `json:"created_at"`
+	InitialFetchAt string `json:"initial_fetch_at"`
+	Project        string `json:"project"`
 }
 
 // ConfigInfo project info

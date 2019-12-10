@@ -69,14 +69,11 @@ func ParseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
 	if info["created_at"] != nil {
 		environmentInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["first_deploy_at"] != nil {
-		environmentInfo.FirstDeployAt = info["first_deploy_at"].(string)
+	if info["initial_fetch_at"] != nil {
+		environmentInfo.InitialFetchAt = info["initial_fetch_at"].(string)
 	}
-	if info["setup_at"] != nil {
-		environmentInfo.SetupAt = info["setup_at"].(string)
-	}
-	if info["pipeline"] != nil {
-		environmentInfo.Project = info["pipeline"].(string)
+	if info["project"] != nil {
+		environmentInfo.Project = info["project"].(string)
 	}
 
 	return environmentInfo
