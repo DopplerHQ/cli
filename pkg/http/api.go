@@ -196,7 +196,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 // GetWorkplaceSettings get specified workplace settings
 func GetWorkplaceSettings(host string, verifyTLS bool, apiKey string) (models.WorkplaceSettings, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/workplace", []queryParam{})
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{})
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to fetch workplace settings", Code: statusCode}
 	}
@@ -218,7 +218,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Invalid workplace settings"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/workplace", []queryParam{}, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{}, body)
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to update workplace settings", Code: statusCode}
 	}
