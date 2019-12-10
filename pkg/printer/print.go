@@ -195,9 +195,9 @@ func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, projectInfo := range info {
-		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
+		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.CreatedAt})
 	}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
+	Table([]string{"id", "name", "description", "created_at"}, rows, TableOptions())
 }
 
 // ProjectInfo print project info
@@ -207,8 +207,8 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
+	rows := [][]string{{info.ID, info.Name, info.Description, info.CreatedAt}}
+	Table([]string{"id", "name", "description", "created_at"}, rows, TableOptions())
 }
 
 // Secrets print secrets

@@ -235,7 +235,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 
 // GetProjects get projects
 func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines", []queryParam{})
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch projects", Code: statusCode}
 	}
@@ -247,7 +247,7 @@ func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectIn
 	}
 
 	var info []models.ProjectInfo
-	for _, project := range result["pipelines"].([]interface{}) {
+	for _, project := range result["projects"].([]interface{}) {
 		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
 		info = append(info, projectInfo)
 	}
@@ -256,7 +256,7 @@ func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectIn
 
 // GetProject get specified project
 func GetProject(host string, verifyTLS bool, apiKey string, project string) (models.ProjectInfo, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []queryParam{})
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{})
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to fetch project", Code: statusCode}
 	}
@@ -267,7 +267,7 @@ func GetProject(host string, verifyTLS bool, apiKey string, project string) (mod
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
 	return projectInfo, Error{}
 }
 
@@ -279,7 +279,7 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/", []queryParam{}, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects", []queryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to create project", Code: statusCode}
 	}
@@ -290,7 +290,7 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
 	return projectInfo, Error{}
 }
 
@@ -302,7 +302,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []queryParam{}, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to update project", Code: statusCode}
 	}
@@ -313,13 +313,13 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["pipeline"].(map[string]interface{}))
+	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
 	return projectInfo, Error{}
 }
 
 // DeleteProject create a project
 func DeleteProject(host string, verifyTLS bool, apiKey string, project string) Error {
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/pipelines/"+project, []queryParam{})
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{})
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete project", Code: statusCode}
 	}

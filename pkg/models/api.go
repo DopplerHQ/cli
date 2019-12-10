@@ -35,7 +35,6 @@ type ProjectInfo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
-	SetupAt     string `json:"setup_at"`
 }
 
 // EnvironmentInfo environment info

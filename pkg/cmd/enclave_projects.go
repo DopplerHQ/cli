@@ -16,6 +16,8 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
+
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -74,6 +76,9 @@ var projectsCreateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		if len(args) > 0 {
 			name = args[0]
+		}
+		if name == "" {
+			utils.HandleError(errors.New("you must provide a name"))
 		}
 
 		localConfig := configuration.LocalConfig(cmd)

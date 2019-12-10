@@ -52,9 +52,6 @@ func ParseProjectInfo(info map[string]interface{}) ProjectInfo {
 	if info["created_at"] != nil {
 		projectInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["setup_at"] != nil {
-		projectInfo.SetupAt = info["setup_at"].(string)
-	}
 
 	return projectInfo
 }
