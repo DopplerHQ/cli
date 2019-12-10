@@ -169,7 +169,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 		}
 	}
 
-	// these flags below don't have a default value and should only be used if specified by the user (or will cause invalid memory access)
+	// these flags below do not have a default value and should only be used if specified by the user (or will cause invalid memory access)
 	flagSet = cmd.Flags().Changed("project")
 	if flagSet {
 		localConfig.EnclaveProject.Value = cmd.Flag("project").Value.String()

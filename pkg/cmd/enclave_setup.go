@@ -93,7 +93,7 @@ var setupCmd = &cobra.Command{
 			models.ConfigEnclaveConfig.String():  config,
 		})
 		if !silent {
-			// don't fetch the LocalConfig since we don't care about env variables or cmd flags
+			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			rows := [][]string{
 				{models.ConfigEnclaveConfig.String(), conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope},
@@ -107,6 +107,6 @@ var setupCmd = &cobra.Command{
 func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	setupCmd.Flags().Bool("silent", false, "don't output the response")
+	setupCmd.Flags().Bool("silent", false, "do not output the response")
 	enclaveCmd.AddCommand(setupCmd)
 }

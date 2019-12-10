@@ -162,7 +162,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 			return errors.New("Request failed")
 		}
 
-		// we can't recover from this error code; accept defeat
+		// we cannot recover from this error code; accept defeat
 		return StopRetry{errors.New("Request failed")}
 	})
 

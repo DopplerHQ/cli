@@ -243,20 +243,20 @@ func init() {
 	configsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCreateCmd.Flags().Bool("no-defaults", false, "don't populate config with environment's default secrets")
-	configsCreateCmd.Flags().Bool("silent", false, "don't output the response")
+	configsCreateCmd.Flags().Bool("no-defaults", false, "do not populate config with environment's default secrets")
+	configsCreateCmd.Flags().Bool("silent", false, "do not output the response")
 	configsCmd.AddCommand(configsCreateCmd)
 
 	configsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsUpdateCmd.Flags().String("name", "", "config name")
-	configsUpdateCmd.Flags().Bool("silent", false, "don't output the response")
+	configsUpdateCmd.Flags().Bool("silent", false, "do not output the response")
 	configsUpdateCmd.MarkFlagRequired("name")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsDeleteCmd.Flags().Bool("silent", false, "don't output the response")
+	configsDeleteCmd.Flags().Bool("silent", false, "do not output the response")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
@@ -274,7 +274,7 @@ func init() {
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
 	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsRollbackCmd.Flags().Bool("silent", false, "don't output the response")
+	configsLogsRollbackCmd.Flags().Bool("silent", false, "do not output the response")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
