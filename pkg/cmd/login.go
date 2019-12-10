@@ -27,6 +27,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
+	"gopkg.in/gookit/color.v1"
 )
 
 var loginCmd = &cobra.Command{
@@ -48,7 +49,8 @@ var loginCmd = &cobra.Command{
 		authURL := response["auth_url"].(string)
 
 		if !silent {
-			fmt.Println("Your auth code is", code)
+			fmt.Print("Your auth code is ")
+			color.Green.Println(code)
 		}
 
 		if copyAuthCode {
