@@ -380,9 +380,9 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 // GetConfigs get configs
 func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]models.ConfigInfo, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -394,7 +394,7 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 	}
 
 	var info []models.ConfigInfo
-	for _, config := range result["environments"].([]interface{}) {
+	for _, config := range result["configs"].([]interface{}) {
 		configInfo := models.ParseConfigInfo(config.(map[string]interface{}))
 		info = append(info, configInfo)
 	}
@@ -404,9 +404,9 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 // GetConfig get a config
 func GetConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -417,22 +417,22 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
 	return info, Error{}
 }
 
 // CreateConfig create a config
 func CreateConfig(host string, verifyTLS bool, apiKey string, project string, name string, environment string, defaults bool) (models.ConfigInfo, Error) {
-	postBody := map[string]interface{}{"name": name, "stage": environment, "defaults": defaults}
+	postBody := map[string]interface{}{"name": name, "environment": environment, "defaults": defaults}
 	body, err := json.Marshal(postBody)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
 	}
 
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments", params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to create config", Code: statusCode}
 	}
@@ -443,16 +443,16 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
 	return info, Error{}
 }
 
 // DeleteConfig create a config
 func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, config string) Error {
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params)
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete config", Code: statusCode}
 	}
@@ -475,9 +475,9 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 	}
 
 	var params []queryParam
-	params = append(params, queryParam{Key: "pipeline", Value: project})
+	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v2/environments/"+config, params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
 	}
@@ -488,7 +488,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["environment"].(map[string]interface{}))
+	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
 	return info, Error{}
 }
 

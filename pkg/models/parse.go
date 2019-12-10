@@ -86,17 +86,20 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	if info["name"] != nil {
 		configInfo.Name = info["name"].(string)
 	}
-	if info["stage"] != nil {
-		configInfo.Environment = info["stage"].(string)
+	if info["environment"] != nil {
+		configInfo.Environment = info["environment"].(string)
 	}
-	if info["pipeline"] != nil {
-		configInfo.Project = info["pipeline"].(string)
+	if info["project"] != nil {
+		configInfo.Project = info["project"].(string)
 	}
 	if info["created_at"] != nil {
 		configInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["deployed_at"] != nil {
-		configInfo.DeployedAt = info["deployed_at"].(string)
+	if info["initial_fetch_at"] != nil {
+		configInfo.InitialFetchAt = info["initial_fetch_at"].(string)
+	}
+	if info["last_fetch_at"] != nil {
+		configInfo.LastFetchAt = info["last_fetch_at"].(string)
 	}
 
 	return configInfo

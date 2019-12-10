@@ -141,8 +141,8 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.Name, info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	rows := [][]string{{info.Name, info.InitialFetchAt, info.LastFetchAt, info.CreatedAt, info.Environment, info.Project}}
+	Table([]string{"name", "initial_fetch_at", "last_fetch_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -154,10 +154,10 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, configInfo.DeployedAt, configInfo.CreatedAt,
+		rows = append(rows, []string{configInfo.Name, configInfo.InitialFetchAt, configInfo.LastFetchAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial_fetch_at", "last_fetch_at", "created_at", "stage", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments

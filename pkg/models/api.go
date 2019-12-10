@@ -48,11 +48,12 @@ type EnvironmentInfo struct {
 
 // ConfigInfo project info
 type ConfigInfo struct {
-	Name        string `json:"name"`
-	Environment string `json:"stage"`
-	Project     string `json:"project"`
-	CreatedAt   string `json:"created_at"`
-	DeployedAt  string `json:"deployed_at"`
+	Name           string `json:"name"`
+	Environment    string `json:"environment"`
+	Project        string `json:"project"`
+	CreatedAt      string `json:"created_at"`
+	InitialFetchAt string `json:"initial_fetch_at"`
+	LastFetchAt    string `json:"last_fetch_at"`
 }
 
 // ConfigLog a log
