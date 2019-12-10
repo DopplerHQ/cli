@@ -73,8 +73,8 @@ func Table(headers []string, rows [][]string, options tableOptions) {
 	t.Render()
 }
 
-// Logs print logs
-func Logs(logs []models.Log, number int, jsonFlag bool) {
+// ConfigLogs print config logs
+func ConfigLogs(logs []models.ConfigLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
 
 	if jsonFlag {
@@ -83,12 +83,12 @@ func Logs(logs []models.Log, number int, jsonFlag bool) {
 	}
 
 	for _, log := range logs[0:maxLogs] {
-		Log(log, false, false)
+		ConfigLog(log, false, false)
 	}
 }
 
-// Log print log
-func Log(log models.Log, jsonFlag bool, diff bool) {
+// ConfigLog print config log
+func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 	if jsonFlag {
 		JSON(log)
 		return
@@ -117,11 +117,44 @@ func Log(log models.Log, jsonFlag bool, diff bool) {
 				color.Red.Println(logDiff.Removed)
 				color.Green.Println(logDiff.Added)
 			} else {
-				color.Red.Println("-", logDiff.Name, "=", `"`+logDiff.Removed+`"`)
-				color.Green.Println("+", logDiff.Name, "=", `"`+logDiff.Added+`"`)
+				color.Red.Println("-", logDiff.Name, "=", logDiff.Removed)
+				color.Green.Println("+", logDiff.Name, "=", logDiff.Added)
 			}
 		}
 	}
+}
+
+// ActivityLogs print activity logs
+func ActivityLogs(logs []models.ActivityLog, number int, jsonFlag bool) {
+	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+
+	if jsonFlag {
+		JSON(logs[0:maxLogs])
+		return
+	}
+
+	for _, log := range logs[0:maxLogs] {
+		ActivityLog(log, false, false)
+	}
+}
+
+// ActivityLog print activity log
+func ActivityLog(log models.ActivityLog, jsonFlag bool, diff bool) {
+	if jsonFlag {
+		JSON(log)
+		return
+	}
+
+	dateTime, err := time.Parse(time.RFC3339, log.CreatedAt)
+
+	fmt.Println("Log " + log.ID)
+	fmt.Println("User: " + log.User.Name + " <" + log.User.Email + ">")
+	if err == nil {
+		fmt.Println("Date: " + dateTime.In(time.Local).String())
+	}
+	fmt.Println("")
+	fmt.Println("\t" + log.Text)
+	fmt.Println("")
 }
 
 // JSON print object as json
@@ -141,8 +174,8 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.Name, info.DeployedAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	rows := [][]string{{info.Name, info.InitialFetchAt, info.LastFetchAt, info.CreatedAt, info.Environment, info.Project}}
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -154,10 +187,10 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, configInfo.DeployedAt, configInfo.CreatedAt,
+		rows = append(rows, []string{configInfo.Name, configInfo.InitialFetchAt, configInfo.LastFetchAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "deployed_at", "created_at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
@@ -169,10 +202,10 @@ func EnvironmentsInfo(info []models.EnvironmentInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, environmentInfo := range info {
-		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.SetupAt, environmentInfo.FirstDeployAt,
+		rows = append(rows, []string{environmentInfo.ID, environmentInfo.Name, environmentInfo.InitialFetchAt,
 			environmentInfo.CreatedAt, environmentInfo.Project})
 	}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
+	Table([]string{"id", "name", "initial fetch", "created at", "project"}, rows, TableOptions())
 }
 
 // EnvironmentInfo print environment
@@ -182,8 +215,8 @@ func EnvironmentInfo(info models.EnvironmentInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.SetupAt, info.FirstDeployAt, info.CreatedAt, info.Project}}
-	Table([]string{"id", "name", "setup_at", "first_deploy_at", "created_at", "project"}, rows, TableOptions())
+	rows := [][]string{{info.ID, info.Name, info.InitialFetchAt, info.CreatedAt, info.Project}}
+	Table([]string{"id", "name", "initial fetch", "created at", "project"}, rows, TableOptions())
 }
 
 // ProjectsInfo print info of multiple projects
@@ -195,9 +228,9 @@ func ProjectsInfo(info []models.ProjectInfo, jsonFlag bool) {
 
 	var rows [][]string
 	for _, projectInfo := range info {
-		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.SetupAt, projectInfo.CreatedAt})
+		rows = append(rows, []string{projectInfo.ID, projectInfo.Name, projectInfo.Description, projectInfo.CreatedAt})
 	}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
+	Table([]string{"id", "name", "description", "created at"}, rows, TableOptions())
 }
 
 // ProjectInfo print project info
@@ -207,8 +240,8 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.ID, info.Name, info.Description, info.SetupAt, info.CreatedAt}}
-	Table([]string{"id", "name", "description", "setup_at", "created_at"}, rows, TableOptions())
+	rows := [][]string{{info.ID, info.Name, info.Description, info.CreatedAt}}
+	Table([]string{"id", "name", "description", "created at"}, rows, TableOptions())
 }
 
 // Secrets print secrets
@@ -331,7 +364,7 @@ func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	}
 
 	rows := [][]string{{settings.ID, settings.Name, settings.BillingEmail}}
-	Table([]string{"id", "name", "billing_email"}, rows, TableOptions())
+	Table([]string{"id", "name", "billing email"}, rows, TableOptions())
 }
 
 // ScopedConfig print scoped config

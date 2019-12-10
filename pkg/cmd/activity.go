@@ -37,7 +37,7 @@ var activityCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.Logs(activity, len(activity), jsonFlag)
+		printer.ActivityLogs(activity, len(activity), jsonFlag)
 	},
 }
 
@@ -59,7 +59,7 @@ var activityGetCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.Log(activity, jsonFlag, false)
+		printer.ActivityLog(activity, jsonFlag, false)
 	},
 }
 

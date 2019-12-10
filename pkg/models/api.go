@@ -35,39 +35,50 @@ type ProjectInfo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
-	SetupAt     string `json:"setup_at"`
 }
 
 // EnvironmentInfo environment info
 type EnvironmentInfo struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	CreatedAt     string `json:"created_at"`
-	FirstDeployAt string `json:"first_deploy_at"`
-	SetupAt       string `json:"setup_at"`
-	Project       string `json:"pipeline"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	CreatedAt      string `json:"created_at"`
+	InitialFetchAt string `json:"initial_fetch_at"`
+	Project        string `json:"project"`
 }
 
 // ConfigInfo project info
 type ConfigInfo struct {
-	Name        string `json:"name"`
-	Environment string `json:"stage"`
-	Project     string `json:"project"`
-	CreatedAt   string `json:"created_at"`
-	DeployedAt  string `json:"deployed_at"`
+	Name           string `json:"name"`
+	Environment    string `json:"environment"`
+	Project        string `json:"project"`
+	CreatedAt      string `json:"created_at"`
+	InitialFetchAt string `json:"initial_fetch_at"`
+	LastFetchAt    string `json:"last_fetch_at"`
 }
 
-// Log a log
-type Log struct {
+// ConfigLog a log
+type ConfigLog struct {
 	ID          string    `json:"id"`
 	Text        string    `json:"text"`
 	HTML        string    `json:"html"`
 	CreatedAt   string    `json:"created_at"`
-	Config      string    `json:"environment"`
-	Environment string    `json:"stage"`
-	Project     string    `json:"pipeline"`
+	Config      string    `json:"config"`
+	Environment string    `json:"environment"`
+	Project     string    `json:"project"`
 	User        User      `json:"user"`
 	Diff        []LogDiff `json:"diff"`
+}
+
+// ActivityLog an activity log
+type ActivityLog struct {
+	ID                 string `json:"id"`
+	Text               string `json:"text"`
+	HTML               string `json:"html"`
+	CreatedAt          string `json:"created_at"`
+	EnclaveConfig      string `json:"enclave_config"`
+	EnclaveEnvironment string `json:"enclave_environment"`
+	EnclaveProject     string `json:"enclave_project"`
+	User               User   `json:"user"`
 }
 
 // User user profile

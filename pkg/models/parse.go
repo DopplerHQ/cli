@@ -52,9 +52,6 @@ func ParseProjectInfo(info map[string]interface{}) ProjectInfo {
 	if info["created_at"] != nil {
 		projectInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["setup_at"] != nil {
-		projectInfo.SetupAt = info["setup_at"].(string)
-	}
 
 	return projectInfo
 }
@@ -72,14 +69,11 @@ func ParseEnvironmentInfo(info map[string]interface{}) EnvironmentInfo {
 	if info["created_at"] != nil {
 		environmentInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["first_deploy_at"] != nil {
-		environmentInfo.FirstDeployAt = info["first_deploy_at"].(string)
+	if info["initial_fetch_at"] != nil {
+		environmentInfo.InitialFetchAt = info["initial_fetch_at"].(string)
 	}
-	if info["setup_at"] != nil {
-		environmentInfo.SetupAt = info["setup_at"].(string)
-	}
-	if info["pipeline"] != nil {
-		environmentInfo.Project = info["pipeline"].(string)
+	if info["project"] != nil {
+		environmentInfo.Project = info["project"].(string)
 	}
 
 	return environmentInfo
@@ -92,25 +86,28 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	if info["name"] != nil {
 		configInfo.Name = info["name"].(string)
 	}
-	if info["stage"] != nil {
-		configInfo.Environment = info["stage"].(string)
+	if info["environment"] != nil {
+		configInfo.Environment = info["environment"].(string)
 	}
-	if info["pipeline"] != nil {
-		configInfo.Project = info["pipeline"].(string)
+	if info["project"] != nil {
+		configInfo.Project = info["project"].(string)
 	}
 	if info["created_at"] != nil {
 		configInfo.CreatedAt = info["created_at"].(string)
 	}
-	if info["deployed_at"] != nil {
-		configInfo.DeployedAt = info["deployed_at"].(string)
+	if info["initial_fetch_at"] != nil {
+		configInfo.InitialFetchAt = info["initial_fetch_at"].(string)
+	}
+	if info["last_fetch_at"] != nil {
+		configInfo.LastFetchAt = info["last_fetch_at"].(string)
 	}
 
 	return configInfo
 }
 
-// ParseLog parse log
-func ParseLog(log map[string]interface{}) Log {
-	var parsedLog Log
+// ParseConfigLog parse config log
+func ParseConfigLog(log map[string]interface{}) ConfigLog {
+	var parsedLog ConfigLog
 
 	if log["id"] != nil {
 		parsedLog.ID = log["id"].(string)
@@ -124,14 +121,14 @@ func ParseLog(log map[string]interface{}) Log {
 	if log["created_at"] != nil {
 		parsedLog.CreatedAt = log["created_at"].(string)
 	}
+	if log["config"] != nil {
+		parsedLog.Config = log["config"].(string)
+	}
 	if log["environment"] != nil {
-		parsedLog.Config = log["environment"].(string)
+		parsedLog.Environment = log["environment"].(string)
 	}
-	if log["stage"] != nil {
-		parsedLog.Environment = log["stage"].(string)
-	}
-	if log["pipeline"] != nil {
-		parsedLog.Project = log["pipeline"].(string)
+	if log["project"] != nil {
+		parsedLog.Project = log["project"].(string)
 	}
 	if log["user"] != nil {
 		user := log["user"].(map[string]interface{})
@@ -160,6 +157,42 @@ func ParseLog(log map[string]interface{}) Log {
 	return parsedLog
 }
 
+// ParseActivityLog parse activity log
+func ParseActivityLog(log map[string]interface{}) ActivityLog {
+	var parsedLog ActivityLog
+
+	if log["id"] != nil {
+		parsedLog.ID = log["id"].(string)
+	}
+	if log["text"] != nil {
+		parsedLog.Text = log["text"].(string)
+	}
+	if log["html"] != nil {
+		parsedLog.HTML = log["html"].(string)
+	}
+	if log["created_at"] != nil {
+		parsedLog.CreatedAt = log["created_at"].(string)
+	}
+	if log["enclave_config"] != nil {
+		parsedLog.EnclaveConfig = log["enclave_config"].(string)
+	}
+	if log["enclave_environment"] != nil {
+		parsedLog.EnclaveEnvironment = log["enclave_environment"].(string)
+	}
+	if log["enclave_project"] != nil {
+		parsedLog.EnclaveProject = log["enclave_project"].(string)
+	}
+	if log["user"] != nil {
+		user := log["user"].(map[string]interface{})
+		parsedLog.User.Email = user["email"].(string)
+		parsedLog.User.Name = user["name"].(string)
+		parsedLog.User.Username = user["username"].(string)
+		parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+	}
+
+	return parsedLog
+}
+
 // ParseSecrets for specified project and config
 func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	var result map[string]interface{}
@@ -169,7 +202,7 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	}
 
 	computed := map[string]ComputedSecret{}
-	secrets := result["variables"].(map[string]interface{})
+	secrets := result["secrets"].(map[string]interface{})
 	for key, secret := range secrets {
 		val := secret.(map[string]interface{})
 		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
