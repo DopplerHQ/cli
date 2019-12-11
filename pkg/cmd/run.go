@@ -39,12 +39,10 @@ var runCmd = &cobra.Command{
 	Short: "Run a command with secrets injected into the environment",
 	Long: `Run a command with secrets injected into the environment
 
-Usage:
-doppler run printenv
-doppler run -- printenv
-doppler run --key=123 -- printenv
-
 To view the CLI's active configuration, run ` + "`doppler configure debug`",
+	Example: `doppler run printenv
+doppler run -- printenv
+doppler run --token=123 -- printenv`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
