@@ -29,22 +29,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deployHost string
-var key string
-var project string
-var config string
-
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
 	Short: "Run a command with secrets injected into the environment",
 	Long: `Run a command with secrets injected into the environment
 
-Usage:
-doppler run printenv
-doppler run -- printenv
-doppler run --key=123 -- printenv
-
 To view the CLI's active configuration, run ` + "`doppler configure debug`",
+	Example: `doppler run printenv
+doppler run -- printenv
+doppler run --token=123 -- printenv`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
