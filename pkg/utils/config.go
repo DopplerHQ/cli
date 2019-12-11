@@ -13,12 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package version
+package utils
 
-// ProgramVersion the current version of this program
-var ProgramVersion = "master"
+// Debug whether we're running in debug mode
+var Debug = false
 
-// IsDevelopment whether the CLI is running in development mode (not a released version)
-func IsDevelopment() bool {
-	return ProgramVersion == "master"
-}
+// OutputJSON whether to print OutputJSON
+var OutputJSON = false

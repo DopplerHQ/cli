@@ -13,12 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package version
+package cmd
 
-// ProgramVersion the current version of this program
-var ProgramVersion = "master"
+import (
+	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/skratchdot/open-golang/open"
+	"github.com/spf13/cobra"
+)
 
-// IsDevelopment whether the CLI is running in development mode (not a released version)
-func IsDevelopment() bool {
-	return ProgramVersion == "master"
+var feedbackCmd = &cobra.Command{
+	Use:   "feedback",
+	Short: "Provide feedback about the Doppler CLI",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := open.Run("https://github.com/DopplerHQ/cli/issues/new/choose")
+		if err != nil {
+			utils.HandleError(err)
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(feedbackCmd)
 }
