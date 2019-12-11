@@ -26,8 +26,8 @@ If applicable, add screenshots to help explain your problem.
  - OS: [e.g. macOS]
  - Version [e.g. 10.15.1]
 
-**CLI (please complete the following information):**
- - Version [e.g. 1.0.0]
+**CLI Version:**
+Version [e.g. 1.0.0]
 
 **Additional context**
 Add any other context about the problem here.
