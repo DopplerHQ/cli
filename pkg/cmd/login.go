@@ -181,38 +181,16 @@ var loginRevokeCmd = &cobra.Command{
 	Long: `Revoke your auth token
 
 Your auth token will be immediately revoked.
-This is the CLI equivalent to logging out.`,
+This is an alias of the "logout" command.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		silent := utils.GetBoolFlag(cmd, "silent")
 		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
-
+		verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
 		token := localConfig.Token.Value
-		if token == "" {
-			if !silent {
-				fmt.Println("You must provide an auth token")
-			}
-			os.Exit(1)
-		}
 
-		_, err := http.RevokeAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), token)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if updateConfig {
-			// remove key from config
-			for scope, config := range configuration.AllConfigs() {
-				if config.Token == token {
-					configuration.Set(scope, map[string]string{models.ConfigToken.String(): ""})
-				}
-			}
-		}
-
-		if !silent {
-			fmt.Println("Auth token has been revoked")
-		}
+		revokeToken(localConfig.APIHost.Value, token, silent, verifyTLS, updateConfig)
 	},
 }
 
