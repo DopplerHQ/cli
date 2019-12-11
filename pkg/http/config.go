@@ -13,12 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package version
+package http
 
-// ProgramVersion the current version of this program
-var ProgramVersion = "master"
+import "time"
 
-// IsDevelopment whether the CLI is running in development mode (not a released version)
-func IsDevelopment() bool {
-	return ProgramVersion == "master"
-}
+// UseTimeout whether to timeout long-running requests
+var UseTimeout = true
+
+// TimeoutDuration how long to wait for a request to complete before timing out
+var TimeoutDuration = 10 * time.Second

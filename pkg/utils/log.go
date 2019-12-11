@@ -22,12 +22,6 @@ import (
 	"runtime/debug"
 )
 
-// Debug whether we're running in debug mode
-var Debug = false
-
-// OutputJSON whether to print OutputJSON
-var OutputJSON = false
-
 // Log info to stdout
 func Log(info string) {
 	if !OutputJSON || Debug {

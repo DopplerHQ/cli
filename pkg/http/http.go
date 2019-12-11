@@ -41,12 +41,6 @@ type errorResponse struct {
 	Success  bool
 }
 
-// UseTimeout whether to timeout long-running requests
-var UseTimeout = true
-
-// TimeoutDuration how long to wait for a request to complete before timing out
-var TimeoutDuration = 10 * time.Second
-
 // GetRequest perform HTTP GET
 func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
