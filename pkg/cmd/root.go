@@ -54,6 +54,9 @@ var rootCmd = &cobra.Command{
 			}
 		}
 	},
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Usage()
+	},
 }
 
 func loadFlags(cmd *cobra.Command) {
