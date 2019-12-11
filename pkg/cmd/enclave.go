@@ -23,6 +23,9 @@ var enclaveCmd = &cobra.Command{
 	Use:   "enclave",
 	Short: "Control Enclave",
 	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Usage()
+	},
 }
 
 func init() {
