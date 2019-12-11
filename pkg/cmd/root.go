@@ -47,7 +47,8 @@ var rootCmd = &cobra.Command{
 
 			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
 			if versionCheck != (models.VersionCheck{}) {
-				if version.ProgramVersion != versionCheck.LatestVersion && !silent && !utils.OutputJSON {
+				shouldPrint := utils.Debug || (!silent && !utils.OutputJSON)
+				if version.ProgramVersion != versionCheck.LatestVersion && shouldPrint {
 					fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
 				}
 
