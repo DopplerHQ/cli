@@ -43,7 +43,8 @@ var rootCmd = &cobra.Command{
 
 		// disable version checking on the "run" command
 		if version.PerformVersionCheck && cmd.CalledAs() != "run" {
-			silent := cmd.Flags().Changed("silent") && utils.GetBoolFlag(cmd, "silent")
+			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
+
 			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
 			if versionCheck != (models.VersionCheck{}) {
 				if version.ProgramVersion != versionCheck.LatestVersion && !silent && !utils.OutputJSON {
@@ -57,24 +58,12 @@ var rootCmd = &cobra.Command{
 }
 
 func loadFlags(cmd *cobra.Command) {
-	if cmd.Flags().Changed("debug") {
-		utils.Debug = utils.GetBoolFlag(cmd, "debug")
-	}
-	if cmd.Flags().Changed("json") {
-		utils.OutputJSON = utils.GetBoolFlag(cmd, "json")
-	}
-	if cmd.Flags().Changed("no-check-version") {
-		version.PerformVersionCheck = !utils.GetBoolFlag(cmd, "no-check-version")
-	}
-	if cmd.Flags().Changed("no-timeout") {
-		http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")
-	}
-	if cmd.Flags().Changed("timeout") {
-		http.TimeoutDuration = utils.GetDurationFlag(cmd, "timeout")
-	}
-	if cmd.Flags().Changed("configuration") {
-		configuration.UserConfigPath = cmd.Flag("configuration").Value.String()
-	}
+	configuration.UserConfigPath = utils.GetFlagIfChanged(cmd, "configuration", configuration.UserConfigPath)
+	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
+	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
+	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
+	utils.OutputJSON = utils.GetBoolFlagIfChanged(cmd, "json", utils.OutputJSON)
+	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
