@@ -89,19 +89,31 @@ $ sudo yum update doppler
 
 ### Docker
 
-Docker containers are currently built using several base images:
-- `alpine`
-- `node:lts-alpine`
-- `python:3-alpine`
-- `ruby:2-alpine`
+We currently build these Docker images:
+- `dopplerhq/cli` based on `alpine`
+- `dopplerhq/cli:node` based on `node:lts-alpine`
+- `dopplerhq/cli:python` based on `python:3-alpine`
+- `dopplerhq/cli:ruby` based on `ruby:2-alpine`
 
-Example:
+You can find all source Dockerfiles in the `/docker` folder.
+
+Here's one such file:
+
+```Dockerfile
+FROM alpine
+COPY doppler /bin/doppler
+ENTRYPOINT ["/bin/doppler"]
+```
+
+To run an image, use `docker`:
 
 ```sh
-$ docker run --rm -it dopplerhq/cli --version
-v1.0.0
+# prints the doppler cli version
 $ docker run --rm -it dopplerhq/cli:node --version
 v1.0.0
+# prints the node version
+$ docker run --rm -it dopplerhq/cli:node run -- node --version
+v12.13.0
 ```
 
 Here's an example Dockerfile showing how you can build on top of Doppler's base images:
@@ -122,22 +134,25 @@ ENTRYPOINT doppler run -- node index.js
 
 You can download all binaries and release artifacts from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are built for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
 
-You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not exist for the OS/architecture you use, please open a GitHub Issue.
+You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
 
 ## Usage
 
-Once installed, setup should only take a minute. You'll authorize the CLI to access your Doppler worplace, and then select your project and config.
+Once installed, setup should only take a minute. You'll authorize the CLI to access your Doppler workplace, and then select your project and config.
 
 ```sh
 $ doppler login                     # generate auth credentials
 $ doppler enclave setup             # select your project and config
-# optional
-$ doppler configure --all           # view local configuration
+$ doppler configure --all           # (optional) view local configuration
 ```
 
-By default, `doppler login` and `doppler enclave setup` will scope your configuration to the current directory. You can modify the scope by specifying the `--scope` flag. Run `doppler help` for more information.
+By default, `doppler login` scopes the generated token globally (`--scope=*`). This means that the token will be accessible to your projects in any local directory. To limit the scope of the token, specify the `scope` flag during login: `doppler login --scope=.`.
+
+Enclave setup (i.e. `doppler enclave setup`) scopes the enclave project and config to the current directory (`--scope=.`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.
 
 ## Development
+
+To build the Doppler CLI for development, you'll need Golang installed.
 
 ### Build
 
@@ -148,7 +163,7 @@ $ ./doppler --version
 
 ### Test
 
-Build for all release targets:
+Testing building for all release targets:
 
 ```
 $ make test-release
@@ -156,13 +171,13 @@ $ make test-release
 
 ### Release
 
-To release a new version, run:
+To release a new version, run this command with `$NEW_VERSION` set to one of `major`, `minor`, `patch`, or `vX.Y.Z` (where `vX.Y.Z` is a valid semantic version).
 
 ```
-$ make release V=vX.Y.Z
+$ make release V=$NEW_VERSION
 ```
 
-This command will push local changes to Origin, create a new tag, and push the tag to Origin. It will then build and release the doppler binaries.
+This command will push local changes to origin, create a new tag, and push the tag to origin. It will then build and release the doppler binaries.
 
 Note: The release will automatically fail if the tag and HEAD have diverged:
 
