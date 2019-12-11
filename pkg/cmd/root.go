@@ -33,6 +33,9 @@ var rootCmd = &cobra.Command{
 	Short: "The official Doppler CLI",
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		loadFlags(cmd)
+		configuration.LoadConfig()
+
 		if utils.Debug {
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", false, true)
 			fmt.Println("")
@@ -53,6 +56,27 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+func loadFlags(cmd *cobra.Command) {
+	if cmd.Flags().Changed("debug") {
+		utils.Debug = utils.GetBoolFlag(cmd, "debug")
+	}
+	if cmd.Flags().Changed("json") {
+		utils.OutputJSON = utils.GetBoolFlag(cmd, "json")
+	}
+	if cmd.Flags().Changed("no-check-version") {
+		version.PerformVersionCheck = !utils.GetBoolFlag(cmd, "no-check-version")
+	}
+	if cmd.Flags().Changed("no-timeout") {
+		http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")
+	}
+	if cmd.Flags().Changed("timeout") {
+		http.TimeoutDuration = utils.GetDurationFlag(cmd, "timeout")
+	}
+	if cmd.Flags().Changed("configuration") {
+		configuration.UserConfigPath = cmd.Flag("configuration").Value.String()
+	}
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -67,32 +91,9 @@ func Execute() {
 		}
 	}()
 
-	args := os.Args[1:]
-	rootCmd.ParseFlags(args)
-
-	if rootCmd.Flags().Changed("debug") {
-		utils.Debug = utils.GetBoolFlag(rootCmd, "debug")
-	}
-	if rootCmd.Flags().Changed("json") {
-		utils.OutputJSON = utils.GetBoolFlag(rootCmd, "json")
-	}
-	if rootCmd.Flags().Changed("no-check-version") {
-		version.PerformVersionCheck = !utils.GetBoolFlag(rootCmd, "no-check-version")
-	}
-	if rootCmd.Flags().Changed("no-timeout") {
-		http.UseTimeout = !utils.GetBoolFlag(rootCmd, "no-timeout")
-	}
-	if rootCmd.Flags().Changed("timeout") {
-		http.TimeoutDuration = utils.GetDurationFlag(rootCmd, "timeout")
-	}
-
-	if rootCmd.Flags().Changed("configuration") {
-		configuration.UserConfigPath = rootCmd.Flag("configuration").Value.String()
-	}
-	configuration.LoadConfig()
-
 	if err := rootCmd.Execute(); err != nil {
-		utils.HandleError(err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
 	}
 }
 
