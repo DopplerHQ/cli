@@ -29,6 +29,13 @@ func Log(info string) {
 	}
 }
 
+// LogDebug prints a debug message to stdout
+func LogDebug(s string) {
+	if Debug {
+		fmt.Println("DEBUG:", s)
+	}
+}
+
 // HandleError prints the error and exits with code 1
 func HandleError(e error, messages ...string) {
 	ErrExit(e, 1, messages...)
