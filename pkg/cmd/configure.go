@@ -49,12 +49,11 @@ var configureCmd = &cobra.Command{
 
 var configureDebugCmd = &cobra.Command{
 	Use:   "debug",
-	Short: "View active configuration utilizing all config sources",
-	Long: `View active configuration utilizing all config sources.
+	Short: "View current configuration utilizing all config sources",
+	Long: `View current configuration utilizing all config sources.
 
-This prints the active configuration that will be used by the CLI.
-This factors in command line flags (--token=123), environment variables (DOPPLER_TOKEN=123),
-and the config file (in order from highest to lowest precedence)`,
+This includes specified flags (--token=123), environment variables (DOPPLER_TOKEN=123),
+and your config file. Flags have the highest priority; config file has the least.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
