@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -135,17 +134,15 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	requestErr := retry(5, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
-			if utils.Debug {
-				fmt.Fprintln(os.Stderr, err)
-			}
+			utils.LogDebug(err.Error())
 			return StopRetry{err}
 		}
 
 		response = resp
 
-		if utils.Debug {
-			fmt.Println("Request ID:", resp.Header.Get("x-request-id"))
-			fmt.Println("Request URL:", req.URL)
+		utils.LogDebug(fmt.Sprintf("Performing HTTP %s to %s", req.Method, req.URL))
+		if requestID := resp.Header.Get("x-request-id"); requestID != "" {
+			utils.LogDebug(fmt.Sprintf("Request ID %s", requestID))
 		}
 
 		if isSuccess(resp.StatusCode) {

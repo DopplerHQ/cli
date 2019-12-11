@@ -93,7 +93,7 @@ func GetBool(value string, def bool) bool {
 	return b
 }
 
-// GetBoolFlag get flag parsed as a boolean
+// GetBoolFlag gets the flag's boolean value
 func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	b, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
 	if err != nil {
@@ -102,7 +102,27 @@ func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	return b
 }
 
-// GetIntFlag get flag parsed as an int
+// GetBoolFlagIfChanged gets the flag's boolean value, if specified;
+// protects against reading an undefined flag
+func GetBoolFlagIfChanged(cmd *cobra.Command, flag string, def bool) bool {
+	if !cmd.Flags().Changed(flag) {
+		return def
+	}
+
+	return GetBoolFlag(cmd, flag)
+}
+
+// GetFlagIfChanged gets the flag's value, if specified;
+// protects against reading an undefined flag
+func GetFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
+	if !cmd.Flags().Changed(flag) {
+		return def
+	}
+
+	return cmd.Flag(flag).Value.String()
+}
+
+// GetIntFlag gets the flag's int value
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
 	if err != nil {
@@ -112,12 +132,23 @@ func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	return int(number)
 }
 
+// GetDurationFlag gets the flag's duration
 func GetDurationFlag(cmd *cobra.Command, flag string) time.Duration {
 	value, err := time.ParseDuration(cmd.Flag(flag).Value.String())
 	if err != nil {
 		HandleError(err, "")
 	}
 	return value
+}
+
+// GetDurationFlagIfChanged gets the flag's duration, if specified;
+// protects against reading an undefined flag
+func GetDurationFlagIfChanged(cmd *cobra.Command, flag string, def time.Duration) time.Duration {
+	if !cmd.Flags().Changed(flag) {
+		return def
+	}
+
+	return GetDurationFlag(cmd, flag)
 }
 
 // GetFilePath verify file path and name are provided

@@ -17,6 +17,7 @@ package configuration
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -263,6 +264,7 @@ func writeConfig(config models.ConfigFile) {
 		utils.HandleError(err)
 	}
 
+	utils.LogDebug(fmt.Sprintf("Writing user config to %s", UserConfigPath))
 	err = ioutil.WriteFile(UserConfigPath, bytes, os.FileMode(0600))
 	if err != nil {
 		utils.HandleError(err)
@@ -274,6 +276,8 @@ func exists() bool {
 }
 
 func readConfig() models.ConfigFile {
+	utils.LogDebug(fmt.Sprintf("Reading user config from %s", UserConfigPath))
+
 	fileContents, err := ioutil.ReadFile(UserConfigPath)
 	if err != nil {
 		utils.HandleError(err)

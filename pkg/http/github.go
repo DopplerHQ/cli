@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 func getLatestVersion() (string, error) {
@@ -55,6 +56,7 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 		return models.VersionCheck{}
 	}
 
+	utils.LogDebug("Checking for latest version of the CLI")
 	tag, err := getLatestVersion()
 	if err != nil {
 		if debug && !json {
