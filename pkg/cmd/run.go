@@ -29,11 +29,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deployHost string
-var key string
-var project string
-var config string
-
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
 	Short: "Run a command with secrets injected into the environment",
