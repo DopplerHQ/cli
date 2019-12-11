@@ -141,7 +141,9 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		response = resp
 
 		utils.LogDebug(fmt.Sprintf("Performing HTTP %s to %s", req.Method, req.URL))
-		utils.LogDebug(fmt.Sprintf("Request ID %s", resp.Header.Get("x-request-id")))
+		if requestID := resp.Header.Get("x-request-id"); requestID != "" {
+			utils.LogDebug(fmt.Sprintf("Request ID %s", requestID))
+		}
 
 		if isSuccess(resp.StatusCode) {
 			return nil
