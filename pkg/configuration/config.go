@@ -312,18 +312,6 @@ func IsValidConfigOption(key string) bool {
 	return exists
 }
 
-// GetScopedConfigValue get the value of the specified key within the config
-func GetScopedConfigValue(conf models.ScopedOptions, key string) (string, string) {
-	pairs := models.ScopedPairs(&conf)
-	for name, pair := range pairs {
-		if key == name {
-			return pair.Value, pair.Scope
-		}
-	}
-
-	return "", ""
-}
-
 // SetConfigValue set the value for the specified key in the config
 func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 	if key == models.ConfigToken.String() {

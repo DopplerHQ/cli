@@ -210,15 +210,3 @@ func init() {
 	configureCmd.Flags().Bool("all", false, "print all saved options")
 	rootCmd.AddCommand(configureCmd)
 }
-
-func printScopedConfigArgs(conf models.ScopedOptions, args []string) {
-	var rows [][]string
-	for _, arg := range args {
-		if configuration.IsValidConfigOption(arg) {
-			value, scope := configuration.GetScopedConfigValue(conf, arg)
-			rows = append(rows, []string{arg, value, scope})
-		}
-	}
-
-	printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
-}
