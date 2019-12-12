@@ -422,6 +422,49 @@ func ScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, 
 	Table(headers, rows, options)
 }
 
+// ScopedConfigValues print scoped config value(s)
+func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[string]*models.ScopedOption, jsonFlag bool, plain bool) {
+	if plain {
+		sbEmpty := true
+		var sb strings.Builder
+
+		for _, arg := range args {
+			if sbEmpty {
+				sbEmpty = false
+			} else {
+				sb.WriteString("\n")
+			}
+
+			if option, exists := values[arg]; exists {
+				sb.WriteString(option.Value)
+			}
+		}
+
+		fmt.Println(sb.String())
+		return
+	}
+
+	if jsonFlag {
+		filteredMap := map[string]string{}
+		for _, arg := range args {
+			if option, exists := values[arg]; exists {
+				filteredMap[arg] = option.Value
+			}
+		}
+
+		JSON(filteredMap)
+		return
+	}
+
+	var rows [][]string
+	for _, arg := range args {
+		if option, exists := values[arg]; exists {
+			rows = append(rows, []string{arg, option.Value, option.Scope})
+		}
+	}
+	Table([]string{"name", "value", "scope"}, rows, TableOptions())
+}
+
 // Configs print configs
 func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 	if jsonFlag {

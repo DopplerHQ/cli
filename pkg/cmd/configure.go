@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 
@@ -103,42 +102,7 @@ doppler configure get key otherkey`,
 		scope := cmd.Flag("scope").Value.String()
 		conf := configuration.Get(scope)
 
-		if plain {
-			sbEmpty := true
-			var sb strings.Builder
-
-			for _, arg := range args {
-				value, _ := configuration.GetScopedConfigValue(conf, arg)
-				if sbEmpty {
-					sbEmpty = false
-				} else {
-					sb.WriteString("\n")
-				}
-
-				sb.WriteString(value)
-			}
-
-			fmt.Println(sb.String())
-			return
-		}
-
-		if jsonFlag {
-			filteredConfMap := map[string]string{}
-			for _, arg := range args {
-				filteredConfMap[arg], _ = configuration.GetScopedConfigValue(conf, arg)
-			}
-
-			printer.JSON(filteredConfMap)
-			return
-		}
-
-		var rows [][]string
-		for _, arg := range args {
-			value, scope := configuration.GetScopedConfigValue(conf, arg)
-			rows = append(rows, []string{arg, value, scope})
-		}
-
-		printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
+		printer.ScopedConfigValues(conf, args, models.ScopedPairs(&conf), jsonFlag, plain)
 	},
 }
 
