@@ -92,14 +92,12 @@ var setupCmd = &cobra.Command{
 			models.ConfigEnclaveProject.String(): project,
 			models.ConfigEnclaveConfig.String():  config,
 		})
+
 		if !silent {
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(scope)
-			rows := [][]string{
-				{models.ConfigEnclaveConfig.String(), conf.EnclaveConfig.Value, conf.EnclaveConfig.Scope},
-				{models.ConfigEnclaveProject.String(), conf.EnclaveProject.Value, conf.EnclaveProject.Scope},
-			}
-			printer.Table([]string{"name", "value", "scope"}, rows, printer.TableOptions())
+			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
+			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false)
 		}
 	},
 }
