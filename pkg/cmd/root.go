@@ -41,21 +41,21 @@ var rootCmd = &cobra.Command{
 			fmt.Println("")
 		}
 
-		// disable version checking on the "run" command
-		if version.PerformVersionCheck && cmd.CalledAs() != "run" {
 			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
 			plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
+			canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
 
-			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
-			if versionCheck != (models.VersionCheck{}) {
-				shouldPrint := utils.Debug || (!silent && !plain && !utils.OutputJSON)
-				if version.ProgramVersion != versionCheck.LatestVersion && shouldPrint {
-					fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
+		// disable version checking on the "run" command
+		if version.PerformVersionCheck && canPrintResults && cmd.CalledAs() != "run" {
+				versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
+				if versionCheck != (models.VersionCheck{}) {
+					if version.ProgramVersion != versionCheck.LatestVersion {
+						fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
+					}
+
+					configuration.SetVersionCheck(versionCheck)
 				}
-
-				configuration.SetVersionCheck(versionCheck)
 			}
-		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
