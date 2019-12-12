@@ -44,10 +44,11 @@ var rootCmd = &cobra.Command{
 		// disable version checking on the "run" command
 		if version.PerformVersionCheck && cmd.CalledAs() != "run" {
 			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
+			plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
 
 			versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
 			if versionCheck != (models.VersionCheck{}) {
-				shouldPrint := utils.Debug || (!silent && !utils.OutputJSON)
+				shouldPrint := utils.Debug || (!silent && !plain && !utils.OutputJSON)
 				if version.ProgramVersion != versionCheck.LatestVersion && shouldPrint {
 					fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
 				}
