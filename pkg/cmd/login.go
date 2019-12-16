@@ -37,6 +37,7 @@ var loginCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		scope := cmd.Flag("scope").Value.String()
+		prevConfig := configuration.Get(scope)
 		silent := utils.GetBoolFlag(cmd, "silent")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
@@ -128,6 +129,16 @@ var loginCmd = &cobra.Command{
 		if !silent {
 			fmt.Println("")
 			fmt.Println("Welcome, " + name)
+		}
+
+		if prevConfig.Token.Value != "" {
+			utils.LogDebug("Revoking previous token")
+			_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
+			if !err.IsNil() {
+				utils.LogDebug("Failed to revoke token")
+			} else {
+				utils.LogDebug("Token successfully revoked")
+			}
 		}
 	},
 }
