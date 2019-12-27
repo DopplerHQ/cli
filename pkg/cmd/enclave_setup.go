@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -38,6 +39,10 @@ var setupCmd = &cobra.Command{
 		projects, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
+		}
+
+		if len(projects) == 0 {
+			utils.HandleError(errors.New("you do not belong to any projects"))
 		}
 
 		project := ""
@@ -72,6 +77,10 @@ var setupCmd = &cobra.Command{
 			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
 				utils.HandleError(apiError.Unwrap(), apiError.Message)
+			}
+
+			if len(configs) == 0 {
+				utils.HandleError(errors.New("your project does not have any configs"))
 			}
 
 			var configOptions []string
