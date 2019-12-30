@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -50,12 +51,6 @@ func getLatestVersion() (string, error) {
 
 // CheckCLIVersion check for updates to the CLI
 func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, debug bool) models.VersionCheck {
-	now := time.Now()
-	// only check version if more than a day since last check
-	if !now.After(versionCheck.CheckedAt.Add(24 * time.Hour)) {
-		return models.VersionCheck{}
-	}
-
 	utils.LogDebug("Checking for latest version of the CLI")
 	tag, err := getLatestVersion()
 	if err != nil {
@@ -68,10 +63,20 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 		return models.VersionCheck{}
 	}
 
-	versionCheck.CheckedAt = now
-	if versionCheck.LatestVersion != tag {
+	versionCheck.CheckedAt = time.Now()
+	tag = normalizeVersion(tag)
+	if normalizeVersion(versionCheck.LatestVersion) != tag {
 		versionCheck.LatestVersion = tag
 	}
 
 	return versionCheck
+}
+
+func normalizeVersion(version string) string {
+	version = strings.TrimSpace(version)
+	if !strings.HasPrefix(version, "v") {
+		return "v" + version
+	}
+
+	return version
 }

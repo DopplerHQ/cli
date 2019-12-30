@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -41,25 +42,42 @@ var rootCmd = &cobra.Command{
 			fmt.Println("")
 		}
 
-			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
-			plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
-			canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
-
-		// disable version checking on the "run" command
-		if version.PerformVersionCheck && canPrintResults && cmd.CalledAs() != "run" {
-				versionCheck := http.CheckCLIVersion(configuration.VersionCheck(), silent, utils.OutputJSON, utils.Debug)
-				if versionCheck != (models.VersionCheck{}) {
-					if version.ProgramVersion != versionCheck.LatestVersion {
-						fmt.Printf("Doppler CLI version %s is now available\n", versionCheck.LatestVersion)
-					}
-
-					configuration.SetVersionCheck(versionCheck)
-				}
-			}
+		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
+		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
+		canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
+		checkVersion(cmd.CalledAs(), silent, plain, canPrintResults)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
+}
+
+func checkVersion(command string, silent bool, plain bool, print bool) {
+	// disable version checking on the "run" command
+	if command == "run" {
+		return
+	}
+
+	if !version.PerformVersionCheck || !print {
+		return
+	}
+
+	prevVersionCheck := configuration.VersionCheck()
+	// don't check more often than every 24 hours
+	if !time.Now().After(prevVersionCheck.CheckedAt.Add(24 * time.Hour)) {
+		return
+	}
+
+	versionCheck := http.CheckCLIVersion(prevVersionCheck, silent, utils.OutputJSON, utils.Debug)
+	if versionCheck == (models.VersionCheck{}) {
+		return
+	}
+
+	if version.ProgramVersion != versionCheck.LatestVersion {
+		fmt.Printf("Doppler CLI %s is now available\n", versionCheck.LatestVersion)
+	}
+
+	configuration.SetVersionCheck(versionCheck)
 }
 
 func loadFlags(cmd *cobra.Command) {
