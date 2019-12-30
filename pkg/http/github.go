@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -69,9 +70,19 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 	}
 
 	versionCheck.CheckedAt = now
-	if versionCheck.LatestVersion != tag {
+	tag = normalizeVersion(tag)
+	if normalizeVersion(versionCheck.LatestVersion) != tag {
 		versionCheck.LatestVersion = tag
 	}
 
 	return versionCheck
+}
+
+func normalizeVersion(version string) string {
+	version = strings.TrimSpace(version)
+	if !strings.HasPrefix(version, "v") {
+		return "v" + version
+	}
+
+	return version
 }
