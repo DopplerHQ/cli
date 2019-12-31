@@ -76,13 +76,14 @@ func Table(headers []string, rows [][]string, options tableOptions) {
 // ConfigLogs print config logs
 func ConfigLogs(logs []models.ConfigLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+	logs = logs[0:maxLogs]
 
 	if jsonFlag {
-		JSON(logs[0:maxLogs])
+		JSON(logs)
 		return
 	}
 
-	for _, log := range logs[0:maxLogs] {
+	for _, log := range logs {
 		ConfigLog(log, false, false)
 	}
 }
@@ -127,13 +128,14 @@ func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 // ActivityLogs print activity logs
 func ActivityLogs(logs []models.ActivityLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+	logs = logs[0:maxLogs]
 
 	if jsonFlag {
-		JSON(logs[0:maxLogs])
+		JSON(logs)
 		return
 	}
 
-	for _, log := range logs[0:maxLogs] {
+	for _, log := range logs {
 		ActivityLog(log, false, false)
 	}
 }
