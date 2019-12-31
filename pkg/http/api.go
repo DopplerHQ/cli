@@ -596,3 +596,72 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 	parsedLog := models.ParseConfigLog(result["log"].(map[string]interface{}))
 	return parsedLog, Error{}
 }
+
+// GetConfigServiceTokens get config service tokens
+func GetConfigServiceTokens(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.ConfigServiceToken, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens", params)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to fetch service tokens", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	var tokens []models.ConfigServiceToken
+	for _, log := range result["tokens"].([]interface{}) {
+		parsedToken := models.ParseConfigServiceToken(log.(map[string]interface{}))
+		tokens = append(tokens, parsedToken)
+	}
+	return tokens, Error{}
+}
+
+// CreateConfigServiceToken create a config service token
+func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, name string) (models.ConfigServiceToken, Error) {
+	postBody := map[string]interface{}{"name": name}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.ConfigServiceToken{}, Error{Err: err, Message: "Invalid service token info"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens", params, body)
+	if err != nil {
+		return models.ConfigServiceToken{}, Error{Err: err, Message: "Unable to create service token", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.ConfigServiceToken{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	info := models.ParseConfigServiceToken(result["token"].(map[string]interface{}))
+	return info, Error{}
+}
+
+// DeleteConfigServiceToken delete a config service token
+func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, slug string) Error {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens/"+slug, params)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to delete service token", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return Error{}
+}

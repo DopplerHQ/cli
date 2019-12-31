@@ -95,3 +95,10 @@ type LogDiff struct {
 	Added   string `json:"added"`
 	Removed string `json:"removed"`
 }
+
+// ConfigServiceToken a service token
+type ConfigServiceToken struct {
+	Name      string `json:"name"`
+	Slug      string `json:"slug"`
+	CreatedAt string `json:"created_at"`
+}
