@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -67,7 +68,12 @@ func Cwd() string {
 
 // RunCommand runs the specified command
 func RunCommand(command []string, env []string) (int, error) {
-	cmd := exec.Command(command[0], command[1:]...)
+	shell := [2]string{"sh", "-c"}
+	if IsWindows() {
+		shell = [2]string{"cmd", "/C"}
+	}
+
+	cmd := exec.Command(shell[0], shell[1], strings.Join(command, " "))
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -214,4 +220,8 @@ func HostArch() string {
 	}
 
 	return arch
+}
+
+func IsWindows() bool {
+	return runtime.GOOS == "windows"
 }
