@@ -26,11 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type configsResponse struct {
-	Variables map[string]interface{}
-	Success   bool
-}
-
 var configsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List Enclave configs",
@@ -168,71 +163,6 @@ var configsUpdateCmd = &cobra.Command{
 	},
 }
 
-var configsLogsCmd = &cobra.Command{
-	Use:   "logs",
-	Short: "List config audit logs",
-	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-		// number := utils.GetIntFlag(cmd, "number", 16)
-
-		logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigLogs(logs, len(logs), jsonFlag)
-	},
-}
-
-var configsLogsGetCmd = &cobra.Command{
-	Use:   "get [log_id]",
-	Short: "Get config audit log",
-	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		log := cmd.Flag("log").Value.String()
-		if len(args) > 0 {
-			log = args[0]
-		}
-
-		configLog, err := http.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigLog(configLog, jsonFlag, true)
-	},
-}
-
-var configsLogsRollbackCmd = &cobra.Command{
-	Use:   "rollback [log_id]",
-	Short: "Rollback a config change",
-	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
-		localConfig := configuration.LocalConfig(cmd)
-
-		log := cmd.Flag("log").Value.String()
-		if len(args) > 0 {
-			log = args[0]
-		}
-
-		configLog, err := http.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !silent {
-			printer.ConfigLog(configLog, jsonFlag, true)
-		}
-	},
-}
-
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 
@@ -259,23 +189,6 @@ func init() {
 	configsDeleteCmd.Flags().Bool("silent", false, "do not output the response")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
-
-	configsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	// TODO: hide this flag until the api supports it
-	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
-	configsCmd.AddCommand(configsLogsCmd)
-
-	configsLogsGetCmd.Flags().String("log", "", "audit log id")
-	configsLogsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsCmd.AddCommand(configsLogsGetCmd)
-
-	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
-	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsRollbackCmd.Flags().Bool("silent", false, "do not output the response")
-	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
 }

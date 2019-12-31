@@ -76,13 +76,14 @@ func Table(headers []string, rows [][]string, options tableOptions) {
 // ConfigLogs print config logs
 func ConfigLogs(logs []models.ConfigLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+	logs = logs[0:maxLogs]
 
 	if jsonFlag {
-		JSON(logs[0:maxLogs])
+		JSON(logs)
 		return
 	}
 
-	for _, log := range logs[0:maxLogs] {
+	for _, log := range logs {
 		ConfigLog(log, false, false)
 	}
 }
@@ -127,13 +128,14 @@ func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 // ActivityLogs print activity logs
 func ActivityLogs(logs []models.ActivityLog, number int, jsonFlag bool) {
 	maxLogs := int(math.Min(float64(len(logs)), float64(number)))
+	logs = logs[0:maxLogs]
 
 	if jsonFlag {
-		JSON(logs[0:maxLogs])
+		JSON(logs)
 		return
 	}
 
-	for _, log := range logs[0:maxLogs] {
+	for _, log := range logs {
 		ActivityLog(log, false, false)
 	}
 }
@@ -506,4 +508,31 @@ func ConfigOptionNames(options []string, jsonFlag bool) {
 		rows = append(rows, []string{option})
 	}
 	Table([]string{"name"}, rows, TableOptions())
+}
+
+// ConfigServiceTokens print config service tokens
+func ConfigServiceTokens(tokens []models.ConfigServiceToken, number int, jsonFlag bool) {
+	maxTokens := int(math.Min(float64(len(tokens)), float64(number)))
+	tokens = tokens[0:maxTokens]
+
+	if jsonFlag {
+		JSON(tokens)
+		return
+	}
+
+	rows := [][]string{}
+	for _, token := range tokens {
+		rows = append(rows, []string{token.Name, token.Slug, token.CreatedAt})
+	}
+	Table([]string{"name", "slug", "created at"}, rows, TableOptions())
+}
+
+// ConfigServiceToken print config service token
+func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, diff bool) {
+	if jsonFlag {
+		JSON(token)
+		return
+	}
+
+	ConfigServiceTokens([]models.ConfigServiceToken{token}, 1, false)
 }

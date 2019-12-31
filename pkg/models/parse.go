@@ -210,3 +210,20 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 
 	return computed, nil
 }
+
+// ParseConfigServiceToken parse config service token
+func ParseConfigServiceToken(token map[string]interface{}) ConfigServiceToken {
+	var parsedToken ConfigServiceToken
+
+	if token["name"] != nil {
+		parsedToken.Name = token["name"].(string)
+	}
+	if token["slug"] != nil {
+		parsedToken.Slug = token["slug"].(string)
+	}
+	if token["created_at"] != nil {
+		parsedToken.CreatedAt = token["created_at"].(string)
+	}
+
+	return parsedToken
+}
