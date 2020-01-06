@@ -218,6 +218,9 @@ func ParseConfigServiceToken(token map[string]interface{}) ConfigServiceToken {
 	if token["name"] != nil {
 		parsedToken.Name = token["name"].(string)
 	}
+	if token["key"] != nil {
+		parsedToken.Token = token["key"].(string)
+	}
 	if token["slug"] != nil {
 		parsedToken.Slug = token["slug"].(string)
 	}

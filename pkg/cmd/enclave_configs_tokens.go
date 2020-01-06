@@ -38,7 +38,7 @@ var configsTokensCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.ConfigServiceTokens(tokens, len(tokens), jsonFlag)
+		printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
 	},
 }
 
@@ -62,7 +62,7 @@ var configsTokensGetCmd = &cobra.Command{
 
 		for _, token := range tokens {
 			if token.Slug == slug {
-				printer.ConfigServiceToken(token, jsonFlag)
+				printer.ConfigServiceTokenInfo(token, jsonFlag)
 				return
 			}
 		}
@@ -118,7 +118,7 @@ var configsTokensDeleteCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			printer.ConfigServiceTokens(tokens, len(tokens), jsonFlag)
+			printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
 		}
 	},
 }

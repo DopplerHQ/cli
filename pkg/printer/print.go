@@ -510,8 +510,8 @@ func ConfigOptionNames(options []string, jsonFlag bool) {
 	Table([]string{"name"}, rows, TableOptions())
 }
 
-// ConfigServiceTokens print config service tokens
-func ConfigServiceTokens(tokens []models.ConfigServiceToken, number int, jsonFlag bool) {
+// ConfigServiceTokensInfo print info of multiple config service tokens
+func ConfigServiceTokensInfo(tokens []models.ConfigServiceToken, number int, jsonFlag bool) {
 	maxTokens := int(math.Min(float64(len(tokens)), float64(number)))
 	tokens = tokens[0:maxTokens]
 
@@ -527,12 +527,23 @@ func ConfigServiceTokens(tokens []models.ConfigServiceToken, number int, jsonFla
 	Table([]string{"name", "slug", "created at"}, rows, TableOptions())
 }
 
-// ConfigServiceToken print config service token
+// ConfigServiceTokenInfo print config service token info
+func ConfigServiceTokenInfo(token models.ConfigServiceToken, jsonFlag bool) {
+	if jsonFlag {
+		JSON(token)
+		return
+	}
+
+	ConfigServiceTokensInfo([]models.ConfigServiceToken{token}, 1, false)
+}
+
+// ConfigServiceToken print config service token and its info
 func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool) {
 	if jsonFlag {
 		JSON(token)
 		return
 	}
 
-	ConfigServiceTokens([]models.ConfigServiceToken{token}, 1, false)
+	rows := [][]string{{token.Name, token.Token, token.Slug, token.CreatedAt}}
+	Table([]string{"name", "token", "slug", "created at"}, rows, TableOptions())
 }
