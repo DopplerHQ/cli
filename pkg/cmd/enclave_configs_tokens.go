@@ -62,7 +62,7 @@ var configsTokensGetCmd = &cobra.Command{
 
 		for _, token := range tokens {
 			if token.Slug == slug {
-				printer.ConfigServiceToken(token, jsonFlag, true)
+				printer.ConfigServiceToken(token, jsonFlag)
 				return
 			}
 		}
@@ -89,7 +89,7 @@ var configsTokensCreateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.ConfigServiceToken(configToken, jsonFlag, true)
+		printer.ConfigServiceToken(configToken, jsonFlag)
 	},
 }
 

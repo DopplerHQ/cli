@@ -528,7 +528,7 @@ func ConfigServiceTokens(tokens []models.ConfigServiceToken, number int, jsonFla
 }
 
 // ConfigServiceToken print config service token
-func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, diff bool) {
+func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool) {
 	if jsonFlag {
 		JSON(token)
 		return
