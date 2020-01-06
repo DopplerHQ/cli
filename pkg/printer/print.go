@@ -538,7 +538,12 @@ func ConfigServiceTokenInfo(token models.ConfigServiceToken, jsonFlag bool) {
 }
 
 // ConfigServiceToken print config service token and its info
-func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool) {
+func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool) {
+	if plain {
+		fmt.Println(token.Token)
+		return
+	}
+
 	if jsonFlag {
 		JSON(token)
 		return
