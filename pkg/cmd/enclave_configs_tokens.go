@@ -38,7 +38,7 @@ var configsTokensCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.ConfigServiceTokens(tokens, len(tokens), jsonFlag)
+		printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
 	},
 }
 
@@ -62,7 +62,7 @@ var configsTokensGetCmd = &cobra.Command{
 
 		for _, token := range tokens {
 			if token.Slug == slug {
-				printer.ConfigServiceToken(token, jsonFlag, true)
+				printer.ConfigServiceTokenInfo(token, jsonFlag)
 				return
 			}
 		}
@@ -77,6 +77,7 @@ var configsTokensCreateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
+		plain := utils.GetBoolFlag(cmd, "plain")
 		localConfig := configuration.LocalConfig(cmd)
 
 		name := cmd.Flag("name").Value.String()
@@ -89,7 +90,7 @@ var configsTokensCreateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.ConfigServiceToken(configToken, jsonFlag, true)
+		printer.ConfigServiceToken(configToken, jsonFlag, plain)
 	},
 }
 
@@ -118,7 +119,7 @@ var configsTokensDeleteCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			printer.ConfigServiceTokens(tokens, len(tokens), jsonFlag)
+			printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
 		}
 	},
 }
@@ -136,6 +137,7 @@ func init() {
 	configsTokensCreateCmd.Flags().String("name", "", "service token name")
 	configsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensDeleteCmd.Flags().String("slug", "", "service token slug")
