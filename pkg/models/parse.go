@@ -224,6 +224,15 @@ func ParseConfigServiceToken(token map[string]interface{}) ConfigServiceToken {
 	if token["slug"] != nil {
 		parsedToken.Slug = token["slug"].(string)
 	}
+	if token["project"] != nil {
+		parsedToken.Project = token["project"].(string)
+	}
+	if token["environment"] != nil {
+		parsedToken.Environment = token["environment"].(string)
+	}
+	if token["config"] != nil {
+		parsedToken.Config = token["config"].(string)
+	}
 	if token["created_at"] != nil {
 		parsedToken.CreatedAt = token["created_at"].(string)
 	}

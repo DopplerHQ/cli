@@ -522,9 +522,9 @@ func ConfigServiceTokensInfo(tokens []models.ConfigServiceToken, number int, jso
 
 	rows := [][]string{}
 	for _, token := range tokens {
-		rows = append(rows, []string{token.Name, token.Slug, token.CreatedAt})
+		rows = append(rows, []string{token.Name, token.Slug, token.Project, token.Environment, token.Config, token.CreatedAt})
 	}
-	Table([]string{"name", "slug", "created at"}, rows, TableOptions())
+	Table([]string{"name", "slug", "project", "environment", "config", "created at"}, rows, TableOptions())
 }
 
 // ConfigServiceTokenInfo print config service token info
@@ -549,6 +549,6 @@ func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bo
 		return
 	}
 
-	rows := [][]string{{token.Name, token.Token, token.Slug, token.CreatedAt}}
-	Table([]string{"name", "token", "slug", "created at"}, rows, TableOptions())
+	rows := [][]string{{token.Name, token.Token, token.Slug, token.Project, token.Environment, token.Config, token.CreatedAt}}
+	Table([]string{"name", "token", "slug", "project", "environment", "config", "created at"}, rows, TableOptions())
 }
