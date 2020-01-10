@@ -98,8 +98,11 @@ type LogDiff struct {
 
 // ConfigServiceToken a service token
 type ConfigServiceToken struct {
-	Name      string `json:"name"`
-	Token     string `json:"token"`
-	Slug      string `json:"slug"`
-	CreatedAt string `json:"created_at"`
+	Name        string `json:"name"`
+	Token       string `json:"token"`
+	Slug        string `json:"slug"`
+	CreatedAt   string `json:"created_at"`
+	Project     string `json:"project"`
+	Environment string `json:"environment"`
+	Config      string `json:"config"`
 }
