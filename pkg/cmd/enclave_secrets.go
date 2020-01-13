@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -164,24 +165,72 @@ doppler secrets delete api_key crypto_key`,
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's .env file",
-	Long: `Save your config's secrets to a .env file. The default filepath is ./doppler.env
+	Long: `Download your config's secrets for later use. Env and JSON format are supported.
 
-Ex: download the file to /root and name it test.env:
-doppler secrets download /root/test.env`,
+Examples:
+
+Save your secrets to /root/ in Env format
+$ doppler enclave secrets download /root/secrets.env
+$ doppler enclave secrets download --format=env /root/secrets.env
+
+Save your secrets to /root/ in JSON format
+$ doppler enclave secrets download --json /root/secrets.json
+$ doppler enclave secrets download --format=json /root/secrets.json
+
+Print your secrets in env format without writing to the filesystem
+$ doppler enclave secrets download --no-file
+$ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		metadata := !utils.GetBoolFlag(cmd, "no-metadata")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		saveFile := !utils.GetBoolFlag(cmd, "no-file")
+		jsonFlag := utils.OutputJSON
 
-		filePath := filepath.Join(".", "doppler.env")
-		if len(args) > 0 {
-			filePath = utils.GetFilePath(args[0], filePath)
+		format := cmd.Flag("format").Value.String()
+		if jsonFlag {
+			format = "json"
+		}
+
+		validFormats := []string{"json", "env"}
+		if format != "" {
+			isValid := false
+
+			for _, val := range validFormats {
+				if val == format {
+					isValid = true
+					break
+				}
+			}
+
+			if !isValid {
+				utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", strings.Join(validFormats, ", ")))
+			}
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, metadata)
+		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format == "json")
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		}
+
+		if !saveFile {
+			if !silent {
+				fmt.Println(string(body))
+			}
+
+			return
+		}
+
+		var filePath string
+		if len(args) > 0 {
+			filePath = utils.GetFilePath(args[0], "")
+			if filePath == "" {
+				utils.HandleError(errors.New("invalid file path"))
+			}
+		} else if format == "json" {
+			filePath = filepath.Join(".", "doppler.json")
+		} else {
+			filePath = filepath.Join(".", "doppler.env")
 		}
 
 		err := ioutil.WriteFile(filePath, body, 0600)
@@ -225,7 +274,8 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDownloadCmd.Flags().Bool("no-metadata", false, "do not add metadata to the downloaded file (helps cache busting)")
+	secretsDownloadCmd.Flags().String("format", "env", "output format. one of [json, env]")
+	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout; don't save to a file")
 	secretsDownloadCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
