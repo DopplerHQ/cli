@@ -193,7 +193,7 @@ func ParseActivityLog(log map[string]interface{}) ActivityLog {
 	return parsedLog
 }
 
-// ParseSecrets for specified project and config
+// ParseSecrets parse secrets
 func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	var result map[string]interface{}
 	err := json.Unmarshal(response, &result)

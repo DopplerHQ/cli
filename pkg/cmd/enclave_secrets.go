@@ -41,7 +41,6 @@ var secretsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
@@ -56,9 +55,9 @@ var secretsCmd = &cobra.Command{
 		}
 
 		if onlyNames {
-			printer.SecretsNames(secrets, jsonFlag, plain)
+			printer.SecretsNames(secrets, jsonFlag, false)
 		} else {
-			printer.Secrets(secrets, []string{}, jsonFlag, plain, raw)
+			printer.Secrets(secrets, []string{}, jsonFlag, false, raw)
 		}
 	},
 }
@@ -68,8 +67,8 @@ var secretsGetCmd = &cobra.Command{
 	Short: "Get the value of one or more secrets",
 	Long: `Get the value of one or more secrets.
 
-Ex: output the secrets "api_key" and "crypto_key":
-doppler secrets get api_key crypto_key`,
+Ex: output the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets get API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
@@ -95,12 +94,11 @@ var secretsSetCmd = &cobra.Command{
 	Short: "Set the value of one or more secrets",
 	Long: `Set the value of one or more secrets.
 
-Ex: set the secrets "api_key" and "crypto_key":
-doppler secrets set api_key=123 crypto_key=456`,
+Ex: set the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
@@ -123,7 +121,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		if !silent {
-			printer.Secrets(response, keys, jsonFlag, plain, raw)
+			printer.Secrets(response, keys, jsonFlag, false, raw)
 		}
 	},
 }
@@ -133,12 +131,11 @@ var secretsDeleteCmd = &cobra.Command{
 	Short: "Delete the value of one or more secrets",
 	Long: `Delete the value of one or more secrets.
 
-Ex: delete the secrets "api_key" and "crypto_key":
-doppler secrets delete api_key crypto_key`,
+Ex: delete the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
@@ -156,7 +153,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			if !silent {
-				printer.Secrets(response, []string{}, jsonFlag, plain, raw)
+				printer.Secrets(response, []string{}, jsonFlag, false, raw)
 			}
 		}
 	},
@@ -247,7 +244,6 @@ $ doppler enclave secrets download --format=env --no-file`,
 func init() {
 	secretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
@@ -259,14 +255,12 @@ func init() {
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsSetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDeleteCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
