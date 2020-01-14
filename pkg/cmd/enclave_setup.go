@@ -37,6 +37,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
+		scopedConfig := configuration.Get(scope)
 
 		flagsFromEnvironment := []string{}
 
@@ -57,14 +58,21 @@ var setupCmd = &cobra.Command{
 			}
 
 			var projectOptions []string
+			defaultOption := ""
 			for _, val := range projects {
 				option := val.Name + " (" + val.ID + ")"
 				projectOptions = append(projectOptions, option)
+
+				// reselect previously-configured value
+				if scopedConfig.EnclaveProject.Value == val.ID {
+					defaultOption = option
+				}
 			}
 
 			prompt := &survey.Select{
 				Message: "Select a project:",
 				Options: projectOptions,
+				Default: defaultOption,
 			}
 			err := survey.AskOne(prompt, &project)
 			if err != nil {
@@ -103,6 +111,7 @@ var setupCmd = &cobra.Command{
 			prompt := &survey.Select{
 				Message: "Select a config:",
 				Options: configOptions,
+				Default: scopedConfig.EnclaveConfig.Value,
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
