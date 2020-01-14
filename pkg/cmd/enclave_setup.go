@@ -35,6 +35,7 @@ var setupCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
+		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 		scopedConfig := configuration.Get(scope)
@@ -49,6 +50,10 @@ var setupCmd = &cobra.Command{
 			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_PROJECT")
 			project = localConfig.EnclaveProject.Value
 		default:
+			if !promptUser {
+				utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
+			}
+
 			projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 			if !httpErr.IsNil() {
 				utils.HandleError(httpErr.Unwrap(), httpErr.Message)
@@ -95,6 +100,10 @@ var setupCmd = &cobra.Command{
 			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_CONFIG")
 			config = localConfig.EnclaveConfig.Value
 		default:
+			if !promptUser {
+				utils.HandleError(errors.New("config must be specified via --config flag or ENCLAVE_CONFIG environment variable when using --no-prompt"))
+			}
+
 			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
 				utils.HandleError(apiError.Unwrap(), apiError.Message)
@@ -141,5 +150,6 @@ func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "do not output the response")
+	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	enclaveCmd.AddCommand(setupCmd)
 }
