@@ -15,7 +15,7 @@ limitations under the License.
 */
 package models
 
-// ComputedSecret holds computed and raw value
+// ComputedSecret holds all info about a secret
 type ComputedSecret struct {
 	Name          string `json:"name"`
 	RawValue      string `json:"raw"`

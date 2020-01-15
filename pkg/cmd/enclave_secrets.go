@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -40,7 +41,6 @@ var secretsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
 
@@ -55,9 +55,9 @@ var secretsCmd = &cobra.Command{
 		}
 
 		if onlyNames {
-			printer.SecretsNames(secrets, jsonFlag, plain)
+			printer.SecretsNames(secrets, jsonFlag, false)
 		} else {
-			printer.Secrets(secrets, []string{}, jsonFlag, plain, raw)
+			printer.Secrets(secrets, []string{}, jsonFlag, false, raw)
 		}
 	},
 }
@@ -67,8 +67,8 @@ var secretsGetCmd = &cobra.Command{
 	Short: "Get the value of one or more secrets",
 	Long: `Get the value of one or more secrets.
 
-Ex: output the secrets "api_key" and "crypto_key":
-doppler secrets get api_key crypto_key`,
+Ex: output the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets get API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
@@ -94,12 +94,11 @@ var secretsSetCmd = &cobra.Command{
 	Short: "Set the value of one or more secrets",
 	Long: `Set the value of one or more secrets.
 
-Ex: set the secrets "api_key" and "crypto_key":
-doppler secrets set api_key=123 crypto_key=456`,
+Ex: set the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 
@@ -122,7 +121,7 @@ doppler secrets set api_key=123 crypto_key=456`,
 		}
 
 		if !silent {
-			printer.Secrets(response, keys, jsonFlag, plain, raw)
+			printer.Secrets(response, keys, jsonFlag, false, raw)
 		}
 	},
 }
@@ -132,12 +131,11 @@ var secretsDeleteCmd = &cobra.Command{
 	Short: "Delete the value of one or more secrets",
 	Long: `Delete the value of one or more secrets.
 
-Ex: delete the secrets "api_key" and "crypto_key":
-doppler secrets delete api_key crypto_key`,
+Ex: delete the secrets "API_KEY" and "CRYPTO_KEY":
+doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
@@ -155,7 +153,7 @@ doppler secrets delete api_key crypto_key`,
 			}
 
 			if !silent {
-				printer.Secrets(response, []string{}, jsonFlag, plain, raw)
+				printer.Secrets(response, []string{}, jsonFlag, false, raw)
 			}
 		}
 	},
@@ -164,24 +162,72 @@ doppler secrets delete api_key crypto_key`,
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's .env file",
-	Long: `Save your config's secrets to a .env file. The default filepath is ./doppler.env
+	Long: `Download your config's secrets for later use. Env and JSON format are supported.
 
-Ex: download the file to /root and name it test.env:
-doppler secrets download /root/test.env`,
+Examples:
+
+Save your secrets to /root/ in Env format
+$ doppler enclave secrets download /root/secrets.env
+$ doppler enclave secrets download --format=env /root/secrets.env
+
+Save your secrets to /root/ in JSON format
+$ doppler enclave secrets download --json /root/secrets.json
+$ doppler enclave secrets download --format=json /root/secrets.json
+
+Print your secrets in env format without writing to the filesystem
+$ doppler enclave secrets download --no-file
+$ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		metadata := !utils.GetBoolFlag(cmd, "no-metadata")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		saveFile := !utils.GetBoolFlag(cmd, "no-file")
+		jsonFlag := utils.OutputJSON
 
-		filePath := filepath.Join(".", "doppler.env")
-		if len(args) > 0 {
-			filePath = utils.GetFilePath(args[0], filePath)
+		format := cmd.Flag("format").Value.String()
+		if jsonFlag {
+			format = "json"
+		}
+
+		validFormats := []string{"json", "env"}
+		if format != "" {
+			isValid := false
+
+			for _, val := range validFormats {
+				if val == format {
+					isValid = true
+					break
+				}
+			}
+
+			if !isValid {
+				utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", strings.Join(validFormats, ", ")))
+			}
 		}
 
 		localConfig := configuration.LocalConfig(cmd)
-		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, metadata)
+		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format == "json")
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		}
+
+		if !saveFile {
+			if !silent {
+				fmt.Println(string(body))
+			}
+
+			return
+		}
+
+		var filePath string
+		if len(args) > 0 {
+			filePath = utils.GetFilePath(args[0], "")
+			if filePath == "" {
+				utils.HandleError(errors.New("invalid file path"))
+			}
+		} else if format == "json" {
+			filePath = filepath.Join(".", "doppler.json")
+		} else {
+			filePath = filepath.Join(".", "doppler.env")
 		}
 
 		err := ioutil.WriteFile(filePath, body, 0600)
@@ -198,7 +244,6 @@ doppler secrets download /root/test.env`,
 func init() {
 	secretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
@@ -210,14 +255,12 @@ func init() {
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsSetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDeleteCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
@@ -225,7 +268,8 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDownloadCmd.Flags().Bool("no-metadata", false, "do not add metadata to the downloaded file (helps cache busting)")
+	secretsDownloadCmd.Flags().String("format", "env", "output format. one of [json, env]")
+	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout; don't save to a file")
 	secretsDownloadCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
