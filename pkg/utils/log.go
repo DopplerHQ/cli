@@ -18,6 +18,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/gookit/color.v1"
 	"os"
 	"runtime/debug"
 )
@@ -32,8 +33,13 @@ func Log(info string) {
 // LogDebug prints a debug message to stdout
 func LogDebug(s string) {
 	if Debug {
-		fmt.Println("DEBUG:", s)
+		fmt.Println(color.Blue.Render("Debug:"), s)
 	}
+}
+
+// LogError prints an error message to stderr
+func LogError(e error) {
+	fmt.Fprintln(os.Stderr, color.Red.Render("Error:"), e)
 }
 
 // HandleError prints the error and exits with code 1
@@ -54,11 +60,11 @@ func ErrExit(e error, exitCode int, messages ...string) {
 			fmt.Fprintln(os.Stderr, message)
 		}
 
-		fmt.Fprintln(os.Stderr, "Error:", e)
+		LogError(e)
 	}
 
 	if Debug {
-		fmt.Fprintln(os.Stderr, "\nStacktrace:")
+		fmt.Fprintln(os.Stderr, color.Red.Render("\nStacktrace:"))
 		debug.PrintStack()
 	}
 
