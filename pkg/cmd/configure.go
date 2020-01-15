@@ -58,7 +58,7 @@ and your config file. Flags have the highest priority; config file has the least
 		jsonFlag := utils.OutputJSON
 
 		config := configuration.LocalConfig(cmd)
-		printer.ScopedConfigSource(config, "", jsonFlag, true)
+		printer.ScopedConfigSource(config, jsonFlag, true)
 	},
 }
 

@@ -38,7 +38,8 @@ var rootCmd = &cobra.Command{
 		configuration.LoadConfig()
 
 		if utils.Debug {
-			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", false, true)
+			utils.LogDebug("Active configuration")
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
 
