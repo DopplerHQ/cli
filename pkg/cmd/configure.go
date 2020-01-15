@@ -25,6 +25,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
+	"gopkg.in/gookit/color.v1"
 )
 
 var configureCmd = &cobra.Command{
@@ -57,8 +58,12 @@ and your config file. Flags have the highest priority; config file has the least
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
+		if !jsonFlag {
+			color.Green.Printf("Configuration file: %s\n\n", configuration.UserConfigPath)
+		}
+
 		config := configuration.LocalConfig(cmd)
-		printer.ScopedConfigSource(config, "", jsonFlag, true)
+		printer.ScopedConfigSource(config, jsonFlag, true)
 	},
 }
 

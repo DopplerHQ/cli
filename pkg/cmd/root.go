@@ -38,7 +38,8 @@ var rootCmd = &cobra.Command{
 		configuration.LoadConfig()
 
 		if utils.Debug {
-			printer.ScopedConfigSource(configuration.LocalConfig(cmd), "DEBUG: Active configuration", false, true)
+			utils.LogDebug("Active configuration")
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
 
@@ -58,7 +59,7 @@ func checkVersion(command string, silent bool, plain bool, print bool) {
 		return
 	}
 
-	if !version.PerformVersionCheck || !print {
+	if !version.PerformVersionCheck || !print || version.IsDevelopment() {
 		return
 	}
 

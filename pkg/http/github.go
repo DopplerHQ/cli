@@ -18,8 +18,6 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -55,10 +53,10 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 	tag, err := getLatestVersion()
 	if err != nil {
 		if debug && !json {
-			fmt.Fprintln(os.Stderr, "Error:", err)
+			utils.LogError(err)
 		}
 		if !silent && !json {
-			fmt.Fprintln(os.Stderr, "Unable to check for CLI updates")
+			utils.LogError(errors.New("Unable to check for CLI updates"))
 		}
 		return models.VersionCheck{}
 	}

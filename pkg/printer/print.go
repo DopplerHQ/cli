@@ -371,11 +371,11 @@ func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 
 // ScopedConfig print scoped config
 func ScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
-	ScopedConfigSource(conf, "", jsonFlag, false)
+	ScopedConfigSource(conf, jsonFlag, false)
 }
 
 // ScopedConfigSource print scoped config with source
-func ScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, source bool) {
+func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 	pairs := models.ScopedPairs(&conf)
 
 	if jsonFlag {
@@ -419,9 +419,7 @@ func ScopedConfigSource(conf models.ScopedOptions, title string, jsonFlag bool, 
 		headers = append(headers, "source")
 	}
 
-	options := TableOptions()
-	options.Title = title
-	Table(headers, rows, options)
+	Table(headers, rows, TableOptions())
 }
 
 // ScopedConfigValues print scoped config value(s)
