@@ -59,7 +59,7 @@ func checkVersion(command string, silent bool, plain bool, print bool) {
 		return
 	}
 
-	if !version.PerformVersionCheck || !print {
+	if !version.PerformVersionCheck || !print || version.IsDevelopment() {
 		return
 	}
 
