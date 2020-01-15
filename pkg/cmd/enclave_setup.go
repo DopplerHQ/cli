@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -34,28 +35,49 @@ var setupCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
+		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
-		projects, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
+		scopedConfig := configuration.Get(scope)
 
-		if len(projects) == 0 {
-			utils.HandleError(errors.New("you do not belong to any projects"))
-		}
+		flagsFromEnvironment := []string{}
 
 		project := ""
-		if cmd.Flags().Changed("project") {
+		switch localConfig.EnclaveProject.Source {
+		case models.FlagSource.String():
 			project = localConfig.EnclaveProject.Value
-		} else {
-			var projectOptions []string
-			for _, val := range projects {
-				projectOptions = append(projectOptions, val.Name+" ("+val.ID+")")
+		case models.EnvironmentSource.String():
+			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_PROJECT")
+			project = localConfig.EnclaveProject.Value
+		default:
+			if !promptUser {
+				utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
 			}
+
+			projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+			if !httpErr.IsNil() {
+				utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+			}
+			if len(projects) == 0 {
+				utils.HandleError(errors.New("you do not have access to any projects"))
+			}
+
+			var projectOptions []string
+			defaultOption := ""
+			for _, val := range projects {
+				option := val.Name + " (" + val.ID + ")"
+				projectOptions = append(projectOptions, option)
+
+				// reselect previously-configured value
+				if scopedConfig.EnclaveProject.Value == val.ID {
+					defaultOption = option
+				}
+			}
+
 			prompt := &survey.Select{
 				Message: "Select a project:",
 				Options: projectOptions,
+				Default: defaultOption,
 			}
 			err := survey.AskOne(prompt, &project)
 			if err != nil {
@@ -71,14 +93,21 @@ var setupCmd = &cobra.Command{
 		}
 
 		config := ""
-		if cmd.Flags().Changed("config") {
+		switch localConfig.EnclaveConfig.Source {
+		case models.FlagSource.String():
 			config = localConfig.EnclaveConfig.Value
-		} else {
+		case models.EnvironmentSource.String():
+			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_CONFIG")
+			config = localConfig.EnclaveConfig.Value
+		default:
+			if !promptUser {
+				utils.HandleError(errors.New("config must be specified via --config flag or ENCLAVE_CONFIG environment variable when using --no-prompt"))
+			}
+
 			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 			if !apiError.IsNil() {
 				utils.HandleError(apiError.Unwrap(), apiError.Message)
 			}
-
 			if len(configs) == 0 {
 				utils.HandleError(errors.New("your project does not have any configs"))
 			}
@@ -87,9 +116,11 @@ var setupCmd = &cobra.Command{
 			for _, val := range configs {
 				configOptions = append(configOptions, val.Name)
 			}
+
 			prompt := &survey.Select{
 				Message: "Select a config:",
 				Options: configOptions,
+				Default: scopedConfig.EnclaveConfig.Value,
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
@@ -103,6 +134,10 @@ var setupCmd = &cobra.Command{
 		})
 
 		if !silent {
+			if len(flagsFromEnvironment) > 0 {
+				fmt.Println("Using " + strings.Join(flagsFromEnvironment, " and ") + " from the environment. To disable this, use --no-read-env.")
+			}
+
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
@@ -115,5 +150,6 @@ func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "do not output the response")
+	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	enclaveCmd.AddCommand(setupCmd)
 }
