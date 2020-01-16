@@ -30,6 +30,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// UserConfigDir path to the user's configuration directory
+var UserConfigDir string
+
 // UserConfigPath path to the user's configuration file
 var UserConfigPath string
 
@@ -37,12 +40,12 @@ var configContents models.ConfigFile
 
 func init() {
 	fileName := ".doppler.yaml"
-	configDir := utils.ConfigDir()
-	if utils.Exists(configDir) {
-		UserConfigPath = filepath.Join(configDir, fileName)
-	} else {
-		UserConfigPath = filepath.Join(utils.HomeDir(), fileName)
+	UserConfigDir = utils.ConfigDir()
+	if !utils.Exists(UserConfigDir) {
+		UserConfigDir = utils.HomeDir()
 	}
+
+	UserConfigPath = filepath.Join(UserConfigDir, fileName)
 
 	if !exists() {
 		if jsonExists() {
