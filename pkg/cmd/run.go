@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -34,6 +35,8 @@ import (
 
 // DefaultFallbackDir path to the default fallback dir
 var DefaultFallbackDir string
+
+var defaultFallbackFileMaxAge = 72 * time.Hour
 
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
@@ -98,6 +101,68 @@ doppler run --token=123 -- printenv`,
 		exitCode, err := utils.RunCommand(args, env)
 		if err != nil || exitCode != 0 {
 			utils.ErrExit(err, exitCode, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")))
+		}
+	},
+}
+
+var runCleanCmd = &cobra.Command{
+	Use:     "clean",
+	Short:   "Delete old fallback files",
+	Long:    `Delete fallback files older than the max age from the default directory`,
+	Example: `doppler run clean --max-age=24h`,
+	Args:    cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		maxAge := utils.GetDurationFlag(cmd, "max-age")
+		silent := utils.GetBoolFlag(cmd, "silent")
+
+		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", DefaultFallbackDir))
+
+		if _, err := os.Stat(DefaultFallbackDir); err != nil {
+			if os.IsNotExist(err) {
+				utils.LogDebug("Fallback directory does not exist")
+				if !silent {
+					fmt.Println("Nothing to clean")
+				}
+				return
+			}
+
+			utils.HandleError(err, "Unable to read fallback directory")
+		}
+
+		entries, err := ioutil.ReadDir(DefaultFallbackDir)
+		if err != nil {
+			utils.HandleError(err, "Unable to read fallback directory")
+		}
+
+		deleted := 0
+		now := time.Now()
+
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+
+			validUntil := entry.ModTime().Add(maxAge)
+			if validUntil.Before(now) {
+				file := filepath.Join(DefaultFallbackDir, entry.Name())
+				utils.LogDebug(fmt.Sprintf("Deleting fallback file %s", file))
+
+				err := os.Remove(file)
+				if err != nil {
+					// don't exit
+					fmt.Printf("Unable to delete fallback file %s\n", file)
+				} else {
+					deleted++
+				}
+			}
+		}
+
+		if !silent {
+			if deleted == 1 {
+				fmt.Printf("Deleted %d fallback file\n", deleted)
+			} else {
+				fmt.Printf("Deleted %d fallback files\n", deleted)
+			}
 		}
 	},
 }
@@ -213,4 +278,8 @@ func init() {
 	runCmd.Flags().Bool("fallback-only", false, "do not request secrets from Doppler. all secrets will be read from the fallback file")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	rootCmd.AddCommand(runCmd)
+
+	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
+	runCleanCmd.Flags().Bool("silent", false, "do not output the response")
+	runCmd.AddCommand(runCleanCmd)
 }
