@@ -128,6 +128,7 @@ var runCleanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		maxAge := utils.GetDurationFlag(cmd, "max-age")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		dryRun := utils.GetBoolFlag(cmd, "dry-run")
 
 		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", DefaultFallbackDir))
 
@@ -158,24 +159,33 @@ var runCleanCmd = &cobra.Command{
 
 			validUntil := entry.ModTime().Add(maxAge)
 			if validUntil.Before(now) {
-				file := filepath.Join(DefaultFallbackDir, entry.Name())
-				utils.LogDebug(fmt.Sprintf("Deleting fallback file %s", file))
-
-				err := os.Remove(file)
-				if err != nil {
-					// don't exit
-					fmt.Printf("Unable to delete fallback file %s\n", file)
-				} else {
+				if dryRun {
 					deleted++
+				} else {
+					file := filepath.Join(DefaultFallbackDir, entry.Name())
+					utils.LogDebug(fmt.Sprintf("Deleting fallback file %s", file))
+
+					err := os.Remove(file)
+					if err != nil {
+						// don't exit
+						fmt.Printf("Unable to delete fallback file %s\n", file)
+					} else {
+						deleted++
+					}
 				}
 			}
 		}
 
 		if !silent {
+			action := "Deleted"
+			if dryRun {
+				action = "Would have deleted"
+			}
+
 			if deleted == 1 {
-				fmt.Printf("Deleted %d fallback file\n", deleted)
+				fmt.Printf("%s %d fallback file\n", action, deleted)
 			} else {
-				fmt.Printf("Deleted %d fallback files\n", deleted)
+				fmt.Printf("%s %d fallback files\n", action, deleted)
 			}
 		}
 	},
@@ -321,5 +331,6 @@ func init() {
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
 	runCleanCmd.Flags().Bool("silent", false, "do not output the response")
+	runCleanCmd.Flags().Bool("dry-run", false, "print the results but do not delete anything")
 	runCmd.AddCommand(runCleanCmd)
 }
