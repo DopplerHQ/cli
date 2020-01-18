@@ -35,6 +35,7 @@ var rootCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		loadFlags(cmd)
+		configuration.Setup()
 		configuration.LoadConfig()
 
 		if utils.Debug {
@@ -82,7 +83,7 @@ func checkVersion(command string, silent bool, plain bool, print bool) {
 }
 
 func loadFlags(cmd *cobra.Command) {
-	configuration.UserConfigPath = utils.GetFlagIfChanged(cmd, "configuration", configuration.UserConfigPath)
+	configuration.UserConfigFile = utils.GetFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
 	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
@@ -124,7 +125,7 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
-	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigPath, "config file")
+	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
 }

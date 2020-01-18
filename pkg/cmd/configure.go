@@ -59,7 +59,7 @@ and your config file. Flags have the highest priority; config file has the least
 		jsonFlag := utils.OutputJSON
 
 		if !jsonFlag {
-			color.Green.Printf("Configuration file: %s\n\n", configuration.UserConfigPath)
+			color.Green.Printf("Configuration file: %s\n\n", configuration.UserConfigFile)
 		}
 
 		config := configuration.LocalConfig(cmd)

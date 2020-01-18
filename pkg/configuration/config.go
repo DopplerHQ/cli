@@ -30,27 +30,53 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// UserConfigDir path to the user's configuration directory
+// BaseConfigDir path to the base configuration directory (e.g. /home/user/.config)
+var BaseConfigDir string
+
+// UserConfigDir path to the user's configuration directory (e.g. /home/user/.config/doppler)
 var UserConfigDir string
 
-// UserConfigPath path to the user's configuration file
-var UserConfigPath string
+// UserConfigFile path to the user's configuration file (e.g. /home/user/.config/doppler/.doppler.yaml)
+var UserConfigFile string
 
+var configFileName = ".doppler.yaml"
+var defaultUserConfigFile string
 var configContents models.ConfigFile
 
 func init() {
-	fileName := ".doppler.yaml"
-	UserConfigDir = utils.ConfigDir()
-	if !utils.Exists(UserConfigDir) {
-		UserConfigDir = utils.HomeDir()
+	BaseConfigDir = utils.ConfigDir()
+	if !utils.Exists(BaseConfigDir) {
+		BaseConfigDir = utils.HomeDir()
 	}
 
-	UserConfigPath = filepath.Join(UserConfigDir, fileName)
+	UserConfigDir = filepath.Join(BaseConfigDir, "doppler")
+	UserConfigFile = filepath.Join(UserConfigDir, configFileName)
+	defaultUserConfigFile = UserConfigFile
+}
 
-	if !exists() {
-		if jsonExists() {
+// Setup the config directory and config file
+func Setup() {
+	utils.LogDebug(fmt.Sprintf("Using config file %s", UserConfigFile))
+
+	usingCustomConfigFile := UserConfigFile != defaultUserConfigFile
+	if !usingCustomConfigFile && !utils.Exists(UserConfigDir) {
+		utils.LogDebug("Creating the config directory")
+		err := os.Mkdir(UserConfigDir, 0700)
+		if err != nil {
+			utils.HandleError(err, fmt.Sprintf("Unable to create config directory %s", UserConfigDir))
+		}
+	}
+
+	if !utils.Exists(UserConfigFile) {
+		v1Config := filepath.Join(BaseConfigDir, configFileName)
+		if utils.Exists(v1Config) {
+			utils.LogDebug("Migrating the config from CLI v1")
+			os.Rename(v1Config, UserConfigFile)
+		} else if jsonExists() {
+			utils.LogDebug("Migrating the config from the Node CLI")
 			migrateJSONToYaml()
 		} else {
+			utils.LogDebug("Creating a new config file")
 			var blankConfig models.ConfigFile
 			writeConfig(blankConfig)
 		}
@@ -107,7 +133,7 @@ func Get(scope string) models.ScopedOptions {
 
 // LocalConfig retrieves the config for the scoped directory
 func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
-	// cli config file (lowest priority)
+	// config file (lowest priority)
 	localConfig := Get(cmd.Flag("scope").Value.String())
 
 	// environment variables
@@ -267,23 +293,19 @@ func writeConfig(config models.ConfigFile) {
 		utils.HandleError(err)
 	}
 
-	utils.LogDebug(fmt.Sprintf("Writing user config to %s", UserConfigPath))
-	err = ioutil.WriteFile(UserConfigPath, bytes, os.FileMode(0600))
+	utils.LogDebug(fmt.Sprintf("Writing user config to %s", UserConfigFile))
+	err = ioutil.WriteFile(UserConfigFile, bytes, os.FileMode(0600))
 	if err != nil {
 		utils.HandleError(err)
 	}
 }
 
-func exists() bool {
-	return utils.Exists(UserConfigPath)
-}
-
 func readConfig() models.ConfigFile {
-	utils.LogDebug(fmt.Sprintf("Reading user config from %s", UserConfigPath))
+	utils.LogDebug("Reading config file")
 
-	fileContents, err := ioutil.ReadFile(UserConfigPath)
+	fileContents, err := ioutil.ReadFile(UserConfigFile)
 	if err != nil {
-		utils.HandleError(err)
+		utils.HandleError(err, "Unable to read user config file")
 	}
 
 	var config models.ConfigFile
