@@ -268,7 +268,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", "env", "output format. one of [json, env]")
+	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout; don't save to a file")
 	secretsDownloadCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)

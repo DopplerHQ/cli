@@ -56,11 +56,19 @@ func ErrExit(e error, exitCode int, messages ...string) {
 		}
 		fmt.Fprintln(os.Stderr, string(resp))
 	} else {
-		for _, message := range messages {
-			fmt.Fprintln(os.Stderr, message)
+		if len(messages) > 0 {
+			for _, message := range messages[0:1] {
+				fmt.Fprintln(os.Stderr, message)
+			}
 		}
 
 		LogError(e)
+
+		if len(messages) > 0 {
+			for _, message := range messages[1:] {
+				fmt.Fprintln(os.Stderr, message)
+			}
+		}
 	}
 
 	if Debug {
