@@ -59,6 +59,12 @@ func Setup() {
 	utils.LogDebug(fmt.Sprintf("Using config file %s", UserConfigFile))
 
 	usingCustomConfigFile := UserConfigFile != defaultUserConfigFile
+	path1, err1 := filepath.Abs(UserConfigFile)
+	path2, err2 := filepath.Abs(defaultUserConfigFile)
+	if err1 == nil && err2 == nil {
+		usingCustomConfigFile = path1 != path2
+	}
+
 	if !usingCustomConfigFile && !utils.Exists(UserConfigDir) {
 		utils.LogDebug("Creating the config directory")
 		err := os.Mkdir(UserConfigDir, 0700)
