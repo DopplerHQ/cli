@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -60,6 +61,7 @@ doppler run --token=123 -- printenv`,
 			fallbackPath = utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
 		} else {
 			fallbackPath = defaultFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+
 			if enableFallback && !utils.Exists(DefaultFallbackDir) {
 				err := os.Mkdir(DefaultFallbackDir, 0700)
 				if err != nil && exitOnWriteFailure {
@@ -70,9 +72,21 @@ doppler run --token=123 -- printenv`,
 		if fallbackPath == "" {
 			utils.HandleError(errors.New("invalid fallback file path"), "")
 		}
+		absFallbackPath, err := filepath.Abs(fallbackPath)
+		if err == nil {
+			fallbackPath = absFallbackPath
+		}
+
+		passphrase := fmt.Sprintf("%s:%s:%s", localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+		if cmd.Flags().Changed("passphrase") {
+			passphrase = cmd.Flag("passphrase").Value.String()
+			if passphrase == "" {
+				utils.HandleError(errors.New("invalid passphrase"))
+			}
+		}
 
 		if !enableFallback {
-			flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure"}
+			flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
 			for _, flag := range flags {
 				if cmd.Flags().Changed(flag) {
 					utils.Log(fmt.Sprintf("Warning: --%s has no effect when the fallback file is disabled", flag))
@@ -80,7 +94,7 @@ doppler run --token=123 -- printenv`,
 			}
 		}
 
-		secrets := getSecrets(cmd, localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure)
+		secrets := getSecrets(cmd, localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
 
 		env := os.Environ()
 		excludedKeys := []string{"PATH", "PS1", "HOME"}
@@ -167,17 +181,17 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
-func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool) map[string]string {
+func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
 	fetchSecrets := !(enableFallback && fallbackOnly)
 	if !fetchSecrets {
-		return readFallbackFile(fallbackPath)
+		return readFallbackFile(fallbackPath, localConfig, passphrase)
 	}
 
 	response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true)
 	if httpErr != (http.Error{}) {
 		if enableFallback {
-			utils.LogDebug("Failed to fetch secrets from the API")
-			return readFallbackFile(fallbackPath)
+			fmt.Println("Failed to fetch secrets from the API")
+			return readFallbackFile(fallbackPath, localConfig, passphrase)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
@@ -187,15 +201,21 @@ func getSecrets(cmd *cobra.Command, localConfig models.ScopedOptions, enableFall
 	if err != nil {
 		if enableFallback {
 			utils.LogDebug("Failed to parse the API response")
-			return readFallbackFile(fallbackPath)
+			return readFallbackFile(fallbackPath, localConfig, passphrase)
 		}
 		utils.HandleError(err, "Unable to parse API response")
 	}
 
 	writeFallbackFile := enableFallback && !fallbackReadonly
 	if writeFallbackFile {
+		utils.LogDebug("Encrypting Enclave secrets")
+		encryptedResponse, err := crypto.Encrypt(passphrase, response)
+		if err != nil {
+			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
+		}
+
 		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackPath))
-		err := ioutil.WriteFile(fallbackPath, response, 0600)
+		err = ioutil.WriteFile(fallbackPath, []byte(encryptedResponse), 0600)
 		if err != nil {
 			utils.LogDebug("Failed to write to fallback file")
 			if exitOnWriteFailure {
@@ -232,7 +252,7 @@ func writeFailureMessage() []string {
 	return msg
 }
 
-func readFallbackFile(path string) map[string]string {
+func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase string) map[string]string {
 	utils.Log("Reading secrets from fallback file " + path)
 
 	if _, err := os.Stat(path); err != nil {
@@ -248,7 +268,26 @@ func readFallbackFile(path string) map[string]string {
 		utils.HandleError(err, "Unable to read fallback file")
 	}
 
-	secrets, err := parseSecrets(response)
+	utils.LogDebug("Decrypting fallback file")
+	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
+	if err != nil {
+		var msg []string
+		msg = append(msg, "")
+		msg = append(msg, color.Green.Render("Why did decryption fail?"))
+		msg = append(msg, "The most common cause of decryption failure is using an incorrect passphrase.")
+		msg = append(msg, "By default, the passphrase consists of your doppler token, enclave project, and enclave config.")
+		msg = append(msg, "")
+		msg = append(msg, color.Green.Render("What should I do now?"))
+		msg = append(msg, "Ensure you're using the same scope that you used when creating the fallback file.")
+		msg = append(msg, "Alternatively, specify the same token, project, and config using the appropriate flags (e.g. --project).")
+		msg = append(msg, "")
+		msg = append(msg, "Run 'doppler run --help' for more info.")
+		msg = append(msg, "")
+
+		utils.HandleError(err, "Unable to decrypt the fallback file", strings.Join(msg, "\n"))
+	}
+
+	secrets, err := parseSecrets([]byte(decryptedSecrets))
 	if err != nil {
 		utils.HandleError(err, "Unable to parse fallback file")
 	}
@@ -263,7 +302,7 @@ func parseSecrets(response []byte) (map[string]string, error) {
 }
 
 func defaultFallbackFile(project string, config string) string {
-	fileName := fmt.Sprintf(".run-%s.json", utils.Hash(fmt.Sprintf("%s:%s", project, config)))
+	fileName := fmt.Sprintf(".run-%s.json", crypto.Hash(fmt.Sprintf("%s:%s", project, config)))
 	return filepath.Join(DefaultFallbackDir, fileName)
 }
 
@@ -273,6 +312,7 @@ func init() {
 	runCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	runCmd.Flags().String("fallback", "", "write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
+	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	runCmd.Flags().Bool("no-fallback", false, "do not read or write a fallback file")
 	runCmd.Flags().Bool("fallback-readonly", false, "do not create or modify the fallback file")
 	runCmd.Flags().Bool("fallback-only", false, "do not request secrets from Doppler. all secrets will be read from the fallback file")
