@@ -29,3 +29,8 @@ jobs:
         args: release --snapshot --skip-publish --skip-sign
       env:
         GOPATH: ${{ runner.workspace }}
+    - uses: actions/upload-artifact@master
+      if: success()
+      with:
+        name: macOS build
+        path: ./dist/doppler_darwin_amd64/doppler
