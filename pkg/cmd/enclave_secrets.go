@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -230,9 +231,23 @@ $ doppler enclave secrets download --format=env --no-file`,
 			filePath = filepath.Join(".", "doppler.env")
 		}
 
-		err := ioutil.WriteFile(filePath, body, 0600)
+		utils.LogDebug("Encrypting Enclave secrets")
+		passphrase := fmt.Sprintf("%s:%s:%s", localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+		if cmd.Flags().Changed("passphrase") {
+			passphrase = cmd.Flag("passphrase").Value.String()
+			if passphrase == "" {
+				utils.HandleError(errors.New("invalid passphrase"))
+			}
+		}
+
+		encryptedBody, err := crypto.Encrypt(passphrase, body)
 		if err != nil {
-			utils.HandleError(err, "Unable to save file")
+			utils.HandleError(err, "Unable to encrypt your secrets. No file has been written.")
+		}
+
+		err = ioutil.WriteFile(filePath, []byte(encryptedBody), 0600)
+		if err != nil {
+			utils.HandleError(err, "Unable to write the secrets file")
 		}
 
 		if !silent {
@@ -269,6 +284,7 @@ func init() {
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
+	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. by default the passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout; don't save to a file")
 	secretsDownloadCmd.Flags().Bool("silent", false, "do not output the response")
 	secretsCmd.AddCommand(secretsDownloadCmd)

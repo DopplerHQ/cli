@@ -51,7 +51,7 @@ func HomeDir() string {
 
 // Exists whether path exists and the user has permission
 func Exists(path string) bool {
-	if _, err := os.Stat(path); os.IsNotExist(err) || os.IsPermission(err) {
+	if _, err := os.Stat(path); err != nil {
 		return false
 	}
 	return true
