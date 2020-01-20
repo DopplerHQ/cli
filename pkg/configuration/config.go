@@ -36,13 +36,21 @@ var UserConfigPath string
 var configContents models.ConfigFile
 
 func init() {
-	fileName := ".doppler.yaml"
 	configDir := utils.ConfigDir()
-	if utils.Exists(configDir) {
-		UserConfigPath = filepath.Join(configDir, fileName)
-	} else {
-		UserConfigPath = filepath.Join(utils.HomeDir(), fileName)
+	if !utils.Exists(configDir) {
+		configDir = utils.HomeDir()
 	}
+
+	fileName := ".doppler.yaml"
+	filePath := filepath.Join(configDir, fileName)
+
+	// support the cli v2 config path to allow downgrades
+	cliV2Path := filepath.Join(configDir, "doppler", fileName)
+	if !utils.Exists(filePath) && utils.Exists(cliV2Path) {
+		filePath = cliV2Path
+	}
+
+	UserConfigPath = filePath
 
 	if !exists() {
 		if jsonExists() {
