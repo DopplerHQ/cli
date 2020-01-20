@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -132,12 +133,16 @@ var loginCmd = &cobra.Command{
 		}
 
 		if prevConfig.Token.Value != "" {
-			utils.LogDebug("Revoking previous token")
-			_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
-			if !err.IsNil() {
-				utils.LogDebug("Failed to revoke token")
-			} else {
-				utils.LogDebug("Token successfully revoked")
+			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
+			newScope, err2 := filepath.Abs(scope)
+			if err1 == nil && err2 == nil && prevScope == newScope {
+				utils.LogDebug("Revoking previous token")
+				_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
+				if !err.IsNil() {
+					utils.LogDebug("Failed to revoke token")
+				} else {
+					utils.LogDebug("Token successfully revoked")
+				}
 			}
 		}
 	},
