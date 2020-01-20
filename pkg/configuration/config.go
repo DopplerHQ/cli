@@ -30,8 +30,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// BaseConfigDir path to the base configuration directory (e.g. /home/user/.config)
-var BaseConfigDir string
+// baseConfigDir path to the base configuration directory (e.g. /home/user/.config)
+var baseConfigDir string
 
 // UserConfigDir path to the user's configuration directory (e.g. /home/user/.config/doppler)
 var UserConfigDir string
@@ -40,33 +40,24 @@ var UserConfigDir string
 var UserConfigFile string
 
 var configFileName = ".doppler.yaml"
-var defaultUserConfigFile string
 var configContents models.ConfigFile
 
 func init() {
-	BaseConfigDir = utils.ConfigDir()
-	if !utils.Exists(BaseConfigDir) {
-		BaseConfigDir = utils.HomeDir()
+	baseConfigDir = utils.ConfigDir()
+	if !utils.Exists(baseConfigDir) {
+		baseConfigDir = utils.HomeDir()
 	}
 
-	UserConfigDir = filepath.Join(BaseConfigDir, "doppler")
+	UserConfigDir = filepath.Join(baseConfigDir, "doppler")
 	UserConfigFile = filepath.Join(UserConfigDir, configFileName)
-	defaultUserConfigFile = UserConfigFile
 }
 
 // Setup the config directory and config file
 func Setup() {
 	utils.LogDebug(fmt.Sprintf("Using config file %s", UserConfigFile))
 
-	usingCustomConfigFile := UserConfigFile != defaultUserConfigFile
-	path1, err1 := filepath.Abs(UserConfigFile)
-	path2, err2 := filepath.Abs(defaultUserConfigFile)
-	if err1 == nil && err2 == nil {
-		usingCustomConfigFile = path1 != path2
-	}
-
-	if !usingCustomConfigFile && !utils.Exists(UserConfigDir) {
-		utils.LogDebug("Creating the config directory")
+	if !utils.Exists(UserConfigDir) {
+		utils.LogDebug(fmt.Sprintf("Creating the config directory %s", UserConfigDir))
 		err := os.Mkdir(UserConfigDir, 0700)
 		if err != nil {
 			utils.HandleError(err, fmt.Sprintf("Unable to create config directory %s", UserConfigDir))
@@ -74,7 +65,7 @@ func Setup() {
 	}
 
 	if !utils.Exists(UserConfigFile) {
-		v1Config := filepath.Join(BaseConfigDir, configFileName)
+		v1Config := filepath.Join(baseConfigDir, configFileName)
 		if utils.Exists(v1Config) {
 			utils.LogDebug("Migrating the config from CLI v1")
 			os.Rename(v1Config, UserConfigFile)

@@ -34,18 +34,17 @@ var logoutCmd = &cobra.Command{
 Your auth token will be immediately revoked.
 This is an alias of the "login revoke" command.`,
 	Args: cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		localConfig := configuration.LocalConfig(cmd)
-		silent := utils.GetBoolFlag(cmd, "silent")
-		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
-		verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
-		token := localConfig.Token.Value
-
-		revokeToken(localConfig.APIHost.Value, token, silent, verifyTLS, updateConfig)
-	},
+	Run:  revokeToken,
 }
 
-func revokeToken(host string, token string, silent bool, verifyTLS bool, updateConfig bool) {
+func revokeToken(cmd *cobra.Command, args []string) {
+	localConfig := configuration.LocalConfig(cmd)
+	silent := utils.GetBoolFlag(cmd, "silent")
+	updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
+	verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
+	yes := utils.GetBoolFlag(cmd, "yes")
+	token := localConfig.Token.Value
+
 	if token == "" {
 		if !silent {
 			fmt.Println("You must provide an auth token")
@@ -53,7 +52,11 @@ func revokeToken(host string, token string, silent bool, verifyTLS bool, updateC
 		os.Exit(1)
 	}
 
-	_, err := http.RevokeAuthToken(host, verifyTLS, token)
+	if !yes && !utils.ConfirmationPrompt(fmt.Sprintf("Revoke auth token scoped to %s?", localConfig.Token.Scope), false) {
+		return
+	}
+
+	_, err := http.RevokeAuthToken(localConfig.APIHost.Value, verifyTLS, token)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -76,5 +79,6 @@ func init() {
 	logoutCmd.Flags().Bool("silent", false, "do not output any text")
 	logoutCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	logoutCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
+	logoutCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	rootCmd.AddCommand(logoutCmd)
 }

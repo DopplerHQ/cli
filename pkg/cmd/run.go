@@ -70,7 +70,7 @@ doppler run --token=123 -- printenv`,
 			}
 		}
 		if fallbackPath == "" {
-			utils.HandleError(errors.New("invalid fallback file path"), "")
+			utils.HandleError(errors.New("invalid fallback file path"))
 		}
 		absFallbackPath, err := filepath.Abs(fallbackPath)
 		if err == nil {

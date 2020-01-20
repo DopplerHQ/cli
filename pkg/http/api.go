@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/models"
-	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 )
 
@@ -130,8 +129,6 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
-
-	utils.LogDebug("Revoked auth token")
 
 	return result, Error{}
 }
