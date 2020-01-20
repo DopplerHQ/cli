@@ -163,7 +163,7 @@ func ActivityLog(log models.ActivityLog, jsonFlag bool, diff bool) {
 func JSON(structure interface{}) {
 	resp, err := json.Marshal(structure)
 	if err != nil {
-		utils.HandleError(err, "")
+		utils.HandleError(err)
 	}
 
 	fmt.Println(string(resp))

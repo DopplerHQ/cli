@@ -61,7 +61,7 @@ func Exists(path string) bool {
 func Cwd() string {
 	cwd, err := os.Executable()
 	if err != nil {
-		HandleError(err, "")
+		HandleError(err)
 	}
 	return filepath.Dir(cwd)
 }
@@ -103,7 +103,7 @@ func GetBool(value string, def bool) bool {
 func GetBoolFlag(cmd *cobra.Command, flag string) bool {
 	b, err := strconv.ParseBool(cmd.Flag(flag).Value.String())
 	if err != nil {
-		HandleError(err, "")
+		HandleError(err)
 	}
 	return b
 }
@@ -132,7 +132,7 @@ func GetFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
 	if err != nil {
-		HandleError(err, "")
+		HandleError(err)
 	}
 
 	return int(number)
@@ -142,7 +142,7 @@ func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 func GetDurationFlag(cmd *cobra.Command, flag string) time.Duration {
 	value, err := time.ParseDuration(cmd.Flag(flag).Value.String())
 	if err != nil {
-		HandleError(err, "")
+		HandleError(err)
 	}
 	return value
 }
