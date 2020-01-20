@@ -199,15 +199,7 @@ var loginRevokeCmd = &cobra.Command{
 Your auth token will be immediately revoked.
 This is an alias of the "logout" command.`,
 	Args: cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		localConfig := configuration.LocalConfig(cmd)
-		silent := utils.GetBoolFlag(cmd, "silent")
-		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
-		verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
-		token := localConfig.Token.Value
-
-		revokeToken(localConfig.APIHost.Value, token, silent, verifyTLS, updateConfig)
-	},
+	Run:  revokeToken,
 }
 
 func init() {
@@ -223,6 +215,7 @@ func init() {
 	loginRevokeCmd.Flags().Bool("silent", false, "do not output any text")
 	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
+	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	loginCmd.AddCommand(loginRevokeCmd)
 
 	rootCmd.AddCommand(loginCmd)
