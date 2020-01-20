@@ -222,6 +222,7 @@ func HostArch() string {
 	return arch
 }
 
+// IsWindows whether the host os is Windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
