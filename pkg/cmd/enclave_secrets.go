@@ -56,7 +56,7 @@ var secretsCmd = &cobra.Command{
 		}
 
 		if onlyNames {
-			printer.SecretsNames(secrets, jsonFlag, false)
+			printer.SecretsNames(secrets, jsonFlag)
 		} else {
 			printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false)
 		}

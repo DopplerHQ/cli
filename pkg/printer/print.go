@@ -327,8 +327,8 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	Table(headers, rows, TableOptions())
 }
 
-// SecretsNames print secrets
-func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain bool) {
+// SecretsNames print secrets names
+func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool) {
 	var secretsNames []string
 	for name := range secrets {
 		secretsNames = append(secretsNames, name)
@@ -342,23 +342,6 @@ func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain
 		}
 
 		JSON(secretsMap)
-		return
-	}
-
-	if plain {
-		sbEmpty := true
-		var sb strings.Builder
-		for _, name := range secretsNames {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
-			sb.WriteString(name)
-		}
-
-		fmt.Println(sb.String())
 		return
 	}
 
