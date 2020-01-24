@@ -103,11 +103,12 @@ doppler configure get key otherkey`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
+		copy := utils.GetBoolFlag(cmd, "copy")
 
 		scope := cmd.Flag("scope").Value.String()
 		conf := configuration.Get(scope)
 
-		printer.ScopedConfigValues(conf, args, models.ScopedPairs(&conf), jsonFlag, plain)
+		printer.ScopedConfigValues(conf, args, models.ScopedPairs(&conf), jsonFlag, plain, copy)
 	},
 }
 
@@ -204,6 +205,7 @@ func init() {
 	configureCmd.AddCommand(configureOptionsCmd)
 
 	configureGetCmd.Flags().Bool("plain", false, "print values without formatting. values will be printed in the same order as specified")
+	configureGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	configureCmd.AddCommand(configureGetCmd)
 
 	configureSetCmd.Flags().Bool("silent", false, "disable text output")

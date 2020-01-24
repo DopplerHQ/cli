@@ -141,7 +141,7 @@ var setupCmd = &cobra.Command{
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
-			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false)
+			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false, false)
 		}
 	},
 }

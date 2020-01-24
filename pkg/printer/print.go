@@ -247,12 +247,23 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 }
 
 // Secrets print secrets
-func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
+func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool, copy bool) {
 	if len(secretsToPrint) == 0 {
 		for name := range secrets {
 			secretsToPrint = append(secretsToPrint, name)
 		}
 		sort.Strings(secretsToPrint)
+	}
+
+	if copy {
+		vals := []string{}
+		for _, name := range secretsToPrint {
+			if secrets[name] != (models.ComputedSecret{}) {
+				vals = append(vals, secrets[name].ComputedValue)
+			}
+		}
+
+		utils.CopyToClipboard(strings.Join(vals, "\n"))
 	}
 
 	if jsonFlag {
@@ -423,25 +434,24 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 }
 
 // ScopedConfigValues print scoped config value(s)
-func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[string]*models.ScopedOption, jsonFlag bool, plain bool) {
-	if plain {
-		sbEmpty := true
-		var sb strings.Builder
-
+func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[string]*models.ScopedOption, jsonFlag bool, plain bool, copy bool) {
+	if plain || copy {
+		vals := []string{}
 		for _, arg := range args {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
+			if option, exists := values[arg]; exists {
+				vals = append(vals, option.Value)
+			}
 			}
 
-			if option, exists := values[arg]; exists {
-				sb.WriteString(option.Value)
-			}
+		print := strings.Join(vals, "\n")
+		if copy {
+			utils.CopyToClipboard(print)
 		}
 
-		fmt.Println(sb.String())
+		if plain {
+			fmt.Println(print)
 		return
+	}
 	}
 
 	if jsonFlag {
@@ -536,7 +546,11 @@ func ConfigServiceTokenInfo(token models.ConfigServiceToken, jsonFlag bool) {
 }
 
 // ConfigServiceToken print config service token and its info
-func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool) {
+func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool, copy bool) {
+	if copy {
+		utils.CopyToClipboard(token.Token)
+	}
+
 	if plain {
 		fmt.Println(token.Token)
 		return

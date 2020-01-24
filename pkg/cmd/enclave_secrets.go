@@ -58,7 +58,7 @@ var secretsCmd = &cobra.Command{
 		if onlyNames {
 			printer.SecretsNames(secrets, jsonFlag, false)
 		} else {
-			printer.Secrets(secrets, []string{}, jsonFlag, false, raw)
+			printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false)
 		}
 	},
 }
@@ -74,6 +74,7 @@ doppler enclave secrets get API_KEY CRYPTO_KEY`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
+		copy := utils.GetBoolFlag(cmd, "copy")
 		raw := utils.GetBoolFlag(cmd, "raw")
 
 		localConfig := configuration.LocalConfig(cmd)
@@ -86,7 +87,7 @@ doppler enclave secrets get API_KEY CRYPTO_KEY`,
 			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
-		printer.Secrets(secrets, args, jsonFlag, plain, raw)
+		printer.Secrets(secrets, args, jsonFlag, plain, raw, copy)
 	},
 }
 
@@ -122,7 +123,7 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 		}
 
 		if !silent {
-			printer.Secrets(response, keys, jsonFlag, false, raw)
+			printer.Secrets(response, keys, jsonFlag, false, raw, false)
 		}
 	},
 }
@@ -154,7 +155,7 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 			}
 
 			if !silent {
-				printer.Secrets(response, []string{}, jsonFlag, false, raw)
+				printer.Secrets(response, []string{}, jsonFlag, false, raw, false)
 			}
 		}
 	},
@@ -265,6 +266,7 @@ func init() {
 	secretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
+	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.AddCommand(secretsGetCmd)
 
