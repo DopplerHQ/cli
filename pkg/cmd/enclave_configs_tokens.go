@@ -95,9 +95,10 @@ var configsTokensCreateCmd = &cobra.Command{
 	},
 }
 
-var configsTokensDeleteCmd = &cobra.Command{
-	Use:   "delete [slug]",
-	Short: "Delete a service token from a config",
+var configsTokensRevokeCmd = &cobra.Command{
+	Use:     "revoke [slug]",
+	Aliases: []string{"delete"},
+	Short:   "Revoke a service token from a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
@@ -142,11 +143,11 @@ func init() {
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
-	configsTokensDeleteCmd.Flags().String("slug", "", "service token slug")
-	configsTokensDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensDeleteCmd.Flags().Bool("silent", false, "disable text output")
-	configsTokensCmd.AddCommand(configsTokensDeleteCmd)
+	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
+	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensRevokeCmd.Flags().Bool("silent", false, "disable text output")
+	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
 }
