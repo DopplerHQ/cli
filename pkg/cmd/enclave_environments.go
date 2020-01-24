@@ -31,10 +31,13 @@ var environmentsCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
+		utils.RequireValue("project", project)
 
 		info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
@@ -53,6 +56,10 @@ var environmentsGetCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 		environment := args[0]
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("environment", environment)
 
 		info, err := http.GetEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment)
 		if !err.IsNil() {

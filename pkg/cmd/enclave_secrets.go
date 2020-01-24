@@ -44,8 +44,12 @@ var secretsCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		raw := utils.GetBoolFlag(cmd, "raw")
 		onlyNames := utils.GetBoolFlag(cmd, "only-names")
-
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
+
 		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -76,8 +80,12 @@ doppler enclave secrets get API_KEY CRYPTO_KEY`,
 		plain := utils.GetBoolFlag(cmd, "plain")
 		copy := utils.GetBoolFlag(cmd, "copy")
 		raw := utils.GetBoolFlag(cmd, "raw")
-
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
+
 		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -103,6 +111,11 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 		jsonFlag := utils.OutputJSON
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		secrets := map[string]interface{}{}
 		var keys []string
@@ -116,7 +129,6 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 			}
 		}
 
-		localConfig := configuration.LocalConfig(cmd)
 		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -141,6 +153,11 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 		raw := utils.GetBoolFlag(cmd, "raw")
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		if yes || utils.ConfirmationPrompt("Delete secret(s)", false) {
 			secrets := map[string]interface{}{}
@@ -148,7 +165,6 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 				secrets[arg] = nil
 			}
 
-			localConfig := configuration.LocalConfig(cmd)
 			response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
@@ -184,6 +200,11 @@ $ doppler enclave secrets download --format=env --no-file`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 		saveFile := !utils.GetBoolFlag(cmd, "no-file")
 		jsonFlag := utils.OutputJSON
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		format := cmd.Flag("format").Value.String()
 		if jsonFlag {
@@ -206,7 +227,6 @@ $ doppler enclave secrets download --format=env --no-file`,
 			}
 		}
 
-		localConfig := configuration.LocalConfig(cmd)
 		body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format == "json")
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)

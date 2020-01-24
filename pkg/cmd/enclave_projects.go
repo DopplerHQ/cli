@@ -16,8 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
-
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -31,8 +29,10 @@ var projectsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -50,10 +50,13 @@ var projectsGetCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
+		utils.RequireValue("project", project)
 
 		info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
@@ -72,16 +75,17 @@ var projectsCreateCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		description := cmd.Flag("description").Value.String()
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("description", description)
 
 		name := cmd.Flag("name").Value.String()
 		if len(args) > 0 {
 			name = args[0]
 		}
-		if name == "" {
-			utils.HandleError(errors.New("you must provide a name"))
-		}
+		utils.RequireValue("name", name)
 
-		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -103,10 +107,13 @@ var projectsDeleteCmd = &cobra.Command{
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
+		utils.RequireValue("project", project)
 
 		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
 			err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
@@ -133,15 +140,19 @@ var projectsUpdateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
+		name := cmd.Flag("name").Value.String()
+		description := cmd.Flag("description").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("name", name)
+		utils.RequireValue("description", description)
 
 		project := localConfig.EnclaveProject.Value
 		if len(args) > 0 {
 			project = args[0]
 		}
-
-		name := cmd.Flag("name").Value.String()
-		description := cmd.Flag("description").Value.String()
+		utils.RequireValue("project", project)
 
 		info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
 		if !err.IsNil() {
