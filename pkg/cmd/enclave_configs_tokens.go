@@ -78,6 +78,7 @@ var configsTokensCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		plain := utils.GetBoolFlag(cmd, "plain")
+		copy := utils.GetBoolFlag(cmd, "copy")
 		localConfig := configuration.LocalConfig(cmd)
 
 		name := cmd.Flag("name").Value.String()
@@ -90,13 +91,14 @@ var configsTokensCreateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		printer.ConfigServiceToken(configToken, jsonFlag, plain)
+		printer.ConfigServiceToken(configToken, jsonFlag, plain, copy)
 	},
 }
 
-var configsTokensDeleteCmd = &cobra.Command{
-	Use:   "delete [slug]",
-	Short: "Delete a service token from a config",
+var configsTokensRevokeCmd = &cobra.Command{
+	Use:     "revoke [slug]",
+	Aliases: []string{"delete"},
+	Short:   "Revoke a service token from a config",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
@@ -138,13 +140,14 @@ func init() {
 	configsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
+	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
-	configsTokensDeleteCmd.Flags().String("slug", "", "service token slug")
-	configsTokensDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensDeleteCmd.Flags().Bool("silent", false, "do not output the response")
-	configsTokensCmd.AddCommand(configsTokensDeleteCmd)
+	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
+	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensRevokeCmd.Flags().Bool("silent", false, "disable text output")
+	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
 }

@@ -174,19 +174,19 @@ func init() {
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
 	configsCreateCmd.Flags().Bool("no-defaults", false, "do not populate config with environment's default secrets")
-	configsCreateCmd.Flags().Bool("silent", false, "do not output the response")
+	configsCreateCmd.Flags().Bool("silent", false, "disable text output")
 	configsCmd.AddCommand(configsCreateCmd)
 
 	configsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsUpdateCmd.Flags().String("name", "", "config name")
-	configsUpdateCmd.Flags().Bool("silent", false, "do not output the response")
+	configsUpdateCmd.Flags().Bool("silent", false, "disable text output")
 	configsUpdateCmd.MarkFlagRequired("name")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsDeleteCmd.Flags().Bool("silent", false, "do not output the response")
+	configsDeleteCmd.Flags().Bool("silent", false, "disable text output")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 

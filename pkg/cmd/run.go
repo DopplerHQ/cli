@@ -45,9 +45,8 @@ var runCmd = &cobra.Command{
 	Long: `Run a command with secrets injected into the environment
 
 To view the CLI's active configuration, run ` + "`doppler configure debug`",
-	Example: `doppler run printenv
-doppler run -- printenv
-doppler run --token=123 -- printenv`,
+	Example: `doppler run -- YOUR_COMMAND
+doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
@@ -321,16 +320,16 @@ func init() {
 
 	runCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	runCmd.Flags().String("fallback", "", "write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
+	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
 	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
-	runCmd.Flags().Bool("no-fallback", false, "do not read or write a fallback file")
-	runCmd.Flags().Bool("fallback-readonly", false, "do not create or modify the fallback file")
-	runCmd.Flags().Bool("fallback-only", false, "do not request secrets from Doppler. all secrets will be read from the fallback file")
+	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
+	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
+	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	rootCmd.AddCommand(runCmd)
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
-	runCleanCmd.Flags().Bool("silent", false, "do not output the response")
-	runCleanCmd.Flags().Bool("dry-run", false, "print the results but do not delete anything")
+	runCleanCmd.Flags().Bool("silent", false, "disable text output")
+	runCleanCmd.Flags().Bool("dry-run", false, "do not delete anything, print what would have happened")
 	runCmd.AddCommand(runCleanCmd)
 }

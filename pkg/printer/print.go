@@ -247,12 +247,23 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 }
 
 // Secrets print secrets
-func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool) {
+func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool, copy bool) {
 	if len(secretsToPrint) == 0 {
 		for name := range secrets {
 			secretsToPrint = append(secretsToPrint, name)
 		}
 		sort.Strings(secretsToPrint)
+	}
+
+	if copy {
+		vals := []string{}
+		for _, name := range secretsToPrint {
+			if secrets[name] != (models.ComputedSecret{}) {
+				vals = append(vals, secrets[name].ComputedValue)
+			}
+		}
+
+		utils.CopyToClipboard(strings.Join(vals, "\n"))
 	}
 
 	if jsonFlag {
@@ -278,23 +289,16 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	}
 
 	if plain {
-		sbEmpty := true
-		var sb strings.Builder
+		vals := []string{}
 		for _, secret := range matchedSecrets {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
 			if raw {
-				sb.WriteString(secret.RawValue)
+				vals = append(vals, secret.RawValue)
 			} else {
-				sb.WriteString(secret.ComputedValue)
+				vals = append(vals, secret.ComputedValue)
 			}
 		}
 
-		fmt.Println(sb.String())
+		fmt.Println(strings.Join(vals, "\n"))
 		return
 	}
 
@@ -316,8 +320,8 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	Table(headers, rows, TableOptions())
 }
 
-// SecretsNames print secrets
-func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain bool) {
+// SecretsNames print secrets names
+func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool) {
 	var secretsNames []string
 	for name := range secrets {
 		secretsNames = append(secretsNames, name)
@@ -331,23 +335,6 @@ func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool, plain
 		}
 
 		JSON(secretsMap)
-		return
-	}
-
-	if plain {
-		sbEmpty := true
-		var sb strings.Builder
-		for _, name := range secretsNames {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
-			sb.WriteString(name)
-		}
-
-		fmt.Println(sb.String())
 		return
 	}
 
@@ -423,25 +410,24 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 }
 
 // ScopedConfigValues print scoped config value(s)
-func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[string]*models.ScopedOption, jsonFlag bool, plain bool) {
-	if plain {
-		sbEmpty := true
-		var sb strings.Builder
-
+func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[string]*models.ScopedOption, jsonFlag bool, plain bool, copy bool) {
+	if plain || copy {
+		vals := []string{}
 		for _, arg := range args {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
 			if option, exists := values[arg]; exists {
-				sb.WriteString(option.Value)
+				vals = append(vals, option.Value)
 			}
 		}
 
-		fmt.Println(sb.String())
-		return
+		print := strings.Join(vals, "\n")
+		if copy {
+			utils.CopyToClipboard(print)
+		}
+
+		if plain {
+			fmt.Println(print)
+			return
+		}
 	}
 
 	if jsonFlag {
@@ -536,7 +522,11 @@ func ConfigServiceTokenInfo(token models.ConfigServiceToken, jsonFlag bool) {
 }
 
 // ConfigServiceToken print config service token and its info
-func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool) {
+func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool, copy bool) {
+	if copy {
+		utils.CopyToClipboard(token.Token)
+	}
+
 	if plain {
 		fmt.Println(token.Token)
 		return
