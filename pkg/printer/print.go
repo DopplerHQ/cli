@@ -289,23 +289,16 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	}
 
 	if plain {
-		sbEmpty := true
-		var sb strings.Builder
+		vals := []string{}
 		for _, secret := range matchedSecrets {
-			if sbEmpty {
-				sbEmpty = false
-			} else {
-				sb.WriteString("\n")
-			}
-
 			if raw {
-				sb.WriteString(secret.RawValue)
+				vals = append(vals, secret.RawValue)
 			} else {
-				sb.WriteString(secret.ComputedValue)
+				vals = append(vals, secret.ComputedValue)
 			}
 		}
 
-		fmt.Println(sb.String())
+		fmt.Println(strings.Join(vals, "\n"))
 		return
 	}
 
@@ -424,7 +417,7 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 			if option, exists := values[arg]; exists {
 				vals = append(vals, option.Value)
 			}
-			}
+		}
 
 		print := strings.Join(vals, "\n")
 		if copy {
@@ -433,8 +426,8 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 
 		if plain {
 			fmt.Println(print)
-		return
-	}
+			return
+		}
 	}
 
 	if jsonFlag {
