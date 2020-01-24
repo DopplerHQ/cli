@@ -149,7 +149,7 @@ var setupCmd = &cobra.Command{
 func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	setupCmd.Flags().Bool("silent", false, "do not output the response")
+	setupCmd.Flags().Bool("silent", false, "disable text output")
 	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	enclaveCmd.AddCommand(setupCmd)
 }

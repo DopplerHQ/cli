@@ -143,7 +143,7 @@ func init() {
 	configsTokensDeleteCmd.Flags().String("slug", "", "service token slug")
 	configsTokensDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsTokensDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensDeleteCmd.Flags().Bool("silent", false, "do not output the response")
+	configsTokensDeleteCmd.Flags().Bool("silent", false, "disable text output")
 	configsTokensCmd.AddCommand(configsTokensDeleteCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
