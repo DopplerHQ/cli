@@ -107,7 +107,7 @@ func RunCommand(command []string, env []string) (int, error) {
 		shell = [2]string{"cmd", "/C"}
 	}
 
-	cmd := exec.Command(shell[0], shell[1], strings.Join(command, " "))
+	cmd := exec.Command(shell[0], shell[1], strings.Join(command, " ")) // #nosec G204
 	cmd.Env = env
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -243,14 +243,20 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 		Default: defaultValue,
 	}
 
-	survey.AskOne(prompt, &confirm)
+	err := survey.AskOne(prompt, &confirm)
+	if err != nil {
+		HandleError(err)
+	}
 	return confirm
 }
 
 // CopyToClipboard copies text to the user's clipboard
 func CopyToClipboard(text string) {
 	if !clipboard.Unsupported {
-		clipboard.WriteAll(text)
+		err := clipboard.WriteAll(text)
+		if err != nil {
+			HandleError(err, "Unable to copy to clipboard")
+		}
 	}
 }
 

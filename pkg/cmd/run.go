@@ -275,7 +275,7 @@ func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase 
 		utils.HandleError(err, "Unable to read fallback file")
 	}
 
-	response, err := ioutil.ReadFile(path)
+	response, err := ioutil.ReadFile(path) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read fallback file")
 	}

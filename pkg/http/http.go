@@ -124,6 +124,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	if UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
+	// #nosec G402
 	if !verifyTLS {
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -188,15 +189,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		return response.StatusCode, nil, err
 	}
 
-	var sb strings.Builder
-	for i, message := range errResponse.Messages {
-		if i != 0 {
-			sb.WriteString("\n")
-		}
-		sb.WriteString(message)
-	}
-
-	return response.StatusCode, body, errors.New(sb.String())
+	return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
 }
 
 func isSuccess(statusCode int) bool {

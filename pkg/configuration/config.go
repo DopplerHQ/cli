@@ -65,10 +65,16 @@ func Setup() {
 		v1ConfigB := filepath.Join(utils.HomeDir(), configFileName)
 		if utils.Exists(v1ConfigA) {
 			utils.LogDebug("Migrating the config from CLI v1")
-			os.Rename(v1ConfigA, UserConfigFile)
+			err := os.Rename(v1ConfigA, UserConfigFile)
+			if err != nil {
+				utils.HandleError(err, "Unable to migrate config from CLI v1")
+			}
 		} else if utils.Exists(v1ConfigB) {
 			utils.LogDebug("Migrating the config from CLI v1")
-			os.Rename(v1ConfigB, UserConfigFile)
+			err := os.Rename(v1ConfigB, UserConfigFile)
+			if err != nil {
+				utils.HandleError(err, "Unable to migrate config from CLI v1")
+			}
 		} else if jsonExists() {
 			utils.LogDebug("Migrating the config from the Node CLI")
 			migrateJSONToYaml()
@@ -300,13 +306,16 @@ func writeConfig(config models.ConfigFile) {
 func readConfig() models.ConfigFile {
 	utils.LogDebug("Reading config file")
 
-	fileContents, err := ioutil.ReadFile(UserConfigFile)
+	fileContents, err := ioutil.ReadFile(UserConfigFile) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read user config file")
 	}
 
 	var config models.ConfigFile
-	yaml.Unmarshal(fileContents, &config)
+	err = yaml.Unmarshal(fileContents, &config)
+	if err != nil {
+		utils.HandleError(err, "Unable to parse user config file")
+	}
 	return config
 }
 
