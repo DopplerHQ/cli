@@ -74,5 +74,6 @@ func init() {
 	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
+	environmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveCmd.AddCommand(environmentsCmd)
 }
