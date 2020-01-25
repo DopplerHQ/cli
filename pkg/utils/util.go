@@ -16,6 +16,7 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -88,6 +89,14 @@ func RunCommand(command []string, env []string) (int, error) {
 	}
 
 	return 0, nil
+}
+
+// RequireValue throws an error if a value is blank
+func RequireValue(name string, value string) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		HandleError(fmt.Errorf("you must provide a %s", name))
+	}
 }
 
 // GetBool parse string into a boolean

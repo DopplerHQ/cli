@@ -161,13 +161,9 @@ Your saved configuration will be updated.`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		oldToken := localConfig.Token.Value
-		if oldToken == "" {
-			if !silent {
-				fmt.Println("You must provide an auth token")
-			}
-			os.Exit(1)
-		}
 
 		response, err := http.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
 		if !err.IsNil() {

@@ -32,8 +32,10 @@ var settingsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		info, err := http.GetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -56,7 +58,7 @@ var settingsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
 		if name == "" && email == "" {
-			return errors.New("Error: command needs a flag")
+			return errors.New("Error: command needs flag --name or --email")
 		}
 
 		return nil
@@ -66,10 +68,12 @@ var settingsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
 		jsonFlag := utils.OutputJSON
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
 
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 
-		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.SetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, settings)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)

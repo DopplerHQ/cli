@@ -34,6 +34,9 @@ var configsCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+
 		configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -51,10 +54,14 @@ var configsGetCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+
 		config := localConfig.EnclaveConfig.Value
 		if len(args) > 0 {
 			config = args[0]
 		}
+		utils.RequireValue("config", config)
 
 		configInfo, err := http.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
 		if !err.IsNil() {
@@ -74,6 +81,10 @@ var configsCreateCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		defaults := !utils.GetBoolFlag(cmd, "no-defaults")
 		environment := cmd.Flag("environment").Value.String()
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 		name := cmd.Flag("name").Value.String()
 		if len(args) > 0 {
@@ -92,7 +103,6 @@ var configsCreateCmd = &cobra.Command{
 			utils.HandleError(errors.New("you must specify an environment"))
 		}
 
-		localConfig := configuration.LocalConfig(cmd)
 		info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, environment, defaults)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -114,10 +124,14 @@ var configsDeleteCmd = &cobra.Command{
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+
 		config := localConfig.EnclaveConfig.Value
 		if len(args) > 0 {
 			config = args[0]
 		}
+		utils.RequireValue("config", config)
 
 		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
 			err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
@@ -147,10 +161,15 @@ var configsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("name", name)
+
 		config := localConfig.EnclaveConfig.Value
 		if len(args) > 0 {
 			config = args[0]
 		}
+		utils.RequireValue("config", config)
 
 		info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
 		if !err.IsNil() {

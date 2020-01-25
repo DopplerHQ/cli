@@ -40,6 +40,8 @@ var setupCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		scopedConfig := configuration.Get(scope)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		flagsFromEnvironment := []string{}
 
 		project := ""

@@ -33,6 +33,10 @@ var configsTokensCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
+
 		tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -49,6 +53,10 @@ var configsTokensGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		slug := cmd.Flag("slug").Value.String()
 		if len(args) > 0 {
@@ -81,6 +89,10 @@ var configsTokensCreateCmd = &cobra.Command{
 		copy := utils.GetBoolFlag(cmd, "copy")
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
+
 		name := cmd.Flag("name").Value.String()
 		if len(args) > 0 {
 			name = args[0]
@@ -104,6 +116,10 @@ var configsTokensRevokeCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		slug := cmd.Flag("slug").Value.String()
 		if len(args) > 0 {

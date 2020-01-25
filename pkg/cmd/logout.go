@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -45,12 +44,7 @@ func revokeToken(cmd *cobra.Command, args []string) {
 	yes := utils.GetBoolFlag(cmd, "yes")
 	token := localConfig.Token.Value
 
-	if token == "" {
-		if !silent {
-			fmt.Println("You must provide an auth token")
-		}
-		os.Exit(1)
-	}
+	utils.RequireValue("token", localConfig.Token.Value)
 
 	if !yes && !utils.ConfirmationPrompt(fmt.Sprintf("Revoke auth token scoped to %s?", localConfig.Token.Scope), false) {
 		return

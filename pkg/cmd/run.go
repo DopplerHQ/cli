@@ -55,6 +55,10 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 		localConfig := configuration.LocalConfig(cmd)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
+
 		fallbackPath := ""
 		if cmd.Flags().Changed("fallback") {
 			fallbackPath = utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")

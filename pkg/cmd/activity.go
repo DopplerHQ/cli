@@ -32,6 +32,8 @@ var activityCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		// number := utils.GetIntFlag(cmd, "number", 16)
 
+		utils.RequireValue("token", localConfig.Token.Value)
+
 		activity, err := http.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -48,6 +50,8 @@ var activityGetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
 
 		log := cmd.Flag("log").Value.String()
 		if len(args) > 0 {
