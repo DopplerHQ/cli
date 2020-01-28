@@ -34,9 +34,7 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
-// DefaultFallbackDir path to the default fallback dir
-var DefaultFallbackDir string
-
+var defaultFallbackDir string
 var defaultFallbackFileMaxAge = 72 * time.Hour
 
 var runCmd = &cobra.Command{
@@ -65,8 +63,8 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 		} else {
 			fallbackPath = defaultFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 
-			if enableFallback && !utils.Exists(DefaultFallbackDir) {
-				err := os.Mkdir(DefaultFallbackDir, 0700)
+			if enableFallback && !utils.Exists(defaultFallbackDir) {
+				err := os.Mkdir(defaultFallbackDir, 0700)
 				if err != nil && exitOnWriteFailure {
 					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
 				}
@@ -133,9 +131,9 @@ var runCleanCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		dryRun := utils.GetBoolFlag(cmd, "dry-run")
 
-		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", DefaultFallbackDir))
+		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", defaultFallbackDir))
 
-		if _, err := os.Stat(DefaultFallbackDir); err != nil {
+		if _, err := os.Stat(defaultFallbackDir); err != nil {
 			if os.IsNotExist(err) {
 				utils.LogDebug("Fallback directory does not exist")
 				if !silent {
@@ -147,7 +145,7 @@ var runCleanCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
 
-		entries, err := ioutil.ReadDir(DefaultFallbackDir)
+		entries, err := ioutil.ReadDir(defaultFallbackDir)
 		if err != nil {
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
@@ -165,7 +163,7 @@ var runCleanCmd = &cobra.Command{
 				if dryRun {
 					deleted++
 				} else {
-					file := filepath.Join(DefaultFallbackDir, entry.Name())
+					file := filepath.Join(defaultFallbackDir, entry.Name())
 					utils.LogDebug(fmt.Sprintf("Deleting fallback file %s", file))
 
 					err := os.Remove(file)
@@ -316,11 +314,11 @@ func parseSecrets(response []byte) (map[string]string, error) {
 
 func defaultFallbackFile(project string, config string) string {
 	fileName := fmt.Sprintf(".run-%s.json", crypto.Hash(fmt.Sprintf("%s:%s", project, config)))
-	return filepath.Join(DefaultFallbackDir, fileName)
+	return filepath.Join(defaultFallbackDir, fileName)
 }
 
 func init() {
-	DefaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
+	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
 
 	runCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
