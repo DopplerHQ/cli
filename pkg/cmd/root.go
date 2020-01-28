@@ -47,14 +47,14 @@ var rootCmd = &cobra.Command{
 		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
 		canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
-		checkVersion(cmd.CalledAs(), silent, plain, canPrintResults)
+		checkVersion(cmd.CalledAs(), silent, canPrintResults)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},
 }
 
-func checkVersion(command string, silent bool, plain bool, print bool) {
+func checkVersion(command string, silent bool, print bool) {
 	// disable version checking on the "run" command and "enclave secrets download" command
 	if command == "run" || command == "download" {
 		return
