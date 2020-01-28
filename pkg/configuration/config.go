@@ -45,7 +45,7 @@ func init() {
 	filePath := filepath.Join(configDir, fileName)
 
 	// support the cli v2 config path to allow downgrades
-	cliV2Path := filepath.Join(configDir, "doppler", fileName)
+	cliV2Path := filepath.Join(utils.HomeDir(), ".doppler", fileName)
 	if !utils.Exists(filePath) && utils.Exists(cliV2Path) {
 		filePath = cliV2Path
 	}
