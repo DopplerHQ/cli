@@ -179,21 +179,15 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
-	Short: "Download a config's .env file",
-	Long: `Download your config's secrets for later use. Env and JSON format are supported.
+	Short: "Download a config's secrets for later use",
+	Long:  `Download your config's secrets for later use. JSON and Env format are supported.`,
+	Example: `Save your secrets to /root/ encrypted in JSON format
+$ doppler enclave secrets download /root/secrets.json
 
-Examples:
-
-Save your secrets to /root/ in Env format
-$ doppler enclave secrets download /root/secrets.env
+Save your secrets to /root/ encrypted in Env format
 $ doppler enclave secrets download --format=env /root/secrets.env
 
-Save your secrets to /root/ in JSON format
-$ doppler enclave secrets download --json /root/secrets.json
-$ doppler enclave secrets download --format=json /root/secrets.json
-
-Print your secrets in env format without writing to the filesystem
-$ doppler enclave secrets download --no-file
+Print your secrets to stdout in env format without writing to the filesystem
 $ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
