@@ -43,12 +43,8 @@ var configFileName = ".doppler.yaml"
 var configContents models.ConfigFile
 
 func init() {
-	baseConfigDir = utils.ConfigDir()
-	if !utils.Exists(baseConfigDir) {
-		baseConfigDir = utils.HomeDir()
-	}
-
-	UserConfigDir = filepath.Join(baseConfigDir, "doppler")
+	baseConfigDir = utils.HomeDir()
+	UserConfigDir = filepath.Join(baseConfigDir, ".doppler")
 	UserConfigFile = filepath.Join(UserConfigDir, configFileName)
 }
 
@@ -65,10 +61,14 @@ func Setup() {
 	}
 
 	if !utils.Exists(UserConfigFile) {
-		v1Config := filepath.Join(baseConfigDir, configFileName)
-		if utils.Exists(v1Config) {
+		v1ConfigA := filepath.Join(utils.ConfigDir(), configFileName)
+		v1ConfigB := filepath.Join(utils.HomeDir(), configFileName)
+		if utils.Exists(v1ConfigA) {
 			utils.LogDebug("Migrating the config from CLI v1")
-			os.Rename(v1Config, UserConfigFile)
+			os.Rename(v1ConfigA, UserConfigFile)
+		} else if utils.Exists(v1ConfigB) {
+			utils.LogDebug("Migrating the config from CLI v1")
+			os.Rename(v1ConfigB, UserConfigFile)
 		} else if jsonExists() {
 			utils.LogDebug("Migrating the config from the Node CLI")
 			migrateJSONToYaml()

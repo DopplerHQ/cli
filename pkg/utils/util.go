@@ -30,8 +30,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ConfigDir get configuration directory
+// ConfigDir DEPRECATED get configuration directory
 func ConfigDir() string {
+	// this function is deprecated and should not be used.
+	// in testing, node:12-alpine creates the ~/.config directory at some indeterminate point
+	// in the build. this means some doppler commands called by docker RUN may use the home
+	// directory to store config, while doppler commands called by ENTRYPOINT will use ~/config.
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		HandleError(err, "Unable to determine configuration directory")
