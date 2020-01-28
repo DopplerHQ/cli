@@ -55,8 +55,8 @@ var rootCmd = &cobra.Command{
 }
 
 func checkVersion(command string, silent bool, plain bool, print bool) {
-	// disable version checking on the "run" command
-	if command == "run" {
+	// disable version checking on the "run" command and "enclave secrets download" command
+	if command == "run" || command == "download" {
 		return
 	}
 
