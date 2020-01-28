@@ -30,13 +30,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// baseConfigDir path to the base configuration directory (e.g. /home/user/.config)
+// baseConfigDir (e.g. /home/user/)
 var baseConfigDir string
 
-// UserConfigDir path to the user's configuration directory (e.g. /home/user/.config/doppler)
+// UserConfigDir (e.g. /home/user/.doppler)
 var UserConfigDir string
 
-// UserConfigFile path to the user's configuration file (e.g. /home/user/.config/doppler/.doppler.yaml)
+// UserConfigFile (e.g. /home/user/doppler/.doppler.yaml)
 var UserConfigFile string
 
 var configFileName = ".doppler.yaml"
