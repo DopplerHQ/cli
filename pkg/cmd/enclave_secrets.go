@@ -191,8 +191,9 @@ Print your secrets to stdout in env format without writing to the filesystem
 $ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		silent := utils.GetBoolFlag(cmd, "silent")
 		saveFile := !utils.GetBoolFlag(cmd, "no-file")
+		// don't log anything extraneous when printing secrets to stdout
+		silent := !saveFile || utils.GetBoolFlag(cmd, "silent")
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -227,10 +228,7 @@ $ doppler enclave secrets download --format=env --no-file`,
 		}
 
 		if !saveFile {
-			if !silent {
-				fmt.Println(string(body))
-			}
-
+			fmt.Println(string(body))
 			return
 		}
 
@@ -240,10 +238,10 @@ $ doppler enclave secrets download --format=env --no-file`,
 			if filePath == "" {
 				utils.HandleError(errors.New("invalid file path"))
 			}
-		} else if format == "json" {
-			filePath = filepath.Join(".", "doppler.json")
-		} else {
+		} else if format == "env" {
 			filePath = filepath.Join(".", "doppler.env")
+		} else {
+			filePath = filepath.Join(".", "doppler.json")
 		}
 
 		utils.LogDebug("Encrypting Enclave secrets")
