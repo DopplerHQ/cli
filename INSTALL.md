@@ -99,17 +99,17 @@ To run an image, use `docker`:
 
 ```sh
 # prints the doppler cli version
-$ docker run --rm -it dopplerhq/cli:node --version
-v1.0.0
+$ docker run --rm -it dopplerhq/cli:2-node --version
+v2.0.0
 # prints the node version
-$ docker run --rm -it dopplerhq/cli:node run -- node --version
+$ docker run --rm -it dopplerhq/cli:2-node run -- node --version
 v12.13.0
 ```
 
-Here's an example Dockerfile showing how you can build on top of Doppler's base images:
+Here's an example Dockerfile showing how you can build on top of Doppler's base images.
 
 ```dockerfile
-FROM dopplerhq/cli:node
+FROM dopplerhq/cli:2-node
 
 # doppler args are passed at runtime
 ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
