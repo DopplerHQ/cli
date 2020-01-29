@@ -170,6 +170,20 @@ func GetFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
 	return cmd.Flag(flag).Value.String()
 }
 
+// GetPathFlagIfChanged gets the flag's path, if specified;
+// always returns an absolute path
+func GetPathFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
+	if !cmd.Flags().Changed(flag) {
+		return def
+	}
+
+	path, err := ParsePath(cmd.Flag(flag).Value.String())
+	if err != nil {
+		HandleError(err, "Unable to parse path")
+	}
+	return path
+}
+
 // GetIntFlag gets the flag's int value
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
