@@ -234,9 +234,10 @@ $ doppler enclave secrets download --format=env --no-file`,
 
 		var filePath string
 		if len(args) > 0 {
-			filePath = utils.GetFilePath(args[0], "")
-			if filePath == "" {
-				utils.HandleError(errors.New("invalid file path"))
+			var err error
+			filePath, err = utils.GetFilePath(args[0])
+			if err != nil {
+				utils.HandleError(err, "Unable to parse download file path")
 			}
 		} else if format == "env" {
 			filePath = filepath.Join(".", "doppler.env")

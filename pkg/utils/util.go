@@ -16,6 +16,7 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -170,10 +171,10 @@ func GetDurationFlagIfChanged(cmd *cobra.Command, flag string, def time.Duration
 	return GetDurationFlag(cmd, flag)
 }
 
-// GetFilePath verify file path and name are provided
-func GetFilePath(fullPath string, defaultPath string) string {
+// GetFilePath verify a file path and name are provided
+func GetFilePath(fullPath string) (string, error) {
 	if fullPath == "" {
-		return defaultPath
+		return "", errors.New("Invalid file path")
 	}
 
 	parsedPath := filepath.Dir(fullPath)
@@ -181,10 +182,10 @@ func GetFilePath(fullPath string, defaultPath string) string {
 
 	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/") && (parsedName != string(filepath.Separator))
 	if !isNameValid {
-		return defaultPath
+		return "", errors.New("Invalid file path")
 	}
 
-	return filepath.Join(parsedPath, parsedName)
+	return filepath.Join(parsedPath, parsedName), nil
 }
 
 // ConfirmationPrompt prompt user to confirm yes/no

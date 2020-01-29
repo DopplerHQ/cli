@@ -59,7 +59,11 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 
 		fallbackPath := ""
 		if cmd.Flags().Changed("fallback") {
-			fallbackPath = utils.GetFilePath(cmd.Flag("fallback").Value.String(), "")
+			var err error
+			fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
+			if err != nil {
+				utils.HandleError(err, "Unable to parse --fallback flag")
+			}
 		} else {
 			fallbackPath = defaultFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 
@@ -69,9 +73,6 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
 				}
 			}
-		}
-		if fallbackPath == "" {
-			utils.HandleError(errors.New("invalid fallback file path"))
 		}
 		absFallbackPath, err := filepath.Abs(fallbackPath)
 		if err == nil {
