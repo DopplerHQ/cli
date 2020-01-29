@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -53,6 +54,33 @@ func HomeDir() string {
 	}
 
 	return dir
+}
+
+// ParsePath returns an absolute path, parsing ~ . .. etc
+func ParsePath(path string) (string, error) {
+	if path == "" {
+		return "", errors.New("Path cannot be blank")
+	}
+
+	if strings.HasPrefix(path, "~") {
+		firstPath := strings.Split(path, string(filepath.Separator))[0]
+
+		if firstPath != "~" {
+			username, err := user.Current()
+			if err != nil || firstPath != fmt.Sprintf("~%s", username.Username) {
+				return "", fmt.Errorf("unable to parse path, please specify an absolute path (e.g. /home/%s)", path[1:])
+			}
+		}
+
+		path = strings.Replace(path, firstPath, HomeDir(), 1)
+	}
+
+	absolutePath, err := filepath.Abs(filepath.Clean(path))
+	if err != nil {
+		return "", err
+	}
+
+	return absolutePath, nil
 }
 
 // Exists whether path exists and the user has permission
@@ -174,6 +202,11 @@ func GetDurationFlagIfChanged(cmd *cobra.Command, flag string, def time.Duration
 // GetFilePath verify a file path and name are provided
 func GetFilePath(fullPath string) (string, error) {
 	if fullPath == "" {
+		return "", errors.New("Invalid file path")
+	}
+
+	fullPath, err := ParsePath(fullPath)
+	if err != nil {
 		return "", errors.New("Invalid file path")
 	}
 
