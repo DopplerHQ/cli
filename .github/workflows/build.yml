@@ -18,3 +18,7 @@ jobs:
       run: go build
       env:
         GOPATH: ${{ runner.workspace }}
+    - name: Test
+      run: make test
+      env:
+        GOPATH: ${{ runner.workspace }}

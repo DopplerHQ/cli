@@ -83,7 +83,7 @@ func checkVersion(command string, silent bool, print bool) {
 }
 
 func loadFlags(cmd *cobra.Command) {
-	configuration.UserConfigFile = utils.GetFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
+	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
 	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)

@@ -16,9 +16,11 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -52,6 +54,33 @@ func HomeDir() string {
 	}
 
 	return dir
+}
+
+// ParsePath returns an absolute path, parsing ~ . .. etc
+func ParsePath(path string) (string, error) {
+	if path == "" {
+		return "", errors.New("Path cannot be blank")
+	}
+
+	if strings.HasPrefix(path, "~") {
+		firstPath := strings.Split(path, string(filepath.Separator))[0]
+
+		if firstPath != "~" {
+			username, err := user.Current()
+			if err != nil || firstPath != fmt.Sprintf("~%s", username.Username) {
+				return "", fmt.Errorf("unable to parse path, please specify an absolute path (e.g. /home/%s)", path[1:])
+			}
+		}
+
+		path = strings.Replace(path, firstPath, HomeDir(), 1)
+	}
+
+	absolutePath, err := filepath.Abs(filepath.Clean(path))
+	if err != nil {
+		return "", err
+	}
+
+	return absolutePath, nil
 }
 
 // Exists whether path exists and the user has permission
@@ -141,6 +170,20 @@ func GetFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
 	return cmd.Flag(flag).Value.String()
 }
 
+// GetPathFlagIfChanged gets the flag's path, if specified;
+// always returns an absolute path
+func GetPathFlagIfChanged(cmd *cobra.Command, flag string, def string) string {
+	if !cmd.Flags().Changed(flag) {
+		return def
+	}
+
+	path, err := ParsePath(cmd.Flag(flag).Value.String())
+	if err != nil {
+		HandleError(err, "Unable to parse path")
+	}
+	return path
+}
+
 // GetIntFlag gets the flag's int value
 func GetIntFlag(cmd *cobra.Command, flag string, bits int) int {
 	number, err := strconv.ParseInt(cmd.Flag(flag).Value.String(), 10, bits)
@@ -170,10 +213,15 @@ func GetDurationFlagIfChanged(cmd *cobra.Command, flag string, def time.Duration
 	return GetDurationFlag(cmd, flag)
 }
 
-// GetFilePath verify file path and name are provided
-func GetFilePath(fullPath string, defaultPath string) string {
+// GetFilePath verify a file path and name are provided
+func GetFilePath(fullPath string) (string, error) {
 	if fullPath == "" {
-		return defaultPath
+		return "", errors.New("Invalid file path")
+	}
+
+	fullPath, err := ParsePath(fullPath)
+	if err != nil {
+		return "", errors.New("Invalid file path")
 	}
 
 	parsedPath := filepath.Dir(fullPath)
@@ -181,10 +229,10 @@ func GetFilePath(fullPath string, defaultPath string) string {
 
 	isNameValid := (parsedName != ".") && (parsedName != "..") && (parsedName != "/") && (parsedName != string(filepath.Separator))
 	if !isNameValid {
-		return defaultPath
+		return "", errors.New("Invalid file path")
 	}
 
-	return filepath.Join(parsedPath, parsedName)
+	return filepath.Join(parsedPath, parsedName), nil
 }
 
 // ConfirmationPrompt prompt user to confirm yes/no

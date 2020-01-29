@@ -98,11 +98,11 @@ func SetVersionCheck(version models.VersionCheck) {
 
 // Get the config at the specified scope
 func Get(scope string) models.ScopedOptions {
-	scope, err := parseScope(scope)
+	scope, err := utils.ParsePath(scope)
 	if err != nil {
 		utils.HandleError(err)
 	}
-	scope = filepath.Clean(scope) + string(filepath.Separator)
+	scope = scope + string(filepath.Separator)
 	var scopedConfig models.ScopedOptions
 
 	for confScope, conf := range configContents.Scoped {
@@ -233,7 +233,7 @@ func AllConfigs() map[string]models.FileScopedOptions {
 func Set(scope string, options map[string]string) {
 	if scope != "*" {
 		var err error
-		scope, err = parseScope(scope)
+		scope, err = utils.ParsePath(scope)
 		if err != nil {
 			utils.HandleError(err)
 		}
@@ -256,7 +256,7 @@ func Set(scope string, options map[string]string) {
 func Unset(scope string, options []string) {
 	if scope != "*" {
 		var err error
-		scope, err = parseScope(scope)
+		scope, err = utils.ParsePath(scope)
 		if err != nil {
 			utils.HandleError(err)
 		}
@@ -308,15 +308,6 @@ func readConfig() models.ConfigFile {
 	var config models.ConfigFile
 	yaml.Unmarshal(fileContents, &config)
 	return config
-}
-
-func parseScope(scope string) (string, error) {
-	absScope, err := filepath.Abs(scope)
-	if err != nil {
-		return "", err
-	}
-
-	return absScope, nil
 }
 
 // IsValidConfigOption whether the specified key is a valid config option
