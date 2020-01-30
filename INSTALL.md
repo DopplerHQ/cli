@@ -79,46 +79,31 @@ $ sudo yum update doppler
 
 ## Docker
 
-We currently build these Docker images:
+We currently publish these Docker tags:
 - `dopplerhq/cli` based on `alpine`
 - `dopplerhq/cli:node` based on `node:lts-alpine`
 - `dopplerhq/cli:python` based on `python:3-alpine`
 - `dopplerhq/cli:ruby` based on `ruby:2-alpine`
 
-You can find all source Dockerfiles in the `/docker` folder.
+You can find all source Dockerfiles in the `/docker` folder ([here](https://github.com/DopplerHQ/cli/tree/master/docker)).
 
-Here's one such file:
-
-```Dockerfile
-FROM alpine
-COPY doppler /bin/doppler
-ENTRYPOINT ["/bin/doppler"]
-```
-
-To run an image, use `docker`:
-
-```sh
-# prints the doppler cli version
-$ docker run --rm -it dopplerhq/cli:2-node --version
-v2.0.0
-# prints the node version
-$ docker run --rm -it dopplerhq/cli:2-node run -- node --version
-v12.13.0
-```
-
-Here's an example Dockerfile showing how you can build on top of Doppler's base images.
+Here's an example Dockerfile for a Node app:
 
 ```dockerfile
 FROM dopplerhq/cli:2-node
 
-# doppler args are passed at runtime
+# doppler args must be passed at runtime
 ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
 
 COPY . .
 
-# doppler will automatically use the DOPPLER_* and ENCLAVE_* environment variables
+# doppler will automatically use the environment variables specified above
 ENTRYPOINT doppler run -- node index.js
 ```
+
+Build the Dockerfile: `docker build -t myapp .`
+
+Run the container: `docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e ENCLAVE_PROJECT="" -e ENCLAVE_CONFIG="" myapp`
 
 ## Other
 
