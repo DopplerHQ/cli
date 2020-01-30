@@ -87,6 +87,7 @@ We currently publish these Docker tags:
 
 You can find all source Dockerfiles in the `/docker` folder ([here](https://github.com/DopplerHQ/cli/tree/master/docker)).
 
+### Example
 Here's an example Dockerfile for a Node app:
 
 ```dockerfile
@@ -101,9 +102,31 @@ COPY . .
 ENTRYPOINT doppler run -- node index.js
 ```
 
-Build the Dockerfile: `docker build -t myapp .`
+Build the Dockerfile: 
 
-Run the container: `docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e ENCLAVE_PROJECT="" -e ENCLAVE_CONFIG="" myapp`
+```sh
+docker build -t mytestapp .
+```
+
+Then run the container:
+```sh
+docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e ENCLAVE_PROJECT="" -e ENCLAVE_CONFIG="" mytestapp
+```
+
+To avoid hard-coding the values, you can use the cli's `configure` command:
+
+```sh
+docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="$(doppler configure get token --plain)" -e ENCLAVE_PROJECT="$(doppler configure get enclave.project --plain)" -e ENCLAVE_CONFIG="$(doppler configure get enclave.config --plain)" mytestapp
+```
+
+Flags:
+- `--rm` delete the container once it exits
+- `-i` attach to stdin; enables killing w/ ctrl+c
+- `-t` print output to this terminal
+- `-p 3000:3000` the port your app uses to service requests, if any
+- `-e DOPPLER_TOKEN=""` pass a token into the environment
+- `-e ENCLAVE_PROJECT=""` pass an enclave project into the environment
+- `-e ENCLAVE_CONFIG=""` pass an enclave config into the environment
 
 ## Other
 
