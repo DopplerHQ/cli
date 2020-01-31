@@ -111,7 +111,7 @@ var configsTokensRevokeCmd = &cobra.Command{
 	Use:     "revoke [slug]",
 	Aliases: []string{"delete"},
 	Short:   "Revoke a service token from a config",
-	Args:  cobra.MaximumNArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
