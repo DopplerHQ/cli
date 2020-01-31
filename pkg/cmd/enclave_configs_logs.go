@@ -117,6 +117,4 @@ func init() {
 	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsLogsRollbackCmd.Flags().Bool("silent", false, "disable text output")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
-
-	enclaveCmd.AddCommand(configsCmd)
 }

@@ -164,6 +164,4 @@ func init() {
 	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsTokensRevokeCmd.Flags().Bool("silent", false, "disable text output")
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
-
-	enclaveCmd.AddCommand(configsCmd)
 }
