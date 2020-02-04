@@ -111,7 +111,7 @@ var configsTokensRevokeCmd = &cobra.Command{
 	Use:     "revoke [slug]",
 	Aliases: []string{"delete"},
 	Short:   "Revoke a service token from a config",
-	Args:  cobra.MaximumNArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
@@ -164,6 +164,4 @@ func init() {
 	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsTokensRevokeCmd.Flags().Bool("silent", false, "disable text output")
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
-
-	enclaveCmd.AddCommand(configsCmd)
 }
