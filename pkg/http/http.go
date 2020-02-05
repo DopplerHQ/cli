@@ -22,7 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -135,6 +137,12 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		resp, err := client.Do(req)
 		if err != nil {
 			utils.LogDebug(err.Error())
+
+			if isTimeout(err) {
+				// retry request
+				return err
+			}
+
 			return StopRetry{err}
 		}
 
@@ -197,4 +205,14 @@ func isSuccess(statusCode int) bool {
 
 func isRetry(statusCode int) bool {
 	return (statusCode == 429) || (statusCode >= 100 && statusCode <= 199) || (statusCode >= 500 && statusCode <= 599)
+}
+
+func isTimeout(err error) bool {
+	if urlErr, ok := err.(*url.Error); ok {
+		if netErr, ok := urlErr.Err.(net.Error); ok {
+			return netErr.Timeout()
+		}
+	}
+
+	return false
 }
