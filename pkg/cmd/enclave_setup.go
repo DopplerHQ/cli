@@ -79,7 +79,9 @@ var setupCmd = &cobra.Command{
 			prompt := &survey.Select{
 				Message: "Select a project:",
 				Options: projectOptions,
-				Default: defaultOption,
+			}
+			if defaultOption != "" {
+				prompt.Default = defaultOption
 			}
 			err := survey.AskOne(prompt, &project)
 			if err != nil {
@@ -122,7 +124,9 @@ var setupCmd = &cobra.Command{
 			prompt := &survey.Select{
 				Message: "Select a config:",
 				Options: configOptions,
-				Default: scopedConfig.EnclaveConfig.Value,
+			}
+			if scopedConfig.EnclaveConfig.Value != "" {
+				prompt.Default = scopedConfig.EnclaveConfig.Value
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
