@@ -428,8 +428,8 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 }
 
 // CreateConfig create a config
-func CreateConfig(host string, verifyTLS bool, apiKey string, project string, name string, environment string, defaults bool) (models.ConfigInfo, Error) {
-	postBody := map[string]interface{}{"name": name, "environment": environment, "defaults": defaults}
+func CreateConfig(host string, verifyTLS bool, apiKey string, project string, name string, environment string) (models.ConfigInfo, Error) {
+	postBody := map[string]interface{}{"name": name, "environment": environment}
 	body, err := json.Marshal(postBody)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}

@@ -79,7 +79,6 @@ var configsCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		silent := utils.GetBoolFlag(cmd, "silent")
-		defaults := !utils.GetBoolFlag(cmd, "no-defaults")
 		environment := cmd.Flag("environment").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -103,7 +102,7 @@ var configsCreateCmd = &cobra.Command{
 			utils.HandleError(errors.New("you must specify an environment"))
 		}
 
-		info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, environment, defaults)
+		info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, environment)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
@@ -192,7 +191,6 @@ func init() {
 	configsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCreateCmd.Flags().Bool("no-defaults", false, "do not populate config with environment's default secrets")
 	configsCreateCmd.Flags().Bool("silent", false, "disable text output")
 	configsCmd.AddCommand(configsCreateCmd)
 
