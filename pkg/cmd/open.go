@@ -52,18 +52,6 @@ var openStatusCmd = &cobra.Command{
 	},
 }
 
-var openSlackCmd = &cobra.Command{
-	Use:   "slack",
-	Short: "open the Doppler Slack channel",
-	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		err := open.Run("https://dashboard.doppler.com/slack")
-		if err != nil {
-			utils.HandleError(err)
-		}
-	},
-}
-
 var openGithubCmd = &cobra.Command{
 	Use:   "github",
 	Short: "open Doppler's GitHub to help contribute",
@@ -79,7 +67,6 @@ var openGithubCmd = &cobra.Command{
 func init() {
 	openCmd.AddCommand(openDashboardCmd)
 	openCmd.AddCommand(openStatusCmd)
-	openCmd.AddCommand(openSlackCmd)
 	openCmd.AddCommand(openGithubCmd)
 
 	rootCmd.AddCommand(openCmd)
