@@ -44,6 +44,7 @@ var setupCmd = &cobra.Command{
 
 		flagsFromEnvironment := []string{}
 
+		originalProject := localConfig.EnclaveProject.Value
 		project := ""
 		switch localConfig.EnclaveProject.Source {
 		case models.FlagSource.String():
@@ -117,16 +118,21 @@ var setupCmd = &cobra.Command{
 			}
 
 			var configOptions []string
+			var defaultOption string
 			for _, val := range configs {
 				configOptions = append(configOptions, val.Name)
+				// reselect previously-configured value
+				if selectedProject == originalProject && val.Name == scopedConfig.EnclaveConfig.Value {
+					defaultOption = val.Name
+				}
 			}
 
 			prompt := &survey.Select{
 				Message: "Select a config:",
 				Options: configOptions,
 			}
-			if scopedConfig.EnclaveConfig.Value != "" {
-				prompt.Default = scopedConfig.EnclaveConfig.Value
+			if defaultOption != "" {
+				prompt.Default = defaultOption
 			}
 			err := survey.AskOne(prompt, &config)
 			if err != nil {
