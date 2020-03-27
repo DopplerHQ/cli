@@ -45,13 +45,13 @@ var setupCmd = &cobra.Command{
 		flagsFromEnvironment := []string{}
 
 		originalProject := localConfig.EnclaveProject.Value
-		project := ""
+		selectedProject := ""
 		switch localConfig.EnclaveProject.Source {
 		case models.FlagSource.String():
-			project = localConfig.EnclaveProject.Value
+			selectedProject = localConfig.EnclaveProject.Value
 		case models.EnvironmentSource.String():
 			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_PROJECT")
-			project = localConfig.EnclaveProject.Value
+			selectedProject = localConfig.EnclaveProject.Value
 		default:
 			if !promptUser {
 				utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
@@ -65,51 +65,52 @@ var setupCmd = &cobra.Command{
 				utils.HandleError(errors.New("you do not have access to any projects"))
 			}
 
-			var projectOptions []string
-			defaultOption := ""
+			var options []string
+			var defaultOption string
 			for _, val := range projects {
 				option := val.Name + " (" + val.ID + ")"
-				projectOptions = append(projectOptions, option)
+				options = append(options, option)
 
 				// reselect previously-configured value
-				if scopedConfig.EnclaveProject.Value == val.ID {
+				if val.ID == scopedConfig.EnclaveProject.Value {
 					defaultOption = option
 				}
 			}
 
 			prompt := &survey.Select{
 				Message: "Select a project:",
-				Options: projectOptions,
+				Options: options,
 			}
 			if defaultOption != "" {
 				prompt.Default = defaultOption
 			}
-			err := survey.AskOne(prompt, &project)
+			err := survey.AskOne(prompt, &selectedProject)
 			if err != nil {
 				utils.HandleError(err)
 			}
 
 			for _, val := range projects {
-				if strings.HasSuffix(project, "("+val.ID+")") {
-					project = val.ID
+				if strings.HasSuffix(selectedProject, "("+val.ID+")") {
+					selectedProject = val.ID
 					break
 				}
 			}
 		}
 
-		config := ""
+		selectedConfig := ""
 		switch localConfig.EnclaveConfig.Source {
 		case models.FlagSource.String():
-			config = localConfig.EnclaveConfig.Value
+			selectedConfig = localConfig.EnclaveConfig.Value
 		case models.EnvironmentSource.String():
 			flagsFromEnvironment = append(flagsFromEnvironment, "ENCLAVE_CONFIG")
-			config = localConfig.EnclaveConfig.Value
+			selectedConfig = localConfig.EnclaveConfig.Value
 		default:
 			if !promptUser {
 				utils.HandleError(errors.New("config must be specified via --config flag or ENCLAVE_CONFIG environment variable when using --no-prompt"))
 			}
 
-			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
+			// Get Configs
+			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject)
 			if !apiError.IsNil() {
 				utils.HandleError(apiError.Unwrap(), apiError.Message)
 			}
@@ -117,10 +118,11 @@ var setupCmd = &cobra.Command{
 				utils.HandleError(errors.New("your project does not have any configs"))
 			}
 
-			var configOptions []string
+			var options []string
 			var defaultOption string
 			for _, val := range configs {
-				configOptions = append(configOptions, val.Name)
+				option := val.Name
+				options = append(options, option)
 				// reselect previously-configured value
 				if selectedProject == originalProject && val.Name == scopedConfig.EnclaveConfig.Value {
 					defaultOption = val.Name
@@ -129,20 +131,20 @@ var setupCmd = &cobra.Command{
 
 			prompt := &survey.Select{
 				Message: "Select a config:",
-				Options: configOptions,
+				Options: options,
 			}
 			if defaultOption != "" {
 				prompt.Default = defaultOption
 			}
-			err := survey.AskOne(prompt, &config)
+			err := survey.AskOne(prompt, &selectedConfig)
 			if err != nil {
 				utils.HandleError(err)
 			}
 		}
 
 		configuration.Set(scope, map[string]string{
-			models.ConfigEnclaveProject.String(): project,
-			models.ConfigEnclaveConfig.String():  config,
+			models.ConfigEnclaveProject.String(): selectedProject,
+			models.ConfigEnclaveConfig.String():  selectedConfig,
 		})
 
 		if !silent {
