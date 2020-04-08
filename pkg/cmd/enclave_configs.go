@@ -198,7 +198,9 @@ func init() {
 	configsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsUpdateCmd.Flags().String("name", "", "config name")
 	configsUpdateCmd.Flags().Bool("silent", false, "disable text output")
-	configsUpdateCmd.MarkFlagRequired("name")
+	if err := configsUpdateCmd.MarkFlagRequired("name"); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")

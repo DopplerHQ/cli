@@ -18,6 +18,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +37,10 @@ To configure your bash shell to load completions for each session add to your ba
 `,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		rootCmd.GenBashCompletion(os.Stdout)
+		err := rootCmd.GenBashCompletion(os.Stdout)
+		if err != nil {
+			utils.HandleError(err, "Unable to generate bash completion")
+		}
 	},
 }
 

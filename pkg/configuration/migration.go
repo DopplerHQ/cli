@@ -54,7 +54,7 @@ func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
 }
 
 func parseJSONConfig() map[string]oldConfig {
-	fileContents, err := ioutil.ReadFile(jsonFile)
+	fileContents, err := ioutil.ReadFile(jsonFile) // #nosec G304
 	if err != nil {
 		utils.HandleError(err)
 	}

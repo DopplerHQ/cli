@@ -65,7 +65,10 @@ var loginCmd = &cobra.Command{
 		}
 
 		if silent || utils.ConfirmationPrompt("Open this URL in your browser?", true) {
-			open.Run(authURL)
+			err := open.Run(authURL)
+			if err != nil {
+				utils.HandleError(err)
+			}
 		}
 
 		if !silent {

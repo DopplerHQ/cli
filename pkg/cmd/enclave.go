@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,10 @@ var enclaveCmd = &cobra.Command{
 	Short: "Control Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Usage()
+		err := cmd.Usage()
+		if err != nil {
+			utils.HandleError(err, "Unable to print command usage")
+		}
 	},
 }
 

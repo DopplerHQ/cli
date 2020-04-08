@@ -19,11 +19,15 @@ package crypto
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 // Hash a string
 func Hash(s string) string {
 	hash := sha256.New()
-	hash.Write([]byte(s))
+	_, err := hash.Write([]byte(s))
+	if err != nil {
+		utils.HandleError(err, "Unable to generate hash")
+	}
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }

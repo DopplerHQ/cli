@@ -183,8 +183,12 @@ func init() {
 	projectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
-	projectsUpdateCmd.MarkFlagRequired("name")
-	projectsUpdateCmd.MarkFlagRequired("description")
+	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := projectsUpdateCmd.MarkFlagRequired("description"); err != nil {
+		utils.HandleError(err)
+	}
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
 	enclaveCmd.AddCommand(projectsCmd)
