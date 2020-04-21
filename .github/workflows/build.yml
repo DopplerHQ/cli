@@ -22,3 +22,10 @@ jobs:
       run: make test
       env:
         GOPATH: ${{ runner.workspace }}
+    - name: GoReleaser Check
+      uses: goreleaser/goreleaser-action@v1
+      with:
+        version: latest
+        args: check
+      env:
+        GOPATH: ${{ runner.workspace }}
