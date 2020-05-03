@@ -39,7 +39,7 @@ func LogDebug(s string) {
 
 // LogError prints an error message to stderr
 func LogError(e error) {
-	fmt.Fprintln(os.Stderr, color.Red.Render("Error:"), e)
+	fmt.Fprintln(os.Stderr, color.Red.Render("Doppler Error:"), e)
 }
 
 // HandleError prints the error and exits with code 1
