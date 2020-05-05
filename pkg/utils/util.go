@@ -102,12 +102,30 @@ func Cwd() string {
 
 // RunCommand runs the specified command
 func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File) (int, error) {
+	cmd := exec.Command(command[0], command[1:]...) // #nosec G204
+	cmd.Env = env
+	cmd.Stdin = inFile
+	cmd.Stdout = outFile
+	cmd.Stderr = errFile
+
+	if err := cmd.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode(), err
+		}
+
+		return 1, err
+	}
+
+	return 0, nil
+}
+
+// RunCommandString runs the specified command string
+func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File) (int, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
 	}
-
-	cmd := exec.Command(shell[0], shell[1], strings.Join(command, " ")) // #nosec G204
+	cmd := exec.Command(shell[0], shell[1], command) // #nosec G204
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
