@@ -51,6 +51,7 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
+		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -116,6 +117,9 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 
 		exitCode, err := utils.RunCommand(args, env)
 		if err != nil || exitCode != 0 {
+			if silent {
+				os.Exit(exitCode)
+			}
 			utils.ErrExit(err, exitCode, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")))
 		}
 	},
@@ -329,6 +333,7 @@ func init() {
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
+	runCmd.Flags().Bool("silent", false, "disable error output if the supplied command exits non-zero")
 	rootCmd.AddCommand(runCmd)
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
