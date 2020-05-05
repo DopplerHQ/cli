@@ -115,7 +115,7 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 			}
 		}
 
-		exitCode, err := utils.RunCommand(args, env)
+		exitCode, err := utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr)
 		if err != nil || exitCode != 0 {
 			if silent {
 				os.Exit(exitCode)

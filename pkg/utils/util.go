@@ -101,7 +101,7 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string) (int, error) {
+func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File) (int, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -109,9 +109,9 @@ func RunCommand(command []string, env []string) (int, error) {
 
 	cmd := exec.Command(shell[0], shell[1], strings.Join(command, " ")) // #nosec G204
 	cmd.Env = env
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = inFile
+	cmd.Stdout = outFile
+	cmd.Stderr = errFile
 
 	if err := cmd.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
