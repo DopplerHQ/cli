@@ -58,7 +58,7 @@ var settingsUpdateCmd = &cobra.Command{
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
 		if name == "" && email == "" {
-			return errors.New("Error: command needs flag --name or --email")
+			return errors.New("command needs flag --name or --email")
 		}
 
 		return nil

@@ -43,9 +43,26 @@ var runCmd = &cobra.Command{
 	Long: `Run a command with secrets injected into the environment
 
 To view the CLI's active configuration, run ` + "`doppler configure debug`",
-	Example: `doppler run -- YOUR_COMMAND
-doppler run --token=123 -- YOUR_COMMAND --your-flag`,
-	Args: cobra.MinimumNArgs(1),
+	Example: `doppler run -- YOUR_COMMAND --YOUR-FLAG
+doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		// The --command flag and args are mututally exclusive
+		usingCommandFlag := cmd.Flags().Changed("command")
+		if usingCommandFlag {
+			command := cmd.Flag("command").Value.String()
+			if command == "" {
+				return errors.New("--command flag requires a value")
+			}
+
+			if len(args) > 0 {
+				return errors.New("arg(s) may not be set when using --command flag")
+			}
+		} else if len(args) == 0 {
+			return errors.New("requires at least 1 arg(s), only received 0")
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
@@ -115,12 +132,21 @@ doppler run --token=123 -- YOUR_COMMAND --your-flag`,
 			}
 		}
 
-		exitCode, err := utils.RunCommand(args, env)
+		exitCode := 0
+		err = nil
+
+		if cmd.Flags().Changed("command") {
+			command := cmd.Flag("command").Value.String()
+			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr)
+		} else {
+			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr)
+		}
+
 		if err != nil || exitCode != 0 {
 			if silent {
 				os.Exit(exitCode)
 			}
-			utils.ErrExit(err, exitCode, fmt.Sprintf("Error trying to execute command: %s", strings.Join(args, " ")))
+			utils.ErrExit(err, exitCode)
 		}
 	},
 }
@@ -329,6 +355,7 @@ func init() {
 	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
 	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
+	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")

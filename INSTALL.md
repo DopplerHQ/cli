@@ -91,7 +91,7 @@ You can find all source Dockerfiles in the `/docker` folder ([here](https://gith
 Here's an example Dockerfile for a Node app:
 
 ```dockerfile
-FROM dopplerhq/cli:2-node
+FROM dopplerhq/cli:3-node
 
 # doppler args must be passed at runtime
 ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
@@ -102,7 +102,7 @@ COPY . .
 ENTRYPOINT doppler run -- node index.js
 ```
 
-Build the Dockerfile: 
+Build the Dockerfile:
 
 ```sh
 docker build -t mytestapp .
