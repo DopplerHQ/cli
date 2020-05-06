@@ -13,8 +13,8 @@ if [ $# -eq 0 ]; then
 fi
 
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ "$GIT_BRANCH" != "master" ]; then
-  echo "You must be on the master branch"
+if [ "$GIT_BRANCH" != "v2" ]; then
+  echo "You must be on the v2 branch"
   exit 1
 fi
 
