@@ -3,8 +3,6 @@
 set -e
 
 VERSION=$(git describe --abbrev=0)
-# remove leading 'v'
-VERSION=${VERSION:1}
 
 echo "Building macOS pkg"
 
