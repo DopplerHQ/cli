@@ -94,11 +94,9 @@ dockers:
       - "dopplerhq/cli:{{ .Version }}"             # Ex: 1.4.2
       - "dopplerhq/cli:{{ .Major }}.{{ .Minor }}"  # Ex: 1.4
       - "dopplerhq/cli:{{ .Major }}"               # Ex: 1
-      - "dopplerhq/cli:latest"
       - "gcr.io/dopplerhq/cli:{{ .Version }}"             # Ex: 1.4.2
       - "gcr.io/dopplerhq/cli:{{ .Major }}.{{ .Minor }}"  # Ex: 1.4
       - "gcr.io/dopplerhq/cli:{{ .Major }}"               # Ex: 1
-      - "gcr.io/dopplerhq/cli:latest"
     build_flag_templates:
       - "--label=org.label-schema.schema-version=1.0"
       - "--label=org.label-schema.version={{.Version}}"
