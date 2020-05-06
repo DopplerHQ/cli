@@ -43,7 +43,7 @@ $ scoop update doppler
 $ sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D401AB61
 
 # add Doppler's apt repo
-$ sudo echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" > /etc/apt/sources.list.d/dopplerhq-doppler.list
+$ echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" | sudo tee /etc/apt/sources.list.d/dopplerhq-doppler.list
 
 # fetch and install latest doppler cli
 $ sudo apt-get update && sudo apt-get install doppler
