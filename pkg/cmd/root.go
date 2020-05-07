@@ -90,6 +90,7 @@ func loadFlags(cmd *cobra.Command) {
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
 	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
+	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "silent", utils.Silent)
 	utils.OutputJSON = utils.GetBoolFlagIfChanged(cmd, "json", utils.OutputJSON)
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }

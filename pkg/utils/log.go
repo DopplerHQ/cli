@@ -18,14 +18,16 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/gookit/color.v1"
 	"os"
 	"runtime/debug"
+
+	"gopkg.in/gookit/color.v1"
 )
 
 // Log info to stdout
 func Log(info string) {
-	if !OutputJSON || Debug {
+	silent := Silent || OutputJSON
+	if Debug || !silent {
 		fmt.Println(info)
 	}
 }
