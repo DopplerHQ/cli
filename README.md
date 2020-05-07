@@ -127,5 +127,5 @@ $ gpg --full-generate-key
 $ gpg --list-secret-keys  # copy the key's 40-character ID
 $ gpg --armor --export-secret-key KEY_ID
 $ gpg --armor --export KEY_ID
-$ gpg --keyserver pgp.mit.edu --send-key LAST_8_DIGITS_OF_KEY_ID
+$ gpg --keyserver keyserver.ubuntu.com --send-key LAST_8_DIGITS_OF_KEY_ID
 ```
