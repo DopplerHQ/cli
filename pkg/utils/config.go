@@ -18,5 +18,8 @@ package utils
 // Debug whether we're running in debug mode
 var Debug = false
 
+// Silent whether we should display Info messages
+var Silent = false
+
 // OutputJSON whether to print OutputJSON
 var OutputJSON = false
