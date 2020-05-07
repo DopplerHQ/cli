@@ -181,6 +181,11 @@ var runCleanCmd = &cobra.Command{
 		deleted := 0
 		now := time.Now()
 
+		action := "Deleted"
+		if dryRun {
+			action = "Would have deleted"
+		}
+
 		for _, entry := range entries {
 			if entry.IsDir() {
 				continue
@@ -188,27 +193,23 @@ var runCleanCmd = &cobra.Command{
 
 			validUntil := entry.ModTime().Add(maxAge)
 			if validUntil.Before(now) {
+				file := filepath.Join(defaultFallbackDir, entry.Name())
+				utils.LogDebug(fmt.Sprintf("%s %s", action, file))
+
 				if dryRun {
 					deleted++
-				} else {
-					file := filepath.Join(defaultFallbackDir, entry.Name())
-					utils.LogDebug(fmt.Sprintf("Deleting fallback file %s", file))
+					continue
+				}
 
-					err := os.Remove(file)
-					if err != nil {
-						// don't exit
-						utils.Log(fmt.Sprintf("Unable to delete fallback file %s\n", file))
-						utils.LogDebugError(err)
-					} else {
-						deleted++
-					}
+				err := os.Remove(file)
+				if err != nil {
+					// don't exit
+					utils.Log(fmt.Sprintf("Unable to delete fallback file %s\n", file))
+					utils.LogDebugError(err)
+				} else {
+					deleted++
 				}
 			}
-		}
-
-		action := "Deleted"
-		if dryRun {
-			action = "Would have deleted"
 		}
 
 		if deleted == 1 {
