@@ -52,12 +52,8 @@ func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, d
 	utils.LogDebug("Checking for latest version of the CLI")
 	tag, err := getLatestVersion()
 	if err != nil {
-		if debug && !json {
-			utils.LogError(err)
-		}
-		if !silent && !json {
-			utils.LogError(errors.New("Unable to check for CLI updates"))
-		}
+		utils.LogError(errors.New("Unable to check for CLI updates"))
+		utils.LogDebugError(err)
 		return models.VersionCheck{}
 	}
 
