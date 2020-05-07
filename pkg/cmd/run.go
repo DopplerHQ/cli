@@ -68,7 +68,6 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
-		silent := utils.GetBoolFlag(cmd, "silent")
 		silentExit := utils.GetBoolFlag(cmd, "silent-exit")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -160,7 +159,6 @@ var runCleanCmd = &cobra.Command{
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		maxAge := utils.GetDurationFlag(cmd, "max-age")
-		silent := utils.GetBoolFlag(cmd, "silent")
 		dryRun := utils.GetBoolFlag(cmd, "dry-run")
 
 		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", defaultFallbackDir))
@@ -168,9 +166,7 @@ var runCleanCmd = &cobra.Command{
 		if _, err := os.Stat(defaultFallbackDir); err != nil {
 			if os.IsNotExist(err) {
 				utils.LogDebug("Fallback directory does not exist")
-				if !silent {
-					fmt.Println("Nothing to clean")
-				}
+				utils.Log("Nothing to clean")
 				return
 			}
 
@@ -201,7 +197,8 @@ var runCleanCmd = &cobra.Command{
 					err := os.Remove(file)
 					if err != nil {
 						// don't exit
-						fmt.Printf("Unable to delete fallback file %s\n", file)
+						utils.Log(fmt.Sprintf("Unable to delete fallback file %s\n", file))
+						utils.LogDebugError(err)
 					} else {
 						deleted++
 					}
@@ -209,17 +206,15 @@ var runCleanCmd = &cobra.Command{
 			}
 		}
 
-		if !silent {
-			action := "Deleted"
-			if dryRun {
-				action = "Would have deleted"
-			}
+		action := "Deleted"
+		if dryRun {
+			action = "Would have deleted"
+		}
 
-			if deleted == 1 {
-				fmt.Printf("%s %d fallback file\n", action, deleted)
-			} else {
-				fmt.Printf("%s %d fallback files\n", action, deleted)
-			}
+		if deleted == 1 {
+			utils.Log(fmt.Sprintf("%s %d fallback file\n", action, deleted))
+		} else {
+			utils.Log(fmt.Sprintf("%s %d fallback files\n", action, deleted))
 		}
 	},
 }
@@ -233,7 +228,8 @@ func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackP
 	response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true)
 	if httpErr != (http.Error{}) {
 		if enableFallback {
-			fmt.Println("Failed to fetch secrets from the API")
+			utils.Log("Unable to fetch secrets from the Doppler API")
+			utils.LogError(httpErr.Unwrap())
 			return readFallbackFile(fallbackPath, localConfig, passphrase)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
@@ -243,7 +239,8 @@ func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackP
 	secrets, err := parseSecrets(response)
 	if err != nil {
 		if enableFallback {
-			utils.LogDebug("Failed to parse the API response")
+			utils.Log("Unable to parse the Doppler API response")
+			utils.LogError(httpErr.Unwrap())
 			return readFallbackFile(fallbackPath, localConfig, passphrase)
 		}
 		utils.HandleError(err, "Unable to parse API response")
@@ -260,11 +257,11 @@ func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackP
 		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackPath))
 		err = ioutil.WriteFile(fallbackPath, []byte(encryptedResponse), 0600)
 		if err != nil {
-			utils.LogDebug("Failed to write to fallback file")
+			utils.Log("Unable to write to fallback file")
 			if exitOnWriteFailure {
-				utils.HandleError(err, "Unable to write fallback file", strings.Join(writeFailureMessage(), "\n"))
+				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
-				utils.LogDebug("Not exiting due to --no-exit-on-write-failure flag")
+				utils.LogError(err)
 			}
 		}
 	}
@@ -275,6 +272,8 @@ func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackP
 func writeFailureMessage() []string {
 	var msg []string
 
+	msg = append(msg, "")
+	msg = append(msg, "=== More Info ===")
 	msg = append(msg, "")
 	msg = append(msg, color.Green.Render("Why did doppler exit?"))
 	msg = append(msg, "Doppler failed to make a local backup of your secrets, known as a fallback file.")
@@ -296,7 +295,8 @@ func writeFailureMessage() []string {
 }
 
 func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase string) map[string]string {
-	utils.Log("Reading secrets from fallback file " + path)
+	utils.Log("Reading secrets from fallback file")
+	utils.LogDebug(fmt.Sprintf("Using fallback file %s", path))
 
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
@@ -316,18 +316,21 @@ func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase 
 	if err != nil {
 		var msg []string
 		msg = append(msg, "")
+		msg = append(msg, "=== More Info ===")
+		msg = append(msg, "")
 		msg = append(msg, color.Green.Render("Why did decryption fail?"))
 		msg = append(msg, "The most common cause of decryption failure is using an incorrect passphrase.")
-		msg = append(msg, "By default, the passphrase consists of your doppler token, enclave project, and enclave config.")
+		msg = append(msg, "The default passphrase is computed using your token, enclave project, and enclave config.")
+		msg = append(msg, "You must use the same token, project, and config that you used when saving the backup file.")
 		msg = append(msg, "")
 		msg = append(msg, color.Green.Render("What should I do now?"))
-		msg = append(msg, "Ensure you're using the same scope that you used when creating the fallback file.")
-		msg = append(msg, "Alternatively, specify the same token, project, and config using the appropriate flags (e.g. --project).")
+		msg = append(msg, "Ensure you are using the same scope that you used when creating the fallback file.")
+		msg = append(msg, "Alternatively, manually specify your configuration using the appropriate flags (e.g. --project).")
 		msg = append(msg, "")
 		msg = append(msg, "Run 'doppler run --help' for more info.")
 		msg = append(msg, "")
 
-		utils.HandleError(err, "Unable to decrypt the fallback file", strings.Join(msg, "\n"))
+		utils.HandleError(err, "Unable to decrypt fallback file", strings.Join(msg, "\n"))
 	}
 
 	secrets, err := parseSecrets([]byte(decryptedSecrets))
@@ -366,7 +369,7 @@ func init() {
 	rootCmd.AddCommand(runCmd)
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
-	runCleanCmd.Flags().Bool("silent", false, "disable text output")
+	runCleanCmd.Flags().Bool("silent", false, "disable output of info messages")
 	runCleanCmd.Flags().Bool("dry-run", false, "do not delete anything, print what would have happened")
 	runCmd.AddCommand(runCleanCmd)
 }
