@@ -32,6 +32,14 @@ func Log(info string) {
 	}
 }
 
+// LogError prints an error message to stderr
+func LogError(e error) {
+	silent := Silent || OutputJSON
+	if Debug || !silent {
+		printError(e)
+	}
+}
+
 // LogDebug prints a debug message to stdout
 func LogDebug(s string) {
 	if Debug {
@@ -39,9 +47,11 @@ func LogDebug(s string) {
 	}
 }
 
-// LogError prints an error message to stderr
-func LogError(e error) {
-	fmt.Fprintln(os.Stderr, color.Red.Render("Doppler Error:"), e)
+// LogDebugError prints an error message to stderr when in debug mode
+func LogDebugError(e error) {
+	if Debug {
+		printError(e)
+	}
 }
 
 // HandleError prints the error and exits with code 1
@@ -58,13 +68,11 @@ func ErrExit(e error, exitCode int, messages ...string) {
 		}
 		fmt.Fprintln(os.Stderr, string(resp))
 	} else {
-		if len(messages) > 0 {
-			for _, message := range messages[0:1] {
-				fmt.Fprintln(os.Stderr, message)
-			}
+		if len(messages) > 0 && messages[0] != "" {
+			fmt.Fprintln(os.Stderr, messages[0])
 		}
 
-		LogError(e)
+		printError(e)
 
 		if len(messages) > 0 {
 			for _, message := range messages[1:] {
@@ -79,4 +87,8 @@ func ErrExit(e error, exitCode int, messages ...string) {
 	}
 
 	os.Exit(exitCode)
+}
+
+func printError(e error) {
+	fmt.Fprintln(os.Stderr, color.Red.Render("Doppler Error:"), e)
 }
