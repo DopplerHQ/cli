@@ -27,6 +27,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
+	"gopkg.in/gookit/color.v1"
 )
 
 var setupCmd = &cobra.Command{
@@ -118,6 +119,14 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 		}
 	}
 
+	if len(projects) == 1 {
+		// the user is expecting to a prompt, so print a message instead
+		if promptUser {
+			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available project:"), options[0]))
+		}
+		return projects[0].ID
+	}
+
 	if !promptUser {
 		utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
 	}
@@ -156,6 +165,15 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 		if selectedConfiguredProject && val.Name == prevConfiguredConfig {
 			defaultOption = val.Name
 		}
+	}
+
+	if len(configs) == 1 {
+		config := configs[0].Name
+		// the user is expecting to a prompt, so print a message instead
+		if promptUser {
+			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available config:"), config))
+		}
+		return config
 	}
 
 	if !promptUser {
