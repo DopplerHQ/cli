@@ -37,12 +37,24 @@ var setupCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
 		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
+		canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
 		scope := cmd.Flag("scope").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 		scopedConfig := configuration.Get(scope)
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
+		saveToken := false
+		if canSaveToken {
+			// save the token when it's passed via command line
+			switch localConfig.Token.Source {
+			case models.FlagSource.String():
+				saveToken = true
+			case models.EnvironmentSource.String():
+				utils.Log(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
+				saveToken = true
+			}
+		}
 
 		currentProject := localConfig.EnclaveProject.Value
 		selectedProject := ""
@@ -96,12 +108,18 @@ var setupCmd = &cobra.Command{
 			models.ConfigEnclaveProject.String(): selectedProject,
 			models.ConfigEnclaveConfig.String():  selectedConfig,
 		}
+		if saveToken {
+			configToSave[models.ConfigToken.String()] = localConfig.Token.Value
+		}
 		configuration.Set(scope, configToSave)
 
 		if !silent {
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(scope)
 			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
+			if saveToken {
+				valuesToPrint = append(valuesToPrint, models.ConfigToken.String())
+			}
 			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false, false)
 		}
 	},
@@ -206,5 +224,6 @@ func init() {
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	setupCmd.Flags().Bool("silent", false, "disable text output")
 	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
 	enclaveCmd.AddCommand(setupCmd)
 }
