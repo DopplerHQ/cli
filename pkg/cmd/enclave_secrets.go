@@ -191,9 +191,8 @@ Print your secrets to stdout in env format without writing to the filesystem
 $ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// don't log anything extraneous when printing to stdout
 		saveFile := !utils.GetBoolFlag(cmd, "no-file")
-		// don't log anything extraneous when printing secrets to stdout
-		silent := !saveFile || utils.GetBoolFlag(cmd, "silent")
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -264,9 +263,7 @@ $ doppler enclave secrets download --format=env --no-file`,
 			utils.HandleError(err, "Unable to write the secrets file")
 		}
 
-		if !silent {
-			fmt.Println("Downloaded secrets to " + filePath)
-		}
+		utils.Log(fmt.Sprintf("Downloaded secrets to %s", filePath))
 	},
 }
 

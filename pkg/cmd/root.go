@@ -79,7 +79,7 @@ func checkVersion(command string, silent bool, print bool) {
 	}
 
 	if version.ProgramVersion != versionCheck.LatestVersion {
-		fmt.Printf("Doppler CLI %s is now available\n", versionCheck.LatestVersion)
+		utils.Log(fmt.Sprintf("Doppler CLI %s is now available\n", versionCheck.LatestVersion))
 	}
 
 	configuration.SetVersionCheck(versionCheck)

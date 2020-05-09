@@ -50,19 +50,14 @@ var loginCmd = &cobra.Command{
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
 
-		if !silent {
-			fmt.Print("Your auth code is ")
-			color.Green.Println(code)
-		}
+		utils.Log(fmt.Sprintf("Your auth code is %s", color.Green.Render(code)))
 
 		if copyAuthCode {
 			utils.CopyToClipboard(code)
 		}
 
-		if !silent {
-			fmt.Println("")
-			fmt.Println("Complete login at", authURL)
-		}
+		utils.Log("")
+		utils.Log(fmt.Sprintf("Complete login at %s", authURL))
 
 		if silent || utils.ConfirmationPrompt("Open this URL in your browser?", true) {
 			err := open.Run(authURL)
@@ -71,9 +66,7 @@ var loginCmd = &cobra.Command{
 			}
 		}
 
-		if !silent {
-			fmt.Println("Waiting...")
-		}
+		utils.Log("Waiting...")
 
 		// auth flow must complete within 5 minutes
 		timeout := 5 * time.Minute
@@ -105,10 +98,8 @@ var loginCmd = &cobra.Command{
 		}
 
 		if err, ok := response["error"]; ok {
-			if !silent {
-				fmt.Println("")
-				fmt.Println(err)
-			}
+			utils.Log("")
+			utils.Log(fmt.Sprint(err))
 
 			os.Exit(1)
 		}
@@ -130,10 +121,8 @@ var loginCmd = &cobra.Command{
 
 		configuration.Set(scope, options)
 
-		if !silent {
-			fmt.Println("")
-			fmt.Println("Welcome, " + name)
-		}
+		utils.Log("")
+		utils.Log(fmt.Sprintf("Welcome, %s", name))
 
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
@@ -161,7 +150,6 @@ Your saved configuration will be updated.`,
 	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		silent := utils.GetBoolFlag(cmd, "silent")
 		updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -184,9 +172,7 @@ Your saved configuration will be updated.`,
 			}
 		}
 
-		if !silent {
-			fmt.Println("Auth token has been rolled")
-		}
+		utils.Log("Auth token has been rolled")
 	},
 }
 
