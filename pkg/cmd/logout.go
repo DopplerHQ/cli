@@ -38,7 +38,6 @@ This is an alias of the "login revoke" command.`,
 
 func revokeToken(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
-	silent := utils.GetBoolFlag(cmd, "silent")
 	updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
 	verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
 	yes := utils.GetBoolFlag(cmd, "yes")
@@ -64,9 +63,7 @@ func revokeToken(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if !silent {
-		fmt.Println("Auth token has been revoked")
-	}
+	utils.Log("Auth token has been revoked")
 }
 
 func init() {

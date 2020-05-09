@@ -45,7 +45,7 @@ func installedViaBrew() bool {
 }
 
 func brewUpdate() {
-	fmt.Println("Updating via Homebrew...")
+	utils.Log("Updating via Homebrew...")
 	command := []string{"brew", "upgrade", "--fetch-HEAD", "doppler"}
 	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
 	strOut := string(out)
@@ -54,22 +54,22 @@ func brewUpdate() {
 	}
 
 	if err != nil {
-		utils.HandleError(err, "Failed to update the Doppler CLI")
+		utils.HandleError(err, "Unable to update the Doppler CLI")
 	}
 
 	re := regexp.MustCompile(`Upgrading dopplerhq\/doppler\/doppler (\d+\.\d+\.\d+) -> (\d+\.\d+\.\d+)`)
 	if matches := re.FindStringSubmatch(strOut); matches != nil {
 		if len(matches) >= 2 {
-			fmt.Printf("Doppler CLI was upgraded to v%s!\n", matches[2])
+			utils.Log(fmt.Sprintf("Doppler CLI was upgraded to v%s!\n", matches[2]))
 		} else {
-			fmt.Println("Doppler CLI was upgraded!")
+			utils.Log("Doppler CLI was upgraded!")
 		}
 		return
 	}
 
 	re = regexp.MustCompile(`Warning: dopplerhq\/doppler\/doppler \d+\.\d+\.\d+ already installed`)
 	if loc := re.FindStringIndex(strOut); loc != nil {
-		fmt.Println("You are already running the latest version")
+		utils.Log("You are already running the latest version")
 	}
 }
 
