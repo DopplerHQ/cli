@@ -43,6 +43,10 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
+		if !cmd.Flags().Changed("scope") {
+			utils.LogWarning("Your token will be scoped to the current directory and its subdirectories. You may specify an alternative directory with the --scope flag.")
+		}
+
 		response, err := http.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -190,15 +194,12 @@ This is an alias of the "logout" command.`,
 func init() {
 	loginCmd.Flags().Bool("silent", false, "disable text output")
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
-	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
 
 	loginRollCmd.Flags().Bool("silent", false, "disable text output")
-	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
 	loginCmd.AddCommand(loginRollCmd)
 
 	loginRevokeCmd.Flags().Bool("silent", false, "disable text output")
-	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
 	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	loginCmd.AddCommand(loginRevokeCmd)

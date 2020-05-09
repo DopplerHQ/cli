@@ -24,11 +24,19 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
-// Log info to stdout
+// Log info message to stdout
 func Log(info string) {
 	silent := Silent || OutputJSON
 	if Debug || !silent {
 		fmt.Println(info)
+	}
+}
+
+// LogWarning message to stdout
+func LogWarning(s string) {
+	silent := Silent || OutputJSON
+	if Debug || !silent {
+		fmt.Println(color.Yellow.Render("Warning:"), s)
 	}
 }
 

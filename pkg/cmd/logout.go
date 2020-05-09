@@ -68,7 +68,6 @@ func revokeToken(cmd *cobra.Command, args []string) {
 
 func init() {
 	logoutCmd.Flags().Bool("silent", false, "disable text output")
-	logoutCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	logoutCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
 	logoutCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	rootCmd.AddCommand(logoutCmd)
