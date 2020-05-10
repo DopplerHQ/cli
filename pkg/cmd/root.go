@@ -27,6 +27,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
+	"gopkg.in/gookit/color.v1"
 )
 
 var rootCmd = &cobra.Command{
@@ -104,7 +105,7 @@ func Execute() {
 			return
 		}
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+			fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %v\n", color.Red.Render("Doppler Exception:"), err))
 			os.Exit(1)
 		}
 	}()
