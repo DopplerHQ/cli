@@ -7,7 +7,7 @@ VERSION=$(git describe --abbrev=0)
 echo "Building macOS pkg"
 
 pkg_name="doppler.pkg"
-final_pkg_name="doppler_$VERSION.pkg"
+final_pkg_name="doppler_${VERSION}_macOS_amd64.pkg"
 
 # we must use the GitHub release id
 github_release_id=$(curl --silent --show-error https://api.github.com/repos/DopplerHQ/cli/releases/latest  | jq '.id')
