@@ -150,31 +150,6 @@ dockers:
       - "--label=org.label-schema.version={{.Version}}"
       - "--label=org.label-schema.name={{.ProjectName}}"
 
-brews:
-  - name: doppler
-    github:
-      owner: DopplerHQ
-      name: homebrew-doppler
-    commit_author:
-      name: "Doppler Bot"
-      email: bot@doppler.com
-    folder: Formula
-    homepage: "https://doppler.com"
-    description: "The official Doppler CLI for managing your secrets and config"
-    test: |
-      system "#{bin}/doppler --version"
-
-scoop:
-  bucket:
-    owner: DopplerHQ
-    name: scoop-doppler
-  commit_author:
-    name: "Doppler Bot"
-    email: bot@doppler.com
-  homepage: "https://doppler.com"
-  description: "The official Doppler CLI for managing your secrets and config"
-  license: Apache-2.0
-
 nfpms:
   - id: doppler
     replacements:
