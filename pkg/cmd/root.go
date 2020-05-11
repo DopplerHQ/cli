@@ -39,14 +39,19 @@ var rootCmd = &cobra.Command{
 		configuration.Setup()
 		configuration.LoadConfig()
 
+		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
+		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
+
 		if utils.Debug {
+			if silent {
+				utils.LogWarning("--silent has no effect when used with --debug")
+			}
+
 			utils.LogDebug("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
 
-		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
-		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
 		canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
 		checkVersion(cmd.CalledAs(), silent, canPrintResults)
 	},
