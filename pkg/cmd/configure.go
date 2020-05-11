@@ -208,10 +208,8 @@ func init() {
 	configureGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	configureCmd.AddCommand(configureGetCmd)
 
-	configureSetCmd.Flags().Bool("silent", false, "disable text output")
 	configureCmd.AddCommand(configureSetCmd)
 
-	configureUnsetCmd.Flags().Bool("silent", false, "disable text output")
 	configureCmd.AddCommand(configureUnsetCmd)
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")

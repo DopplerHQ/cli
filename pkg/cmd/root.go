@@ -138,4 +138,5 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
+	rootCmd.PersistentFlags().Bool("silent", false, "disable output of info messages")
 }

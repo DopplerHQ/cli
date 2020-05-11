@@ -222,7 +222,6 @@ func valueFromEnvironmentNotice(name string) string {
 func init() {
 	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	setupCmd.Flags().Bool("silent", false, "disable text output")
 	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
 	enclaveCmd.AddCommand(setupCmd)

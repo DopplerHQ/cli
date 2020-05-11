@@ -281,13 +281,11 @@ func init() {
 	secretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsSetCmd.Flags().Bool("silent", false, "disable text output")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsDeleteCmd.Flags().Bool("silent", false, "disable text output")
 	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
@@ -296,7 +294,6 @@ func init() {
 	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is `$token:$project:$config`.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
-	secretsDownloadCmd.Flags().Bool("silent", false, "disable text output")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
 	enclaveCmd.AddCommand(secretsCmd)
