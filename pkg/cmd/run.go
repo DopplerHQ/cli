@@ -109,7 +109,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
 			for _, flag := range flags {
 				if cmd.Flags().Changed(flag) {
-					utils.Log(fmt.Sprintf("Warning: --%s has no effect when the fallback file is disabled", flag))
+					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
 				}
 			}
 		}
