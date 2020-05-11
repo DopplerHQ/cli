@@ -39,10 +39,8 @@ var rootCmd = &cobra.Command{
 		configuration.Setup()
 		configuration.LoadConfig()
 
-		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
-		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
-
 		if utils.Debug {
+			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
 			if silent {
 				utils.LogWarning("--silent has no effect when used with --debug")
 			}
@@ -52,8 +50,12 @@ var rootCmd = &cobra.Command{
 			fmt.Println("")
 		}
 
-		canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
-		checkVersion(cmd.CalledAs(), silent, canPrintResults)
+		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
+		// only run version check if we can print the results
+		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
+		if utils.CanLogInfo() && !plain {
+			checkVersion(cmd.CalledAs())
+		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
@@ -63,13 +65,13 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func checkVersion(command string, silent bool, print bool) {
+func checkVersion(command string) {
 	// disable version checking on the "run" command and "enclave secrets download" command
 	if command == "run" || command == "download" {
 		return
 	}
 
-	if !version.PerformVersionCheck || !print || version.IsDevelopment() {
+	if !version.PerformVersionCheck || version.IsDevelopment() {
 		return
 	}
 
@@ -79,7 +81,7 @@ func checkVersion(command string, silent bool, print bool) {
 		return
 	}
 
-	versionCheck := http.CheckCLIVersion(prevVersionCheck, silent, utils.OutputJSON, utils.Debug)
+	versionCheck := http.CheckCLIVersion(prevVersionCheck)
 	if versionCheck == (models.VersionCheck{}) {
 		return
 	}

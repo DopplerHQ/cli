@@ -48,7 +48,7 @@ func getLatestVersion() (string, error) {
 }
 
 // CheckCLIVersion check for updates to the CLI
-func CheckCLIVersion(versionCheck models.VersionCheck, silent bool, json bool, debug bool) models.VersionCheck {
+func CheckCLIVersion(versionCheck models.VersionCheck) models.VersionCheck {
 	utils.LogDebug("Checking for latest version of the CLI")
 	tag, err := getLatestVersion()
 	if err != nil {

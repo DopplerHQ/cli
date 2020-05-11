@@ -26,40 +26,48 @@ import (
 
 // Log info message to stdout
 func Log(info string) {
-	silent := Silent || OutputJSON
-	if Debug || !silent {
+	if CanLogInfo() {
 		fmt.Println(info)
 	}
 }
 
 // LogWarning message to stdout
 func LogWarning(s string) {
-	silent := Silent || OutputJSON
-	if Debug || !silent {
+	if CanLogInfo() {
 		fmt.Println(color.Yellow.Render("Warning:"), s)
 	}
 }
 
 // LogError prints an error message to stderr
 func LogError(e error) {
-	silent := Silent || OutputJSON
-	if Debug || !silent {
+	if CanLogInfo() {
 		printError(e)
 	}
 }
 
+// CanLogInfo messages to stdout
+func CanLogInfo() bool {
+	silent := Silent || OutputJSON
+	return Debug || !silent
+}
+
 // LogDebug prints a debug message to stdout
 func LogDebug(s string) {
-	if Debug {
+	if CanLogDebug() {
 		fmt.Println(color.Blue.Render("Debug:"), s)
 	}
 }
 
 // LogDebugError prints an error message to stderr when in debug mode
 func LogDebugError(e error) {
-	if Debug {
+	if CanLogDebug() {
 		printError(e)
 	}
+}
+
+// CanLogDebug messages to stdout
+func CanLogDebug() bool {
+	return Debug
 }
 
 // HandleError prints the error and exits with code 1
