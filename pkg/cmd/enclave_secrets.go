@@ -18,7 +18,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -258,8 +257,7 @@ $ doppler enclave secrets download --format=env --no-file`,
 			utils.HandleError(err, "Unable to encrypt your secrets. No file has been written.")
 		}
 
-		err = ioutil.WriteFile(filePath, []byte(encryptedBody), 0600)
-		if err != nil {
+		if err := utils.WriteFile(filePath, []byte(encryptedBody), 0600); err != nil {
 			utils.HandleError(err, "Unable to write the secrets file")
 		}
 
