@@ -256,8 +256,7 @@ func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackP
 		}
 
 		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackPath))
-		err = ioutil.WriteFile(fallbackPath, []byte(encryptedResponse), 0600)
-		if err != nil {
+		if err := utils.WriteFile(fallbackPath, []byte(encryptedResponse), 0600); err != nil {
 			utils.Log("Unable to write to fallback file")
 			if exitOnWriteFailure {
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))

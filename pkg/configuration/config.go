@@ -297,8 +297,7 @@ func writeConfig(config models.ConfigFile) {
 	}
 
 	utils.LogDebug(fmt.Sprintf("Writing user config to %s", UserConfigFile))
-	err = ioutil.WriteFile(UserConfigFile, bytes, os.FileMode(0600))
-	if err != nil {
+	if err := utils.WriteFile(UserConfigFile, bytes, os.FileMode(0600)); err != nil {
 		utils.HandleError(err)
 	}
 }
