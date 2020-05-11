@@ -28,6 +28,3 @@ if [[ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]]; then
   exit 1
 fi
 
-# publish binaries to bintray
-scripts/publish/deb.sh
-scripts/publish/rpm.sh
