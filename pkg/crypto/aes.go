@@ -24,8 +24,11 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"strings"
+	"time"
 
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -43,12 +46,15 @@ func deriveKey(passphrase string, salt []byte) ([]byte, []byte, error) {
 	return pbkdf2.Key([]byte(passphrase), salt, 50000, 32, sha256.New), salt, nil
 }
 
-// Encrypt plaintext with a passphrase; uses pbkdf2 for key deriv and aes-gcm for encryption
+// Encrypt plaintext with a passphrase; uses pbkdf2 for key deriv and aes-256-gcm for encryption
 func Encrypt(passphrase string, plaintext []byte) (string, error) {
+	now := time.Now()
 	key, salt, err := deriveKey(passphrase, nil)
 	if err != nil {
 		return "", err
 	}
+
+	utils.LogDebug(fmt.Sprintf("PBKDF2 key derivation took %d ms", time.Now().Sub(now).Milliseconds()))
 
 	iv := make([]byte, 12)
 	// http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
