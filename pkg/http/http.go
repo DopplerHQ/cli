@@ -186,6 +186,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	var errResponse errorResponse
 	err = json.Unmarshal(body, &errResponse)
 	if err != nil {
+		utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
 		return response.StatusCode, nil, err
 	}
 
