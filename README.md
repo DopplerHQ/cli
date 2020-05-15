@@ -12,6 +12,8 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 
 The Doppler CLI is available in several popular package managers. It's also [available](https://github.com/DopplerHQ/cli/releases/latest) as a standalone binary.
 
+For more info, including instructions on verifying binary signatures, see the [Install](INSTALL.md) page.
+
 ### macOS
 
 Using [brew](https://brew.sh/) is recommended:
@@ -104,6 +106,8 @@ This command will push local changes to origin, create a new tag, and push the t
 Note: The release will automatically fail if the tag and HEAD have diverged:
 
 `   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
+
+Note: In the goreleaser output, it will state that artifact signing is disabled. This is due to the custom args we pass goreleaser (so that we can specify our GPG key). You can verify that signing works by the presence of a `checksums.txt.sig` file.
 
 ### Help
 

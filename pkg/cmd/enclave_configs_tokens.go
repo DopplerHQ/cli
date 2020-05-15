@@ -162,6 +162,5 @@ func init() {
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
 	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensRevokeCmd.Flags().Bool("silent", false, "disable text output")
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 }

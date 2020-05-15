@@ -5,7 +5,7 @@ RUN apt-get update \
     && apt-get dist-upgrade -y \
     && apt-get install -y sudo gnupg apt-transport-https ca-certificates
 
-RUN sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-keys 379CE192D401AB61 \
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61 \
     && echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" | sudo tee -a /etc/apt/sources.list \
     && sudo apt-get update \
     && sudo apt-get install -y doppler

@@ -133,3 +133,22 @@ Flags:
 You can download all binaries and release artifacts from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are built for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
 
 You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
+
+# Verify Signature
+
+You can verify the integrity and authenticity of any released artifact using Doppler's public GPG key. The signatures of all release artifacts are placed in checksums.txt, which itself is then signed.
+
+```sh
+# fetch Doppler's signing key
+gpg --keyserver keyserver.ubuntu.com --recv D3D593D50EE79DEC
+# verify content of checksums.txt against signature
+gpg --verify checksums.txt.sig checksums.txt
+# verify checksum of cli binary (downloaded file name must match download page)
+sha256sum --check --strict --ignore-missing checksums.txt
+```
+
+If the signature matches, you'll see output like this:
+```sh
+$ sha256sum --check --ignore-missing --strict checksums.txt
+doppler_3.3.2_linux_amd64.deb: OK
+```

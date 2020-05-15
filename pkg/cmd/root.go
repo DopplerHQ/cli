@@ -40,15 +40,22 @@ var rootCmd = &cobra.Command{
 		configuration.LoadConfig()
 
 		if utils.Debug {
+			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
+			if silent {
+				utils.LogWarning("--silent has no effect when used with --debug")
+			}
+
 			utils.LogDebug("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
 
-		silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
-		canPrintResults := utils.Debug || (!silent && !plain && !utils.OutputJSON)
-		checkVersion(cmd.CalledAs(), silent, canPrintResults)
+		// only run version check if we can print the results
+		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
+		if utils.CanLogInfo() && !plain {
+			checkVersion(cmd.CalledAs())
+		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
@@ -58,13 +65,13 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func checkVersion(command string, silent bool, print bool) {
+func checkVersion(command string) {
 	// disable version checking on the "run" command and "enclave secrets download" command
 	if command == "run" || command == "download" {
 		return
 	}
 
-	if !version.PerformVersionCheck || !print || version.IsDevelopment() {
+	if !version.PerformVersionCheck || version.IsDevelopment() {
 		return
 	}
 
@@ -74,7 +81,7 @@ func checkVersion(command string, silent bool, print bool) {
 		return
 	}
 
-	versionCheck := http.CheckCLIVersion(prevVersionCheck, silent, utils.OutputJSON, utils.Debug)
+	versionCheck := http.CheckCLIVersion(prevVersionCheck)
 	if versionCheck == (models.VersionCheck{}) {
 		return
 	}
@@ -133,4 +140,5 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
+	rootCmd.PersistentFlags().Bool("silent", false, "disable output of info messages")
 }

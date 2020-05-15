@@ -115,6 +115,5 @@ func init() {
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
 	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsRollbackCmd.Flags().Bool("silent", false, "disable text output")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 }

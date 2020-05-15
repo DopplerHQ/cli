@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -58,9 +59,7 @@ and your config file. Flags have the highest priority; config file has the least
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
-		if !jsonFlag {
-			color.Green.Printf("Configuration file: %s\n\n", configuration.UserConfigFile)
-		}
+		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
 
 		config := configuration.LocalConfig(cmd)
 		printer.ScopedConfigSource(config, jsonFlag, true)
@@ -208,10 +207,8 @@ func init() {
 	configureGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	configureCmd.AddCommand(configureGetCmd)
 
-	configureSetCmd.Flags().Bool("silent", false, "disable text output")
 	configureCmd.AddCommand(configureSetCmd)
 
-	configureUnsetCmd.Flags().Bool("silent", false, "disable text output")
 	configureCmd.AddCommand(configureUnsetCmd)
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")

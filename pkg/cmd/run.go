@@ -109,7 +109,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
 			for _, flag := range flags {
 				if cmd.Flags().Changed(flag) {
-					utils.Log(fmt.Sprintf("Warning: --%s has no effect when the fallback file is disabled", flag))
+					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
 				}
 			}
 		}
@@ -364,12 +364,10 @@ func init() {
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
-	runCmd.Flags().Bool("silent", false, "disable output of info messages")
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")
 	rootCmd.AddCommand(runCmd)
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
-	runCleanCmd.Flags().Bool("silent", false, "disable output of info messages")
 	runCleanCmd.Flags().Bool("dry-run", false, "do not delete anything, print what would have happened")
 	runCmd.AddCommand(runCleanCmd)
 }
