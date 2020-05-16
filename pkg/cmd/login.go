@@ -50,22 +50,28 @@ var loginCmd = &cobra.Command{
 		code := response["code"].(string)
 		authURL := response["auth_url"].(string)
 
-		utils.Log(fmt.Sprintf("Your auth code is %s", color.Green.Render(code)))
-
 		if copyAuthCode {
 			utils.CopyToClipboard(code)
 		}
 
-		utils.Log("")
-		utils.Log(fmt.Sprintf("Complete login at %s", authURL))
+		openBrowser := silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
+		printURL := !openBrowser
+		if openBrowser {
+			if err := open.Run(authURL); err != nil {
+				if silent {
+					utils.HandleError(err, "Unable to launch a browser")
+				}
 
-		if silent || utils.ConfirmationPrompt("Open this URL in your browser?", true) {
-			err := open.Run(authURL)
-			if err != nil {
-				utils.HandleError(err)
+				printURL = true
+				utils.Log("Unable to launch a browser")
+				utils.LogDebugError(err)
 			}
 		}
 
+		if printURL {
+			utils.Log(fmt.Sprintf("Complete authorization at %s", authURL))
+		}
+		utils.Log(fmt.Sprintf("Your auth code is %s", color.Green.Render(code)))
 		utils.Log("Waiting...")
 
 		// auth flow must complete within 5 minutes
@@ -94,7 +100,7 @@ var loginCmd = &cobra.Command{
 		}
 
 		if response == nil {
-			utils.HandleError(errors.New("unable to authenticate"))
+			utils.HandleError(errors.New("unexpected API response"))
 		}
 
 		if err, ok := response["error"]; ok {
