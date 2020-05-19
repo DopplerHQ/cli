@@ -10,7 +10,7 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 
 ## Install
 
-The Doppler CLI is available in several popular package managers. It's also [available](https://github.com/DopplerHQ/cli/releases/latest) as a standalone binary.
+The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#linuxmacosbsd-shell-script), and downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
 
 For more info, including instructions on verifying binary signatures, see the [Install](INSTALL.md) page.
 
@@ -67,7 +67,8 @@ Once installed, setup should only take a minute. You'll authorize the CLI to acc
 ```sh
 $ doppler login                     # generate auth credentials
 $ doppler enclave setup             # select your project and config
-$ doppler configure --all           # (optional) view local configuration
+# optional
+$ doppler configure --all           # view local configuration
 ```
 
 By default, `doppler login` scopes the generated token globally (`--scope=*`). This means that the token will be accessible to your projects in any local directory. To limit the scope of the token, specify the `scope` flag during login: `doppler login --scope=.`.

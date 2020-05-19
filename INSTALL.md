@@ -16,7 +16,7 @@ To update:
 $ brew upgrade doppler
 ```
 
-Alternatively, you can download the doppler `pkg` file from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. This will install the doppler binary in `/usr/local/bin`. Note that this installation method does not support seamless updates. To update, you'll need to download and run the new `pkg` file.
+Alternatively, you can install the CLI via [shell script](#linuxmacosbsd-shell-script), or via the doppler `.pkg` file on the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. These methods will install the doppler binary directly to `/usr/local/bin` and do not support seamless updates. To update, you'll need to re-run the installation.
 
 ## Windows
 
@@ -76,6 +76,20 @@ To update:
 ```sh
 $ sudo yum update doppler
 ```
+
+## Linux/macOS/BSD shell script
+
+You can bypass package managers and quickly install the latest version of the CLI via shell script. The script automatically downloads and installs the CLI binary most appropriate for your system's architecture. It is also fully POSIX compliant to support all linux and bsd variants with minimal dependencies.
+
+Note that this installation method is only recommended for ephemeral environments like CI jobs. Longer-lived environments that expect to receive updates should install the CLI via a package manager.
+
+```sh
+curl -LO https://cli.doppler.com/install.sh || wget https://cli.doppler.com/install.sh
+chmod +x install.sh
+sudo ./install.sh
+```
+
+You can find the source `install.sh` file in this repo's `scripts` directory.
 
 ## Docker
 
