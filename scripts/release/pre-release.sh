@@ -35,7 +35,7 @@ else
     echo "Invalid argument: $RELEASE_TYPE"
     exit 1
   fi
-  VERSION=$(./scripts/version.sh "-$reltype" "$PREV_VERSION")
+  VERSION=$(./scripts/release/version.sh "-$reltype" "$PREV_VERSION")
 fi
 
 echo "Using version $VERSION"
