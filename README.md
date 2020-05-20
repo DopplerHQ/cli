@@ -10,7 +10,7 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 
 ## Install
 
-The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#linuxmacosbsd-shell-script), and downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
+The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#shell-script), and downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
 
 For more info, including instructions on verifying binary signatures, see the [Install](INSTALL.md) page.
 
@@ -28,7 +28,7 @@ To update:
 $ brew upgrade doppler
 ```
 
-For installation without brew, see the [Install](INSTALL.md) page.
+For installation without brew, see the [Install](INSTALL.md#macos) page.
 
 ### Windows
 
@@ -46,9 +46,19 @@ To update:
 $ scoop update doppler
 ```
 
+### Shell script
+
+This option is only recommend for CI jobs and other environments that won't receive updates.
+
+```sh
+$ (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh
+```
+
+For more info, see the [Install](INSTALL.md#shell-script) page.
+
 ### Linux
 
-See [Install](INSTALL.md) page for instructions.
+See [Install](INSTALL.md#linux) page for instructions.
 
 ### Docker
 
@@ -58,7 +68,7 @@ We currently build these Docker images:
 - `dopplerhq/cli:python` based on `python:3-alpine`
 - `dopplerhq/cli:ruby` based on `ruby:2-alpine`
 
-For more info, see the [Install](INSTALL.md) page.
+For more info, see the [Install](INSTALL.md#docker) page.
 
 ## Usage
 
