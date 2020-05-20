@@ -4,9 +4,9 @@ build:
 	go build -o doppler main.go
 
 release:
-	./scripts/pre-release.sh $(v)
-	doppler run -- ./scripts/release.sh
-	doppler run -- ./scripts/post-release.sh
+	./scripts/release/pre-release.sh $(v)
+	doppler run -- ./scripts/release/release.sh
+	doppler run -- ./scripts/release/post-release.sh
 
 test:
 	go test ./pkg/... -v
