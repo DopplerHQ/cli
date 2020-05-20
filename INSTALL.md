@@ -77,7 +77,7 @@ To update:
 $ sudo yum update doppler
 ```
 
-## Linux/macOS/BSD shell script
+## Shell script
 
 You can bypass package managers and quickly install the latest version of the CLI via shell script. The script automatically downloads and installs the CLI binary most appropriate for your system's architecture. It is also fully POSIX compliant to support all linux and bsd variants with minimal dependencies.
 
