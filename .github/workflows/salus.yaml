@@ -1,5 +1,7 @@
 on: [push]
 
+name: Salus security scan
+
 jobs:
   salus_scan_job:
     runs-on: ubuntu-latest
