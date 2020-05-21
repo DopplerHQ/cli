@@ -1,0 +1,26 @@
+name: Test CLI action
+
+on: [push]
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install CLI
+      uses: dopplerhq/cli-action@v1
+    - name: Test CLI
+      run: doppler --version
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Install CLI
+      uses: dopplerhq/cli-action@v1
+    - name: Test CLI
+      run: doppler --version
+  macOS:
+    runs-on: macos-latest
+    steps:
+    - name: Install CLI
+      uses: dopplerhq/cli-action@v1
+    - name: Test CLI
+      run: doppler --version
