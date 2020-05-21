@@ -99,6 +99,10 @@ We currently publish these Docker tags:
 
 You can find all source Dockerfiles in the `/docker` folder ([here](https://github.com/DopplerHQ/cli/tree/master/docker)).
 
+## GitHub Action
+
+You can install the latest version of the CLI via GitHub Action. See the cli-action [repo](https://github.com/DopplerHQ/cli-action) for more info.
+
 ### Example
 Here's an example Dockerfile for a Node app:
 

@@ -10,7 +10,7 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 
 ## Install
 
-The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#shell-script), and downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
+The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#shell-script), [GitHub Action](https://github.com/DopplerHQ/cli-action), or downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
 
 For more info, including instructions on verifying binary signatures, see the [Install](INSTALL.md) page.
 
@@ -69,6 +69,10 @@ We currently build these Docker images:
 - `dopplerhq/cli:ruby` based on `ruby:2-alpine`
 
 For more info, see the [Install](INSTALL.md#docker) page.
+
+### GitHub Action
+
+You can install the latest version of the CLI via GitHub Action. See the cli-action [repo](https://github.com/DopplerHQ/cli-action) for more info.
 
 ## Usage
 
