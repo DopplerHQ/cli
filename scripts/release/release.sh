@@ -18,4 +18,10 @@ echo "Using Docker config $DOCKER_CONFIG"
 echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USER --password-stdin $DOCKER_REGISTRY
 echo $GOOGLE_CREDS | docker login -u $GCR_USER --password-stdin $GCR_REGISTRY
 
+# pull in latest docker images
+docker pull alpine
+docker pull node:lts-alpine
+docker pull python:3-alpine
+docker pull ruby:2-alpine
+
 GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist
