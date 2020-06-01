@@ -44,8 +44,12 @@ var rootCmd = &cobra.Command{
 			if silent {
 				utils.LogWarning("--silent has no effect when used with --debug")
 			}
+		}
 
-			utils.LogDebug("Active configuration")
+		// this output does not honor --silent
+		printConfig := utils.GetBoolFlagIfChanged(cmd, "print-config", false)
+		if printConfig {
+			fmt.Println("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
@@ -139,5 +143,6 @@ func init() {
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", false, "output json")
 	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
+	rootCmd.PersistentFlags().Bool("print-config", false, "output active configuration")
 	rootCmd.PersistentFlags().Bool("silent", false, "disable output of info messages")
 }
