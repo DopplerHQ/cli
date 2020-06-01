@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"runtime/debug"
 
 	"gopkg.in/gookit/color.v1"
 )
@@ -95,11 +94,6 @@ func ErrExit(e error, exitCode int, messages ...string) {
 				fmt.Fprintln(os.Stderr, message)
 			}
 		}
-	}
-
-	if Debug {
-		fmt.Fprintln(os.Stderr, color.Red.Render("\nStacktrace:"))
-		debug.PrintStack()
 	}
 
 	os.Exit(exitCode)
