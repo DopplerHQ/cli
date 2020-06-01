@@ -142,7 +142,7 @@ func init() {
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", utils.OutputJSON, "output json")
-	rootCmd.PersistentFlags().Bool("debug", utils.Debug, "output additional information when encountering errors")
+	rootCmd.PersistentFlags().Bool("debug", utils.Debug, "output additional information")
 	rootCmd.PersistentFlags().Bool("print-config", false, "output active configuration")
 	rootCmd.PersistentFlags().Bool("silent", utils.Silent, "disable output of info messages")
 }
