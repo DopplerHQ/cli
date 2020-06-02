@@ -44,8 +44,12 @@ var rootCmd = &cobra.Command{
 			if silent {
 				utils.LogWarning("--silent has no effect when used with --debug")
 			}
+		}
 
-			utils.LogDebug("Active configuration")
+		// this output does not honor --silent
+		printConfig := utils.GetBoolFlagIfChanged(cmd, "print-config", false)
+		if printConfig {
+			fmt.Println("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			fmt.Println("")
 		}
@@ -106,14 +110,13 @@ func loadFlags(cmd *cobra.Command) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// catch any panics
+	// catch any panics in non-dev builds
 	defer func() {
-		if version.IsDevelopment() {
-			return
-		}
-		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %v\n", color.Red.Render("Doppler Exception:"), err))
-			os.Exit(1)
+		if !version.IsDevelopment() {
+			if err := recover(); err != nil {
+				fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %v\n", color.Red.Render("Doppler Exception:"), err))
+				os.Exit(1)
+			}
 		}
 	}()
 
@@ -138,7 +141,8 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read enclave config from the environment")
 	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
-	rootCmd.PersistentFlags().Bool("json", false, "output json")
-	rootCmd.PersistentFlags().Bool("debug", false, "output additional information when encountering errors")
-	rootCmd.PersistentFlags().Bool("silent", false, "disable output of info messages")
+	rootCmd.PersistentFlags().Bool("json", utils.OutputJSON, "output json")
+	rootCmd.PersistentFlags().Bool("debug", utils.Debug, "output additional information")
+	rootCmd.PersistentFlags().Bool("print-config", false, "output active configuration")
+	rootCmd.PersistentFlags().Bool("silent", utils.Silent, "disable output of info messages")
 }
