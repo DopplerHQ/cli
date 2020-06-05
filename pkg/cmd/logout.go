@@ -39,6 +39,7 @@ This is an alias of the "login revoke" command.`,
 func revokeToken(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 	updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
+	updateEnclaveConfig := !utils.GetBoolFlag(cmd, "no-update-enclave-config")
 	verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
 	yes := utils.GetBoolFlag(cmd, "yes")
 	token := localConfig.Token.Value
@@ -58,7 +59,18 @@ func revokeToken(cmd *cobra.Command, args []string) {
 		// remove key from config
 		for scope, config := range configuration.AllConfigs() {
 			if config.Token == token {
-				configuration.Set(scope, map[string]string{models.ConfigToken.String(): ""})
+				updatedConfig := map[string]string{models.ConfigToken.String(): ""}
+
+				if updateEnclaveConfig {
+					if config.EnclaveProject != "" {
+						updatedConfig[models.ConfigEnclaveProject.String()] = ""
+					}
+					if config.EnclaveConfig != "" {
+						updatedConfig[models.ConfigEnclaveConfig.String()] = ""
+					}
+				}
+
+				configuration.Set(scope, updatedConfig)
 			}
 		}
 	}
@@ -68,7 +80,8 @@ func revokeToken(cmd *cobra.Command, args []string) {
 
 func init() {
 	logoutCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	logoutCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
+	logoutCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
+	logoutCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
 	logoutCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	rootCmd.AddCommand(logoutCmd)
 }

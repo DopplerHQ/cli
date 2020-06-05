@@ -202,7 +202,8 @@ func init() {
 	loginCmd.AddCommand(loginRollCmd)
 
 	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token from the config file")
+	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
+	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
 	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	loginCmd.AddCommand(loginRevokeCmd)
 
