@@ -184,10 +184,18 @@ func ParseActivityLog(log map[string]interface{}) ActivityLog {
 	}
 	if log["user"] != nil {
 		user := log["user"].(map[string]interface{})
-		parsedLog.User.Email = user["email"].(string)
-		parsedLog.User.Name = user["name"].(string)
-		parsedLog.User.Username = user["username"].(string)
-		parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+		if user["email"] != nil {
+			parsedLog.User.Email = user["email"].(string)
+		}
+		if user["name"] != nil {
+			parsedLog.User.Name = user["name"].(string)
+		}
+		if user["username"] != nil {
+			parsedLog.User.Username = user["username"].(string)
+		}
+		if user["profile_image_url"] != nil {
+			parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+		}
 	}
 
 	return parsedLog
@@ -204,8 +212,15 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	computed := map[string]ComputedSecret{}
 	secrets := result["secrets"].(map[string]interface{})
 	for key, secret := range secrets {
+		computedSecret := ComputedSecret{Name: key}
 		val := secret.(map[string]interface{})
-		computed[key] = ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
+		if val["raw"] != nil {
+			computedSecret.RawValue = val["raw"].(string)
+		}
+		if val["computed"] != nil {
+			computedSecret.ComputedValue = val["computed"].(string)
+		}
+		computed[key] = computedSecret
 	}
 
 	return computed, nil
