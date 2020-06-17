@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -108,15 +109,10 @@ func RunCommand(command []string, env []string, inFile *os.File, outFile *os.Fil
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	if err := cmd.Run(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			return exitError.ExitCode(), err
-		}
-
-		return 1, err
+	if IsWindows() {
+		return execCommandWindows(cmd)
 	}
-
-	return 0, nil
+	return execCommand(cmd)
 }
 
 // RunCommandString runs the specified command string
@@ -131,6 +127,47 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
+	if IsWindows() {
+		return execCommandWindows(cmd)
+	}
+	return execCommand(cmd)
+}
+
+func execCommandWindows(cmd *exec.Cmd) (int, error) {
+	if err := cmd.Start(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode(), err
+		}
+
+		return 1, err
+	}
+
+	// ignore interrupts or the CLI will exit before the user
+	// can respond to cmd.exe's "Terminate batch job?" prompt
+	channel := make(chan os.Signal, 1)
+	signal.Notify(channel, os.Interrupt)
+	go func() {
+		s := <-channel
+		// do nothing; the child process will have also received the signal
+		LogDebug(fmt.Sprintf("Process received %s", s.String()))
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode := exitError.ExitCode()
+			// when killed via signal, Go may incorrectly read the exit code as -1
+			if exitCode >= 0 {
+				return exitCode, err
+			}
+		}
+
+		return 1, err
+	}
+
+	return 0, nil
+}
+
+func execCommand(cmd *exec.Cmd) (int, error) {
 	if err := cmd.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			return exitError.ExitCode(), err
