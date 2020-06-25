@@ -86,6 +86,9 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	if info["name"] != nil {
 		configInfo.Name = info["name"].(string)
 	}
+	if info["root"] != nil {
+		configInfo.Root = info["root"].(bool)
+	}
 	if info["environment"] != nil {
 		configInfo.Environment = info["environment"].(string)
 	}
