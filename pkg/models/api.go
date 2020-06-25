@@ -50,6 +50,7 @@ type EnvironmentInfo struct {
 type ConfigInfo struct {
 	Name           string `json:"name"`
 	Root           bool   `json:"root"`
+	Locked         bool   `json:"locked"`
 	Environment    string `json:"environment"`
 	Project        string `json:"project"`
 	CreatedAt      string `json:"created_at"`

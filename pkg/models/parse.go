@@ -89,6 +89,9 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	if info["root"] != nil {
 		configInfo.Root = info["root"].(bool)
 	}
+	if info["locked"] != nil {
+		configInfo.Locked = info["locked"].(bool)
+	}
 	if info["environment"] != nil {
 		configInfo.Environment = info["environment"].(string)
 	}
