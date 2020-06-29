@@ -181,6 +181,70 @@ var configsUpdateCmd = &cobra.Command{
 	},
 }
 
+var configsLockCmd = &cobra.Command{
+	Use:   "lock [config]",
+	Short: "Lock a config",
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.OutputJSON
+		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+
+		config := localConfig.EnclaveConfig.Value
+		if len(args) > 0 {
+			config = args[0]
+		}
+		utils.RequireValue("config", config)
+
+		if yes || utils.ConfirmationPrompt("Lock config "+config, false) {
+			configInfo, err := http.LockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
+
+			if !silent {
+				printer.ConfigInfo(configInfo, jsonFlag)
+			}
+		}
+	},
+}
+
+var configsUnlockCmd = &cobra.Command{
+	Use:   "unlock [config]",
+	Short: "Unlock a config",
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonFlag := utils.OutputJSON
+		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
+		localConfig := configuration.LocalConfig(cmd)
+
+		utils.RequireValue("token", localConfig.Token.Value)
+		utils.RequireValue("project", localConfig.EnclaveProject.Value)
+
+		config := localConfig.EnclaveConfig.Value
+		if len(args) > 0 {
+			config = args[0]
+		}
+		utils.RequireValue("config", config)
+
+		if yes || utils.ConfirmationPrompt("Unlock config "+config, false) {
+			configInfo, err := http.UnlockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
+
+			if !silent {
+				printer.ConfigInfo(configInfo, jsonFlag)
+			}
+		}
+	},
+}
+
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 
@@ -205,6 +269,16 @@ func init() {
 	configsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
+
+	configsLockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	configsLockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsLockCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	configsCmd.AddCommand(configsLockCmd)
+
+	configsUnlockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	configsUnlockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsUnlockCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	configsCmd.AddCommand(configsUnlockCmd)
 
 	enclaveCmd.AddCommand(configsCmd)
 }

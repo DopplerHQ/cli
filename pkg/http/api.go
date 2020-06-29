@@ -453,7 +453,7 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 	return info, Error{}
 }
 
-// DeleteConfig create a config
+// DeleteConfig delete a config
 func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, config string) Error {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
@@ -472,7 +472,47 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 	return Error{}
 }
 
-// UpdateConfig create a config
+// LockConfig lock a config
+func LockConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/lock", params, nil)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to lock config", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	return info, Error{}
+}
+
+// UnlockConfig unlock a config
+func UnlockConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/unlock", params, nil)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to unlock config", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	return info, Error{}
+}
+
+// UpdateConfig update a config
 func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, config string, name string) (models.ConfigInfo, Error) {
 	postBody := map[string]interface{}{"name": name}
 	body, err := json.Marshal(postBody)
@@ -585,7 +625,7 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log+"/rollback", params, []byte{})
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log+"/rollback", params, nil)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
