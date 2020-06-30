@@ -95,7 +95,8 @@ var setupCmd = &cobra.Command{
 				utils.HandleError(apiError.Unwrap(), apiError.Message)
 			}
 			if len(configs) == 0 {
-				utils.HandleError(errors.New("your project does not have any configs"))
+				utils.Log("You project does not have any configs")
+				break
 			}
 
 			selectedConfig = selectConfig(configs, selectedConfiguredProject, scopedConfig.EnclaveConfig.Value, promptUser)
