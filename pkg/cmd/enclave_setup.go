@@ -129,7 +129,10 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	var options []string
 	var defaultOption string
 	for _, val := range projects {
-		option := val.Name + " (" + val.ID + ")"
+		option := val.Name
+		if val.Name != val.ID {
+			option = fmt.Sprintf("%s (%s)", option, val.ID)
+		}
 		options = append(options, option)
 
 		if val.ID == prevConfiguredProject {
@@ -164,7 +167,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	}
 
 	for _, val := range projects {
-		if strings.HasSuffix(selectedProject, "("+val.ID+")") {
+		if selectedProject == val.ID || strings.HasSuffix(selectedProject, "("+val.ID+")") {
 			return val.ID
 		}
 	}
