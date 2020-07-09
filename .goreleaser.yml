@@ -159,7 +159,7 @@ dockers:
 
 brews:
   - name: doppler
-    github:
+    tap:
       owner: DopplerHQ
       name: homebrew-doppler
     commit_author:
