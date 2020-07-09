@@ -62,6 +62,7 @@ var configsTokensGetCmd = &cobra.Command{
 		if len(args) > 0 {
 			slug = args[0]
 		}
+		utils.RequireValue("slug", slug)
 
 		tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		if !err.IsNil() {
@@ -97,6 +98,7 @@ var configsTokensCreateCmd = &cobra.Command{
 		if len(args) > 0 {
 			name = args[0]
 		}
+		utils.RequireValue("name", name)
 
 		configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name)
 		if !err.IsNil() {
@@ -125,6 +127,7 @@ var configsTokensRevokeCmd = &cobra.Command{
 		if len(args) > 0 {
 			slug = args[0]
 		}
+		utils.RequireValue("slug", slug)
 
 		err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug)
 		if !err.IsNil() {

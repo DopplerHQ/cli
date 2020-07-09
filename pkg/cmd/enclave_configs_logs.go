@@ -61,6 +61,7 @@ var configsLogsGetCmd = &cobra.Command{
 		if len(args) > 0 {
 			log = args[0]
 		}
+		utils.RequireValue("log", log)
 
 		configLog, err := http.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
 		if !err.IsNil() {
@@ -88,6 +89,7 @@ var configsLogsRollbackCmd = &cobra.Command{
 		if len(args) > 0 {
 			log = args[0]
 		}
+		utils.RequireValue("log", log)
 
 		configLog, err := http.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
 		if !err.IsNil() {
