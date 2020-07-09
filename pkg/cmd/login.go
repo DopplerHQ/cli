@@ -43,6 +43,15 @@ var loginCmd = &cobra.Command{
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
+		// warn user if scope already contains a token
+		if prevConfig.Token.Value != "" {
+			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
+			newScope, err2 := filepath.Abs(scope)
+			if err1 == nil && err2 == nil && prevScope == newScope {
+				utils.LogWarning("This scope already contains a token and will be overridden.")
+			}
+		}
+
 		response, err := http.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
