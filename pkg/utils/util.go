@@ -306,13 +306,14 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 }
 
 // CopyToClipboard copies text to the user's clipboard
-func CopyToClipboard(text string) {
+func CopyToClipboard(text string) error {
 	if !clipboard.Unsupported {
 		err := clipboard.WriteAll(text)
 		if err != nil {
-			HandleError(err, "Unable to copy to clipboard")
+			return err
 		}
 	}
+	return nil
 }
 
 // HostOS the host OS
