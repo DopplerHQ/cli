@@ -112,13 +112,33 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   if [ -x "$(command -v curl)" ]; then
     log_debug "Using $(command -v curl)"
     log_debug "Downloading from $url"
-    # ensure this command always succeeds
-    headers=$(curl --silent --retry 3 -o "$filename" -LN -D - "$url" || true)
+    # when this fails print the exit code
+    headers=$(curl --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
+    if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
+      exit_code="$headers"
+      echo "ERROR: curl failed with exit code $exit_code"
+
+      if [ "$exit_code" -eq 60 ]; then
+        echo ""
+        echo "Ensure that CA Certificates are installed for your distribution"
+      fi
+      clean_exit 1
+    fi
   else
     log_debug "Using $(command -v wget)"
     log_debug "Downloading from $url"
-    # ensure this command always succeeds
-    headers=$(wget -q -t 3 -S -O $filename "$url" 2>&1 || true)
+    # when this fails print the exit code
+    headers=$(wget -q -t 3 -S -O $filename "$url" 2>&1 || echo "$?")
+    if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
+      exit_code="$headers"
+      echo "ERROR: wget failed with exit code $exit_code"
+
+      if [ "$exit_code" -eq 5 ]; then
+        echo ""
+        echo "Ensure that CA Certificates are installed for your distribution"
+      fi
+      clean_exit 1
+    fi
   fi
 
   status=$(echo "$headers" | head -1 | sed -n 's/^[[:space:]]*HTTP.* \([0-9][0-9][0-9]\).*$/\1/p')
