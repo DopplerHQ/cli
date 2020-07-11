@@ -263,7 +263,9 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 			}
 		}
 
-		utils.CopyToClipboard(strings.Join(vals, "\n"))
+		if err := utils.CopyToClipboard(strings.Join(vals, "\n")); err != nil {
+			utils.HandleError(err, "Unable to copy to clipboard")
+		}
 	}
 
 	if jsonFlag {
@@ -421,7 +423,9 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 
 		print := strings.Join(vals, "\n")
 		if copy {
-			utils.CopyToClipboard(print)
+			if err := utils.CopyToClipboard(print); err != nil {
+				utils.HandleError(err, "Unable to copy to clipboard")
+			}
 		}
 
 		if plain {
@@ -524,7 +528,9 @@ func ConfigServiceTokenInfo(token models.ConfigServiceToken, jsonFlag bool) {
 // ConfigServiceToken print config service token and its info
 func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bool, copy bool) {
 	if copy {
-		utils.CopyToClipboard(token.Token)
+		if err := utils.CopyToClipboard(token.Token); err != nil {
+			utils.HandleError(err, "Unable to copy to clipboard")
+		}
 	}
 
 	if plain {

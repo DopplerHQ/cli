@@ -60,7 +60,9 @@ var loginCmd = &cobra.Command{
 		authURL := response["auth_url"].(string)
 
 		if copyAuthCode {
-			utils.CopyToClipboard(code)
+			if err := utils.CopyToClipboard(code); err != nil {
+				utils.LogWarning("Unable to copy to clipboard")
+			}
 		}
 
 		openBrowser := silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)

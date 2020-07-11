@@ -120,6 +120,16 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
+	} else {
+		// these shells all support the same options we use for sh
+		shells := []string{"/bash", "/dash", "/fish", "/zsh", "/ksh", "/csh", "/tcsh"}
+		envShell := os.Getenv("SHELL")
+		for _, s := range shells {
+			if strings.HasSuffix(envShell, s) {
+				shell[0] = envShell
+				break
+			}
+		}
 	}
 	cmd := exec.Command(shell[0], shell[1], command) // #nosec G204
 	cmd.Env = env
@@ -306,13 +316,14 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 }
 
 // CopyToClipboard copies text to the user's clipboard
-func CopyToClipboard(text string) {
+func CopyToClipboard(text string) error {
 	if !clipboard.Unsupported {
 		err := clipboard.WriteAll(text)
 		if err != nil {
-			HandleError(err, "Unable to copy to clipboard")
+			return err
 		}
 	}
+	return nil
 }
 
 // HostOS the host OS
