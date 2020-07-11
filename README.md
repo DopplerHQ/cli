@@ -8,6 +8,7 @@ The Doppler CLI is the official tool for interacting with your Enclave secrets a
 - View activity and audit logs
 - Execute applications with your secrets injected into the environment
 
+
 ## Install
 
 The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#shell-script), [GitHub Action](https://github.com/DopplerHQ/cli-action), or downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
@@ -76,7 +77,7 @@ You can install the latest version of the CLI via GitHub Action. See the cli-act
 
 ## Usage
 
-Once installed, setup should only take a minute. You'll authorize the CLI to access your Doppler workplace, and then select your project and config.
+Setup should only take a minute (literally). You'll authorize the CLI to access your Doppler workplace, and then select your project and config.
 
 ```sh
 $ doppler login                     # generate auth credentials
@@ -85,6 +86,7 @@ $ doppler enclave setup             # select your project and config
 $ doppler configure --all           # view local configuration
 ```
 
-By default, `doppler login` scopes the generated token globally (`--scope=*`). This means that the token will be accessible to your projects in any local directory. To limit the scope of the token, specify the `scope` flag during login: `doppler login --scope=.`.
+By default, `doppler login` scopes the auth token globally (`--scope=*`). This means that the token will be accessible to projects using the Doppler CLI from any local directory. To limit this, specify the `scope` flag during login: `doppler login --scope=./` or `doppler login --scope ~/projects/backend`.
 
-Enclave setup (i.e. `doppler enclave setup`) scopes the enclave project and config to the current directory (`--scope=.`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.
+Enclave setup (i.e. `doppler enclave setup`) scopes the enclave project and config to the current directory (`--scope=./`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.
+
