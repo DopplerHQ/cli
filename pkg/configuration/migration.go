@@ -47,6 +47,7 @@ func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
 	config := map[string]models.FileScopedOptions{}
 
 	for key, val := range oldConfig {
+		key = NormalizeScope(key)
 		config[key] = models.FileScopedOptions{EnclaveProject: val.Pipeline, EnclaveConfig: val.Environment, Token: val.Key}
 	}
 

@@ -37,7 +37,7 @@ var loginCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		scope := cmd.Flag("scope").Value.String()
+		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
 		prevConfig := configuration.Get(scope)
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
@@ -207,14 +207,14 @@ This is an alias of the "logout" command.`,
 
 func init() {
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
-	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginCmd.Flags().Bool("yes", false, "open browser without confirmation")
 
-	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginRollCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
 	loginCmd.AddCommand(loginRollCmd)
 
-	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginRevokeCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
 	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
 	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")

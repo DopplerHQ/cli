@@ -37,7 +37,7 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 		canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
-		scope := cmd.Flag("scope").Value.String()
+		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
 		localConfig := configuration.LocalConfig(cmd)
 		scopedConfig := configuration.Get(scope)
 

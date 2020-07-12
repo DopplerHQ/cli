@@ -79,7 +79,7 @@ func revokeToken(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	logoutCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	logoutCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	logoutCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
 	logoutCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
 	logoutCmd.Flags().Bool("yes", false, "proceed without confirmation")
