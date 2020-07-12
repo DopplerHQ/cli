@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -153,20 +152,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 		utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
 	}
 
-	prompt := &survey.Select{
-		Message: "Select a project:",
-		Options: options,
-	}
-	if defaultOption != "" {
-		prompt.Default = defaultOption
-	}
-
-	selectedProject := ""
-	err := survey.AskOne(prompt, &selectedProject)
-	if err != nil {
-		utils.HandleError(err)
-	}
-
+	selectedProject := utils.SelectPrompt("Select a project:", options, defaultOption)
 	for _, val := range projects {
 		if selectedProject == val.ID || strings.HasSuffix(selectedProject, "("+val.ID+")") {
 			return val.ID
@@ -202,20 +188,7 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 		utils.HandleError(errors.New("config must be specified via --config flag or ENCLAVE_CONFIG environment variable when using --no-prompt"))
 	}
 
-	prompt := &survey.Select{
-		Message: "Select a config:",
-		Options: options,
-	}
-	if defaultOption != "" {
-		prompt.Default = defaultOption
-	}
-
-	selectedConfig := ""
-	err := survey.AskOne(prompt, &selectedConfig)
-	if err != nil {
-		utils.HandleError(err)
-	}
-
+	selectedConfig := utils.SelectPrompt("Select a config:", options, defaultOption)
 	return selectedConfig
 }
 
