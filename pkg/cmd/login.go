@@ -40,6 +40,7 @@ var loginCmd = &cobra.Command{
 		scope := cmd.Flag("scope").Value.String()
 		prevConfig := configuration.Get(scope)
 		silent := utils.GetBoolFlag(cmd, "silent")
+		yes := utils.GetBoolFlag(cmd, "yes")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
@@ -65,7 +66,7 @@ var loginCmd = &cobra.Command{
 			}
 		}
 
-		openBrowser := silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
+		openBrowser := yes || silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
 		printURL := !openBrowser
 		if openBrowser {
 			if err := open.Run(authURL); err != nil {
@@ -207,6 +208,7 @@ This is an alias of the "logout" command.`,
 func init() {
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
 	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginCmd.Flags().Bool("yes", false, "open browser without confirmation")
 
 	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
 	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
