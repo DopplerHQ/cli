@@ -92,13 +92,13 @@ func Exists(path string) bool {
 	return true
 }
 
-// Cwd current working directory
+// Cwd current working directory of user's shell
 func Cwd() string {
-	cwd, err := os.Executable()
+	cwd, err := os.Getwd()
 	if err != nil {
 		HandleError(err)
 	}
-	return filepath.Dir(cwd)
+	return cwd
 }
 
 // RunCommand runs the specified command
