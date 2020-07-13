@@ -37,8 +37,7 @@ var loginCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
-		prevConfig := configuration.Get(scope)
+		prevConfig := configuration.Get(configuration.Scope)
 		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
@@ -47,7 +46,7 @@ var loginCmd = &cobra.Command{
 		// warn user if scope already contains a token
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
-			newScope, err2 := filepath.Abs(scope)
+			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogWarning("This scope already contains a token and will be overridden.")
 			}
@@ -137,14 +136,14 @@ var loginCmd = &cobra.Command{
 			options[models.ConfigVerifyTLS.String()] = localConfig.VerifyTLS.Value
 		}
 
-		configuration.Set(scope, options)
+		configuration.Set(configuration.Scope, options)
 
 		utils.Log("")
 		utils.Log(fmt.Sprintf("Welcome, %s", name))
 
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
-			newScope, err2 := filepath.Abs(scope)
+			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogDebug("Revoking previous token")
 				_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)

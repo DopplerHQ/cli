@@ -40,6 +40,9 @@ var UserConfigDir string
 // UserConfigFile (e.g. /home/user/doppler/.doppler.yaml)
 var UserConfigFile string
 
+// Scope to use for config file
+var Scope = "."
+
 var configFileName = ".doppler.yaml"
 var configContents models.ConfigFile
 
@@ -105,17 +108,23 @@ func SetVersionCheck(version models.VersionCheck) {
 
 // Get the config at the specified scope
 func Get(scope string) models.ScopedOptions {
-	scope = NormalizeScope(scope)
 	var err error
-	if scope, err = utils.ParsePath(scope); err != nil {
-		utils.HandleError(err)
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
-	scope = scope + string(filepath.Separator)
+	if !strings.HasSuffix(scope, string(filepath.Separator)) {
+		scope = scope + string(filepath.Separator)
+	}
 	var scopedConfig models.ScopedOptions
 
 	for confScope, conf := range configContents.Scoped {
+		confScopePath := confScope
 		// both paths must end in / to prevent partial match (e.g. /test matching /test123)
-		if !strings.HasPrefix(scope, filepath.Clean(confScope)+string(filepath.Separator)) {
+		if !strings.HasSuffix(confScopePath, string(filepath.Separator)) {
+			confScopePath = confScopePath + string(filepath.Separator)
+		}
+
+		if !strings.HasPrefix(scope, confScopePath) {
 			continue
 		}
 
@@ -139,7 +148,7 @@ func Get(scope string) models.ScopedOptions {
 // LocalConfig retrieves the config for the scoped directory
 func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	// config file (lowest priority)
-	localConfig := Get(NormalizeScope(cmd.Flag("scope").Value.String()))
+	localConfig := Get(Scope)
 
 	// environment variables
 	if !utils.GetBoolFlag(cmd, "no-read-env") {
@@ -239,10 +248,9 @@ func AllConfigs() map[string]models.FileScopedOptions {
 
 // Set properties on a scoped config
 func Set(scope string, options map[string]string) {
-	scope = NormalizeScope(scope)
 	var err error
-	if scope, err = utils.ParsePath(scope); err != nil {
-		utils.HandleError(err)
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
 
 	for key, value := range options {
@@ -260,10 +268,9 @@ func Set(scope string, options map[string]string) {
 
 // Unset a local config
 func Unset(scope string, options []string) {
-	scope = NormalizeScope(scope)
 	var err error
-	if scope, err = utils.ParsePath(scope); err != nil {
-		utils.HandleError(err)
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
 
 	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
@@ -325,7 +332,10 @@ func readConfig() models.ConfigFile {
 	// normalize config scope and merge options from conflicting scopes
 	normalizedOptions := map[string]models.FileScopedOptions{}
 	for _, scope := range sorted {
-		normalizedScope := NormalizeScope(scope)
+		var normalizedScope string
+		if normalizedScope, err = NormalizeScope(scope); err != nil {
+			utils.HandleError(err, "Invalid scope")
+		}
 		scopedOption := normalizedOptions[normalizedScope]
 
 		options := config.Scoped[scope]
@@ -388,9 +398,10 @@ func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 }
 
 // NormalizeScope from legacy '*' to '/'
-func NormalizeScope(scope string) string {
+func NormalizeScope(scope string) (string, error) {
 	if scope == "*" {
-		return "/"
+		return "/", nil
 	}
-	return scope
+
+	return utils.ParsePath(scope)
 }

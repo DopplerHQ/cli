@@ -37,9 +37,8 @@ var setupCmd = &cobra.Command{
 		silent := utils.GetBoolFlag(cmd, "silent")
 		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 		canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
 		localConfig := configuration.LocalConfig(cmd)
-		scopedConfig := configuration.Get(scope)
+		scopedConfig := configuration.Get(configuration.Scope)
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
@@ -111,11 +110,11 @@ var setupCmd = &cobra.Command{
 		if saveToken {
 			configToSave[models.ConfigToken.String()] = localConfig.Token.Value
 		}
-		configuration.Set(scope, configToSave)
+		configuration.Set(configuration.Scope, configToSave)
 
 		if !silent {
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
-			conf := configuration.Get(scope)
+			conf := configuration.Get(configuration.Scope)
 			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
 			if saveToken {
 				valuesToPrint = append(valuesToPrint, models.ConfigToken.String())

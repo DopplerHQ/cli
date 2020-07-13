@@ -42,8 +42,7 @@ var configureCmd = &cobra.Command{
 			return
 		}
 
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
-		config := configuration.Get(scope)
+		config := configuration.Get(configuration.Scope)
 		printer.ScopedConfig(config, jsonFlag)
 	},
 }
@@ -104,8 +103,7 @@ doppler configure get key otherkey`,
 		plain := utils.GetBoolFlag(cmd, "plain")
 		copy := utils.GetBoolFlag(cmd, "copy")
 
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
-		conf := configuration.Get(scope)
+		conf := configuration.Get(configuration.Scope)
 
 		printer.ScopedConfigValues(conf, args, models.ScopedPairs(&conf), jsonFlag, plain, copy)
 	},
@@ -145,22 +143,21 @@ doppler configure set key=123 otherkey=456`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		silent := utils.GetBoolFlag(cmd, "silent")
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
 		jsonFlag := utils.OutputJSON
 
 		if !strings.Contains(args[0], "=") {
-			configuration.Set(scope, map[string]string{args[0]: args[1]})
+			configuration.Set(configuration.Scope, map[string]string{args[0]: args[1]})
 		} else {
 			options := map[string]string{}
 			for _, option := range args {
 				arr := strings.Split(option, "=")
 				options[arr[0]] = arr[1]
 			}
-			configuration.Set(scope, options)
+			configuration.Set(configuration.Scope, options)
 		}
 
 		if !silent {
-			printer.ScopedConfig(configuration.Get(scope), jsonFlag)
+			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
 		}
 	},
 }
@@ -189,11 +186,10 @@ doppler configure unset key otherkey`,
 		silent := utils.GetBoolFlag(cmd, "silent")
 		jsonFlag := utils.OutputJSON
 
-		scope := configuration.NormalizeScope(cmd.Flag("scope").Value.String())
-		configuration.Unset(scope, args)
+		configuration.Unset(configuration.Scope, args)
 
 		if !silent {
-			printer.ScopedConfig(configuration.Get(scope), jsonFlag)
+			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
 		}
 	},
 }

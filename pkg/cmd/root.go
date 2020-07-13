@@ -98,6 +98,11 @@ func checkVersion(command string) {
 }
 
 func loadFlags(cmd *cobra.Command) {
+	var err error
+	if configuration.Scope, err = configuration.NormalizeScope(cmd.Flag("scope").Value.String()); err != nil {
+		utils.HandleError(err, "Invalid scope")
+	}
+
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
@@ -139,7 +144,7 @@ func init() {
 	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "max http request duration")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read enclave config from the environment")
-	rootCmd.PersistentFlags().String("scope", ".", "the directory to scope your config to")
+	rootCmd.PersistentFlags().String("scope", configuration.Scope, "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", utils.OutputJSON, "output json")
 	rootCmd.PersistentFlags().Bool("debug", utils.Debug, "output additional information")
