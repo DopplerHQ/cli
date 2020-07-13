@@ -78,7 +78,6 @@ var configsCreateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		environment := cmd.Flag("environment").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -107,7 +106,7 @@ var configsCreateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.ConfigInfo(info, jsonFlag)
 		}
 	},
@@ -119,7 +118,6 @@ var configsDeleteCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -138,7 +136,7 @@ var configsDeleteCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			if !silent {
+			if !utils.Silent {
 				configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
 				if !err.IsNil() {
 					utils.HandleError(err.Unwrap(), err.Message)
@@ -156,7 +154,6 @@ var configsUpdateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -175,7 +172,7 @@ var configsUpdateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.ConfigInfo(info, jsonFlag)
 		}
 	},
@@ -187,7 +184,6 @@ var configsLockCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -206,7 +202,7 @@ var configsLockCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			if !silent {
+			if !utils.Silent {
 				printer.ConfigInfo(configInfo, jsonFlag)
 			}
 		}
@@ -219,7 +215,6 @@ var configsUnlockCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -238,7 +233,7 @@ var configsUnlockCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			if !silent {
+			if !utils.Silent {
 				printer.ConfigInfo(configInfo, jsonFlag)
 			}
 		}

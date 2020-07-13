@@ -73,7 +73,6 @@ var projectsCreateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		description := cmd.Flag("description").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -91,7 +90,7 @@ var projectsCreateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.ProjectInfo(info, jsonFlag)
 		}
 	},
@@ -103,7 +102,6 @@ var projectsDeleteCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -121,7 +119,7 @@ var projectsDeleteCmd = &cobra.Command{
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			if !silent {
+			if !utils.Silent {
 				info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 				if !err.IsNil() {
 					utils.HandleError(err.Unwrap(), err.Message)
@@ -139,7 +137,6 @@ var projectsUpdateCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		description := cmd.Flag("description").Value.String()
 		localConfig := configuration.LocalConfig(cmd)
@@ -159,7 +156,7 @@ var projectsUpdateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.ProjectInfo(info, jsonFlag)
 		}
 	},

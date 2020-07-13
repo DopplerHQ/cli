@@ -142,7 +142,6 @@ doppler configure set key=123 otherkey=456`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		silent := utils.GetBoolFlag(cmd, "silent")
 		jsonFlag := utils.OutputJSON
 
 		if !strings.Contains(args[0], "=") {
@@ -156,7 +155,7 @@ doppler configure set key=123 otherkey=456`,
 			configuration.Set(configuration.Scope, options)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
 		}
 	},
@@ -183,12 +182,11 @@ doppler configure unset key otherkey`,
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		silent := utils.GetBoolFlag(cmd, "silent")
 		jsonFlag := utils.OutputJSON
 
 		configuration.Unset(configuration.Scope, args)
 
-		if !silent {
+		if !utils.Silent {
 			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
 		}
 	},

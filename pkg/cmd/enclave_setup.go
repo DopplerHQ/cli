@@ -34,7 +34,6 @@ var setupCmd = &cobra.Command{
 	Short: "Setup the Doppler CLI for Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		silent := utils.GetBoolFlag(cmd, "silent")
 		promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 		canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
 		localConfig := configuration.LocalConfig(cmd)
@@ -112,7 +111,7 @@ var setupCmd = &cobra.Command{
 		}
 		configuration.Set(configuration.Scope, configToSave)
 
-		if !silent {
+		if !utils.Silent {
 			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
 			conf := configuration.Get(configuration.Scope)
 			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}

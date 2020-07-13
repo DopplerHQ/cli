@@ -38,7 +38,6 @@ var loginCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		prevConfig := configuration.Get(configuration.Scope)
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
@@ -65,11 +64,11 @@ var loginCmd = &cobra.Command{
 			}
 		}
 
-		openBrowser := yes || silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
+		openBrowser := yes || utils.Silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
 		printURL := !openBrowser
 		if openBrowser {
 			if err := open.Run(authURL); err != nil {
-				if silent {
+				if utils.Silent {
 					utils.HandleError(err, "Unable to launch a browser")
 				}
 

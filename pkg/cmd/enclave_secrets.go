@@ -109,7 +109,6 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		raw := utils.GetBoolFlag(cmd, "raw")
-		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -133,7 +132,7 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.Secrets(response, keys, jsonFlag, false, raw, false)
 		}
 	},
@@ -150,7 +149,6 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		raw := utils.GetBoolFlag(cmd, "raw")
-		silent := utils.GetBoolFlag(cmd, "silent")
 		yes := utils.GetBoolFlag(cmd, "yes")
 		localConfig := configuration.LocalConfig(cmd)
 
@@ -169,7 +167,7 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
 
-			if !silent {
+			if !utils.Silent {
 				printer.Secrets(response, []string{}, jsonFlag, false, raw, false)
 			}
 		}

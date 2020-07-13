@@ -64,7 +64,6 @@ var settingsUpdateCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		silent := utils.GetBoolFlag(cmd, "silent")
 		name := cmd.Flag("name").Value.String()
 		email := cmd.Flag("email").Value.String()
 		jsonFlag := utils.OutputJSON
@@ -79,7 +78,7 @@ var settingsUpdateCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			printer.Settings(info, jsonFlag)
 		}
 	},

@@ -116,7 +116,6 @@ var configsTokensRevokeCmd = &cobra.Command{
 	Args:    cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
-		silent := utils.GetBoolFlag(cmd, "silent")
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -134,7 +133,7 @@ var configsTokensRevokeCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !silent {
+		if !utils.Silent {
 			tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)

@@ -39,11 +39,8 @@ var rootCmd = &cobra.Command{
 		configuration.Setup()
 		configuration.LoadConfig()
 
-		if utils.Debug {
-			silent := utils.GetBoolFlagIfChanged(cmd, "silent", false)
-			if silent {
-				utils.LogWarning("--silent has no effect when used with --debug")
-			}
+		if utils.Debug && utils.Silent {
+			utils.LogWarning("--silent has no effect when used with --debug")
 		}
 
 		// this output does not honor --silent
