@@ -208,7 +208,7 @@ This is an alias of the "logout" command.`,
 func init() {
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
 	loginCmd.Flags().String("scope", "/", "the directory to scope your token to")
-	loginCmd.Flags().Bool("yes", false, "open browser without confirmation")
+	loginCmd.Flags().BoolP("yes", "y", false, "open browser without confirmation")
 
 	loginRollCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
@@ -217,7 +217,7 @@ func init() {
 	loginRevokeCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
 	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
-	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	loginRevokeCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	loginCmd.AddCommand(loginRevokeCmd)
 
 	rootCmd.AddCommand(loginCmd)

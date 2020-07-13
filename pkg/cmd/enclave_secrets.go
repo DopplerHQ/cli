@@ -286,7 +286,7 @@ func init() {
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")

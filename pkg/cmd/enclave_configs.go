@@ -267,17 +267,17 @@ func init() {
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	configsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
 	configsLockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsLockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLockCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	configsLockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsLockCmd)
 
 	configsUnlockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	configsUnlockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsUnlockCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	configsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsUnlockCmd)
 
 	enclaveCmd.AddCommand(configsCmd)

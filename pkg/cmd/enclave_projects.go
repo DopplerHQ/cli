@@ -173,7 +173,7 @@ func init() {
 	projectsCreateCmd.Flags().String("description", "", "project description")
 	projectsCmd.AddCommand(projectsCreateCmd)
 
-	projectsDeleteCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	projectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	projectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
