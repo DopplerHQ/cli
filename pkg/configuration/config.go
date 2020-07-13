@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -38,6 +39,9 @@ var UserConfigDir string
 
 // UserConfigFile (e.g. /home/user/doppler/.doppler.yaml)
 var UserConfigFile string
+
+// Scope to use for config file
+var Scope = "."
 
 var configFileName = ".doppler.yaml"
 var configContents models.ConfigFile
@@ -104,16 +108,23 @@ func SetVersionCheck(version models.VersionCheck) {
 
 // Get the config at the specified scope
 func Get(scope string) models.ScopedOptions {
-	scope, err := utils.ParsePath(scope)
-	if err != nil {
-		utils.HandleError(err)
+	var err error
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
-	scope = scope + string(filepath.Separator)
+	if !strings.HasSuffix(scope, string(filepath.Separator)) {
+		scope = scope + string(filepath.Separator)
+	}
 	var scopedConfig models.ScopedOptions
 
 	for confScope, conf := range configContents.Scoped {
-		// both paths should end in / to prevent partial match (e.g. /test matching /test123)
-		if confScope != "*" && !strings.HasPrefix(scope, filepath.Clean(confScope)+string(filepath.Separator)) {
+		confScopePath := confScope
+		// both paths must end in / to prevent partial match (e.g. /test matching /test123)
+		if !strings.HasSuffix(confScopePath, string(filepath.Separator)) {
+			confScopePath = confScopePath + string(filepath.Separator)
+		}
+
+		if !strings.HasPrefix(scope, confScopePath) {
 			continue
 		}
 
@@ -137,7 +148,7 @@ func Get(scope string) models.ScopedOptions {
 // LocalConfig retrieves the config for the scoped directory
 func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	// config file (lowest priority)
-	localConfig := Get(cmd.Flag("scope").Value.String())
+	localConfig := Get(Scope)
 
 	// environment variables
 	if !utils.GetBoolFlag(cmd, "no-read-env") {
@@ -146,7 +157,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 			envValue := os.Getenv(envVar)
 			if envValue != "" {
 				pair.Value = envValue
-				pair.Scope = "*"
+				pair.Scope = "/"
 				pair.Source = models.EnvironmentSource.String()
 			}
 		}
@@ -156,7 +167,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	flagSet := cmd.Flags().Changed("token")
 	if flagSet || localConfig.Token.Value == "" {
 		localConfig.Token.Value = cmd.Flag("token").Value.String()
-		localConfig.Token.Scope = "*"
+		localConfig.Token.Scope = "/"
 
 		if flagSet {
 			localConfig.Token.Source = models.FlagSource.String()
@@ -168,7 +179,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	flagSet = cmd.Flags().Changed("api-host")
 	if flagSet || localConfig.APIHost.Value == "" {
 		localConfig.APIHost.Value = cmd.Flag("api-host").Value.String()
-		localConfig.APIHost.Scope = "*"
+		localConfig.APIHost.Scope = "/"
 
 		if flagSet {
 			localConfig.APIHost.Source = models.FlagSource.String()
@@ -180,7 +191,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	flagSet = cmd.Flags().Changed("dashboard-host")
 	if flagSet || localConfig.DashboardHost.Value == "" {
 		localConfig.DashboardHost.Value = cmd.Flag("dashboard-host").Value.String()
-		localConfig.DashboardHost.Scope = "*"
+		localConfig.DashboardHost.Scope = "/"
 
 		if flagSet {
 			localConfig.DashboardHost.Source = models.FlagSource.String()
@@ -193,7 +204,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	if flagSet || localConfig.VerifyTLS.Value == "" {
 		noVerifyTLS := cmd.Flag("no-verify-tls").Value.String()
 		localConfig.VerifyTLS.Value = strconv.FormatBool(!utils.GetBool(noVerifyTLS, false))
-		localConfig.VerifyTLS.Scope = "*"
+		localConfig.VerifyTLS.Scope = "/"
 
 		if flagSet {
 			localConfig.VerifyTLS.Source = models.FlagSource.String()
@@ -206,7 +217,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	flagSet = cmd.Flags().Changed("project")
 	if flagSet {
 		localConfig.EnclaveProject.Value = cmd.Flag("project").Value.String()
-		localConfig.EnclaveProject.Scope = "*"
+		localConfig.EnclaveProject.Scope = "/"
 
 		if flagSet {
 			localConfig.EnclaveProject.Source = models.FlagSource.String()
@@ -218,7 +229,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	flagSet = cmd.Flags().Changed("config")
 	if flagSet {
 		localConfig.EnclaveConfig.Value = cmd.Flag("config").Value.String()
-		localConfig.EnclaveConfig.Scope = "*"
+		localConfig.EnclaveConfig.Scope = "/"
 
 		if flagSet {
 			localConfig.EnclaveConfig.Source = models.FlagSource.String()
@@ -237,12 +248,9 @@ func AllConfigs() map[string]models.FileScopedOptions {
 
 // Set properties on a scoped config
 func Set(scope string, options map[string]string) {
-	if scope != "*" {
-		var err error
-		scope, err = utils.ParsePath(scope)
-		if err != nil {
-			utils.HandleError(err)
-		}
+	var err error
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
 
 	for key, value := range options {
@@ -260,12 +268,9 @@ func Set(scope string, options map[string]string) {
 
 // Unset a local config
 func Unset(scope string, options []string) {
-	if scope != "*" {
-		var err error
-		scope, err = utils.ParsePath(scope)
-		if err != nil {
-			utils.HandleError(err)
-		}
+	var err error
+	if scope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, "Invalid scope")
 	}
 
 	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
@@ -315,6 +320,48 @@ func readConfig() models.ConfigFile {
 	if err != nil {
 		utils.HandleError(err, "Unable to parse user config file")
 	}
+
+	// sort scopes before normalizing so that if multiple scopes normalize to
+	// the same value (like '/' and '*') they'll apply in a deterministic order
+	var sorted []string
+	for scope := range config.Scoped {
+		sorted = append(sorted, scope)
+	}
+	sort.Strings(sorted)
+
+	// normalize config scope and merge options from conflicting scopes
+	normalizedOptions := map[string]models.FileScopedOptions{}
+	for _, scope := range sorted {
+		var normalizedScope string
+		if normalizedScope, err = NormalizeScope(scope); err != nil {
+			utils.HandleError(err, "Invalid scope")
+		}
+		scopedOption := normalizedOptions[normalizedScope]
+
+		options := config.Scoped[scope]
+		if options.APIHost != "" {
+			scopedOption.APIHost = options.APIHost
+		}
+		if options.DashboardHost != "" {
+			scopedOption.DashboardHost = options.DashboardHost
+		}
+		if options.EnclaveConfig != "" {
+			scopedOption.EnclaveConfig = options.EnclaveConfig
+		}
+		if options.EnclaveProject != "" {
+			scopedOption.EnclaveProject = options.EnclaveProject
+		}
+		if options.Token != "" {
+			scopedOption.Token = options.Token
+		}
+		if options.VerifyTLS != "" {
+			scopedOption.VerifyTLS = options.VerifyTLS
+		}
+
+		normalizedOptions[normalizedScope] = scopedOption
+	}
+
+	config.Scoped = normalizedOptions
 	return config
 }
 
@@ -348,4 +395,13 @@ func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 	} else if key == models.ConfigEnclaveConfig.String() {
 		(*conf).EnclaveConfig = value
 	}
+}
+
+// NormalizeScope from legacy '*' to '/'
+func NormalizeScope(scope string) (string, error) {
+	if scope == "*" {
+		return "/", nil
+	}
+
+	return utils.ParsePath(scope)
 }

@@ -37,9 +37,7 @@ var loginCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		scope := cmd.Flag("scope").Value.String()
-		prevConfig := configuration.Get(scope)
-		silent := utils.GetBoolFlag(cmd, "silent")
+		prevConfig := configuration.Get(configuration.Scope)
 		yes := utils.GetBoolFlag(cmd, "yes")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
@@ -47,7 +45,7 @@ var loginCmd = &cobra.Command{
 		// warn user if scope already contains a token
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
-			newScope, err2 := filepath.Abs(scope)
+			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogWarning("This scope already contains a token and will be overridden.")
 			}
@@ -66,11 +64,11 @@ var loginCmd = &cobra.Command{
 			}
 		}
 
-		openBrowser := yes || silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
+		openBrowser := yes || utils.Silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
 		printURL := !openBrowser
 		if openBrowser {
 			if err := open.Run(authURL); err != nil {
-				if silent {
+				if utils.Silent {
 					utils.HandleError(err, "Unable to launch a browser")
 				}
 
@@ -137,14 +135,14 @@ var loginCmd = &cobra.Command{
 			options[models.ConfigVerifyTLS.String()] = localConfig.VerifyTLS.Value
 		}
 
-		configuration.Set(scope, options)
+		configuration.Set(configuration.Scope, options)
 
 		utils.Log("")
 		utils.Log(fmt.Sprintf("Welcome, %s", name))
 
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
-			newScope, err2 := filepath.Abs(scope)
+			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogDebug("Revoking previous token")
 				_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
@@ -207,17 +205,17 @@ This is an alias of the "logout" command.`,
 
 func init() {
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
-	loginCmd.Flags().String("scope", "*", "the directory to scope your token to")
-	loginCmd.Flags().Bool("yes", false, "open browser without confirmation")
+	loginCmd.Flags().String("scope", "/", "the directory to scope your token to")
+	loginCmd.Flags().BoolP("yes", "y", false, "open browser without confirmation")
 
-	loginRollCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginRollCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRollCmd.Flags().Bool("no-update-config", false, "do not update the rolled token in the config file")
 	loginCmd.AddCommand(loginRollCmd)
 
-	loginRevokeCmd.Flags().String("scope", "*", "the directory to scope your token to")
+	loginRevokeCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
 	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
-	loginRevokeCmd.Flags().Bool("yes", false, "proceed without confirmation")
+	loginRevokeCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	loginCmd.AddCommand(loginRevokeCmd)
 
 	rootCmd.AddCommand(loginCmd)

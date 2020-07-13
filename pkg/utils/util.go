@@ -315,6 +315,26 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 	return confirm
 }
 
+// SelectPrompt prompt user to select from a list of options
+func SelectPrompt(message string, options []string, defaultOption string) string {
+	prompt := &survey.Select{
+		Message:  message,
+		Options:  options,
+		PageSize: 25,
+	}
+	if defaultOption != "" {
+		prompt.Default = defaultOption
+	}
+
+	selectedProject := ""
+	err := survey.AskOne(prompt, &selectedProject)
+	if err != nil {
+		HandleError(err)
+	}
+
+	return selectedProject
+}
+
 // CopyToClipboard copies text to the user's clipboard
 func CopyToClipboard(text string) error {
 	if !clipboard.Unsupported {
