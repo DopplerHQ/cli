@@ -108,12 +108,13 @@ func SetVersionCheck(version models.VersionCheck) {
 
 // Get the config at the specified scope
 func Get(scope string) models.ScopedOptions {
+	var normalizedScope string
 	var err error
-	if scope, err = NormalizeScope(scope); err != nil {
-		utils.HandleError(err, "Invalid scope")
+	if normalizedScope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
-	if !strings.HasSuffix(scope, string(filepath.Separator)) {
-		scope = scope + string(filepath.Separator)
+	if !strings.HasSuffix(normalizedScope, string(filepath.Separator)) {
+		normalizedScope = normalizedScope + string(filepath.Separator)
 	}
 	var scopedConfig models.ScopedOptions
 
@@ -124,7 +125,7 @@ func Get(scope string) models.ScopedOptions {
 			confScopePath = confScopePath + string(filepath.Separator)
 		}
 
-		if !strings.HasPrefix(scope, confScopePath) {
+		if !strings.HasPrefix(normalizedScope, confScopePath) {
 			continue
 		}
 
@@ -248,9 +249,10 @@ func AllConfigs() map[string]models.FileScopedOptions {
 
 // Set properties on a scoped config
 func Set(scope string, options map[string]string) {
+	var normalizedScope string
 	var err error
-	if scope, err = NormalizeScope(scope); err != nil {
-		utils.HandleError(err, "Invalid scope")
+	if normalizedScope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
 	for key, value := range options {
@@ -258,9 +260,9 @@ func Set(scope string, options map[string]string) {
 			utils.HandleError(errors.New("invalid option "+key), "")
 		}
 
-		config := configContents.Scoped[scope]
+		config := configContents.Scoped[normalizedScope]
 		SetConfigValue(&config, key, value)
-		configContents.Scoped[scope] = config
+		configContents.Scoped[normalizedScope] = config
 	}
 
 	writeConfig(configContents)
@@ -268,12 +270,13 @@ func Set(scope string, options map[string]string) {
 
 // Unset a local config
 func Unset(scope string, options []string) {
+	var normalizedScope string
 	var err error
-	if scope, err = NormalizeScope(scope); err != nil {
-		utils.HandleError(err, "Invalid scope")
+	if normalizedScope, err = NormalizeScope(scope); err != nil {
+		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
-	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
+	if configContents.Scoped[normalizedScope] == (models.FileScopedOptions{}) {
 		return
 	}
 
@@ -282,13 +285,13 @@ func Unset(scope string, options []string) {
 			utils.HandleError(errors.New("invalid option "+key), "")
 		}
 
-		config := configContents.Scoped[scope]
+		config := configContents.Scoped[normalizedScope]
 		SetConfigValue(&config, key, "")
-		configContents.Scoped[scope] = config
+		configContents.Scoped[normalizedScope] = config
 	}
 
-	if configContents.Scoped[scope] == (models.FileScopedOptions{}) {
-		delete(configContents.Scoped, scope)
+	if configContents.Scoped[normalizedScope] == (models.FileScopedOptions{}) {
+		delete(configContents.Scoped, normalizedScope)
 	}
 
 	writeConfig(configContents)
@@ -334,7 +337,7 @@ func readConfig() models.ConfigFile {
 	for _, scope := range sorted {
 		var normalizedScope string
 		if normalizedScope, err = NormalizeScope(scope); err != nil {
-			utils.HandleError(err, "Invalid scope")
+			utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 		}
 		scopedOption := normalizedOptions[normalizedScope]
 

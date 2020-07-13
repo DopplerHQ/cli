@@ -96,8 +96,9 @@ func checkVersion(command string) {
 
 func loadFlags(cmd *cobra.Command) {
 	var err error
-	if configuration.Scope, err = configuration.NormalizeScope(cmd.Flag("scope").Value.String()); err != nil {
-		utils.HandleError(err, "Invalid scope")
+	scope := cmd.Flag("scope").Value.String()
+	if configuration.Scope, err = configuration.NormalizeScope(scope); err != nil {
+		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
