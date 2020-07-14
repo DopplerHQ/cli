@@ -47,33 +47,25 @@ var loginCmd = &cobra.Command{
 		if prevConfig.Token.Value != "" && !overwrite {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
 			newScope, err2 := filepath.Abs(configuration.Scope)
-			// specified scope already has a token
 			if err1 == nil && err2 == nil && prevScope == newScope {
-				cwd := utils.Cwd()
-				if newScope == cwd {
-					// overwriting token in CWD so show yes/no override prompt
-					utils.LogWarning("This scope has already been authorized from a previous login.")
-					if !utils.ConfirmationPrompt("Overwrite existing login:", false) {
+				if cmd.Flags().Changed("scope") {
+					// user specified scope flag, show yes/no override prompt
+					utils.LogWarning("This scope is already authorized from a previous login.")
+					utils.Log("")
+					if !utils.ConfirmationPrompt("Overwrite existing login", false) {
 						utils.Log("Exiting")
 						return
 					}
 				} else {
-					options := []string{fmt.Sprintf("Scope login to current directory (%s)", cwd), fmt.Sprintf("Overwrite existing login (%s)", newScope)}
-					warning := "This scope has already been authorized from a previous login."
-					message := "You may scope your new login to the current directory, or overwrite your existing login."
+					// scope flag wasn't specified, show option to scope to current directory
+					utils.LogWarning("You have already logged in.")
+					utils.Log("")
+					utils.Log("Would you like to scope your new login to the current directory, or overwrite the existing global login?")
 
-					// user is using default scope
-					if newScope == "/" {
-						warning = "You have already authorized this directory."
-						message = "You may scope your new login to the current directory, or overwrite the global login."
-						options[1] = fmt.Sprintf("Overwrite global login (%s)", newScope)
-					}
-
-					utils.LogWarning(warning)
-					utils.Log(message)
-
+					cwd := utils.Cwd()
+					options := []string{fmt.Sprintf("Scope login to current directory (%s)", cwd), fmt.Sprintf("Overwrite global login (%s)", newScope)}
 					if utils.SelectPrompt("Select an option:", options, options[0]) == options[0] {
-						// use current directory
+						// use current directory as scope
 						configuration.Scope = cwd
 					}
 				}
