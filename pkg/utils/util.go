@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 )
@@ -92,13 +93,13 @@ func Exists(path string) bool {
 	return true
 }
 
-// Cwd current working directory
+// Cwd current working directory of user's shell
 func Cwd() string {
-	cwd, err := os.Executable()
+	cwd, err := os.Getwd()
 	if err != nil {
 		HandleError(err)
 	}
-	return filepath.Dir(cwd)
+	return cwd
 }
 
 // RunCommand runs the specified command
@@ -310,6 +311,10 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 
 	err := survey.AskOne(prompt, &confirm)
 	if err != nil {
+		if err == terminal.InterruptErr {
+			Log("Exiting")
+			os.Exit(1)
+		}
 		HandleError(err)
 	}
 	return confirm
@@ -329,6 +334,10 @@ func SelectPrompt(message string, options []string, defaultOption string) string
 	selectedProject := ""
 	err := survey.AskOne(prompt, &selectedProject)
 	if err != nil {
+		if err == terminal.InterruptErr {
+			Log("Exiting")
+			os.Exit(1)
+		}
 		HandleError(err)
 	}
 

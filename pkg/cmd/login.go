@@ -39,15 +39,44 @@ var loginCmd = &cobra.Command{
 		localConfig := configuration.LocalConfig(cmd)
 		prevConfig := configuration.Get(configuration.Scope)
 		yes := utils.GetBoolFlag(cmd, "yes")
+		overwrite := utils.GetBoolFlag(cmd, "overwrite")
 		copyAuthCode := !utils.GetBoolFlag(cmd, "no-copy")
 		hostname, _ := os.Hostname()
 
-		// warn user if scope already contains a token
-		if prevConfig.Token.Value != "" {
+		// Disallow overwriting a token with the same scope (by default)
+		if prevConfig.Token.Value != "" && !overwrite {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
 			newScope, err2 := filepath.Abs(configuration.Scope)
+			// specified scope already has a token
 			if err1 == nil && err2 == nil && prevScope == newScope {
-				utils.LogWarning("This scope already contains a token and will be overridden.")
+				cwd := utils.Cwd()
+				if newScope == cwd {
+					// overwriting token in CWD so show yes/no override prompt
+					utils.LogWarning("This scope has already been authorized from a previous login.")
+					if !utils.ConfirmationPrompt("Overwrite existing login:", false) {
+						utils.Log("Exiting")
+						return
+					}
+				} else {
+					options := []string{fmt.Sprintf("Scope login to current directory (%s)", cwd), fmt.Sprintf("Overwrite existing login (%s)", newScope)}
+					warning := "This scope has already been authorized from a previous login."
+					message := "You may scope your new login to the current directory, or overwrite your existing login."
+
+					// user is using default scope
+					if newScope == "/" {
+						warning = "You have already authorized this directory."
+						message = "You may scope your new login to the current directory, or overwrite the global login."
+						options[1] = fmt.Sprintf("Overwrite global login (%s)", newScope)
+					}
+
+					utils.LogWarning(warning)
+					utils.Log(message)
+
+					if utils.SelectPrompt("Select an option:", options, options[0]) == options[0] {
+						// use current directory
+						configuration.Scope = cwd
+					}
+				}
 			}
 		}
 
@@ -206,6 +235,7 @@ This is an alias of the "logout" command.`,
 func init() {
 	loginCmd.Flags().Bool("no-copy", false, "do not copy the auth code to the clipboard")
 	loginCmd.Flags().String("scope", "/", "the directory to scope your token to")
+	loginCmd.Flags().Bool("overwrite", false, "overwrite existing token if one exists")
 	loginCmd.Flags().BoolP("yes", "y", false, "open browser without confirmation")
 
 	loginRollCmd.Flags().String("scope", "/", "the directory to scope your token to")
