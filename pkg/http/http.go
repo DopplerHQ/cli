@@ -131,6 +131,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		}
 	}
 
+	startTime := time.Now()
 	var response *http.Response
 	response = nil
 
@@ -159,6 +160,11 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		}
 
 		if isRetry(resp.StatusCode) {
+			// start logging retries after 10 seconds so it doesn't feel like we've frozen
+			// we subtract 1 millisecond so that we always win the race against a request that exhausts its full 10 second time out
+			if time.Now().After(startTime.Add(10 * time.Second).Add(-1 * time.Millisecond)) {
+				utils.Log(fmt.Sprintf("Request failed with HTTP %d, retrying", resp.StatusCode))
+			}
 			return errors.New("Request failed")
 		}
 
