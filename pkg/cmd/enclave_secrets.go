@@ -255,7 +255,7 @@ $ doppler enclave secrets download --format=env --no-file`,
 			utils.HandleError(err, "Unable to encrypt your secrets. No file has been written.")
 		}
 
-		if err := utils.WriteFile(filePath, []byte(encryptedBody), 0600); err != nil {
+		if err := utils.WriteFile(filePath, []byte(encryptedBody), 0400); err != nil {
 			utils.HandleError(err, "Unable to write the secrets file")
 		}
 
