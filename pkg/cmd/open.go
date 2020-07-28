@@ -45,7 +45,7 @@ var openStatusCmd = &cobra.Command{
 	Short: "open the Doppler status page",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := open.Run("https://status.doppler.com")
+		err := open.Run("https://www.dopplerstatus.com")
 		if err != nil {
 			utils.HandleError(err)
 		}
