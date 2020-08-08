@@ -161,16 +161,7 @@ fi
 tag=$(echo "$headers" | sed -n 's/^[[:space:]]*x-cli-version: \(v[0-9]*\.[0-9]*\.[0-9]*\)[[:space:]]*$/\1/p')
 log_debug "Downloaded CLI $tag"
 
-if [ "$format" = "pkg" ]; then
-  mv -f "$filename" "$filename.pkg"
-  filename="$filename.pkg"
-
-  newfile="$CWD/doppler-${tag}-${arch}.pkg"
-  mv -f "$filename" "$newfile"
-
-  echo "Launching installer"
-  open "$newfile"
-elif [ "$format" = "deb" ]; then
+if [ "$format" = "deb" ]; then
   mv -f "$filename" "$filename.deb"
   filename="$filename.deb"
 
