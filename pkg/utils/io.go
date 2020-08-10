@@ -41,3 +41,27 @@ func WriteFile(filename string, data []byte, perm os.FileMode) error {
 
 	return nil
 }
+
+// WriteTempFile writes data to a unique temp file and returns the file name
+func WriteTempFile(name string, data []byte, perm os.FileMode) (string, error) {
+	tmpFile, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("%s.", name))
+	if err != nil {
+		return "", err
+	}
+
+	LogDebug(fmt.Sprintf("Writing to temp file %s", tmpFile.Name()))
+	if _, err := tmpFile.Write(data); err != nil {
+		return "", err
+	}
+
+	tmpFileName := tmpFile.Name()
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+
+	if err := os.Chmod(tmpFileName, perm); err != nil {
+		return "", err
+	}
+
+	return tmpFileName, nil
+}

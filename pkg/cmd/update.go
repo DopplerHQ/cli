@@ -17,9 +17,8 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
-	"regexp"
 
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -29,50 +28,41 @@ var updateCmd = &cobra.Command{
 	Short: "update the Doppler CLI",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		if installedViaBrew() {
-			brewUpdate()
+		if utils.IsWindows() {
+			utils.HandleError(fmt.Errorf("this command is not yet implemented for your operating system"))
+		}
+
+		force := utils.GetBoolFlag(cmd, "force")
+		available, _, err := controllers.NewVersionAvailable()
+		if err != nil {
+			utils.HandleError(err, "Unable to check for CLI updates")
+		}
+
+		if !available {
+			if force {
+				utils.Log(fmt.Sprintf("Already running the latest version but proceeding anyway due to --force flag"))
+			} else {
+				utils.Log(fmt.Sprintf("You are already running the latest version"))
+				return
+			}
+		}
+
+		// utils.Log(fmt.Sprintf("Doppler CLI %s is now available", check.LatestVersion))
+		utils.Log("Updating...")
+		wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
+		if !controllerErr.IsNil() {
+			utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+		}
+
+		if wasUpdated {
+			utils.Log(fmt.Sprintf("Doppler CLI was upgraded to %s!", installedVersion))
 		} else {
-			utils.HandleError(fmt.Errorf("this command is not yet implemented for your install method"))
+			utils.Log(fmt.Sprintf("You are already running the latest version"))
 		}
 	},
 }
 
-func installedViaBrew() bool {
-	// this command returns 0 (nil) if installed, 1 (err) otherwise
-	command := []string{"brew", "ls", "--versions", "doppler"}
-	err := exec.Command(command[0], command[1:]...).Run() // #nosec G204
-	return err == nil
-}
-
-func brewUpdate() {
-	utils.Log("Updating via Homebrew...")
-	command := []string{"brew", "upgrade", "--fetch-HEAD", "doppler"}
-	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
-	strOut := string(out)
-	if utils.Debug {
-		fmt.Println(strOut)
-	}
-
-	if err != nil {
-		utils.HandleError(err, "Unable to update the Doppler CLI")
-	}
-
-	re := regexp.MustCompile(`Upgrading dopplerhq\/doppler\/doppler (\d+\.\d+\.\d+) -> (\d+\.\d+\.\d+)`)
-	if matches := re.FindStringSubmatch(strOut); matches != nil {
-		if len(matches) >= 2 {
-			utils.Log(fmt.Sprintf("Doppler CLI was upgraded to v%s!\n", matches[2]))
-		} else {
-			utils.Log("Doppler CLI was upgraded!")
-		}
-		return
-	}
-
-	re = regexp.MustCompile(`Warning: dopplerhq\/doppler\/doppler \d+\.\d+\.\d+ already installed`)
-	if loc := re.FindStringIndex(strOut); loc != nil {
-		utils.Log("You are already running the latest version")
-	}
-}
-
 func init() {
+	updateCmd.Flags().BoolP("force", "f", false, "install the latest CLI regardless of whether there's an update available")
 	rootCmd.AddCommand(updateCmd)
 }
