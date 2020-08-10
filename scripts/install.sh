@@ -3,6 +3,7 @@
 set -e
 
 DEBUG=0
+INSTALL=1
 CLEAN_EXIT=0
 CWD="$(pwd)"
 tempdir=""
@@ -14,7 +15,7 @@ cleanup() {
     echo "ERROR: script failed during execution"
 
     if [ "$DEBUG" -eq 0 ]; then
-      echo "For more verbose output, re-run this script with the debug arg (./install.sh debug)"
+      echo "For more verbose output, re-run this script with the debug flag (./install.sh --debug)"
     fi
   fi
 
@@ -43,8 +44,12 @@ delete_tempdir() {
   tempdir=""
 }
 
-if [ "$1" = "debug" ]; then
+if [ "$1" = "--debug" ] || [ "$2" = "--debug" ]; then
   DEBUG=1
+fi
+
+if [ "$1" = "--no-install" ] || [ "$2" = "--no-install" ]; then
+  INSTALL=0
 fi
 
 # identify OS
@@ -62,6 +67,9 @@ elif [ "$uname_os" = "NetBSD" ]; then
   os="netbsd"
 else
   echo "ERROR: Unsupported OS '$uname_os'"
+  echo ""
+  echo "Please report this issue:"
+  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
   clean_exit 1
 fi
 
@@ -83,6 +91,9 @@ elif [ "$uname_machine" = "arm64" ]; then
   arch="arm64"
 else
   echo "ERROR: Unsupported architecture '$uname_machine'"
+  echo ""
+  echo "Please report this issue:"
+  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20architecture"
   clean_exit 1
 fi
 
@@ -161,29 +172,30 @@ fi
 tag=$(echo "$headers" | sed -n 's/^[[:space:]]*x-cli-version: \(v[0-9]*\.[0-9]*\.[0-9]*\)[[:space:]]*$/\1/p')
 log_debug "Downloaded CLI $tag"
 
-if [ "$format" = "pkg" ]; then
-  mv -f "$filename" "$filename.pkg"
-  filename="$filename.pkg"
-
-  newfile="$CWD/doppler-${tag}-${arch}.pkg"
-  mv -f "$filename" "$newfile"
-
-  echo "Launching installer"
-  open "$newfile"
-elif [ "$format" = "deb" ]; then
+if [ "$format" = "deb" ]; then
   mv -f "$filename" "$filename.deb"
   filename="$filename.deb"
 
-  echo 'Installing...'
-  dpkg -i "$filename"
-  echo "Installed Doppler CLI $(doppler -v)"
+  if [ "$INSTALL" -eq 1 ]; then
+    echo 'Installing...'
+    dpkg -i "$filename"
+    echo "Installed Doppler CLI $(doppler -v)"
+  else
+    log_debug "Moving installer to $(pwd) (cwd)"
+    mv -f "$filename" .
+  fi
 elif [ "$format" = "rpm" ]; then
   mv -f "$filename" "$filename.rpm"
   filename="$filename.rpm"
 
-  echo 'Installing...'
-  rpm -i --force "$filename"
-  echo "Installed Doppler CLI $(doppler -v)"
+  if [ "$INSTALL" -eq 1 ]; then
+    echo 'Installing...'
+    rpm -i --force "$filename"
+    echo "Installed Doppler CLI $(doppler -v)"
+  else
+    log_debug "Moving installer to $(pwd) (cwd)"
+    mv -f "$filename" .
+  fi
 elif [ "$format" = "tar" ]; then
   mv -f "$filename" "$filename.tar.gz"
   filename="$filename.tar.gz"
@@ -199,14 +211,24 @@ elif [ "$format" = "tar" ]; then
   chmod 755 "$extract_dir/doppler"
 
   # install
-  echo 'Installing...'
-  log_debug "Moving binary to /usr/local/bin"
-  mv -f "$extract_dir/doppler" /usr/local/bin
-  if [ ! -x "$(command -v doppler)" ]; then
-    log_debug "Binary not in PATH, moving to /usr/bin"
-    mv -f /usr/local/bin/doppler /usr/bin/doppler
+  if [ "$INSTALL" -eq 1 ]; then
+    echo 'Installing...'
+    log_debug "Moving binary to /usr/local/bin"
+    mv -f "$extract_dir/doppler" /usr/local/bin
+    if [ ! -x "$(command -v doppler)" ]; then
+      log_debug "Binary not in PATH, moving to /usr/bin"
+      mv -f /usr/local/bin/doppler /usr/bin/doppler
+    fi
+  else
+    log_debug "Moving binary to $(pwd) (cwd)"
+    mv -f "$extract_dir/doppler" .
   fi
 
   delete_tempdir
-  echo "Installed Doppler CLI $(doppler -v)"
+
+  if [ "$INSTALL" -eq 1 ]; then
+    echo "Installed Doppler CLI $(doppler -v)"
+  else
+    echo "Doppler CLI saved to ./doppler"
+  fi
 fi
