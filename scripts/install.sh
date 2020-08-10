@@ -67,6 +67,9 @@ elif [ "$uname_os" = "NetBSD" ]; then
   os="netbsd"
 else
   echo "ERROR: Unsupported OS '$uname_os'"
+  echo ""
+  echo "Please report this issue:"
+  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
   clean_exit 1
 fi
 
@@ -88,6 +91,9 @@ elif [ "$uname_machine" = "arm64" ]; then
   arch="arm64"
 else
   echo "ERROR: Unsupported architecture '$uname_machine'"
+  echo ""
+  echo "Please report this issue:"
+  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20architecture"
   clean_exit 1
 fi
 
