@@ -96,3 +96,68 @@ func RunInstallScript() (bool, string, Error) {
 
 	return wasUpdated, newVersion.String(), Error{}
 }
+
+// IsInstalledViaScoop checks whether the CLI was installed via Scoop on Windows
+func IsInstalledViaScoop() bool {
+	command := []string{"scoop", "list", "doppler"}
+	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+	strOut := string(out)
+	if utils.Debug {
+		fmt.Println(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
+		fmt.Println(strOut)
+	}
+
+	if err != nil {
+		return false
+	}
+
+	// Ex: `doppler 3.7.1 [doppler]`
+	re := regexp.MustCompile(`doppler\s+\d+\.\d+\.\d+\s+\[doppler\]`)
+	matches := re.FindStringSubmatch(strOut)
+	if matches != nil && len(matches) == 1 {
+		return true
+	}
+	return false
+}
+
+// UpdateViaScoop attempts to update the CLI via Scoop on Windows
+func UpdateViaScoop(force bool) {
+	utils.Log("Updating via scoop...")
+	command := []string{"scoop", "update", "doppler"}
+	if force {
+		command = append(command, "-f")
+	}
+	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+	strOut := string(out)
+	// log output before checking error
+	if utils.Debug {
+		fmt.Println(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
+		fmt.Println(strOut)
+	}
+
+	if err != nil {
+		utils.HandleError(err, "Unable to update the Doppler CLI")
+	}
+
+	// Ex: `doppler: 3.7.1 (latest version)`
+	re := regexp.MustCompile(`doppler:\s+\d+\.\d+\.\d+\s+\(latest version\)`)
+	if loc := re.FindStringIndex(strOut); loc != nil {
+		utils.Log("You are already running the latest version")
+		return
+	}
+
+	// Ex: `'doppler' (3.7.1) was installed successfully!`
+	re = regexp.MustCompile(`'doppler' \((\d+\.\d+\.\d+)\) was installed successfully!`)
+	matches := re.FindStringSubmatch(strOut)
+	if matches != nil && len(matches) == 2 {
+		if force && version.Normalize(matches[1]) == version.Normalize(version.ProgramVersion) {
+			utils.Log(fmt.Sprintf("Reinstalled Doppler CLI v%s!", matches[1]))
+			return
+		}
+
+		utils.Log(fmt.Sprintf("Doppler CLI was upgraded to v%s!", matches[1]))
+		return
+	}
+
+	utils.HandleError(errors.New("Unable to determine new CLI version"))
+}
