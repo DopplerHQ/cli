@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/controllers"
@@ -29,6 +28,10 @@ var updateCmd = &cobra.Command{
 	Short: "update the Doppler CLI",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
+		if utils.IsWindows() {
+			utils.HandleError(fmt.Errorf("this command is not yet implemented for your operating system"))
+		}
+
 		force := utils.GetBoolFlag(cmd, "force")
 		available, _, err := controllers.NewVersionAvailable()
 		if err != nil {
@@ -44,24 +47,17 @@ var updateCmd = &cobra.Command{
 			}
 		}
 
-		if utils.IsWindows() {
-			if controllers.IsInstalledViaScoop() {
-				controllers.UpdateViaScoop(force)
-			} else {
-				utils.HandleError(errors.New("Doppler CLI must be installed via Scoop"), "Unsupported install method")
-			}
-		} else {
-			utils.Log("Updating...")
-			wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
-			if !controllerErr.IsNil() {
-				utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
-			}
+		// utils.Log(fmt.Sprintf("Doppler CLI %s is now available", check.LatestVersion))
+		utils.Log("Updating...")
+		wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
+		if !controllerErr.IsNil() {
+			utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+		}
 
-			if wasUpdated {
-				utils.Log(fmt.Sprintf("Doppler CLI was upgraded to %s!", installedVersion))
-			} else {
-				utils.Log(fmt.Sprintf("You are already running the latest version"))
-			}
+		if wasUpdated {
+			utils.Log(fmt.Sprintf("Doppler CLI was upgraded to %s!", installedVersion))
+		} else {
+			utils.Log(fmt.Sprintf("You are already running the latest version"))
 		}
 	},
 }
