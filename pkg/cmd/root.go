@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
@@ -82,12 +82,17 @@ func checkVersion(command string) {
 		return
 	}
 
-	versionCheck := http.CheckCLIVersion(prevVersionCheck)
-	if versionCheck == (models.VersionCheck{}) {
+	available, versionCheck, err := controllers.NewVersionAvailable()
+	if err != nil {
+		// retry on next run
 		return
 	}
 
-	if version.ProgramVersion != versionCheck.LatestVersion {
+	if !available {
+		utils.LogDebug("No CLI updates available")
+		// re-use existing version
+		versionCheck.LatestVersion = prevVersionCheck.LatestVersion
+	} else {
 		utils.Log(fmt.Sprintf("Doppler CLI %s is now available\n", versionCheck.LatestVersion))
 	}
 

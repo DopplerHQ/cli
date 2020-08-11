@@ -18,11 +18,11 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
 )
 
 func getLatestVersion() (string, error) {
@@ -47,30 +47,25 @@ func getLatestVersion() (string, error) {
 	return "", errors.New("unable to retrieve tag_name of latest release")
 }
 
-// CheckCLIVersion check for updates to the CLI
-func CheckCLIVersion(versionCheck models.VersionCheck) models.VersionCheck {
+// GetLatestCLIVersion fetches the latest CLI version
+func GetLatestCLIVersion() (models.VersionCheck, error) {
 	utils.LogDebug("Checking for latest version of the CLI")
 	tag, err := getLatestVersion()
 	if err != nil {
-		utils.LogError(errors.New("Unable to check for CLI updates"))
+		utils.LogDebug("Unable to check for CLI updates")
 		utils.LogDebugError(err)
-		return models.VersionCheck{}
+		return models.VersionCheck{}, err
 	}
 
-	versionCheck.CheckedAt = time.Now()
-	tag = normalizeVersion(tag)
-	if normalizeVersion(versionCheck.LatestVersion) != tag {
-		versionCheck.LatestVersion = tag
-	}
-
-	return versionCheck
+	versionCheck := models.VersionCheck{CheckedAt: time.Now(), LatestVersion: version.Normalize(tag)}
+	return versionCheck, nil
 }
 
-func normalizeVersion(version string) string {
-	version = strings.TrimSpace(version)
-	if !strings.HasPrefix(version, "v") {
-		return "v" + version
+// GetCLIInstallScript from cli.doppler.com
+func GetCLIInstallScript() ([]byte, Error) {
+	_, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/install.sh", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to download CLI install script"}
 	}
-
-	return version
+	return resp, Error{}
 }

@@ -5,7 +5,6 @@ set -e
 DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
-CWD="$(pwd)"
 tempdir=""
 filename=""
 
@@ -19,17 +18,17 @@ cleanup() {
     fi
   fi
 
-  if [ ! -z "$tempdir" ]; then
+  if [ -n "$tempdir" ]; then
     delete_tempdir
   fi
 
-  exit $exit_code
+  exit "$exit_code"
 }
 trap cleanup EXIT
 
 clean_exit() {
   CLEAN_EXIT=1
-  exit $1
+  exit "$1"
 }
 
 log_debug() {
@@ -139,7 +138,7 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
     log_debug "Using $(command -v wget)"
     log_debug "Downloading from $url"
     # when this fails print the exit code
-    headers=$(wget -q -t 3 -S -O $filename "$url" 2>&1 || echo "$?")
+    headers=$(wget -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
       exit_code="$headers"
       echo "ERROR: wget failed with exit code $exit_code"
