@@ -55,7 +55,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		if wasUpdated {
-			utils.Log(fmt.Sprintf("Doppler CLI was upgraded to %s!", installedVersion))
+			utils.Log(fmt.Sprintf("Doppler CLI was updated to %s!", installedVersion))
 		} else {
 			utils.Log(fmt.Sprintf("You are already running the latest version"))
 		}
