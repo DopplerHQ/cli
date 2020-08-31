@@ -119,17 +119,22 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 	req.URL.RawQuery = query.Encode()
 
-	// set timeout and tls config
 	client := &http.Client{}
+	// set http timeout
 	if UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
+
+	// try to prevent "connect: cannot assign requested address" errors
+	// https://github.com/golang/go/issues/16012
+	transport := &http.Transport{MaxIdleConnsPerHost: 20}
+
+	// set TLS config
 	// #nosec G402
 	if !verifyTLS {
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
+	client.Transport = transport
 
 	startTime := time.Now()
 	var response *http.Response
