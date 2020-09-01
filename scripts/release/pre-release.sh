@@ -22,7 +22,7 @@ RELEASE_TYPE=$1
 PREV_VERSION=$(git describe --abbrev=0)
 
 if [ "${RELEASE_TYPE:0:1}" == "v" ]; then
-  VERSION="$RELEASE_TYPE"
+  VERSION="${RELEASE_TYPE:1}"
 else
   reltype=""
   if [ "$RELEASE_TYPE" == "major" ]; then
