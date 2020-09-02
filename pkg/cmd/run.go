@@ -69,6 +69,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 		silentExit := utils.GetBoolFlag(cmd, "silent-exit")
+		preserveEnv := utils.GetBoolFlag(cmd, "preserve-env")
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -116,18 +117,38 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 
 		secrets := getSecrets(localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
 
+		if preserveEnv {
+			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
+		}
+
 		env := os.Environ()
+		existingEnvKeys := map[string]bool{}
+		for _, envVar := range env {
+			// key=value format
+			parts := strings.SplitN(envVar, "=", 2)
+			key := parts[0]
+			existingEnvKeys[key] = true
+		}
+
 		excludedKeys := []string{"PATH", "PS1", "HOME"}
 		for name, value := range secrets {
-			addKey := true
+			useSecret := true
 			for _, excludedKey := range excludedKeys {
 				if excludedKey == name {
-					addKey = false
+					useSecret = false
 					break
 				}
 			}
 
-			if addKey {
+			if useSecret && preserveEnv {
+				// skip secret if environment already contains variable w/ same name
+				if existingEnvKeys[name] == true {
+					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
+					useSecret = false
+				}
+			}
+
+			if useSecret {
 				env = append(env, fmt.Sprintf("%s=%s", name, value))
 			}
 		}
@@ -360,6 +381,7 @@ func init() {
 	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
 	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
+	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
