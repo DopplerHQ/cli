@@ -127,7 +127,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 
 	// try to prevent "connect: cannot assign requested address" errors
 	// https://github.com/golang/go/issues/16012
-	transport := &http.Transport{MaxIdleConnsPerHost: 20}
+	transport := &http.Transport{MaxIdleConnsPerHost: 250, MaxConnsPerHost: 250, MaxIdleConns: 250}
 
 	// set TLS config
 	// #nosec G402
