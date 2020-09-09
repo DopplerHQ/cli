@@ -108,19 +108,19 @@ func rollbackConfigsLogs(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	configsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsLogsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	// TODO: hide this flag until the api supports it
 	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
-	configsLogsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsLogsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsLogsCmd.AddCommand(configsLogsGetCmd)
 
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
-	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 }

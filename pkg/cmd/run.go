@@ -270,7 +270,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 
 	writeFallbackFile := enableFallback && !fallbackReadonly
 	if writeFallbackFile {
-		utils.LogDebug("Encrypting Enclave secrets")
+		utils.LogDebug("Encrypting secrets")
 		encryptedResponse, err := crypto.Encrypt(passphrase, response)
 		if err != nil {
 			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
@@ -341,7 +341,7 @@ func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase 
 		msg = append(msg, "")
 		msg = append(msg, color.Green.Render("Why did decryption fail?"))
 		msg = append(msg, "The most common cause of decryption failure is using an incorrect passphrase.")
-		msg = append(msg, "The default passphrase is computed using your token, enclave project, and enclave config.")
+		msg = append(msg, "The default passphrase is computed using your token, project, and config.")
 		msg = append(msg, "You must use the same token, project, and config that you used when saving the backup file.")
 		msg = append(msg, "")
 		msg = append(msg, color.Green.Render("What should I do now?"))
@@ -376,8 +376,8 @@ func defaultFallbackFile(project string, config string) string {
 func init() {
 	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
 
-	runCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	runCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
 	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")

@@ -25,7 +25,7 @@ import (
 
 var projectsCmd = &cobra.Command{
 	Use:   "projects",
-	Short: "List Enclave projects",
+	Short: "Manage projects",
 	Args:  cobra.NoArgs,
 	Run:   projects,
 }
@@ -173,7 +173,7 @@ func updateProjects(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	projectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	projectsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	projectsCmd.AddCommand(projectsGetCmd)
 
 	projectsCreateCmd.Flags().String("name", "", "project name")
@@ -181,10 +181,10 @@ func init() {
 	projectsCmd.AddCommand(projectsCreateCmd)
 
 	projectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	projectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	projectsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
-	projectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	projectsUpdateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
 	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {

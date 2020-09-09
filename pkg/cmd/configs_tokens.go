@@ -153,24 +153,24 @@ func revokeConfigsTokens(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	configsTokensCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsCmd.AddCommand(configsTokensCmd)
 
 	configsTokensGetCmd.Flags().String("slug", "", "service token slug")
-	configsTokensGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsTokensCmd.AddCommand(configsTokensGetCmd)
 
 	configsTokensCreateCmd.Flags().String("name", "", "service token name")
-	configsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensCreateCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
-	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 }

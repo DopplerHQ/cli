@@ -25,7 +25,7 @@ import (
 
 var environmentsCmd = &cobra.Command{
 	Use:   "environments",
-	Short: "List Enclave environments",
+	Short: "Manage environments",
 	Args:  cobra.NoArgs,
 	Run:   environments,
 }
@@ -75,9 +75,9 @@ func getEnvironments(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	environmentsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
-	environmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	environmentsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	rootCmd.AddCommand(environmentsCmd)
 }

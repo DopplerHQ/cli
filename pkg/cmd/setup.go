@@ -31,7 +31,7 @@ import (
 
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Setup the Doppler CLI for Enclave",
+	Short: "Setup the Doppler CLI for managing secrets",
 	Args:  cobra.NoArgs,
 	Run:   setup,
 }
@@ -197,8 +197,8 @@ func valueFromEnvironmentNotice(name string) string {
 }
 
 func init() {
-	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	setupCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	setupCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
 	rootCmd.AddCommand(setupCmd)
