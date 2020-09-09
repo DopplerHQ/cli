@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var environmentsCmd = &cobra.Command{
+var enclaveEnvironmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "List Enclave environments",
 	Args:  cobra.NoArgs,
@@ -48,7 +48,7 @@ var environmentsCmd = &cobra.Command{
 	},
 }
 
-var environmentsGetCmd = &cobra.Command{
+var enclaveEnvironmentsGetCmd = &cobra.Command{
 	Use:   "get [environment_id]",
 	Short: "Get info for an environment",
 	Args:  cobra.ExactArgs(1),
@@ -71,9 +71,9 @@ var environmentsGetCmd = &cobra.Command{
 }
 
 func init() {
-	environmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	environmentsCmd.AddCommand(environmentsGetCmd)
+	enclaveEnvironmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveEnvironmentsCmd.AddCommand(enclaveEnvironmentsGetCmd)
 
-	environmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveCmd.AddCommand(environmentsCmd)
+	enclaveEnvironmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveCmd.AddCommand(enclaveEnvironmentsCmd)
 }

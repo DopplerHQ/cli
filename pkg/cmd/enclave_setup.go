@@ -29,7 +29,7 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
-var setupCmd = &cobra.Command{
+var enclaveSetupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup the Doppler CLI for Enclave",
 	Args:  cobra.NoArgs,
@@ -195,9 +195,9 @@ func valueFromEnvironmentNotice(name string) string {
 }
 
 func init() {
-	setupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	setupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
-	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
-	enclaveCmd.AddCommand(setupCmd)
+	enclaveSetupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSetupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSetupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	enclaveSetupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
+	enclaveCmd.AddCommand(enclaveSetupCmd)
 }

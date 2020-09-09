@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configsCmd = &cobra.Command{
+var enclaveConfigsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List Enclave configs",
 	Args:  cobra.NoArgs,
@@ -46,7 +46,7 @@ var configsCmd = &cobra.Command{
 	},
 }
 
-var configsGetCmd = &cobra.Command{
+var enclaveConfigsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -72,7 +72,7 @@ var configsGetCmd = &cobra.Command{
 	},
 }
 
-var configsCreateCmd = &cobra.Command{
+var enclaveConfigsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -112,7 +112,7 @@ var configsCreateCmd = &cobra.Command{
 	},
 }
 
-var configsDeleteCmd = &cobra.Command{
+var enclaveConfigsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -148,7 +148,7 @@ var configsDeleteCmd = &cobra.Command{
 	},
 }
 
-var configsUpdateCmd = &cobra.Command{
+var enclaveConfigsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -178,7 +178,7 @@ var configsUpdateCmd = &cobra.Command{
 	},
 }
 
-var configsLockCmd = &cobra.Command{
+var enclaveConfigsLockCmd = &cobra.Command{
 	Use:   "lock [config]",
 	Short: "Lock a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -209,7 +209,7 @@ var configsLockCmd = &cobra.Command{
 	},
 }
 
-var configsUnlockCmd = &cobra.Command{
+var enclaveConfigsUnlockCmd = &cobra.Command{
 	Use:   "unlock [config]",
 	Short: "Unlock a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -241,39 +241,39 @@ var configsUnlockCmd = &cobra.Command{
 }
 
 func init() {
-	configsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 
-	configsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsCmd.AddCommand(configsGetCmd)
+	enclaveConfigsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsGetCmd)
 
-	configsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsCreateCmd.Flags().String("name", "", "config name")
-	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCmd.AddCommand(configsCreateCmd)
+	enclaveConfigsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsCreateCmd.Flags().String("name", "", "config name")
+	enclaveConfigsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsCreateCmd)
 
-	configsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsUpdateCmd.Flags().String("name", "", "config name")
-	if err := configsUpdateCmd.MarkFlagRequired("name"); err != nil {
+	enclaveConfigsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsUpdateCmd.Flags().String("name", "", "config name")
+	if err := enclaveConfigsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
-	configsCmd.AddCommand(configsUpdateCmd)
+	enclaveConfigsCmd.AddCommand(enclaveConfigsUpdateCmd)
 
-	configsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	configsCmd.AddCommand(configsDeleteCmd)
+	enclaveConfigsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsDeleteCmd)
 
-	configsLockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	configsCmd.AddCommand(configsLockCmd)
+	enclaveConfigsLockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsLockCmd)
 
-	configsUnlockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsUnlockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	configsCmd.AddCommand(configsUnlockCmd)
+	enclaveConfigsUnlockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsUnlockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsUnlockCmd)
 
-	enclaveCmd.AddCommand(configsCmd)
+	enclaveCmd.AddCommand(enclaveConfigsCmd)
 }

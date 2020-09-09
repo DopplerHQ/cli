@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var projectsCmd = &cobra.Command{
+var enclaveProjectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
@@ -42,7 +42,7 @@ var projectsCmd = &cobra.Command{
 	},
 }
 
-var projectsGetCmd = &cobra.Command{
+var enclaveProjectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
 	Args:  cobra.MaximumNArgs(1),
@@ -67,7 +67,7 @@ var projectsGetCmd = &cobra.Command{
 	},
 }
 
-var projectsCreateCmd = &cobra.Command{
+var enclaveProjectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Args:  cobra.MaximumNArgs(1),
@@ -96,7 +96,7 @@ var projectsCreateCmd = &cobra.Command{
 	},
 }
 
-var projectsDeleteCmd = &cobra.Command{
+var enclaveProjectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Args:  cobra.MaximumNArgs(1),
@@ -131,7 +131,7 @@ var projectsDeleteCmd = &cobra.Command{
 	},
 }
 
-var projectsUpdateCmd = &cobra.Command{
+var enclaveProjectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Args:  cobra.MaximumNArgs(1),
@@ -163,27 +163,27 @@ var projectsUpdateCmd = &cobra.Command{
 }
 
 func init() {
-	projectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsCmd.AddCommand(projectsGetCmd)
+	enclaveProjectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsGetCmd)
 
-	projectsCreateCmd.Flags().String("name", "", "project name")
-	projectsCreateCmd.Flags().String("description", "", "project description")
-	projectsCmd.AddCommand(projectsCreateCmd)
+	enclaveProjectsCreateCmd.Flags().String("name", "", "project name")
+	enclaveProjectsCreateCmd.Flags().String("description", "", "project description")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsCreateCmd)
 
-	projectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	projectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsCmd.AddCommand(projectsDeleteCmd)
+	enclaveProjectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveProjectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsDeleteCmd)
 
-	projectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsUpdateCmd.Flags().String("name", "", "project name")
-	projectsUpdateCmd.Flags().String("description", "", "project description")
-	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
+	enclaveProjectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsUpdateCmd.Flags().String("name", "", "project name")
+	enclaveProjectsUpdateCmd.Flags().String("description", "", "project description")
+	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
-	if err := projectsUpdateCmd.MarkFlagRequired("description"); err != nil {
+	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("description"); err != nil {
 		utils.HandleError(err)
 	}
-	projectsCmd.AddCommand(projectsUpdateCmd)
+	enclaveProjectsCmd.AddCommand(enclaveProjectsUpdateCmd)
 
-	enclaveCmd.AddCommand(projectsCmd)
+	enclaveCmd.AddCommand(enclaveProjectsCmd)
 }

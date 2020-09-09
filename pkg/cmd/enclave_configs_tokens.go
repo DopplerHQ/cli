@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configsTokensCmd = &cobra.Command{
+var enclaveConfigsTokensCmd = &cobra.Command{
 	Use:   "tokens",
 	Short: "List a config's service tokens",
 	Args:  cobra.NoArgs,
@@ -46,7 +46,7 @@ var configsTokensCmd = &cobra.Command{
 	},
 }
 
-var configsTokensGetCmd = &cobra.Command{
+var enclaveConfigsTokensGetCmd = &cobra.Command{
 	Use:   "get [slug]",
 	Short: "Get a config's service token",
 	Args:  cobra.MaximumNArgs(1),
@@ -80,7 +80,7 @@ var configsTokensGetCmd = &cobra.Command{
 	},
 }
 
-var configsTokensCreateCmd = &cobra.Command{
+var enclaveConfigsTokensCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a service token for a config",
 	Args:  cobra.MaximumNArgs(1),
@@ -109,7 +109,7 @@ var configsTokensCreateCmd = &cobra.Command{
 	},
 }
 
-var configsTokensRevokeCmd = &cobra.Command{
+var enclaveConfigsTokensRevokeCmd = &cobra.Command{
 	Use:     "revoke [slug]",
 	Aliases: []string{"delete"},
 	Short:   "Revoke a service token from a config",
@@ -145,24 +145,24 @@ var configsTokensRevokeCmd = &cobra.Command{
 }
 
 func init() {
-	configsTokensCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsCmd.AddCommand(configsTokensCmd)
+	enclaveConfigsTokensCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsTokensCmd)
 
-	configsTokensGetCmd.Flags().String("slug", "", "service token slug")
-	configsTokensGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensCmd.AddCommand(configsTokensGetCmd)
+	enclaveConfigsTokensGetCmd.Flags().String("slug", "", "service token slug")
+	enclaveConfigsTokensGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensGetCmd)
 
-	configsTokensCreateCmd.Flags().String("name", "", "service token name")
-	configsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
-	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
-	configsTokensCmd.AddCommand(configsTokensCreateCmd)
+	enclaveConfigsTokensCreateCmd.Flags().String("name", "", "service token name")
+	enclaveConfigsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
+	enclaveConfigsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
+	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensCreateCmd)
 
-	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
-	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
+	enclaveConfigsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
+	enclaveConfigsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensRevokeCmd)
 }

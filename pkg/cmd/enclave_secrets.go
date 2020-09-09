@@ -35,7 +35,7 @@ type secretsResponse struct {
 	Success   bool
 }
 
-var secretsCmd = &cobra.Command{
+var enclaveSecretsCmd = &cobra.Command{
 	Use:   "secrets",
 	Short: "List Enclave secrets",
 	Args:  cobra.NoArgs,
@@ -66,7 +66,7 @@ var secretsCmd = &cobra.Command{
 	},
 }
 
-var secretsGetCmd = &cobra.Command{
+var enclaveSecretsGetCmd = &cobra.Command{
 	Use:   "get [secrets]",
 	Short: "Get the value of one or more secrets",
 	Long: `Get the value of one or more secrets.
@@ -98,7 +98,7 @@ doppler enclave secrets get API_KEY CRYPTO_KEY`,
 	},
 }
 
-var secretsSetCmd = &cobra.Command{
+var enclaveSecretsSetCmd = &cobra.Command{
 	Use:   "set [secrets]",
 	Short: "Set the value of one or more secrets",
 	Long: `Set the value of one or more secrets.
@@ -138,7 +138,7 @@ doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 	},
 }
 
-var secretsDeleteCmd = &cobra.Command{
+var enclaveSecretsDeleteCmd = &cobra.Command{
 	Use:   "delete [secrets]",
 	Short: "Delete the value of one or more secrets",
 	Long: `Delete the value of one or more secrets.
@@ -174,7 +174,7 @@ doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 	},
 }
 
-var secretsDownloadCmd = &cobra.Command{
+var enclaveSecretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's secrets for later use",
 	Long:  `Download your config's secrets for later use. JSON and Env format are supported.`,
@@ -264,35 +264,35 @@ $ doppler enclave secrets download --format=env --no-file`,
 }
 
 func init() {
-	secretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	secretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
+	enclaveSecretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
-	secretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	secretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
-	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
-	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsCmd.AddCommand(secretsGetCmd)
+	enclaveSecretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
+	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
+	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
-	secretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	secretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsCmd.AddCommand(secretsSetCmd)
+	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 
-	secretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	secretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	secretsCmd.AddCommand(secretsDeleteCmd)
+	enclaveSecretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveSecretsCmd.AddCommand(enclaveSecretsDeleteCmd)
 
-	secretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	secretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
-	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is `$token:$project:$config`.")
-	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
-	secretsCmd.AddCommand(secretsDownloadCmd)
+	enclaveSecretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
+	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is `$token:$project:$config`.")
+	enclaveSecretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
+	enclaveSecretsCmd.AddCommand(enclaveSecretsDownloadCmd)
 
-	enclaveCmd.AddCommand(secretsCmd)
+	enclaveCmd.AddCommand(enclaveSecretsCmd)
 }

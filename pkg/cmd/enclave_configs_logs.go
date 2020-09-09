@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configsLogsCmd = &cobra.Command{
+var enclaveConfigsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
 	Args:  cobra.NoArgs,
@@ -45,7 +45,7 @@ var configsLogsCmd = &cobra.Command{
 	},
 }
 
-var configsLogsGetCmd = &cobra.Command{
+var enclaveConfigsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
 	Args:  cobra.MaximumNArgs(1),
@@ -72,7 +72,7 @@ var configsLogsGetCmd = &cobra.Command{
 	},
 }
 
-var configsLogsRollbackCmd = &cobra.Command{
+var enclaveConfigsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
 	Args:  cobra.MaximumNArgs(1),
@@ -102,19 +102,19 @@ var configsLogsRollbackCmd = &cobra.Command{
 }
 
 func init() {
-	configsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	// TODO: hide this flag until the api supports it
-	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
-	configsCmd.AddCommand(configsLogsCmd)
+	// enclaveConfigsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	enclaveConfigsCmd.AddCommand(enclaveConfigsLogsCmd)
 
-	configsLogsGetCmd.Flags().String("log", "", "audit log id")
-	configsLogsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsCmd.AddCommand(configsLogsGetCmd)
+	enclaveConfigsLogsGetCmd.Flags().String("log", "", "audit log id")
+	enclaveConfigsLogsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsCmd.AddCommand(enclaveConfigsLogsGetCmd)
 
-	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
-	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
+	enclaveConfigsLogsRollbackCmd.Flags().String("log", "", "audit log id")
+	enclaveConfigsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsCmd.AddCommand(enclaveConfigsLogsRollbackCmd)
 }
