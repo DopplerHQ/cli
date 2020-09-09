@@ -16,10 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
-	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -27,47 +23,14 @@ var enclaveEnvironmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "List Enclave environments",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.EnvironmentsInfo(info, jsonFlag)
-	},
+	Run:   environments,
 }
 
 var enclaveEnvironmentsGetCmd = &cobra.Command{
 	Use:   "get [environment_id]",
 	Short: "Get info for an environment",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-		environment := args[0]
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("environment", environment)
-
-		info, err := http.GetEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.EnvironmentInfo(info, jsonFlag)
-	},
+	Run:   getEnvironments,
 }
 
 func init() {

@@ -16,10 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
-	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -27,78 +23,21 @@ var enclaveConfigsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-		// number := utils.GetIntFlag(cmd, "number", 16)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigLogs(logs, len(logs), jsonFlag)
-	},
+	Run:   configsLogs,
 }
 
 var enclaveConfigsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		log := cmd.Flag("log").Value.String()
-		if len(args) > 0 {
-			log = args[0]
-		}
-		utils.RequireValue("log", log)
-
-		configLog, err := http.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigLog(configLog, jsonFlag, true)
-	},
+	Run:   getConfigsLogs,
 }
 
 var enclaveConfigsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		log := cmd.Flag("log").Value.String()
-		if len(args) > 0 {
-			log = args[0]
-		}
-		utils.RequireValue("log", log)
-
-		configLog, err := http.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ConfigLog(configLog, jsonFlag, true)
-		}
-	},
+	Run:   rollbackConfigsLogs,
 }
 
 func init() {

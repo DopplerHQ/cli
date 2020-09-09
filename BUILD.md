@@ -48,7 +48,7 @@ Note: In the goreleaser output, it will state that artifact signing is disabled.
 
 #### Generate a GPG key
 
-Store the keys and passphrase in your enclave config
+Store the keys and passphrase in your Doppler config
 
 ```
 $ gpg --full-generate-key

@@ -115,7 +115,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := getSecrets(localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
+		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -241,7 +241,7 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
-func getSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
 	fetchSecrets := !(enableFallback && fallbackOnly)
 	if !fetchSecrets {
 		return readFallbackFile(fallbackPath, localConfig, passphrase)

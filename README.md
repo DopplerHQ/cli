@@ -1,6 +1,6 @@
 # Doppler CLI
 
-The Doppler CLI is the official tool for interacting with your Enclave secrets and configuration.
+The Doppler CLI is the official tool for interacting with your Doppler secrets and configuration.
 
 **You can:**
 
@@ -81,11 +81,11 @@ Setup should only take a minute (literally). You'll authorize the CLI to access 
 
 ```sh
 $ doppler login                     # generate auth credentials
-$ doppler enclave setup             # select your project and config
+$ doppler setup                     # select your project and config
 # optional
 $ doppler configure --all           # view local configuration
 ```
 
 By default, `doppler login` scopes the auth token to the root directory (`--scope=/`). This means that the token will be accessible to projects using the Doppler CLI in any subdirectory. To limit this, specify the `scope` flag during login: `doppler login --scope=./` or `doppler login --scope ~/projects/backend`.
 
-Enclave setup (i.e. `doppler enclave setup`) scopes the enclave project and config to the current directory (`--scope=./`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.
+Setup (i.e. `doppler setup`) scopes the selected project and config to the current directory (`--scope=./`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.

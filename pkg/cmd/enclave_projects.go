@@ -16,9 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -27,139 +24,35 @@ var enclaveProjectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ProjectsInfo(info, jsonFlag)
-	},
+	Run:   projects,
 }
 
 var enclaveProjectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ProjectInfo(info, jsonFlag)
-	},
+	Run:   getProjects,
 }
 
 var enclaveProjectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		description := cmd.Flag("description").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("description", description)
-
-		name := cmd.Flag("name").Value.String()
-		if len(args) > 0 {
-			name = args[0]
-		}
-		utils.RequireValue("name", name)
-
-		info, err := http.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ProjectInfo(info, jsonFlag)
-		}
-	},
+	Run:   createProjects,
 }
 
 var enclaveProjectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		yes := utils.GetBoolFlag(cmd, "yes")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
-			err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			if !utils.Silent {
-				info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-				if !err.IsNil() {
-					utils.HandleError(err.Unwrap(), err.Message)
-				}
-
-				printer.ProjectsInfo(info, jsonFlag)
-			}
-		}
-	},
+	Run:   deleteProjects,
 }
 
 var enclaveProjectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		name := cmd.Flag("name").Value.String()
-		description := cmd.Flag("description").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("name", name)
-		utils.RequireValue("description", description)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ProjectInfo(info, jsonFlag)
-		}
-	},
+	Run:   updateProjects,
 }
 
 func init() {

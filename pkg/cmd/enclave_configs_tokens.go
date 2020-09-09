@@ -16,12 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
-
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
-	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -29,84 +23,21 @@ var enclaveConfigsTokensCmd = &cobra.Command{
 	Use:   "tokens",
 	Short: "List a config's service tokens",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
-	},
+	Run:   configsTokens,
 }
 
 var enclaveConfigsTokensGetCmd = &cobra.Command{
 	Use:   "get [slug]",
 	Short: "Get a config's service token",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		slug := cmd.Flag("slug").Value.String()
-		if len(args) > 0 {
-			slug = args[0]
-		}
-		utils.RequireValue("slug", slug)
-
-		tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		for _, token := range tokens {
-			if token.Slug == slug {
-				printer.ConfigServiceTokenInfo(token, jsonFlag)
-				return
-			}
-		}
-
-		utils.HandleError(errors.New("invalid service token slug"), err.Message)
-	},
+	Run:   getConfigsTokens,
 }
 
 var enclaveConfigsTokensCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a service token for a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		plain := utils.GetBoolFlag(cmd, "plain")
-		copy := utils.GetBoolFlag(cmd, "copy")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		name := cmd.Flag("name").Value.String()
-		if len(args) > 0 {
-			name = args[0]
-		}
-		utils.RequireValue("name", name)
-
-		configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigServiceToken(configToken, jsonFlag, plain, copy)
-	},
+	Run:   createConfigsTokens,
 }
 
 var enclaveConfigsTokensRevokeCmd = &cobra.Command{
@@ -114,34 +45,7 @@ var enclaveConfigsTokensRevokeCmd = &cobra.Command{
 	Aliases: []string{"delete"},
 	Short:   "Revoke a service token from a config",
 	Args:    cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
-
-		slug := cmd.Flag("slug").Value.String()
-		if len(args) > 0 {
-			slug = args[0]
-		}
-		utils.RequireValue("slug", slug)
-
-		err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
-		}
-	},
+	Run:     revokeConfigsTokens,
 }
 
 func init() {

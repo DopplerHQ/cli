@@ -16,12 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
-	"strings"
-
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -30,214 +24,49 @@ var enclaveConfigsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List Enclave configs",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigsInfo(configs, jsonFlag)
-	},
+	Run:   configs,
 }
 
 var enclaveConfigsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		config := localConfig.EnclaveConfig.Value
-		if len(args) > 0 {
-			config = args[0]
-		}
-		utils.RequireValue("config", config)
-
-		configInfo, err := http.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ConfigInfo(configInfo, jsonFlag)
-	},
+	Run:   getConfigs,
 }
 
 var enclaveConfigsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		environment := cmd.Flag("environment").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		name := cmd.Flag("name").Value.String()
-		if len(args) > 0 {
-			name = args[0]
-		}
-
-		if name == "" {
-			utils.HandleError(errors.New("you must specify a name"))
-		}
-
-		if environment == "" && strings.Index(name, "_") != -1 {
-			environment = name[0:strings.Index(name, "_")]
-		}
-
-		if environment == "" {
-			utils.HandleError(errors.New("you must specify an environment"))
-		}
-
-		info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, environment)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ConfigInfo(info, jsonFlag)
-		}
-	},
+	Run:   createConfigs,
 }
 
 var enclaveConfigsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		yes := utils.GetBoolFlag(cmd, "yes")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		config := localConfig.EnclaveConfig.Value
-		if len(args) > 0 {
-			config = args[0]
-		}
-		utils.RequireValue("config", config)
-
-		if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
-			err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			if !utils.Silent {
-				configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
-				if !err.IsNil() {
-					utils.HandleError(err.Unwrap(), err.Message)
-				}
-
-				printer.ConfigsInfo(configs, jsonFlag)
-			}
-		}
-	},
+	Run:   deleteConfigs,
 }
 
 var enclaveConfigsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		name := cmd.Flag("name").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("name", name)
-
-		config := localConfig.EnclaveConfig.Value
-		if len(args) > 0 {
-			config = args[0]
-		}
-		utils.RequireValue("config", config)
-
-		info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ConfigInfo(info, jsonFlag)
-		}
-	},
+	Run:   updateConfigs,
 }
 
 var enclaveConfigsLockCmd = &cobra.Command{
 	Use:   "lock [config]",
 	Short: "Lock a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		yes := utils.GetBoolFlag(cmd, "yes")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		config := localConfig.EnclaveConfig.Value
-		if len(args) > 0 {
-			config = args[0]
-		}
-		utils.RequireValue("config", config)
-
-		if yes || utils.ConfirmationPrompt("Lock config "+config, false) {
-			configInfo, err := http.LockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			if !utils.Silent {
-				printer.ConfigInfo(configInfo, jsonFlag)
-			}
-		}
-	},
+	Run:   lockConfigs,
 }
 
 var enclaveConfigsUnlockCmd = &cobra.Command{
 	Use:   "unlock [config]",
 	Short: "Unlock a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		yes := utils.GetBoolFlag(cmd, "yes")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-
-		config := localConfig.EnclaveConfig.Value
-		if len(args) > 0 {
-			config = args[0]
-		}
-		utils.RequireValue("config", config)
-
-		if yes || utils.ConfirmationPrompt("Unlock config "+config, false) {
-			configInfo, err := http.UnlockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			if !utils.Silent {
-				printer.ConfigInfo(configInfo, jsonFlag)
-			}
-		}
-	},
+	Run:   unlockConfigs,
 }
 
 func init() {

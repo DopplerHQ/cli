@@ -22,7 +22,7 @@ import (
 
 var enclaveCmd = &cobra.Command{
 	Use:   "enclave",
-	Short: "Control Enclave",
+	Short: "Manage Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
