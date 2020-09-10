@@ -63,7 +63,7 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedProject = localConfig.EnclaveProject.Value
 	case models.EnvironmentSource.String():
-		utils.Log(valueFromEnvironmentNotice("ENCLAVE_PROJECT"))
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
 		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
@@ -87,7 +87,7 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedConfig = localConfig.EnclaveConfig.Value
 	case models.EnvironmentSource.String():
-		utils.Log(valueFromEnvironmentNotice("ENCLAVE_CONFIG"))
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
 		configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject)
@@ -149,7 +149,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	}
 
 	if !promptUser {
-		utils.HandleError(errors.New("project must be specified via --project flag or ENCLAVE_PROJECT environment variable when using --no-prompt"))
+		utils.HandleError(errors.New("project must be specified via --project flag or DOPPLER_PROJECT environment variable when using --no-prompt"))
 	}
 
 	selectedProject := utils.SelectPrompt("Select a project:", options, defaultOption)
@@ -185,7 +185,7 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 	}
 
 	if !promptUser {
-		utils.HandleError(errors.New("config must be specified via --config flag or ENCLAVE_CONFIG environment variable when using --no-prompt"))
+		utils.HandleError(errors.New("config must be specified via --config flag or DOPPLER_CONFIG environment variable when using --no-prompt"))
 	}
 
 	selectedConfig := utils.SelectPrompt("Select a config:", options, defaultOption)
