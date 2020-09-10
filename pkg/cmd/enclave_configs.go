@@ -24,49 +24,70 @@ var enclaveConfigsCmd = &cobra.Command{
 	Use:   "configs",
 	Short: "List Enclave configs",
 	Args:  cobra.NoArgs,
-	Run:   configs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs")
+		configs(cmd, args)
+	},
 }
 
 var enclaveConfigsGetCmd = &cobra.Command{
 	Use:   "get [config]",
 	Short: "Get info for a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs get")
+		getConfigs(cmd, args)
+	},
 }
 
 var enclaveConfigsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   createConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs create")
+		createConfigs(cmd, args)
+	},
 }
 
 var enclaveConfigsDeleteCmd = &cobra.Command{
 	Use:   "delete [config]",
 	Short: "Delete a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   deleteConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs delete")
+		deleteConfigs(cmd, args)
+	},
 }
 
 var enclaveConfigsUpdateCmd = &cobra.Command{
 	Use:   "update [config]",
 	Short: "Update a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   updateConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs update")
+		updateConfigs(cmd, args)
+	},
 }
 
 var enclaveConfigsLockCmd = &cobra.Command{
 	Use:   "lock [config]",
 	Short: "Lock a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   lockConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs lock")
+		lockConfigs(cmd, args)
+	},
 }
 
 var enclaveConfigsUnlockCmd = &cobra.Command{
 	Use:   "unlock [config]",
 	Short: "Unlock a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   unlockConfigs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs unlock")
+		unlockConfigs(cmd, args)
+	},
 }
 
 func init() {

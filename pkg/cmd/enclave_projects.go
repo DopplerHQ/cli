@@ -24,35 +24,50 @@ var enclaveProjectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
-	Run:   projects,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("projects")
+		projects(cmd, args)
+	},
 }
 
 var enclaveProjectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   getProjects,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("projects get")
+		getProjects(cmd, args)
+	},
 }
 
 var enclaveProjectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   createProjects,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("projects create")
+		createProjects(cmd, args)
+	},
 }
 
 var enclaveProjectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   deleteProjects,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("projects delete")
+		deleteProjects(cmd, args)
+	},
 }
 
 var enclaveProjectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   updateProjects,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("projects update")
+		updateProjects(cmd, args)
+	},
 }
 
 func init() {

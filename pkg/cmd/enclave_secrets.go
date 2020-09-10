@@ -23,7 +23,10 @@ var enclaveSecretsCmd = &cobra.Command{
 	Use:   "secrets",
 	Short: "List Enclave secrets",
 	Args:  cobra.NoArgs,
-	Run:   secrets,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("secrets")
+		secrets(cmd, args)
+	},
 }
 
 var enclaveSecretsGetCmd = &cobra.Command{
@@ -34,7 +37,10 @@ var enclaveSecretsGetCmd = &cobra.Command{
 Ex: output the secrets "API_KEY" and "CRYPTO_KEY":
 doppler enclave secrets get API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
-	Run:  getSecrets,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("secrets get")
+		getSecrets(cmd, args)
+	},
 }
 
 var enclaveSecretsSetCmd = &cobra.Command{
@@ -45,7 +51,10 @@ var enclaveSecretsSetCmd = &cobra.Command{
 Ex: set the secrets "API_KEY" and "CRYPTO_KEY":
 doppler enclave secrets set API_KEY=123 CRYPTO_KEY=456`,
 	Args: cobra.MinimumNArgs(1),
-	Run:  setSecrets,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("secrets set")
+		setSecrets(cmd, args)
+	},
 }
 
 var enclaveSecretsDeleteCmd = &cobra.Command{
@@ -56,7 +65,10 @@ var enclaveSecretsDeleteCmd = &cobra.Command{
 Ex: delete the secrets "API_KEY" and "CRYPTO_KEY":
 doppler enclave secrets delete API_KEY CRYPTO_KEY`,
 	Args: cobra.MinimumNArgs(1),
-	Run:  deleteSecrets,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("secrets delete")
+		deleteSecrets(cmd, args)
+	},
 }
 
 var enclaveSecretsDownloadCmd = &cobra.Command{
@@ -72,7 +84,10 @@ $ doppler enclave secrets download --format=env /root/secrets.env
 Print your secrets to stdout in env format without writing to the filesystem
 $ doppler enclave secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
-	Run:  downloadSecrets,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("secrets download")
+		downloadSecrets(cmd, args)
+	},
 }
 
 func init() {

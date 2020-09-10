@@ -23,7 +23,10 @@ var enclaveSetupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup the Doppler CLI for Enclave",
 	Args:  cobra.NoArgs,
-	Run:   setup,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("setup")
+		setup(cmd, args)
+	},
 }
 
 func init() {

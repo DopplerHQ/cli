@@ -23,14 +23,20 @@ var enclaveEnvironmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "List Enclave environments",
 	Args:  cobra.NoArgs,
-	Run:   environments,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("environments")
+		environments(cmd, args)
+	},
 }
 
 var enclaveEnvironmentsGetCmd = &cobra.Command{
 	Use:   "get [environment_id]",
 	Short: "Get info for an environment",
 	Args:  cobra.ExactArgs(1),
-	Run:   getEnvironments,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("environments get")
+		getEnvironments(cmd, args)
+	},
 }
 
 func init() {

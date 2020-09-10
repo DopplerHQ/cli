@@ -23,21 +23,30 @@ var enclaveConfigsTokensCmd = &cobra.Command{
 	Use:   "tokens",
 	Short: "List a config's service tokens",
 	Args:  cobra.NoArgs,
-	Run:   configsTokens,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs tokens")
+		configsTokens(cmd, args)
+	},
 }
 
 var enclaveConfigsTokensGetCmd = &cobra.Command{
 	Use:   "get [slug]",
 	Short: "Get a config's service token",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigsTokens,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs tokens get")
+		getConfigsTokens(cmd, args)
+	},
 }
 
 var enclaveConfigsTokensCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a service token for a config",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   createConfigsTokens,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs tokens create")
+		createConfigsTokens(cmd, args)
+	},
 }
 
 var enclaveConfigsTokensRevokeCmd = &cobra.Command{
@@ -45,7 +54,10 @@ var enclaveConfigsTokensRevokeCmd = &cobra.Command{
 	Aliases: []string{"delete"},
 	Short:   "Revoke a service token from a config",
 	Args:    cobra.MaximumNArgs(1),
-	Run:     revokeConfigsTokens,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs tokens revoke")
+		revokeConfigsTokens(cmd, args)
+	},
 }
 
 func init() {

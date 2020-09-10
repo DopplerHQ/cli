@@ -23,21 +23,30 @@ var enclaveConfigsLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "List config audit logs",
 	Args:  cobra.NoArgs,
-	Run:   configsLogs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs logs")
+		configsLogs(cmd, args)
+	},
 }
 
 var enclaveConfigsLogsGetCmd = &cobra.Command{
 	Use:   "get [log_id]",
 	Short: "Get config audit log",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigsLogs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs logs get")
+		getConfigsLogs(cmd, args)
+	},
 }
 
 var enclaveConfigsLogsRollbackCmd = &cobra.Command{
 	Use:   "rollback [log_id]",
 	Short: "Rollback a config change",
 	Args:  cobra.MaximumNArgs(1),
-	Run:   rollbackConfigsLogs,
+	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configs logs rollback")
+		rollbackConfigsLogs(cmd, args)
+	},
 }
 
 func init() {

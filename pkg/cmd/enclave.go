@@ -25,6 +25,8 @@ var enclaveCmd = &cobra.Command{
 	Short: "Manage Enclave",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("")
+
 		err := cmd.Usage()
 		if err != nil {
 			utils.HandleError(err, "Unable to print command usage")
