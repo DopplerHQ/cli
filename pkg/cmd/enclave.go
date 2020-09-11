@@ -21,9 +21,10 @@ import (
 )
 
 var enclaveCmd = &cobra.Command{
-	Use:   "enclave",
-	Short: "Manage Enclave",
-	Args:  cobra.NoArgs,
+	Use:    "enclave",
+	Short:  "Manage Enclave (deprecated)",
+	Args:   cobra.NoArgs,
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		deprecatedCommand("")
 
