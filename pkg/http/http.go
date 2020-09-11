@@ -204,14 +204,18 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 
 	// print the response body error messages
-	var errResponse errorResponse
-	err = json.Unmarshal(body, &errResponse)
-	if err != nil {
-		utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
-		return response.StatusCode, nil, err
+	if contentType := response.Header.Get("content-type"); strings.HasPrefix(contentType, "application/json") {
+		var errResponse errorResponse
+		err = json.Unmarshal(body, &errResponse)
+		if err != nil {
+			utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
+			return response.StatusCode, nil, err
+		}
+
+		return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
 	}
 
-	return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
+	return response.StatusCode, nil, fmt.Errorf("Request failed with HTTP %d", response.StatusCode)
 }
 
 func isSuccess(statusCode int) bool {
