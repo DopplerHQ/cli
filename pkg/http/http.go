@@ -144,6 +144,10 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	requestErr := retry(5, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+
 			utils.LogDebug(err.Error())
 
 			if isTimeout(err) {
@@ -178,11 +182,13 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		return StopRetry{errors.New("Request failed")}
 	})
 
+	if response != nil {
+		defer response.Body.Close()
+	}
+
 	if requestErr != nil && response == nil {
 		return 0, nil, requestErr
 	}
-
-	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
