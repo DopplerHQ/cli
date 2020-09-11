@@ -119,6 +119,9 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 	req.URL.RawQuery = query.Encode()
 
+	// close the connection after reading the response, to help prevent socket exhaustion
+	req.Close = true
+
 	client := &http.Client{}
 	// set http timeout
 	if UseTimeout {
