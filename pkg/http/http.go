@@ -119,6 +119,9 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 	req.URL.RawQuery = query.Encode()
 
+	// close the connection after reading the response, to help prevent socket exhaustion
+	req.Close = true
+
 	client := &http.Client{}
 	// set http timeout
 	if UseTimeout {
@@ -144,6 +147,10 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	requestErr := retry(5, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
+			if resp != nil {
+				defer resp.Body.Close()
+			}
+
 			utils.LogDebug(err.Error())
 
 			if isTimeout(err) {
@@ -178,11 +185,13 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		return StopRetry{errors.New("Request failed")}
 	})
 
+	if response != nil {
+		defer response.Body.Close()
+	}
+
 	if requestErr != nil && response == nil {
 		return 0, nil, requestErr
 	}
-
-	defer response.Body.Close()
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -195,14 +204,18 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 
 	// print the response body error messages
-	var errResponse errorResponse
-	err = json.Unmarshal(body, &errResponse)
-	if err != nil {
-		utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
-		return response.StatusCode, nil, err
+	if contentType := response.Header.Get("content-type"); strings.HasPrefix(contentType, "application/json") {
+		var errResponse errorResponse
+		err = json.Unmarshal(body, &errResponse)
+		if err != nil {
+			utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
+			return response.StatusCode, nil, err
+		}
+
+		return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
 	}
 
-	return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
+	return response.StatusCode, nil, fmt.Errorf("Request failed with HTTP %d", response.StatusCode)
 }
 
 func isSuccess(statusCode int) bool {
