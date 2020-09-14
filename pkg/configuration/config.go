@@ -385,6 +385,7 @@ func IsValidConfigOption(key string) bool {
 
 // IsTranslatableConfigOption checks whether the key can be translated to a valid config option
 func IsTranslatableConfigOption(key string) bool {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
 	if key == "config" || key == "project" {
 		return true
 	}
@@ -394,6 +395,7 @@ func IsTranslatableConfigOption(key string) bool {
 
 // TranslateFriendlyOption to its config option name
 func TranslateFriendlyOption(key string) string {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
 	if key == "config" {
 		return models.ConfigEnclaveConfig.String()
 	}
@@ -405,6 +407,7 @@ func TranslateFriendlyOption(key string) string {
 
 // TranslateConfigOption to its friendly name
 func TranslateConfigOption(key string) string {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
 	if key == models.ConfigEnclaveConfig.String() {
 		return "config"
 	}
