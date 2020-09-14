@@ -39,7 +39,7 @@ This is an alias of the "login revoke" command.`,
 func revokeToken(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 	updateConfig := !utils.GetBoolFlag(cmd, "no-update-config")
-	updateEnclaveConfig := !utils.GetBoolFlag(cmd, "no-update-enclave-config")
+	updateEnclaveConfig := !utils.GetBoolFlag(cmd, "no-update-enclave-config") && !utils.GetBoolFlag(cmd, "no-update-config-options")
 	verifyTLS := utils.GetBool(localConfig.VerifyTLS.Value, true)
 	yes := utils.GetBoolFlag(cmd, "yes")
 	token := localConfig.Token.Value
@@ -81,7 +81,16 @@ func revokeToken(cmd *cobra.Command, args []string) {
 func init() {
 	logoutCmd.Flags().String("scope", "/", "the directory to scope your token to")
 	logoutCmd.Flags().Bool("no-update-config", false, "do not modify the config file")
-	logoutCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the config and project from the config file")
+	logoutCmd.Flags().Bool("no-update-config-options", false, "do not remove configured options from the config file (i.e. project and config)")
 	logoutCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	// deprecated
+	logoutCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the config and project from the config file")
+	if err := logoutCmd.Flags().MarkDeprecated("no-update-enclave-config", "please use --no-update-config-options instead"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := logoutCmd.Flags().MarkHidden("no-update-enclave-config"); err != nil {
+		utils.HandleError(err)
+	}
+
 	rootCmd.AddCommand(logoutCmd)
 }
