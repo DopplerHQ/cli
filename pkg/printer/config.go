@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
@@ -56,7 +57,8 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 
 	for name, pair := range pairs {
 		if *pair != (models.ScopedOption{}) {
-			row := []string{name, pair.Value, pair.Scope}
+			translatedName := configuration.TranslateConfigOption(name)
+			row := []string{translatedName, pair.Value, pair.Scope}
 			if source {
 				row = append(row, pair.Source)
 			}
@@ -115,7 +117,8 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 	var rows [][]string
 	for _, arg := range args {
 		if option, exists := values[arg]; exists {
-			rows = append(rows, []string{arg, option.Value, option.Scope})
+			translatedArg := configuration.TranslateConfigOption(arg)
+			rows = append(rows, []string{translatedArg, option.Value, option.Scope})
 		}
 	}
 	Table([]string{"name", "value", "scope"}, rows, TableOptions())
@@ -134,7 +137,8 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 
 		for name, value := range pairs {
 			if value != "" {
-				rows = append(rows, []string{name, value, scope})
+				translatedName := configuration.TranslateConfigOption(name)
+				rows = append(rows, []string{translatedName, value, scope})
 			}
 		}
 	}
@@ -157,8 +161,15 @@ func ConfigOptionNames(options []string, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{}
+	translatedOptions := []string{}
 	for _, option := range options {
+		translatedOptions = append(translatedOptions, configuration.TranslateConfigOption(option))
+	}
+
+	sort.Strings(translatedOptions)
+
+	rows := [][]string{}
+	for _, option := range translatedOptions {
 		rows = append(rows, []string{option})
 	}
 	Table([]string{"name"}, rows, TableOptions())

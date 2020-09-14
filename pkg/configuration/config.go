@@ -383,6 +383,17 @@ func IsValidConfigOption(key string) bool {
 	return exists
 }
 
+// TranslateConfigOption to its friendly name
+func TranslateConfigOption(key string) string {
+	if key == models.ConfigEnclaveConfig.String() {
+		return "config"
+	}
+	if key == models.ConfigEnclaveProject.String() {
+		return "project"
+	}
+	return key
+}
+
 // SetConfigValue set the value for the specified key in the config
 func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 	if key == models.ConfigToken.String() {

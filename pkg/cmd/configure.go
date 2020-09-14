@@ -18,7 +18,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -73,7 +72,6 @@ var configureOptionsCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 
 		options := models.AllConfigOptions()
-		sort.Strings(options)
 		printer.ConfigOptionNames(options, jsonFlag)
 	},
 }
