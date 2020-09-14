@@ -132,7 +132,7 @@ docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e DOPPLER_PROJECT="" -e DO
 To avoid hard-coding the values, you can use the cli's `configure` command:
 
 ```sh
-docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="$(doppler configure get token --plain)" -e DOPPLER_PROJECT="$(doppler configure get enclave.project --plain)" -e DOPPLER_CONFIG="$(doppler configure get enclave.config --plain)" mytestapp
+docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="$(doppler configure get token --plain)" -e DOPPLER_PROJECT="$(doppler configure get project --plain)" -e DOPPLER_CONFIG="$(doppler configure get config --plain)" mytestapp
 ```
 
 Flags:

@@ -383,6 +383,26 @@ func IsValidConfigOption(key string) bool {
 	return exists
 }
 
+// IsTranslatableConfigOption checks whether the key can be translated to a valid config option
+func IsTranslatableConfigOption(key string) bool {
+	if key == "config" || key == "project" {
+		return true
+	}
+
+	return false
+}
+
+// TranslateFriendlyOption to its config option name
+func TranslateFriendlyOption(key string) string {
+	if key == "config" {
+		return models.ConfigEnclaveConfig.String()
+	}
+	if key == "project" {
+		return models.ConfigEnclaveProject.String()
+	}
+	return key
+}
+
 // TranslateConfigOption to its friendly name
 func TranslateConfigOption(key string) string {
 	if key == models.ConfigEnclaveConfig.String() {

@@ -89,7 +89,7 @@ doppler configure get key otherkey`,
 		}
 
 		for _, arg := range args {
-			if !configuration.IsValidConfigOption(arg) {
+			if !configuration.IsValidConfigOption(arg) && !configuration.IsTranslatableConfigOption(arg) {
 				return errors.New("invalid option " + arg)
 			}
 		}
@@ -103,7 +103,12 @@ doppler configure get key otherkey`,
 
 		conf := configuration.Get(configuration.Scope)
 
-		printer.ScopedConfigValues(conf, args, models.ScopedPairs(&conf), jsonFlag, plain, copy)
+		translatedArgs := []string{}
+		for _, arg := range args {
+			translatedArgs = append(translatedArgs, configuration.TranslateFriendlyOption(arg))
+		}
+
+		printer.ScopedConfigValues(conf, translatedArgs, models.ScopedPairs(&conf), jsonFlag, plain, copy)
 	},
 }
 
@@ -121,7 +126,7 @@ doppler configure set key=123 otherkey=456`,
 
 		if !strings.Contains(args[0], "=") {
 			if len(args) == 2 {
-				if configuration.IsValidConfigOption(args[0]) {
+				if configuration.IsValidConfigOption(args[0]) || configuration.IsTranslatableConfigOption(args[0]) {
 					return nil
 				}
 				return errors.New("invalid option " + args[0])
@@ -132,7 +137,7 @@ doppler configure set key=123 otherkey=456`,
 
 		for _, arg := range args {
 			option := strings.Split(arg, "=")
-			if len(option) < 2 || !configuration.IsValidConfigOption(option[0]) {
+			if len(option) < 2 || (!configuration.IsValidConfigOption(option[0]) && !configuration.IsTranslatableConfigOption(option[0])) {
 				return errors.New("invalid option " + option[0])
 			}
 		}
@@ -142,16 +147,23 @@ doppler configure set key=123 otherkey=456`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
+		options := map[string]string{}
 		if !strings.Contains(args[0], "=") {
-			configuration.Set(configuration.Scope, map[string]string{args[0]: args[1]})
+			options[args[0]] = args[1]
 		} else {
-			options := map[string]string{}
 			for _, option := range args {
 				arr := strings.Split(option, "=")
 				options[arr[0]] = arr[1]
 			}
-			configuration.Set(configuration.Scope, options)
 		}
+
+		translatedOptions := map[string]string{}
+		for key, value := range options {
+			translatedKey := configuration.TranslateFriendlyOption(key)
+			translatedOptions[translatedKey] = value
+		}
+
+		configuration.Set(configuration.Scope, translatedOptions)
 
 		if !utils.Silent {
 			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
@@ -172,7 +184,7 @@ doppler configure unset key otherkey`,
 		}
 
 		for _, arg := range args {
-			if !configuration.IsValidConfigOption(arg) {
+			if !configuration.IsValidConfigOption(arg) && !configuration.IsTranslatableConfigOption(arg) {
 				return errors.New("invalid option " + arg)
 			}
 		}
@@ -182,7 +194,12 @@ doppler configure unset key otherkey`,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
-		configuration.Unset(configuration.Scope, args)
+		translatedArgs := []string{}
+		for _, arg := range args {
+			translatedArgs = append(translatedArgs, configuration.TranslateFriendlyOption(arg))
+		}
+
+		configuration.Unset(configuration.Scope, translatedArgs)
 
 		if !utils.Silent {
 			printer.ScopedConfig(configuration.Get(configuration.Scope), jsonFlag)
