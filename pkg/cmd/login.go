@@ -235,10 +235,18 @@ func init() {
 	loginCmd.AddCommand(loginRollCmd)
 
 	loginRevokeCmd.Flags().String("scope", "/", "the directory to scope your token to")
-	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not remove the revoked token and Enclave configuration from the config file")
-	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
+	loginRevokeCmd.Flags().Bool("no-update-config", false, "do not modify the config file")
+	loginRevokeCmd.Flags().Bool("no-update-config-options", false, "do not remove configured options from the config file (i.e. project and config)")
 	loginRevokeCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	loginCmd.AddCommand(loginRevokeCmd)
+	// deprecated
+	loginRevokeCmd.Flags().Bool("no-update-enclave-config", false, "do not remove the Enclave configuration from the config file")
+	if err := loginRevokeCmd.Flags().MarkDeprecated("no-update-enclave-config", "please use --no-update-config-options instead"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := loginRevokeCmd.Flags().MarkHidden("no-update-enclave-config"); err != nil {
+		utils.HandleError(err)
+	}
 
+	loginCmd.AddCommand(loginRevokeCmd)
 	rootCmd.AddCommand(loginCmd)
 }

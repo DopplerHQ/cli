@@ -383,6 +383,40 @@ func IsValidConfigOption(key string) bool {
 	return exists
 }
 
+// IsTranslatableConfigOption checks whether the key can be translated to a valid config option
+func IsTranslatableConfigOption(key string) bool {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
+	if key == "config" || key == "project" {
+		return true
+	}
+
+	return false
+}
+
+// TranslateFriendlyOption to its config option name
+func TranslateFriendlyOption(key string) string {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
+	if key == "config" {
+		return models.ConfigEnclaveConfig.String()
+	}
+	if key == "project" {
+		return models.ConfigEnclaveProject.String()
+	}
+	return key
+}
+
+// TranslateConfigOption to its friendly name
+func TranslateConfigOption(key string) string {
+	// TODO remove this function when releasing CLI v4 (DPLR-435)
+	if key == models.ConfigEnclaveConfig.String() {
+		return "config"
+	}
+	if key == models.ConfigEnclaveProject.String() {
+		return "project"
+	}
+	return key
+}
+
 // SetConfigValue set the value for the specified key in the config
 func SetConfigValue(conf *models.FileScopedOptions, key string, value string) {
 	if key == models.ConfigToken.String() {

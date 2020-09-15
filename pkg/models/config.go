@@ -131,7 +131,9 @@ func EnvPairs(conf *ScopedOptions) map[string]*ScopedOption {
 		"DOPPLER_API_HOST":       &conf.APIHost,
 		"DOPPLER_DASHBOARD_HOST": &conf.DashboardHost,
 		"DOPPLER_VERIFY_TLS":     &conf.VerifyTLS,
-		"ENCLAVE_PROJECT":        &conf.EnclaveProject,
-		"ENCLAVE_CONFIG":         &conf.EnclaveConfig,
+		"DOPPLER_PROJECT":        &conf.EnclaveProject,
+		"DOPPLER_CONFIG":         &conf.EnclaveConfig,
+		"ENCLAVE_PROJECT":        &conf.EnclaveProject, // deprecated, remove in v4
+		"ENCLAVE_CONFIG":         &conf.EnclaveConfig,  // deprecated, remove in v4
 	}
 }

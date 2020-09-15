@@ -67,7 +67,7 @@ var rootCmd = &cobra.Command{
 }
 
 func checkVersion(command string) {
-	// disable version checking on the "run" command and "enclave secrets download" command
+	// disable version checking on the "run" command and "secrets download" command
 	if command == "run" || command == "download" {
 		return
 	}
@@ -115,6 +115,14 @@ func loadFlags(cmd *cobra.Command) {
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 
+func deprecatedCommand(newCommand string) {
+	if newCommand == "" {
+		utils.LogWarning("This command is deprecated")
+	} else {
+		utils.LogWarning(fmt.Sprintf("This command is deprecated, please use the \"doppler %s\" command", newCommand))
+	}
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -146,7 +154,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "disable http timeout")
 	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "max http request duration")
 
-	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read enclave config from the environment")
+	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read config from the environment")
 	rootCmd.PersistentFlags().String("scope", configuration.Scope, "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
 	rootCmd.PersistentFlags().Bool("json", utils.OutputJSON, "output json")

@@ -21,10 +21,13 @@ import (
 )
 
 var enclaveCmd = &cobra.Command{
-	Use:   "enclave",
-	Short: "Control Enclave",
-	Args:  cobra.NoArgs,
+	Use:    "enclave",
+	Short:  "Manage Enclave (deprecated)",
+	Args:   cobra.NoArgs,
+	Hidden: true,
 	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("")
+
 		err := cmd.Usage()
 		if err != nil {
 			utils.HandleError(err, "Unable to print command usage")

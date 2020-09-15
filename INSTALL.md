@@ -110,7 +110,7 @@ Here's an example Dockerfile for a Node app:
 FROM dopplerhq/cli:3-node
 
 # doppler args must be passed at runtime
-ENV DOPPLER_TOKEN="" ENCLAVE_PROJECT="" ENCLAVE_CONFIG=""
+ENV DOPPLER_TOKEN="" DOPPLER_PROJECT="" DOPPLER_CONFIG=""
 
 COPY . .
 
@@ -126,13 +126,13 @@ docker build -t mytestapp .
 
 Then run the container:
 ```sh
-docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e ENCLAVE_PROJECT="" -e ENCLAVE_CONFIG="" mytestapp
+docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="" -e DOPPLER_PROJECT="" -e DOPPLER_CONFIG="" mytestapp
 ```
 
 To avoid hard-coding the values, you can use the cli's `configure` command:
 
 ```sh
-docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="$(doppler configure get token --plain)" -e ENCLAVE_PROJECT="$(doppler configure get enclave.project --plain)" -e ENCLAVE_CONFIG="$(doppler configure get enclave.config --plain)" mytestapp
+docker run --rm -it -p 3000:3000 -e DOPPLER_TOKEN="$(doppler configure get token --plain)" -e DOPPLER_PROJECT="$(doppler configure get project --plain)" -e DOPPLER_CONFIG="$(doppler configure get config --plain)" mytestapp
 ```
 
 Flags:
@@ -141,8 +141,8 @@ Flags:
 - `-t` print output to this terminal
 - `-p 3000:3000` the port your app uses to service requests, if any
 - `-e DOPPLER_TOKEN=""` pass a token into the environment
-- `-e ENCLAVE_PROJECT=""` pass an enclave project into the environment
-- `-e ENCLAVE_CONFIG=""` pass an enclave config into the environment
+- `-e DOPPLER_PROJECT=""` pass an project into the environment
+- `-e DOPPLER_CONFIG=""` pass an config into the environment
 
 ## Other
 

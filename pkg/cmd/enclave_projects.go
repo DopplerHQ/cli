@@ -16,174 +16,82 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/DopplerHQ/cli/pkg/configuration"
-	"github.com/DopplerHQ/cli/pkg/http"
-	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
-var projectsCmd = &cobra.Command{
+var enclaveProjectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List Enclave projects",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ProjectsInfo(info, jsonFlag)
+		deprecatedCommand("projects")
+		projects(cmd, args)
 	},
 }
 
-var projectsGetCmd = &cobra.Command{
+var enclaveProjectsGetCmd = &cobra.Command{
 	Use:   "get [project_id]",
 	Short: "Get info for a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		printer.ProjectInfo(info, jsonFlag)
+		deprecatedCommand("projects get")
+		getProjects(cmd, args)
 	},
 }
 
-var projectsCreateCmd = &cobra.Command{
+var enclaveProjectsCreateCmd = &cobra.Command{
 	Use:   "create [name]",
 	Short: "Create a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		description := cmd.Flag("description").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("description", description)
-
-		name := cmd.Flag("name").Value.String()
-		if len(args) > 0 {
-			name = args[0]
-		}
-		utils.RequireValue("name", name)
-
-		info, err := http.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ProjectInfo(info, jsonFlag)
-		}
+		deprecatedCommand("projects create")
+		createProjects(cmd, args)
 	},
 }
 
-var projectsDeleteCmd = &cobra.Command{
+var enclaveProjectsDeleteCmd = &cobra.Command{
 	Use:   "delete [project_id]",
 	Short: "Delete a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		yes := utils.GetBoolFlag(cmd, "yes")
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
-			err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-
-			if !utils.Silent {
-				info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-				if !err.IsNil() {
-					utils.HandleError(err.Unwrap(), err.Message)
-				}
-
-				printer.ProjectsInfo(info, jsonFlag)
-			}
-		}
+		deprecatedCommand("projects delete")
+		deleteProjects(cmd, args)
 	},
 }
 
-var projectsUpdateCmd = &cobra.Command{
+var enclaveProjectsUpdateCmd = &cobra.Command{
 	Use:   "update [project_id]",
 	Short: "Update a project",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonFlag := utils.OutputJSON
-		name := cmd.Flag("name").Value.String()
-		description := cmd.Flag("description").Value.String()
-		localConfig := configuration.LocalConfig(cmd)
-
-		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("name", name)
-		utils.RequireValue("description", description)
-
-		project := localConfig.EnclaveProject.Value
-		if len(args) > 0 {
-			project = args[0]
-		}
-		utils.RequireValue("project", project)
-
-		info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		if !utils.Silent {
-			printer.ProjectInfo(info, jsonFlag)
-		}
+		deprecatedCommand("projects update")
+		updateProjects(cmd, args)
 	},
 }
 
 func init() {
-	projectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsCmd.AddCommand(projectsGetCmd)
+	enclaveProjectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsGetCmd)
 
-	projectsCreateCmd.Flags().String("name", "", "project name")
-	projectsCreateCmd.Flags().String("description", "", "project description")
-	projectsCmd.AddCommand(projectsCreateCmd)
+	enclaveProjectsCreateCmd.Flags().String("name", "", "project name")
+	enclaveProjectsCreateCmd.Flags().String("description", "", "project description")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsCreateCmd)
 
-	projectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	projectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsCmd.AddCommand(projectsDeleteCmd)
+	enclaveProjectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveProjectsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsCmd.AddCommand(enclaveProjectsDeleteCmd)
 
-	projectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	projectsUpdateCmd.Flags().String("name", "", "project name")
-	projectsUpdateCmd.Flags().String("description", "", "project description")
-	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
+	enclaveProjectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveProjectsUpdateCmd.Flags().String("name", "", "project name")
+	enclaveProjectsUpdateCmd.Flags().String("description", "", "project description")
+	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
-	if err := projectsUpdateCmd.MarkFlagRequired("description"); err != nil {
+	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("description"); err != nil {
 		utils.HandleError(err)
 	}
-	projectsCmd.AddCommand(projectsUpdateCmd)
+	enclaveProjectsCmd.AddCommand(enclaveProjectsUpdateCmd)
 
-	enclaveCmd.AddCommand(projectsCmd)
+	enclaveCmd.AddCommand(enclaveProjectsCmd)
 }
