@@ -26,6 +26,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -179,15 +180,38 @@ func execCommandWindows(cmd *exec.Cmd) (int, error) {
 }
 
 func execCommand(cmd *exec.Cmd) (int, error) {
-	if err := cmd.Run(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			return exitError.ExitCode(), err
-		}
+	// signal handling logic adapted from aws-vault https://github.com/99designs/aws-vault/
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan)
 
+	if err := cmd.Start(); err != nil {
 		return 1, err
 	}
 
-	return 0, nil
+	// catch and ignore all signals
+	// no need to manually send them to the subprocess since it's in the same process group
+	go func() {
+		for {
+			// ignore
+			<-sigChan
+		}
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		if err := cmd.Process.Signal(os.Kill); err != nil {
+			LogDebug(fmt.Sprintf("Unable to forward signal %s to subprocess", os.Kill))
+			LogDebugError(err)
+		}
+
+		if exitError, ok := err.(*exec.ExitError); ok {
+			return exitError.ExitCode(), exitError
+		}
+
+		return 2, err
+	}
+
+	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
+	return waitStatus.ExitStatus(), nil
 }
 
 // RequireValue throws an error if a value is blank
