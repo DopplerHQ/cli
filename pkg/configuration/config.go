@@ -154,9 +154,20 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	// environment variables
 	if !utils.GetBoolFlag(cmd, "no-read-env") {
 		pairs := models.EnvPairs(&localConfig)
-		for envVar, pair := range pairs {
+		envVars := []string{}
+		for envVar := range pairs {
+			envVars = append(envVars, envVar)
+		}
+
+		// sort variables so that they are processed in a deterministic order
+		// this also ensures ENCLAVE_ variables are given precedence over (i.e. read after) DOPPLER_ variables,
+		// which is necessary for backwards compatibility until we drop support for ENCLAVE_ variables
+		sort.Strings(envVars)
+
+		for _, envVar := range envVars {
 			envValue := os.Getenv(envVar)
 			if envValue != "" {
+				pair := pairs[envVar]
 				pair.Value = envValue
 				pair.Scope = "/"
 				pair.Source = models.EnvironmentSource.String()
