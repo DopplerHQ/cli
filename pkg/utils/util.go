@@ -26,6 +26,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -110,9 +111,6 @@ func RunCommand(command []string, env []string, inFile *os.File, outFile *os.Fil
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	if IsWindows() {
-		return execCommandWindows(cmd)
-	}
 	return execCommand(cmd)
 }
 
@@ -138,56 +136,42 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	if IsWindows() {
-		return execCommandWindows(cmd)
-	}
 	return execCommand(cmd)
 }
 
-func execCommandWindows(cmd *exec.Cmd) (int, error) {
-	if err := cmd.Start(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			return exitError.ExitCode(), err
-		}
+func execCommand(cmd *exec.Cmd) (int, error) {
+	// signal handling logic adapted from aws-vault https://github.com/99designs/aws-vault/
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan)
 
+	if err := cmd.Start(); err != nil {
 		return 1, err
 	}
 
-	// ignore interrupts or the CLI will exit before the user
-	// can respond to cmd.exe's "Terminate batch job?" prompt
-	channel := make(chan os.Signal, 1)
-	signal.Notify(channel, os.Interrupt)
+	// catch and ignore all signals
+	// no need to manually send them to the subprocess since it's in the same process group
 	go func() {
-		s := <-channel
-		// do nothing; the child process will have also received the signal
-		LogDebug(fmt.Sprintf("Process received %s", s.String()))
+		for {
+			// ignore
+			<-sigChan
+		}
 	}()
 
 	if err := cmd.Wait(); err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode := exitError.ExitCode()
-			// when killed via signal, Go may incorrectly read the exit code as -1
-			if exitCode >= 0 {
-				return exitCode, err
-			}
+		if err := cmd.Process.Signal(os.Kill); err != nil {
+			LogDebug(fmt.Sprintf("Unable to forward signal %s to subprocess", os.Kill))
+			LogDebugError(err)
 		}
 
-		return 1, err
-	}
-
-	return 0, nil
-}
-
-func execCommand(cmd *exec.Cmd) (int, error) {
-	if err := cmd.Run(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
-			return exitError.ExitCode(), err
+			return exitError.ExitCode(), exitError
 		}
 
-		return 1, err
+		return 2, err
 	}
 
-	return 0, nil
+	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
+	return waitStatus.ExitStatus(), nil
 }
 
 // RequireValue throws an error if a value is blank
