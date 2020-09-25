@@ -16,6 +16,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -129,7 +131,12 @@ func deleteProjects(cmd *cobra.Command, args []string) {
 	}
 	utils.RequireValue("project", project)
 
-	if yes || utils.ConfirmationPrompt("Delete project "+project, false) {
+	prompt := "Delete project"
+	if project != "" {
+		prompt = fmt.Sprintf("%s %s", prompt, project)
+	}
+
+	if yes || utils.ConfirmationPrompt(prompt, false) {
 		err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)

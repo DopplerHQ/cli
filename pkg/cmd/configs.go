@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -160,7 +161,12 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 	}
 	utils.RequireValue("config", config)
 
-	if yes || utils.ConfirmationPrompt("Delete config "+config, false) {
+	prompt := "Delete config"
+	if config != "" {
+		prompt = fmt.Sprintf("%s %s", prompt, config)
+	}
+
+	if yes || utils.ConfirmationPrompt(prompt, false) {
 		err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -216,7 +222,12 @@ func lockConfigs(cmd *cobra.Command, args []string) {
 	}
 	utils.RequireValue("config", config)
 
-	if yes || utils.ConfirmationPrompt("Lock config "+config, false) {
+	prompt := "Lock config"
+	if config != "" {
+		prompt = fmt.Sprintf("%s %s", prompt, config)
+	}
+
+	if yes || utils.ConfirmationPrompt(prompt, false) {
 		configInfo, err := http.LockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
@@ -242,7 +253,12 @@ func unlockConfigs(cmd *cobra.Command, args []string) {
 	}
 	utils.RequireValue("config", config)
 
-	if yes || utils.ConfirmationPrompt("Unlock config "+config, false) {
+	prompt := "Unlock config"
+	if config != "" {
+		prompt = fmt.Sprintf("%s %s", prompt, config)
+	}
+
+	if yes || utils.ConfirmationPrompt(prompt, false) {
 		configInfo, err := http.UnlockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
