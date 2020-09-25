@@ -59,8 +59,6 @@ func configsTokens(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 	if !err.IsNil() {
@@ -75,8 +73,6 @@ func getConfigsTokens(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	slug := cmd.Flag("slug").Value.String()
 	if len(args) > 0 {
@@ -106,8 +102,6 @@ func createConfigsTokens(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	name := cmd.Flag("name").Value.String()
 	if len(args) > 0 {
@@ -128,8 +122,6 @@ func revokeConfigsTokens(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	slug := cmd.Flag("slug").Value.String()
 	if len(args) > 0 {

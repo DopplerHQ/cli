@@ -84,7 +84,6 @@ func getProjects(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		project = args[0]
 	}
-	utils.RequireValue("project", project)
 
 	info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
 	if !err.IsNil() {
@@ -129,7 +128,6 @@ func deleteProjects(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		project = args[0]
 	}
-	utils.RequireValue("project", project)
 
 	prompt := "Delete project"
 	if project != "" {
@@ -167,7 +165,6 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		project = args[0]
 	}
-	utils.RequireValue("project", project)
 
 	info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
 	if !err.IsNil() {

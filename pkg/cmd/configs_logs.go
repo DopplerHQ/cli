@@ -50,8 +50,6 @@ func configsLogs(cmd *cobra.Command, args []string) {
 	// number := utils.GetIntFlag(cmd, "number", 16)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 	if !err.IsNil() {
@@ -66,8 +64,6 @@ func getConfigsLogs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	log := cmd.Flag("log").Value.String()
 	if len(args) > 0 {
@@ -88,8 +84,6 @@ func rollbackConfigsLogs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	log := cmd.Flag("log").Value.String()
 	if len(args) > 0 {

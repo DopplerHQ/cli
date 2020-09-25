@@ -98,8 +98,6 @@ func secrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 	if !err.IsNil() {
@@ -125,8 +123,6 @@ func getSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 	if !err.IsNil() {
@@ -146,8 +142,6 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	secrets := map[string]interface{}{}
 	var keys []string
@@ -178,8 +172,6 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	if yes || utils.ConfirmationPrompt("Delete secret(s)", false) {
 		secrets := map[string]interface{}{}
@@ -205,8 +197,6 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
-	utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 	format := cmd.Flag("format").Value.String()
 	if jsonFlag {

@@ -81,7 +81,6 @@ func configs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
 	if !err.IsNil() {
@@ -96,13 +95,11 @@ func getConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
 	}
-	utils.RequireValue("config", config)
 
 	configInfo, err := http.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
 	if !err.IsNil() {
@@ -118,7 +115,6 @@ func createConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	name := cmd.Flag("name").Value.String()
 	if len(args) > 0 {
@@ -153,13 +149,11 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
 	}
-	utils.RequireValue("config", config)
 
 	prompt := "Delete config"
 	if config != "" {
@@ -189,14 +183,12 @@ func updateConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 	utils.RequireValue("name", name)
 
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
 	}
-	utils.RequireValue("config", config)
 
 	info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
 	if !err.IsNil() {
@@ -214,13 +206,11 @@ func lockConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
 	}
-	utils.RequireValue("config", config)
 
 	prompt := "Lock config"
 	if config != "" {
@@ -245,13 +235,11 @@ func unlockConfigs(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("project", localConfig.EnclaveProject.Value)
 
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
 	}
-	utils.RequireValue("config", config)
 
 	prompt := "Unlock config"
 	if config != "" {
