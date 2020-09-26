@@ -57,6 +57,7 @@ var activityGetCmd = &cobra.Command{
 		if len(args) > 0 {
 			log = args[0]
 		}
+		utils.RequireValue("log", log)
 
 		activity, err := http.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
 		if !err.IsNil() {
