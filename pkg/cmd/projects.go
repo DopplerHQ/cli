@@ -20,6 +20,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -99,7 +100,6 @@ func createProjects(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
-	utils.RequireValue("description", description)
 
 	name := cmd.Flag("name").Value.String()
 	if len(args) > 0 {
@@ -159,16 +159,21 @@ func updateProjects(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 	utils.RequireValue("name", name)
-	utils.RequireValue("description", description)
 
 	project := localConfig.EnclaveProject.Value
 	if len(args) > 0 {
 		project = args[0]
 	}
 
-	info, err := http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	var info models.ProjectInfo
+	var httpErr http.Error
+	if cmd.Flags().Changed("description") {
+		info, httpErr = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
+	} else {
+		info, httpErr = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name)
+	}
+	if !httpErr.IsNil() {
+		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
 
 	if !utils.Silent {
@@ -192,9 +197,6 @@ func init() {
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
 	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
-		utils.HandleError(err)
-	}
-	if err := projectsUpdateCmd.MarkFlagRequired("description"); err != nil {
 		utils.HandleError(err)
 	}
 	projectsCmd.AddCommand(projectsUpdateCmd)

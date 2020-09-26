@@ -306,9 +306,14 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 	return projectInfo, Error{}
 }
 
-// UpdateProject update a project
-func UpdateProject(host string, verifyTLS bool, apiKey string, project string, name string, description string) (models.ProjectInfo, Error) {
-	postBody := map[string]string{"name": name, "description": description}
+// UpdateProject update a project's name and (optional) description
+func UpdateProject(host string, verifyTLS bool, apiKey string, project string, name string, description ...string) (models.ProjectInfo, Error) {
+	postBody := map[string]string{"name": name}
+	if len(description) > 0 {
+		desc := description[0]
+		postBody["description"] = desc
+	}
+
 	body, err := json.Marshal(postBody)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
