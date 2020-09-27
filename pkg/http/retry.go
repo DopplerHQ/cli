@@ -33,7 +33,7 @@ func retry(attempts int, sleep time.Duration, f func() error) error {
 
 		if attempts--; attempts > 0 {
 			// Add some randomness to prevent creating a Thundering Herd
-			jitter := time.Duration(rand.Int63n(int64(sleep)))
+			jitter := time.Duration(rand.Int63n(int64(sleep))) // #nosec G404
 			sleep = sleep + jitter/2
 
 			time.Sleep(sleep)
