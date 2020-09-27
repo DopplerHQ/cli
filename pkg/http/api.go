@@ -137,6 +137,7 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, jsonFlag bool) ([]byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
 	headers := apiKeyHeader(apiKey)
 	if jsonFlag {
@@ -145,7 +146,7 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 		headers["Accept"] = "text/plain"
 	}
 
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/enclave/v1/configs/"+config+"/secrets/download", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets/download", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
 	}
@@ -157,10 +158,11 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 func GetSecrets(host string, verifyTLS bool, apiKey string, project string, config string) ([]byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
 	headers := apiKeyHeader(apiKey)
 	headers["Accept"] = "application/json"
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/enclave/v1/configs/"+config+"/secrets", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch secrets", Code: statusCode}
 	}
@@ -179,8 +181,9 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/secrets", params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets", params, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to set secrets", Code: statusCode}
 	}
@@ -241,7 +244,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 
 // GetProjects get projects
 func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects", []queryParam{})
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch projects", Code: statusCode}
 	}
@@ -262,7 +265,10 @@ func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectIn
 
 // GetProject get specified project
 func GetProject(host string, verifyTLS bool, apiKey string, project string) (models.ProjectInfo, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{})
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to fetch project", Code: statusCode}
 	}
@@ -285,7 +291,7 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects", []queryParam{}, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to create project", Code: statusCode}
 	}
@@ -308,7 +314,10 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{}, body)
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to update project", Code: statusCode}
 	}
@@ -325,7 +334,10 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 
 // DeleteProject create a project
 func DeleteProject(host string, verifyTLS bool, apiKey string, project string) Error {
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/projects/"+project, []queryParam{})
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete project", Code: statusCode}
 	}
@@ -344,7 +356,7 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/environments", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch environments", Code: statusCode}
 	}
@@ -367,8 +379,9 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, environment string) (models.EnvironmentInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "environment", Value: environment})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/environments/"+environment, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params)
 	if err != nil {
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to fetch environment", Code: statusCode}
 	}
@@ -388,7 +401,7 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -411,8 +424,9 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 func GetConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -438,7 +452,7 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs", params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to create config", Code: statusCode}
 	}
@@ -457,8 +471,9 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, config string) Error {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params)
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete config", Code: statusCode}
 	}
@@ -476,8 +491,9 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 func LockConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/lock", params, nil)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/lock", params, nil)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to lock config", Code: statusCode}
 	}
@@ -496,8 +512,9 @@ func LockConfig(host string, verifyTLS bool, apiKey string, project string, conf
 func UnlockConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/unlock", params, nil)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/unlock", params, nil)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to unlock config", Code: statusCode}
 	}
@@ -522,8 +539,9 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config, params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
 	}
@@ -580,8 +598,9 @@ func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (mod
 func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch config logs", Code: statusCode}
 	}
@@ -604,8 +623,10 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "log", Value: log})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log, params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log", params)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
 	}
@@ -624,8 +645,10 @@ func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, co
 func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project string, config string, log string) (models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "log", Value: log})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/logs/"+log+"/rollback", params, nil)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log/rollback", params, nil)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
@@ -644,8 +667,9 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 func GetConfigServiceTokens(host string, verifyTLS bool, apiKey string, project string, config string) ([]models.ConfigServiceToken, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens", params)
+	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch service tokens", Code: statusCode}
 	}
@@ -674,8 +698,9 @@ func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens", params, body)
+	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params, body)
 	if err != nil {
 		return models.ConfigServiceToken{}, Error{Err: err, Message: "Unable to create service token", Code: statusCode}
 	}
@@ -694,8 +719,10 @@ func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, slug string) Error {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "slug", Value: slug})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/enclave/v1/configs/"+config+"/tokens/"+slug, params)
+	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete service token", Code: statusCode}
 	}

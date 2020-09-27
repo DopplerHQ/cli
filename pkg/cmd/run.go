@@ -72,10 +72,9 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
-		utils.RequireValue("project", localConfig.EnclaveProject.Value)
-		utils.RequireValue("config", localConfig.EnclaveConfig.Value)
 
 		fallbackPath := ""
+		legacyFallbackPath := ""
 		if cmd.Flags().Changed("fallback") {
 			var err error
 			fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
@@ -83,7 +82,12 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 				utils.HandleError(err, "Unable to parse --fallback flag")
 			}
 		} else {
-			fallbackPath = defaultFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+			fallbackPath = defaultFallbackFile(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+			// TODO remove this when releasing CLI v4 (DPLR-435)
+			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
+				// save to old path to maintain backwards compatibility
+				legacyFallbackPath = legacyFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+			}
 
 			if enableFallback && !utils.Exists(defaultFallbackDir) {
 				err := os.Mkdir(defaultFallbackDir, 0700)
@@ -92,17 +96,30 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 				}
 			}
 		}
-		absFallbackPath, err := filepath.Abs(fallbackPath)
-		if err == nil {
+
+		if absFallbackPath, err := filepath.Abs(fallbackPath); err == nil {
 			fallbackPath = absFallbackPath
 		}
 
-		passphrase := fmt.Sprintf("%s:%s:%s", localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+		if legacyFallbackPath != "" {
+			if absFallbackPath, err := filepath.Abs(legacyFallbackPath); err == nil {
+				legacyFallbackPath = absFallbackPath
+			}
+		}
+
+		var passphrase string
 		if cmd.Flags().Changed("passphrase") {
 			passphrase = cmd.Flag("passphrase").Value.String()
-			if passphrase == "" {
-				utils.HandleError(errors.New("invalid passphrase"))
+		} else {
+			// using only the token is sufficient for Service Tokens. it's insufficient for CLI tokens, which require a project and config
+			passphrase = fmt.Sprintf("%s", localConfig.Token.Value)
+			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
+				passphrase = fmt.Sprintf("%s:%s:%s", passphrase, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 			}
+		}
+
+		if passphrase == "" {
+			utils.HandleError(errors.New("invalid passphrase"))
 		}
 
 		if !enableFallback {
@@ -114,7 +131,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
+		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, legacyFallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -153,7 +170,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		}
 
 		exitCode := 0
-		err = nil
+		var err error
 
 		if cmd.Flags().Changed("command") {
 			command := cmd.Flag("command").Value.String()
@@ -239,10 +256,10 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
-func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, legacyFallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
 	fetchSecrets := !(enableFallback && fallbackOnly)
 	if !fetchSecrets {
-		return readFallbackFile(fallbackPath, localConfig, passphrase)
+		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 	}
 
 	response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true)
@@ -250,7 +267,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, localConfig, passphrase)
+			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
@@ -261,7 +278,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 		if enableFallback {
 			utils.Log("Unable to parse the Doppler API response")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, localConfig, passphrase)
+			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 		}
 		utils.HandleError(err, "Unable to parse API response")
 	}
@@ -281,6 +298,19 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
 				utils.LogError(err)
+			}
+		}
+
+		// TODO remove this when releasing CLI v4 (DPLR-435)
+		if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
+			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", legacyFallbackPath))
+			if err := utils.WriteFile(legacyFallbackPath, []byte(encryptedResponse), 0400); err != nil {
+				utils.Log("Unable to write to legacy fallback file")
+				if exitOnWriteFailure {
+					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
+				} else {
+					utils.LogError(err)
+				}
 			}
 		}
 	}
@@ -313,12 +343,18 @@ func writeFailureMessage() []string {
 	return msg
 }
 
-func readFallbackFile(path string, localConfig models.ScopedOptions, passphrase string) map[string]string {
+func readFallbackFile(path string, legacyPath string, passphrase string) map[string]string {
 	utils.Log("Reading secrets from fallback file")
 	utils.LogDebug(fmt.Sprintf("Using fallback file %s", path))
 
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
+			// attempt to read from the legacy path, in case the fallback file was created with an older version of the CLI
+			// TODO remove this when releasing CLI v4 (DPLR-435)
+			if legacyPath != "" {
+				return readFallbackFile(legacyPath, "", passphrase)
+			}
+
 			utils.HandleError(errors.New("The fallback file does not exist"))
 		}
 
@@ -366,8 +402,23 @@ func parseSecrets(response []byte) (map[string]string, error) {
 	return secrets, err
 }
 
-func defaultFallbackFile(project string, config string) string {
-	fileName := fmt.Sprintf(".run-%s.json", crypto.Hash(fmt.Sprintf("%s:%s", project, config)))
+// legacyFallbackFile deprecated file path used by early versions of CLI v3
+func legacyFallbackFile(project string, config string) string {
+	name := fmt.Sprintf("%s:%s", project, config)
+	fileName := fmt.Sprintf(".run-%s.json", crypto.Hash(name))
+	return filepath.Join(defaultFallbackDir, fileName)
+}
+
+func defaultFallbackFile(token string, project string, config string) string {
+	var fileName string
+	var name string
+	if project == "" && config == "" {
+		name = fmt.Sprintf("%s", token)
+	} else {
+		name = fmt.Sprintf("%s:%s:%s", token, project, config)
+	}
+
+	fileName = fmt.Sprintf(".secrets-%s.json", crypto.Hash(name))
 	return filepath.Join(defaultFallbackDir, fileName)
 }
 
