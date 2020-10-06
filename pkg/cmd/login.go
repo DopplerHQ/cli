@@ -102,7 +102,7 @@ var loginCmd = &cobra.Command{
 		if printURL {
 			utils.Log(fmt.Sprintf("Complete authorization at %s", authURL))
 		}
-		utils.Log(fmt.Sprintf("Your auth code is %s", color.Green.Render(code)))
+		utils.Log(fmt.Sprintf("Your auth code is:\n%s\n", color.Green.Render(code)))
 		utils.Log("Waiting...")
 
 		// auth flow must complete within 5 minutes
