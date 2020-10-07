@@ -49,7 +49,7 @@ $ scoop update doppler
 
 ### Shell script
 
-This option is only recommend for CI jobs and other environments that won't receive updates.
+This option is recommend for CI jobs and other environments that won't make use of package manager updates.
 
 ```sh
 $ (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh
