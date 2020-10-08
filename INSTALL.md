@@ -81,7 +81,7 @@ $ sudo yum update doppler
 
 You can bypass package managers and quickly install the latest version of the CLI via shell script. The script automatically downloads and installs the CLI binary most appropriate for your system's architecture. It is also fully POSIX compliant to support all linux and bsd variants with minimal dependencies.
 
-Note that this installation method is only recommended for ephemeral environments like CI jobs. Longer-lived environments that expect to receive updates should install the CLI via a package manager.
+Note that this installation method is most recommended for ephemeral environments like CI jobs. Longer-lived environments that would like to receive updates via  package manager should install the CLI via that package manager.
 
 ```sh
 (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh
