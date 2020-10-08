@@ -292,7 +292,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 		}
 
 		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackPath))
-		if err := utils.WriteFile(fallbackPath, []byte(encryptedResponse), 0400); err != nil {
+		if err := utils.WriteFile(fallbackPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
 			utils.Log("Unable to write to fallback file")
 			if exitOnWriteFailure {
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
@@ -304,7 +304,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 		// TODO remove this when releasing CLI v4 (DPLR-435)
 		if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
 			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", legacyFallbackPath))
-			if err := utils.WriteFile(legacyFallbackPath, []byte(encryptedResponse), 0400); err != nil {
+			if err := utils.WriteFile(legacyFallbackPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
 				utils.Log("Unable to write to legacy fallback file")
 				if exitOnWriteFailure {
 					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))

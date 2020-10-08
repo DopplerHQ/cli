@@ -21,6 +21,16 @@ import (
 	"os"
 )
 
+// RestrictedFilePerms perms used for creating restrictied files meant to be accessible only to the user
+func RestrictedFilePerms() os.FileMode {
+	// windows disallows overwriting an existing file with 0400 perms
+	if IsWindows() {
+		return 0600
+	}
+
+	return 0400
+}
+
 // WriteFile atomically writes data to a file named by filename.
 func WriteFile(filename string, data []byte, perm os.FileMode) error {
 	temp := fmt.Sprintf("%s.%s", filename, RandomBase64String(8))
