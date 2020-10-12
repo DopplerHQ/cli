@@ -112,7 +112,8 @@ url="https://cli.doppler.com/download?os=$os&arch=$arch&format=$format"
 
 # download binary
 if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
-  tempdir="$(mktemp -d)"
+  # create hidden temp dir in user's home directory to ensure no other users have write perms
+  tempdir="$(mktemp -d ~/.tmp.XXXXXXXX)"
   log_debug "Using temp directory $tempdir"
 
   echo "Downloading latest release"
