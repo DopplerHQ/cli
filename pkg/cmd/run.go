@@ -257,8 +257,10 @@ var runCleanCmd = &cobra.Command{
 }
 
 func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, legacyFallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
-	fetchSecrets := !(enableFallback && fallbackOnly)
-	if !fetchSecrets {
+	if fallbackOnly {
+		if !enableFallback {
+			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
+		}
 		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 	}
 
