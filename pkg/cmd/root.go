@@ -111,6 +111,8 @@ func loadFlags(cmd *cobra.Command) {
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
 	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "silent", utils.Silent)
+	// no-file is used by the 'secrets download' command to output secrets to stdout
+	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
 	utils.OutputJSON = utils.GetBoolFlagIfChanged(cmd, "json", utils.OutputJSON)
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }

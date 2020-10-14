@@ -191,7 +191,6 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 }
 
 func downloadSecrets(cmd *cobra.Command, args []string) {
-	// don't log anything extraneous when printing to stdout
 	saveFile := !utils.GetBoolFlag(cmd, "no-file")
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
