@@ -262,7 +262,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 			if exitOnWriteFailure {
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
-				utils.LogError(err)
+				utils.LogDebugError(err)
 			}
 		}
 
@@ -274,7 +274,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 				if exitOnWriteFailure {
 					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 				} else {
-					utils.LogError(err)
+					utils.LogDebugError(err)
 				}
 			}
 		}
