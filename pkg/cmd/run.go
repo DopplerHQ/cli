@@ -75,36 +75,8 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 
 		fallbackPath := ""
 		legacyFallbackPath := ""
-		if cmd.Flags().Changed("fallback") {
-			var err error
-			fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
-			if err != nil {
-				utils.HandleError(err, "Unable to parse --fallback flag")
-			}
-		} else {
-			fallbackPath = defaultFallbackFile(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			// TODO remove this when releasing CLI v4 (DPLR-435)
-			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-				// save to old path to maintain backwards compatibility
-				legacyFallbackPath = legacyFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			}
-
-			if enableFallback && !utils.Exists(defaultFallbackDir) {
-				err := os.Mkdir(defaultFallbackDir, 0700)
-				if err != nil && exitOnWriteFailure {
-					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
-				}
-			}
-		}
-
-		if absFallbackPath, err := filepath.Abs(fallbackPath); err == nil {
-			fallbackPath = absFallbackPath
-		}
-
-		if legacyFallbackPath != "" {
-			if absFallbackPath, err := filepath.Abs(legacyFallbackPath); err == nil {
-				legacyFallbackPath = absFallbackPath
-			}
+		if enableFallback {
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
 		}
 
 		var passphrase string
@@ -422,6 +394,47 @@ func defaultFallbackFile(token string, project string, config string) string {
 
 	fileName = fmt.Sprintf(".secrets-%s.json", crypto.Hash(name))
 	return filepath.Join(defaultFallbackDir, fileName)
+}
+
+func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWriteFailure bool) (string, string) {
+	fallbackPath := ""
+	legacyFallbackPath := ""
+	if cmd.Flags().Changed("fallback") {
+		var err error
+		fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
+		if err != nil {
+			utils.HandleError(err, "Unable to parse --fallback flag")
+		}
+	} else {
+		fallbackPath = defaultFallbackFile(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		// TODO remove this when releasing CLI v4 (DPLR-435)
+		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
+			// save to old path to maintain backwards compatibility
+			legacyFallbackPath = legacyFallbackFile(config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		}
+
+		if !utils.Exists(defaultFallbackDir) {
+			err := os.Mkdir(defaultFallbackDir, 0700)
+			if err != nil {
+				utils.LogDebug("Unable to create directory for fallback file")
+				if exitOnWriteFailure {
+					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
+				}
+			}
+		}
+	}
+
+	if absFallbackPath, err := filepath.Abs(fallbackPath); err == nil {
+		fallbackPath = absFallbackPath
+	}
+
+	if legacyFallbackPath != "" {
+		if absFallbackPath, err := filepath.Abs(legacyFallbackPath); err == nil {
+			legacyFallbackPath = absFallbackPath
+		}
+	}
+
+	return fallbackPath, legacyFallbackPath
 }
 
 func init() {
