@@ -443,7 +443,7 @@ func init() {
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
-	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
+	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. the default passphrase is computed using your current configuration.")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
