@@ -15,11 +15,7 @@ jobs:
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Build
-      run: go build
-      env:
-        GOPATH: ${{ runner.workspace }}
-    - name: Test
-      run: make test
+      run: make build
       env:
         GOPATH: ${{ runner.workspace }}
     - name: GoReleaser Check
