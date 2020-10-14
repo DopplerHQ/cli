@@ -11,6 +11,9 @@ release:
 test:
 	go test ./pkg/... -v
 
+test-e2e:
+	./tests.sh
+
 test-release:
 	goreleaser release --snapshot --skip-publish --skip-sign --rm-dist
 
