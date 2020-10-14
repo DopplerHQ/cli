@@ -218,6 +218,7 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
+// fetchSecrets fetches secrets, including all reading and writing of fallback files
 func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, legacyFallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
 	if fallbackOnly {
 		if !enableFallback {
@@ -445,10 +446,12 @@ func init() {
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
-	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. the default passphrase is computed using your current configuration.")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
+	// fallback flags
+	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
+	// TODO rename this to 'fallback-passphrase' in CLI v4 (DPLR-435)
+	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. the default passphrase is computed using your current configuration.")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
