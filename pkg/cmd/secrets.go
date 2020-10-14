@@ -243,16 +243,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 
 	utils.LogDebug("Encrypting secrets")
 
-	var passphrase string
-	if cmd.Flags().Changed("passphrase") {
-		passphrase = cmd.Flag("passphrase").Value.String()
-	} else {
-		passphrase = fmt.Sprintf("%s", localConfig.Token.Value)
-		if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-			passphrase = fmt.Sprintf("%s:%s:%s", passphrase, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		}
-	}
-
+	passphrase := getPassphrase(cmd, "passphrase", localConfig)
 	if passphrase == "" {
 		utils.HandleError(errors.New("invalid passphrase"))
 	}

@@ -79,17 +79,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
 		}
 
-		var passphrase string
-		if cmd.Flags().Changed("passphrase") {
-			passphrase = cmd.Flag("passphrase").Value.String()
-		} else {
-			// using only the token is sufficient for Service Tokens. it's insufficient for CLI tokens, which require a project and config
-			passphrase = fmt.Sprintf("%s", localConfig.Token.Value)
-			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-				passphrase = fmt.Sprintf("%s:%s:%s", passphrase, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			}
-		}
-
+		passphrase := getPassphrase(cmd, "passphrase", localConfig)
 		if passphrase == "" {
 			utils.HandleError(errors.New("invalid passphrase"))
 		}
@@ -394,6 +384,19 @@ func defaultFallbackFile(token string, project string, config string) string {
 
 	fileName = fmt.Sprintf(".secrets-%s.json", crypto.Hash(name))
 	return filepath.Join(defaultFallbackDir, fileName)
+}
+
+// generate the passphrase used for encrypting a secrets file
+func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions) string {
+	if cmd.Flags().Changed(flag) {
+		return cmd.Flag(flag).Value.String()
+	}
+
+	if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
+		return fmt.Sprintf("%s:%s:%s", config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+	}
+
+	return config.Token.Value
 }
 
 func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWriteFailure bool) (string, string) {
