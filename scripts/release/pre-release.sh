@@ -2,6 +2,13 @@
 
 set -e
 
+echo "Using $(go version)"
+read -rp "Continue? (y/n) " ok
+if [ "$ok" != "y" ] && [ "$ok" != "Y" ] && [ "$ok" != "yes" ]; then
+  echo "Exiting"
+  exit 1
+fi
+
 if [ ! -z "$(git status --porcelain)" ]; then
   echo "The git workspace must be clean"
   exit 1
