@@ -1,3 +1,4 @@
 FROM node:lts-alpine
+RUN apk add --no-cache tini
 COPY doppler /bin/doppler
-ENTRYPOINT ["/bin/doppler"]
+ENTRYPOINT ["/sbin/tini", "--", "/bin/doppler"]
