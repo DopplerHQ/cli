@@ -117,7 +117,7 @@ func init() {
 	enclaveSecretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveSecretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	enclaveSecretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
-	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is `$token:$project:$config`.")
+	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDownloadCmd)
 

@@ -75,49 +75,11 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 
 		fallbackPath := ""
 		legacyFallbackPath := ""
-		if cmd.Flags().Changed("fallback") {
-			var err error
-			fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
-			if err != nil {
-				utils.HandleError(err, "Unable to parse --fallback flag")
-			}
-		} else {
-			fallbackPath = defaultFallbackFile(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			// TODO remove this when releasing CLI v4 (DPLR-435)
-			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-				// save to old path to maintain backwards compatibility
-				legacyFallbackPath = legacyFallbackFile(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			}
-
-			if enableFallback && !utils.Exists(defaultFallbackDir) {
-				err := os.Mkdir(defaultFallbackDir, 0700)
-				if err != nil && exitOnWriteFailure {
-					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
-				}
-			}
+		if enableFallback {
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
 		}
 
-		if absFallbackPath, err := filepath.Abs(fallbackPath); err == nil {
-			fallbackPath = absFallbackPath
-		}
-
-		if legacyFallbackPath != "" {
-			if absFallbackPath, err := filepath.Abs(legacyFallbackPath); err == nil {
-				legacyFallbackPath = absFallbackPath
-			}
-		}
-
-		var passphrase string
-		if cmd.Flags().Changed("passphrase") {
-			passphrase = cmd.Flag("passphrase").Value.String()
-		} else {
-			// using only the token is sufficient for Service Tokens. it's insufficient for CLI tokens, which require a project and config
-			passphrase = fmt.Sprintf("%s", localConfig.Token.Value)
-			if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-				passphrase = fmt.Sprintf("%s:%s:%s", passphrase, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-			}
-		}
-
+		passphrase := getPassphrase(cmd, "passphrase", localConfig)
 		if passphrase == "" {
 			utils.HandleError(errors.New("invalid passphrase"))
 		}
@@ -256,9 +218,12 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
+// fetchSecrets fetches secrets, including all reading and writing of fallback files
 func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, legacyFallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
-	fetchSecrets := !(enableFallback && fallbackOnly)
-	if !fetchSecrets {
+	if fallbackOnly {
+		if !enableFallback {
+			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
+		}
 		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 	}
 
@@ -297,19 +262,19 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 			if exitOnWriteFailure {
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
-				utils.LogError(err)
+				utils.LogDebugError(err)
 			}
 		}
 
 		// TODO remove this when releasing CLI v4 (DPLR-435)
-		if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
+		if legacyFallbackPath != "" && localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
 			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", legacyFallbackPath))
 			if err := utils.WriteFile(legacyFallbackPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
 				utils.Log("Unable to write to legacy fallback file")
 				if exitOnWriteFailure {
 					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 				} else {
-					utils.LogError(err)
+					utils.LogDebugError(err)
 				}
 			}
 		}
@@ -422,15 +387,71 @@ func defaultFallbackFile(token string, project string, config string) string {
 	return filepath.Join(defaultFallbackDir, fileName)
 }
 
+// generate the passphrase used for encrypting a secrets file
+func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions) string {
+	if cmd.Flags().Changed(flag) {
+		return cmd.Flag(flag).Value.String()
+	}
+
+	if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
+		return fmt.Sprintf("%s:%s:%s", config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+	}
+
+	return config.Token.Value
+}
+
+func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWriteFailure bool) (string, string) {
+	fallbackPath := ""
+	legacyFallbackPath := ""
+	if cmd.Flags().Changed("fallback") {
+		var err error
+		fallbackPath, err = utils.GetFilePath(cmd.Flag("fallback").Value.String())
+		if err != nil {
+			utils.HandleError(err, "Unable to parse --fallback flag")
+		}
+	} else {
+		fallbackPath = defaultFallbackFile(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		// TODO remove this when releasing CLI v4 (DPLR-435)
+		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
+			// save to old path to maintain backwards compatibility
+			legacyFallbackPath = legacyFallbackFile(config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		}
+
+		if !utils.Exists(defaultFallbackDir) {
+			err := os.Mkdir(defaultFallbackDir, 0700)
+			if err != nil {
+				utils.LogDebug("Unable to create directory for fallback file")
+				if exitOnWriteFailure {
+					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
+				}
+			}
+		}
+	}
+
+	if absFallbackPath, err := filepath.Abs(fallbackPath); err == nil {
+		fallbackPath = absFallbackPath
+	}
+
+	if legacyFallbackPath != "" {
+		if absFallbackPath, err := filepath.Abs(legacyFallbackPath); err == nil {
+			legacyFallbackPath = absFallbackPath
+		}
+	}
+
+	return fallbackPath, legacyFallbackPath
+}
+
 func init() {
 	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	runCmd.Flags().String("fallback", "", "path to the fallback file.write secrets to this file after connecting to Doppler. secrets will be read from this file if subsequent connections are unsuccessful.")
-	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
+	// fallback flags
+	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
+	// TODO rename this to 'fallback-passphrase' in CLI v4 (DPLR-435)
+	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. the default passphrase is computed using your current configuration.")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")

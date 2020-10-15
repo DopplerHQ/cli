@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -191,10 +192,14 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 }
 
 func downloadSecrets(cmd *cobra.Command, args []string) {
-	// don't log anything extraneous when printing to stdout
 	saveFile := !utils.GetBoolFlag(cmd, "no-file")
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
+
+	enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
+	fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
+	fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
+	exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
@@ -219,9 +224,40 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	body, apiError := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format == "json")
-	if !apiError.IsNil() {
-		utils.HandleError(apiError.Unwrap(), apiError.Message)
+	fallbackPassphrase := getPassphrase(cmd, "fallback-passphrase", localConfig)
+	if fallbackPassphrase == "" {
+		utils.HandleError(errors.New("invalid fallback file passphrase"))
+	}
+
+	var body []byte
+	if format == "json" {
+		fallbackPath := ""
+		legacyFallbackPath := ""
+		if enableFallback {
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
+		}
+		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, legacyFallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, fallbackPassphrase)
+
+		var err error
+		body, err = json.Marshal(secrets)
+		if err != nil {
+			utils.HandleError(err, "Unable to parse JSON secrets")
+		}
+	} else {
+		// fallback file is not supported when fetching .env format
+		enableFallback = false
+		flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure"}
+		for _, flag := range flags {
+			if cmd.Flags().Changed(flag) {
+				utils.LogWarning(fmt.Sprintf("--%s has no effect when format is %s", flag, format))
+			}
+		}
+
+		var apiError http.Error
+		body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false)
+		if !apiError.IsNil() {
+			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		}
 	}
 
 	if !saveFile {
@@ -244,16 +280,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 
 	utils.LogDebug("Encrypting secrets")
 
-	var passphrase string
-	if cmd.Flags().Changed("passphrase") {
-		passphrase = cmd.Flag("passphrase").Value.String()
-	} else {
-		passphrase = fmt.Sprintf("%s", localConfig.Token.Value)
-		if localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-			passphrase = fmt.Sprintf("%s:%s:%s", passphrase, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		}
-	}
-
+	passphrase := getPassphrase(cmd, "passphrase", localConfig)
 	if passphrase == "" {
 		utils.HandleError(errors.New("invalid passphrase"))
 	}
@@ -297,8 +324,15 @@ func init() {
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
-	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is `$token:$project:$config`.")
+	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
+	// fallback flags
+	secretsDownloadCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
+	secretsDownloadCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
+	secretsDownloadCmd.Flags().String("fallback-passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
+	secretsDownloadCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
+	secretsDownloadCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
+	secretsDownloadCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
 	rootCmd.AddCommand(secretsCmd)
