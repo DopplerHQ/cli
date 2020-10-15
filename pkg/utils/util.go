@@ -33,6 +33,7 @@ import (
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/atotto/clipboard"
 	"github.com/google/uuid"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -149,12 +150,21 @@ func execCommand(cmd *exec.Cmd) (int, error) {
 		return 1, err
 	}
 
-	// catch and ignore all signals
-	// no need to manually send them to the subprocess since it's in the same process group
+	isTTY := isatty.IsTerminal(os.Stdout.Fd())
+
+	// handle all signals
 	go func() {
 		for {
-			// ignore
-			<-sigChan
+			// When running with a TTY, user-generated signals (like SIGINT) are sent to the entire process group.
+			// If we forward the signal, the child process will end up receiving the signal twice.
+			if !isTTY {
+				// forward to process
+				sig := <-sigChan
+				cmd.Process.Signal(sig) // #nosec G104
+			} else {
+				// ignore
+				<-sigChan
+			}
 		}
 	}()
 
