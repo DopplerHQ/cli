@@ -50,7 +50,7 @@ func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, a
 	params = append(params, queryParam{Key: "os", Value: os})
 	params = append(params, queryParam{Key: "arch", Value: arch})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, nil, "/auth/v1/cli/generate", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, nil, "/auth/v1/cli/generate", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth code", Code: statusCode}
 	}
@@ -73,7 +73,7 @@ func GetAuthToken(host string, verifyTLS bool, code string) (map[string]interfac
 		return nil, Error{Err: err, Message: "Invalid auth code"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/authorize", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/authorize", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth token", Code: statusCode}
 	}
@@ -96,7 +96,7 @@ func RollAuthToken(host string, verifyTLS bool, token string) (map[string]interf
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/roll", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/roll", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to roll auth token", Code: statusCode}
 	}
@@ -119,7 +119,7 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/revoke", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/revoke", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to revoke auth token", Code: statusCode}
 	}
@@ -146,7 +146,7 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 		headers["Accept"] = "text/plain"
 	}
 
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets/download", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets/download", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
 	}
@@ -162,7 +162,7 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 	headers := apiKeyHeader(apiKey)
 	headers["Accept"] = "application/json"
-	statusCode, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch secrets", Code: statusCode}
 	}
@@ -183,7 +183,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets", params, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets", params, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to set secrets", Code: statusCode}
 	}
@@ -205,7 +205,7 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 // GetWorkplaceSettings get specified workplace settings
 func GetWorkplaceSettings(host string, verifyTLS bool, apiKey string) (models.WorkplaceSettings, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{})
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{})
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to fetch workplace settings", Code: statusCode}
 	}
@@ -227,7 +227,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Invalid workplace settings"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{}, body)
 	if err != nil {
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to update workplace settings", Code: statusCode}
 	}
@@ -244,7 +244,7 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 
 // GetProjects get projects
 func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{})
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch projects", Code: statusCode}
 	}
@@ -268,7 +268,7 @@ func GetProject(host string, verifyTLS bool, apiKey string, project string) (mod
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to fetch project", Code: statusCode}
 	}
@@ -291,7 +291,7 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Invalid project info"}
 	}
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{}, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to create project", Code: statusCode}
 	}
@@ -322,7 +322,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params, body)
 	if err != nil {
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to update project", Code: statusCode}
 	}
@@ -342,7 +342,7 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete project", Code: statusCode}
 	}
@@ -361,7 +361,7 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch environments", Code: statusCode}
 	}
@@ -386,7 +386,7 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "environment", Value: environment})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params)
 	if err != nil {
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to fetch environment", Code: statusCode}
 	}
@@ -406,7 +406,7 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -431,7 +431,7 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to fetch configs", Code: statusCode}
 	}
@@ -457,7 +457,7 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to create config", Code: statusCode}
 	}
@@ -478,7 +478,7 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete config", Code: statusCode}
 	}
@@ -498,7 +498,7 @@ func LockConfig(host string, verifyTLS bool, apiKey string, project string, conf
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/lock", params, nil)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/lock", params, nil)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to lock config", Code: statusCode}
 	}
@@ -519,7 +519,7 @@ func UnlockConfig(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/unlock", params, nil)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/unlock", params, nil)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to unlock config", Code: statusCode}
 	}
@@ -546,7 +546,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
 	}
@@ -563,7 +563,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 
 // GetActivityLogs get activity logs
 func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.ActivityLog, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1", []queryParam{})
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch activity logs", Code: statusCode}
 	}
@@ -584,7 +584,7 @@ func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Activ
 
 // GetActivityLog get specified activity log
 func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (models.ActivityLog, Error) {
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1/"+log, []queryParam{})
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1/"+log, []queryParam{})
 	if err != nil {
 		return models.ActivityLog{}, Error{Err: err, Message: "Unable to fetch activity log", Code: statusCode}
 	}
@@ -605,7 +605,7 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch config logs", Code: statusCode}
 	}
@@ -631,7 +631,7 @@ func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "log", Value: log})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log", params)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to fetch config log", Code: statusCode}
 	}
@@ -653,7 +653,7 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "log", Value: log})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log/rollback", params, nil)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs/log/rollback", params, nil)
 	if err != nil {
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to rollback config log", Code: statusCode}
 	}
@@ -674,7 +674,7 @@ func GetConfigServiceTokens(host string, verifyTLS bool, apiKey string, project 
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch service tokens", Code: statusCode}
 	}
@@ -705,7 +705,7 @@ func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens", params, body)
 	if err != nil {
 		return models.ConfigServiceToken{}, Error{Err: err, Message: "Unable to create service token", Code: statusCode}
 	}
@@ -727,7 +727,7 @@ func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "slug", Value: slug})
 
-	statusCode, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete service token", Code: statusCode}
 	}

@@ -43,66 +43,66 @@ type errorResponse struct {
 }
 
 // GetRequest perform HTTP GET
-func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, []byte, error) {
+func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
 
-	statusCode, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return statusCode, body, err
+		return statusCode, respHeaders, body, err
 	}
 
-	return statusCode, body, nil
+	return statusCode, respHeaders, body, nil
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, []byte, error) {
+func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
 
-	statusCode, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return statusCode, body, err
+		return statusCode, respHeaders, body, err
 	}
 
-	return statusCode, body, nil
+	return statusCode, respHeaders, body, nil
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, []byte, error) {
+func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
-		return 0, nil, err
+		return 0, nil, nil, err
 	}
 
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
 
-	statusCode, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
 	if err != nil {
-		return statusCode, body, err
+		return statusCode, respHeaders, body, err
 	}
 
-	return statusCode, body, nil
+	return statusCode, respHeaders, body, nil
 }
 
-func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int, []byte, error) {
+func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int, http.Header, []byte, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -190,17 +190,19 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	}
 
 	if requestErr != nil && response == nil {
-		return 0, nil, requestErr
+		return 0, nil, nil, requestErr
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return response.StatusCode, nil, err
+		return response.StatusCode, nil, nil, err
 	}
+
+	headers := response.Header.Clone()
 
 	// success
 	if requestErr == nil {
-		return response.StatusCode, body, nil
+		return response.StatusCode, headers, body, nil
 	}
 
 	// print the response body error messages
@@ -209,13 +211,13 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		err = json.Unmarshal(body, &errResponse)
 		if err != nil {
 			utils.LogDebug(fmt.Sprintf("Unable to parse response body: \n%s", string(body)))
-			return response.StatusCode, nil, err
+			return response.StatusCode, headers, nil, err
 		}
 
-		return response.StatusCode, body, errors.New(strings.Join(errResponse.Messages, "\n"))
+		return response.StatusCode, headers, body, errors.New(strings.Join(errResponse.Messages, "\n"))
 	}
 
-	return response.StatusCode, nil, fmt.Errorf("Request failed with HTTP %d", response.StatusCode)
+	return response.StatusCode, headers, nil, fmt.Errorf("Request failed with HTTP %d", response.StatusCode)
 }
 
 func isSuccess(statusCode int) bool {

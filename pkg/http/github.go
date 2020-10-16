@@ -28,7 +28,7 @@ import (
 func getLatestVersion() (string, error) {
 	origTimeout := TimeoutDuration
 	TimeoutDuration = 2 * time.Second
-	_, resp, err := GetRequest("https://api.github.com", true, nil, "/repos/DopplerHQ/cli/releases/latest", nil)
+	_, _, resp, err := GetRequest("https://api.github.com", true, nil, "/repos/DopplerHQ/cli/releases/latest", nil)
 	TimeoutDuration = origTimeout
 	if err != nil {
 		return "", err
@@ -63,7 +63,7 @@ func GetLatestCLIVersion() (models.VersionCheck, error) {
 
 // GetCLIInstallScript from cli.doppler.com
 func GetCLIInstallScript() ([]byte, Error) {
-	_, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/install.sh", nil)
+	_, _, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/install.sh", nil)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download CLI install script"}
 	}
