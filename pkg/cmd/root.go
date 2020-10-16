@@ -93,7 +93,11 @@ func checkVersion(command string) {
 		// re-use existing version
 		versionCheck.LatestVersion = prevVersionCheck.LatestVersion
 	} else {
-		utils.Log(fmt.Sprintf("Doppler CLI %s is now available\n", versionCheck.LatestVersion))
+		utils.Log(color.Green.Sprintf("An update is available."))
+		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
+		if utils.ConfirmationPrompt(prompt, true) {
+			installCLIUpdate()
+		}
 	}
 
 	configuration.SetVersionCheck(versionCheck)

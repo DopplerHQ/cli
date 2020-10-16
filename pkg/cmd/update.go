@@ -47,19 +47,23 @@ var updateCmd = &cobra.Command{
 			}
 		}
 
-		// utils.Log(fmt.Sprintf("Doppler CLI %s is now available", check.LatestVersion))
-		utils.Log("Updating...")
-		wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
-		if !controllerErr.IsNil() {
-			utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
-		}
-
-		if wasUpdated {
-			utils.Log(fmt.Sprintf("Doppler CLI was updated to %s!", installedVersion))
-		} else {
-			utils.Log(fmt.Sprintf("You are already running the latest version"))
-		}
+		installCLIUpdate()
 	},
+}
+
+func installCLIUpdate() {
+	utils.Log("Updating...")
+	wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
+	if !controllerErr.IsNil() {
+		utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+	}
+
+	if wasUpdated {
+		utils.Log(fmt.Sprintf("Installed CLI %s", installedVersion))
+	} else {
+		utils.Log(fmt.Sprintf("You are already running the latest version"))
+	}
+
 }
 
 func init() {
