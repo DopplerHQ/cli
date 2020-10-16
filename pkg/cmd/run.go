@@ -158,6 +158,7 @@ var runCleanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		maxAge := utils.GetDurationFlag(cmd, "max-age")
 		dryRun := utils.GetBoolFlag(cmd, "dry-run")
+		all := utils.GetBoolFlag(cmd, "all")
 
 		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", defaultFallbackDir))
 
@@ -189,8 +190,17 @@ var runCleanCmd = &cobra.Command{
 				continue
 			}
 
-			validUntil := entry.ModTime().Add(maxAge)
-			if validUntil.Before(now) {
+			delete := false
+			if all {
+				delete = true
+			} else {
+				validUntil := entry.ModTime().Add(maxAge)
+				if validUntil.Before(now) {
+					delete = true
+				}
+			}
+
+			if delete {
 				file := filepath.Join(defaultFallbackDir, entry.Name())
 				utils.LogDebug(fmt.Sprintf("%s %s", action, file))
 
@@ -470,5 +480,6 @@ func init() {
 
 	runCleanCmd.Flags().Duration("max-age", defaultFallbackFileMaxAge, "delete fallback files that exceed this age")
 	runCleanCmd.Flags().Bool("dry-run", false, "do not delete anything, print what would have happened")
+	runCleanCmd.Flags().Bool("all", false, "delete all fallback files")
 	runCmd.AddCommand(runCleanCmd)
 }
