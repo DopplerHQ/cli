@@ -35,7 +35,8 @@ import (
 )
 
 var defaultFallbackDir string
-var defaultFallbackFileMaxAge = 72 * time.Hour
+
+const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
 
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
