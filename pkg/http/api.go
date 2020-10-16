@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/version"
@@ -134,7 +135,7 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 }
 
 // DownloadSecrets for specified project and config
-func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, jsonFlag bool) ([]byte, Error) {
+func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, jsonFlag bool, etag string) (int, http.Header, []byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
@@ -145,13 +146,16 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 	} else {
 		headers["Accept"] = "text/plain"
 	}
-
-	statusCode, _, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets/download", params)
-	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
+	if etag != "" {
+		headers["If-None-Match"] = etag
 	}
 
-	return response, Error{}
+	statusCode, respHeaders, response, err := GetRequest(host, verifyTLS, headers, "/v3/configs/config/secrets/download", params)
+	if err != nil {
+		return statusCode, respHeaders, nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
+	}
+
+	return statusCode, respHeaders, response, Error{}
 }
 
 // GetSecrets for specified project and config

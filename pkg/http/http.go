@@ -221,7 +221,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 }
 
 func isSuccess(statusCode int) bool {
-	return statusCode >= 200 && statusCode <= 299
+	return (statusCode >= 200 && statusCode <= 299) || (statusCode >= 300 && statusCode <= 399)
 }
 
 func isRetry(statusCode int) bool {

@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -197,6 +198,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
 	enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
+	enableCache := enableFallback && !utils.GetBoolFlag(cmd, "no-cache")
 	fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 	fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 	exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
@@ -233,10 +235,14 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	if format == "json" {
 		fallbackPath := ""
 		legacyFallbackPath := ""
+		metadataPath := ""
 		if enableFallback {
 			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
 		}
-		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, legacyFallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, fallbackPassphrase)
+		if enableCache {
+			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+		}
+		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, fallbackPassphrase)
 
 		var err error
 		body, err = json.Marshal(secrets)
@@ -246,6 +252,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	} else {
 		// fallback file is not supported when fetching .env format
 		enableFallback = false
+		enableCache = false
 		flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure"}
 		for _, flag := range flags {
 			if cmd.Flags().Changed(flag) {
@@ -254,7 +261,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		var apiError http.Error
-		body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false)
+		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false, "")
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
@@ -328,6 +335,7 @@ func init() {
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	// fallback flags
 	secretsDownloadCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
+	secretsDownloadCmd.Flags().Bool("no-cache", false, "disable using the fallback file to speed up fetches. the fallback file is only used when the API indicates that it's still current.")
 	secretsDownloadCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
 	secretsDownloadCmd.Flags().String("fallback-passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
