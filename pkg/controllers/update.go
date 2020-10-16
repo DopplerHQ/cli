@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 )
@@ -95,4 +96,16 @@ func RunInstallScript() (bool, string, Error) {
 	}
 
 	return wasUpdated, newVersion.String(), Error{}
+}
+
+// CLIChangeLog fetches the latest changelog
+func CLIChangeLog() (map[string]models.ChangeLog, http.Error) {
+	response, apiError := http.GetChangelog()
+	if !apiError.IsNil() {
+		return nil, apiError
+
+	}
+
+	changes := models.ParseChangeLog(response)
+	return changes, http.Error{}
 }

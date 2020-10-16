@@ -60,6 +60,7 @@ func installCLIUpdate() {
 
 	if wasUpdated {
 		utils.Log(fmt.Sprintf("Installed CLI %s", installedVersion))
+		utils.Log("")
 	} else {
 		utils.Log(fmt.Sprintf("You are already running the latest version"))
 	}

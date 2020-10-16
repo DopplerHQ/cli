@@ -26,6 +26,8 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
+	goVersion "github.com/hashicorp/go-version"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
 	"gopkg.in/gookit/color.v1"
@@ -405,4 +407,41 @@ func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bo
 
 	rows := [][]string{{token.Name, token.Token, token.Slug, token.Project, token.Environment, token.Config, token.CreatedAt}}
 	Table([]string{"name", "token", "slug", "project", "environment", "config", "created at"}, rows, TableOptions())
+}
+
+// ChangeLog print change log
+func ChangeLog(changes map[string]models.ChangeLog, max int, jsonFlag bool) {
+	if jsonFlag {
+		JSON(changes)
+		return
+	}
+
+	var versionsRaw []string
+	for v := range changes {
+		versionsRaw = append(versionsRaw, v)
+	}
+
+	// sort versions so we print the X most recent
+	versions := make([]*goVersion.Version, len(versionsRaw))
+	for i, raw := range versionsRaw {
+		v, _ := goVersion.NewVersion(raw)
+		versions[i] = v
+	}
+	sort.Sort(sort.Reverse(goVersion.Collection(versions)))
+
+	for i, v := range versions {
+		if i >= max {
+			break
+		}
+		if i != 0 {
+			utils.Log("")
+		}
+
+		vString := version.Normalize(v.String())
+		utils.Log(color.Cyan.Sprintf("CLI %s", vString))
+		cl := changes[vString]
+		for _, change := range cl.Changes {
+			utils.Log(fmt.Sprintf("· %s", change))
+		}
+	}
 }

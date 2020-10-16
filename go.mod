@@ -7,6 +7,7 @@ require (
 	github.com/atotto/clipboard v0.1.2
 	github.com/go-openapi/strfmt v0.19.3 // indirect
 	github.com/google/uuid v1.1.1
+	github.com/hashicorp/go-version v1.2.1
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
