@@ -22,7 +22,7 @@ import (
 )
 
 // ProgramVersion the current version of this program
-var ProgramVersion = "master"
+var ProgramVersion = "dev"
 
 // Version semver
 type Version struct {
@@ -38,7 +38,7 @@ func (v Version) String() string {
 
 // IsDevelopment whether the CLI is running in development mode (not a released version)
 func IsDevelopment() bool {
-	return ProgramVersion == "master"
+	return strings.HasPrefix(ProgramVersion, "dev")
 }
 
 // CompareVersions returns -1 if first is greater, 1 if second is greater, and 0 otherwise
