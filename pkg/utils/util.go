@@ -32,6 +32,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/atotto/clipboard"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -371,4 +372,15 @@ func HostArch() string {
 // IsWindows whether the host os is Windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+// UUID generates a random UUID
+func UUID() (string, error) {
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		LogDebug("Unable to generate random UUID")
+		return "", err
+	}
+
+	return uuid.String(), nil
 }
