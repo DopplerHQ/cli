@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-set -eu
+set -e
 
 DEBUG=0
 INSTALL=1
