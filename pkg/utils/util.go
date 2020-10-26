@@ -158,10 +158,8 @@ func execCommand(cmd *exec.Cmd) (int, error) {
 	}()
 
 	if err := cmd.Wait(); err != nil {
-		if err := cmd.Process.Signal(os.Kill); err != nil {
-			LogDebug(fmt.Sprintf("Unable to forward signal %s to subprocess", os.Kill))
-			LogDebugError(err)
-		}
+		// ignore errors
+		cmd.Process.Signal(os.Kill) // #nosec G104
 
 		if exitError, ok := err.(*exec.ExitError); ok {
 			return exitError.ExitCode(), exitError
