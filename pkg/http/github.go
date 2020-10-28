@@ -69,3 +69,13 @@ func GetCLIInstallScript() ([]byte, Error) {
 	}
 	return resp, Error{}
 }
+
+// GetChangelog of CLI releases
+func GetChangelog() ([]byte, Error) {
+	headers := map[string]string{"Accept": "application/json"}
+	_, _, resp, err := GetRequest("https://cli.doppler.com", true, headers, "/changes", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to fetch changelog"}
+	}
+	return resp, Error{}
+}

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/controllers"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -60,6 +61,14 @@ func installCLIUpdate() {
 
 	if wasUpdated {
 		utils.Log(fmt.Sprintf("Installed CLI %s", installedVersion))
+
+		if changes, apiError := controllers.CLIChangeLog(); apiError.IsNil() {
+			utils.Log("\nWhat's new:")
+			printer.ChangeLog(changes, 1, false)
+			utils.Log("\nTip: run 'doppler changelog' to see all latest changes")
+		}
+
+		utils.Log("")
 	} else {
 		utils.Log(fmt.Sprintf("You are already running the latest version"))
 	}
