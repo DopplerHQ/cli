@@ -11,6 +11,7 @@ export DOPPLER_CONFIG="prd_e2e_tests"
 # Run tests
 "$DIR/tests/secrets-download-fallback.sh"
 "$DIR/tests/run-fallback.sh"
+"$DIR/tests/configure.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0
