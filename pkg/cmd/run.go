@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -66,6 +67,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
+		enableCache := enableFallback && !utils.GetBoolFlag(cmd, "no-cache")
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
@@ -76,8 +78,12 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 
 		fallbackPath := ""
 		legacyFallbackPath := ""
+		metadataPath := ""
 		if enableFallback {
 			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
+		}
+		if enableCache {
+			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		}
 
 		passphrase := getPassphrase(cmd, "passphrase", localConfig)
@@ -94,7 +100,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := fetchSecrets(localConfig, enableFallback, fallbackPath, legacyFallbackPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
+		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -230,7 +236,7 @@ var runCleanCmd = &cobra.Command{
 }
 
 // fetchSecrets fetches secrets, including all reading and writing of fallback files
-func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbackPath string, legacyFallbackPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
 	if fallbackOnly {
 		if !enableFallback {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
@@ -238,14 +244,38 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 	}
 
-	response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true)
-	if httpErr != (http.Error{}) {
+	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
+	enableCache = enableCache && metadataPath != ""
+	etag := ""
+	if enableCache {
+		metadata, err := controllers.MetadataFile(metadataPath)
+		if !err.IsNil() {
+			utils.LogDebugError(err.Unwrap())
+			utils.LogDebug(err.Message)
+		} else {
+			etag = metadata.ETag
+		}
+	}
+
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true, etag)
+	if !httpErr.IsNil() {
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
 			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	}
+
+	if enableCache && statusCode == 304 {
+		utils.LogDebug("Using cached secrets from fallback file")
+		cache, err := controllers.SecretsCacheFile(fallbackPath, passphrase)
+		if !err.IsNil() {
+			utils.LogDebugError(err.Unwrap())
+			utils.LogDebug(err.Message)
+		} else {
+			return cache
+		}
 	}
 
 	// ensure the response can be parsed before proceeding
@@ -287,6 +317,17 @@ func fetchSecrets(localConfig models.ScopedOptions, enableFallback bool, fallbac
 				} else {
 					utils.LogDebugError(err)
 				}
+			}
+		}
+
+		if enableCache {
+			if etag := respHeaders.Get("etag"); etag != "" {
+				if err := controllers.WriteMetadataFile(metadataPath, etag); !err.IsNil() {
+					utils.LogDebugError(err.Unwrap())
+					utils.LogDebug(err.Message)
+				}
+			} else {
+				utils.LogDebug("API response does not contain ETag")
 			}
 		}
 	}
@@ -454,6 +495,7 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWrit
 
 func init() {
 	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
+	controllers.DefaultMetadataDir = defaultFallbackDir
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
@@ -463,7 +505,8 @@ func init() {
 	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
 	// TODO rename this to 'fallback-passphrase' in CLI v4 (DPLR-435)
 	runCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the fallback file. the default passphrase is computed using your current configuration.")
-	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file")
+	runCmd.Flags().Bool("no-cache", false, "disable using the fallback file to speed up fetches. the fallback file is only used when the API indicates that it's still current.")
+	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file (implies --no-cache)")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
