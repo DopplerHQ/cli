@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -143,6 +144,16 @@ func Get(scope string) models.ScopedOptions {
 		}
 	}
 
+	if controllers.IsKeyringSecret(scopedConfig.Token.Value) {
+		utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
+		token, err := controllers.GetKeyring(scopedConfig.Token.Value)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+
+		scopedConfig.Token.Value = token
+	}
+
 	return scopedConfig
 }
 
@@ -255,7 +266,23 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 
 // AllConfigs get all configs we know about
 func AllConfigs() map[string]models.FileScopedOptions {
-	return configContents.Scoped
+	all := map[string]models.FileScopedOptions{}
+	for scope, scopedOptions := range configContents.Scoped {
+		options := scopedOptions
+
+		if controllers.IsKeyringSecret(options.Token) {
+			utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
+			token, err := controllers.GetKeyring(options.Token)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
+
+			options.Token = token
+		}
+
+		all[scope] = options
+	}
+	return all
 }
 
 // Set properties on a scoped config
@@ -266,12 +293,39 @@ func Set(scope string, options map[string]string) {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
+	config := configContents.Scoped[normalizedScope]
+	previousToken := config.Token
+
 	for key, value := range options {
 		if !IsValidConfigOption(key) {
 			utils.HandleError(errors.New("invalid option "+key), "")
 		}
 
-		config := configContents.Scoped[normalizedScope]
+		if key == models.ConfigToken.String() {
+			utils.LogDebug(fmt.Sprintf("Saving %s to system keyring", key))
+			uuid, err := utils.UUID()
+			if err != nil {
+				utils.HandleError(err, "Unable to generate UUID for keyring")
+			}
+			id := controllers.GenerateKeyringID(uuid)
+
+			if controllerError := controllers.SetKeyring(id, value); !controllerError.IsNil() {
+				utils.LogDebugError(controllerError.Unwrap())
+				utils.LogDebug(controllerError.Message)
+			} else {
+				value = id
+
+				utils.LogDebug("Removing previous token from system keyring")
+				// remove old token from keyring
+				if controllers.IsKeyringSecret(previousToken) {
+					if controllerError := controllers.DeleteKeyring(previousToken); !controllerError.IsNil() {
+						utils.LogDebugError(controllerError.Unwrap())
+						utils.LogDebug(controllerError.Message)
+					}
+				}
+			}
+		}
+
 		SetConfigValue(&config, key, value)
 		configContents.Scoped[normalizedScope] = config
 	}
@@ -297,6 +351,18 @@ func Unset(scope string, options []string) {
 		}
 
 		config := configContents.Scoped[normalizedScope]
+
+		if key == models.ConfigToken.String() {
+			previousToken := config.Token
+			// remove old token from keyring
+			if controllers.IsKeyringSecret(previousToken) {
+				if controllerError := controllers.DeleteKeyring(previousToken); !controllerError.IsNil() {
+					utils.LogDebugError(controllerError.Unwrap())
+					utils.LogDebug(controllerError.Message)
+				}
+			}
+		}
+
 		SetConfigValue(&config, key, "")
 		configContents.Scoped[normalizedScope] = config
 	}
