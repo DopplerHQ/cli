@@ -51,7 +51,7 @@ func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, a
 	params = append(params, queryParam{Key: "os", Value: os})
 	params = append(params, queryParam{Key: "arch", Value: arch})
 
-	statusCode, _, response, err := GetRequest(host, verifyTLS, nil, "/auth/v1/cli/generate", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, nil, "/v3/auth/cli/generate", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth code", Code: statusCode}
 	}
@@ -74,7 +74,7 @@ func GetAuthToken(host string, verifyTLS bool, code string) (map[string]interfac
 		return nil, Error{Err: err, Message: "Invalid auth code"}
 	}
 
-	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/authorize", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/v3/auth/cli/authorize", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth token", Code: statusCode}
 	}
@@ -97,7 +97,7 @@ func RollAuthToken(host string, verifyTLS bool, token string) (map[string]interf
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/roll", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/v3/auth/cli/roll", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to roll auth token", Code: statusCode}
 	}
@@ -120,7 +120,7 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 		return nil, Error{Err: err, Message: "Invalid auth token"}
 	}
 
-	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/auth/v1/cli/revoke", []queryParam{}, body)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, nil, "/v3/auth/cli/revoke", []queryParam{}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to revoke auth token", Code: statusCode}
 	}
