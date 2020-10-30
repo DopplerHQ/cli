@@ -179,7 +179,7 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	}
 
 	rows := [][]string{{info.Name, info.InitialFetchAt, info.LastFetchAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "environment", "project"}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -194,7 +194,7 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		rows = append(rows, []string{configInfo.Name, configInfo.InitialFetchAt, configInfo.LastFetchAt, configInfo.CreatedAt,
 			configInfo.Environment, configInfo.Project})
 	}
-	Table([]string{"name", "initial fetch", "last fetch", "created at", "stage", "project"}, rows, TableOptions())
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "environment", "project"}, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
