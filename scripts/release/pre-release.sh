@@ -2,13 +2,6 @@
 
 set -e
 
-echo "Using $(go version)"
-read -rp "Continue? (y/n) " ok
-if [ "$ok" != "y" ] && [ "$ok" != "Y" ] && [ "$ok" != "yes" ]; then
-  echo "Exiting"
-  exit 1
-fi
-
 # make sure docker daemon is running
 docker ps > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -29,6 +22,13 @@ fi
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ "$GIT_BRANCH" != "master" ]; then
   echo "You must be on the master branch"
+  exit 1
+fi
+
+echo "Using $(go version)"
+read -rp "Continue? (y/n) " ok
+if [ "$ok" != "y" ] && [ "$ok" != "Y" ] && [ "$ok" != "yes" ]; then
+  echo "Exiting"
   exit 1
 fi
 
