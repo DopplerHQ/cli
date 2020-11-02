@@ -1,0 +1,71 @@
+name: Test install.sh
+
+on: [push]
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-no-package-manager:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug --no-package-manager
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-no-install:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Download CLI
+      run: sudo ./scripts/install.sh --debug --no-install
+    - name: Verify file existence
+      run: ls -l ./doppler-download.deb
+  ubuntu-no-install-no-package-manager:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Download CLI
+      run: sudo ./scripts/install.sh --debug --no-install --no-package-manager
+    - name: Verify file existence
+      run: ls -l ./doppler
+  macOS:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install CLI
+      run: ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  macOS-no-install:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install CLI
+      run: ./scripts/install.sh --debug --no-install
+    - name: Verify file existence
+      run: ls -l ./doppler
