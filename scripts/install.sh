@@ -43,13 +43,16 @@ delete_tempdir() {
   tempdir=""
 }
 
-if [ "$1" = "--debug" ] || [ "$2" = "--debug" ]; then
-  DEBUG=1
-fi
+# flag parsing
+for arg; do
+  if [ "$arg" = "--debug" ]; then
+    DEBUG=1
+  fi
 
-if [ "$1" = "--no-install" ] || [ "$2" = "--no-install" ]; then
-  INSTALL=0
-fi
+  if [ "$arg" = "--no-install" ]; then
+    INSTALL=0
+  fi
+done
 
 # identify OS
 os="unknown"
