@@ -5,6 +5,7 @@ set -e
 DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
+USE_PACKAGE_MANAGER=1
 tempdir=""
 filename=""
 
@@ -43,13 +44,20 @@ delete_tempdir() {
   tempdir=""
 }
 
-if [ "$1" = "--debug" ] || [ "$2" = "--debug" ]; then
-  DEBUG=1
-fi
+# flag parsing
+for arg; do
+  if [ "$arg" = "--debug" ]; then
+    DEBUG=1
+  fi
 
-if [ "$1" = "--no-install" ] || [ "$2" = "--no-install" ]; then
-  INSTALL=0
-fi
+  if [ "$arg" = "--no-install" ]; then
+    INSTALL=0
+  fi
+
+  if [ "$arg" = "--no-package-manager" ]; then
+    USE_PACKAGE_MANAGER=0
+  fi
+done
 
 # identify OS
 os="unknown"
@@ -100,10 +108,12 @@ log_debug "Detected architecture '$arch'"
 
 # identify format
 format="tar"
-if [ -x "$(command -v dpkg)" ]; then
-  format="deb"
-elif [ -x "$(command -v rpm)" ]; then
-  format="rpm"
+if [ "$USE_PACKAGE_MANAGER" -eq 1 ]; then
+  if [ -x "$(command -v dpkg)" ]; then
+    format="deb"
+  elif [ -x "$(command -v rpm)" ]; then
+    format="rpm"
+  fi
 fi
 
 log_debug "Detected format '$format'"
@@ -183,6 +193,7 @@ if [ "$format" = "deb" ]; then
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
+    echo "Doppler CLI installer saved to ./$file.deb"
   fi
 elif [ "$format" = "rpm" ]; then
   mv -f "$filename" "$filename.rpm"
@@ -195,6 +206,7 @@ elif [ "$format" = "rpm" ]; then
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
+    echo "Doppler CLI installer saved to ./$file.rpm"
   fi
 elif [ "$format" = "tar" ]; then
   mv -f "$filename" "$filename.tar.gz"
