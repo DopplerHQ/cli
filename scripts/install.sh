@@ -193,6 +193,7 @@ if [ "$format" = "deb" ]; then
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
+    echo "Doppler CLI installer saved to ./$file.deb"
   fi
 elif [ "$format" = "rpm" ]; then
   mv -f "$filename" "$filename.rpm"
@@ -205,6 +206,7 @@ elif [ "$format" = "rpm" ]; then
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
+    echo "Doppler CLI installer saved to ./$file.rpm"
   fi
 elif [ "$format" = "tar" ]; then
   mv -f "$filename" "$filename.tar.gz"
