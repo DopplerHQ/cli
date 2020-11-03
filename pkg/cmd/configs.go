@@ -76,6 +76,13 @@ var configsUnlockCmd = &cobra.Command{
 	Run:   unlockConfigs,
 }
 
+var configsCloneCmd = &cobra.Command{
+	Use:   "clone [config]",
+	Short: "Clone a config",
+	Args:  cobra.MaximumNArgs(1),
+	Run:   cloneConfigs,
+}
+
 func configs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
@@ -258,6 +265,27 @@ func unlockConfigs(cmd *cobra.Command, args []string) {
 	}
 }
 
+func cloneConfigs(cmd *cobra.Command, args []string) {
+	jsonFlag := utils.OutputJSON
+	localConfig := configuration.LocalConfig(cmd)
+
+	utils.RequireValue("token", localConfig.Token.Value)
+
+	config := localConfig.EnclaveConfig.Value
+	if len(args) > 0 {
+		config = args[0]
+	}
+
+	configInfo, err := http.CloneConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
+	if !err.IsNil() {
+		utils.HandleError(err.Unwrap(), err.Message)
+	}
+
+	if !utils.Silent {
+		printer.ConfigInfo(configInfo, jsonFlag)
+	}
+}
+
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 
@@ -292,6 +320,10 @@ func init() {
 	configsUnlockCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsUnlockCmd)
+
+	configsCloneCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsCloneCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsCmd.AddCommand(configsCloneCmd)
 
 	rootCmd.AddCommand(configsCmd)
 }
