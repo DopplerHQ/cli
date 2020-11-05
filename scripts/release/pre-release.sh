@@ -3,11 +3,7 @@
 set -e
 
 # make sure docker daemon is running
-docker ps > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-  echo "Docker daemon must be running"
-  exit 1
-fi
+docker ps > /dev/null 2>&1 || (echo "Docker daemon must be running" && exit 1)
 
 if [ ! -z "$(git status --porcelain)" ]; then
   echo "The git workspace must be clean"
