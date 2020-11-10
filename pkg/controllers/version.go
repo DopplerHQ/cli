@@ -25,7 +25,7 @@ import (
 )
 
 // NewVersionAvailable checks whether a CLI version is available that's newer than this CLI
-func NewVersionAvailable() (bool, models.VersionCheck, error) {
+func NewVersionAvailable(prevVersionCheck models.VersionCheck) (bool, models.VersionCheck, error) {
 	now := time.Now()
 	check, err := http.GetLatestCLIVersion()
 	if err != nil {
@@ -35,6 +35,13 @@ func NewVersionAvailable() (bool, models.VersionCheck, error) {
 	}
 
 	versionCheck := models.VersionCheck{CheckedAt: now, LatestVersion: version.Normalize(check.LatestVersion)}
+
+	// skip if available version is unchanged from previous check
+	if versionCheck.LatestVersion == prevVersionCheck.LatestVersion {
+		utils.LogDebug("Previous version check is still latest version")
+		return false, versionCheck, nil
+	}
+
 	newVersion, err := version.ParseVersion(versionCheck.LatestVersion)
 	if err != nil {
 		utils.LogDebug("Unable to parse new CLI version")

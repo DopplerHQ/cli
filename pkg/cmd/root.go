@@ -82,7 +82,7 @@ func checkVersion(command string) {
 		return
 	}
 
-	available, versionCheck, err := controllers.NewVersionAvailable()
+	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
 	if err != nil {
 		// retry on next run
 		return

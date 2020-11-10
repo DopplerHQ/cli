@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/controllers"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -34,7 +35,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		force := utils.GetBoolFlag(cmd, "force")
-		available, _, err := controllers.NewVersionAvailable()
+		available, _, err := controllers.NewVersionAvailable(models.VersionCheck{})
 		if err != nil {
 			utils.HandleError(err, "Unable to check for CLI updates")
 		}
