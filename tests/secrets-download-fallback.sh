@@ -22,14 +22,14 @@ beforeAll() {
 
 beforeEach() {
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json
+  rm -f fallback.json secrets.yaml
   rm -rf ./temp-fallback
 }
 
 afterAll() {
   echo "INFO: Completed '$TEST_NAME' tests"
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json
+  rm -f fallback.json secrets.yaml
   rm -rf ./temp-fallback
 }
 
@@ -132,5 +132,23 @@ beforeEach
 
 # test 'secrets download' ignores fallback flags when format is env
 "$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=env > /dev/null
+
+beforeEach
+
+# test 'secrets download' writes correct file name when format is yaml
+"$DOPPLER_BINARY" secrets download --format=yaml > /dev/null
+[[ -f secrets.yaml ]] || (echo "ERROR: 'secrets download' did not save secrets.yaml when format is yaml" && exit 1)
+rm -f ./secrets.yaml
+
+beforeEach
+
+# test 'secrets download' doesn't write fallback when format is yaml
+"$DOPPLER_BINARY" secrets download --no-file --format=yaml > /dev/null
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is yaml" && exit 1)
+
+beforeEach
+
+# test 'secrets download' ignores fallback flags when format is yaml
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=yaml > /dev/null
 
 afterAll

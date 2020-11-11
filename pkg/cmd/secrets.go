@@ -210,7 +210,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		format = "json"
 	}
 
-	validFormats := []string{"json", "env"}
+	validFormats := []string{"json", "env", "yaml"}
 	if format != "" {
 		isValid := false
 
@@ -250,7 +250,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(err, "Unable to parse JSON secrets")
 		}
 	} else {
-		// fallback file is not supported when fetching .env format
+		// fallback file is not supported when fetching env/yaml format
 		enableFallback = false
 		enableCache = false
 		flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure"}
@@ -261,7 +261,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		var apiError http.Error
-		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false, "")
+		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, "")
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
@@ -281,6 +281,8 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 	} else if format == "env" {
 		filePath = filepath.Join(".", "doppler.env")
+	} else if format == "yaml" {
+		filePath = filepath.Join(".", "secrets.yaml")
 	} else {
 		filePath = filepath.Join(".", "doppler.json")
 	}
@@ -330,7 +332,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env]")
+	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env, yaml]")
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	// fallback flags
