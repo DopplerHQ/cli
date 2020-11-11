@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -56,6 +57,12 @@ func setup(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	repoConfig, err := controllers.RepoConfig()
+	if !err.IsNil() {
+		utils.Log(err.Message)
+		utils.LogDebugError(err.Unwrap())
+	}
+
 	currentProject := localConfig.EnclaveProject.Value
 	selectedProject := ""
 
@@ -66,6 +73,11 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
+		if repoConfig.Setup.Project != "" {
+			utils.Log("Reading project from repo config file doppler.yaml")
+			selectedProject = repoConfig.Setup.Project
+			break
+		}
 		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !httpErr.IsNil() {
 			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
@@ -90,6 +102,11 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
+		if repoConfig.Setup.Config != "" {
+			utils.Log("Reading config from repo config file doppler.yaml")
+			selectedConfig = repoConfig.Setup.Config
+			break
+		}
 		configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject)
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
