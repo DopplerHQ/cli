@@ -57,7 +57,7 @@ func setup(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	repoConfig, err := controllers.RepoConfig()
+	repoConfig, repoConfigFile, err := controllers.RepoConfig()
 	if !err.IsNil() {
 		utils.Log(err.Message)
 		utils.LogDebugError(err.Unwrap())
@@ -74,7 +74,7 @@ func setup(cmd *cobra.Command, args []string) {
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
 		if repoConfig.Setup.Project != "" {
-			utils.Log("Reading project from repo config file doppler.yaml")
+			utils.Log(fmt.Sprintf("Reading project from repo config file %s", repoConfigFile))
 			selectedProject = repoConfig.Setup.Project
 			break
 		}
@@ -103,7 +103,7 @@ func setup(cmd *cobra.Command, args []string) {
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
 		if repoConfig.Setup.Config != "" {
-			utils.Log("Reading config from repo config file doppler.yaml")
+			utils.Log(fmt.Sprintf("Reading config from repo config file %s", repoConfigFile))
 			selectedConfig = repoConfig.Setup.Config
 			break
 		}

@@ -25,24 +25,30 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// repoConfigFileName (doppler.yaml)
-const repoConfigFileName = "doppler.yaml"
+const repoConfigFileNameYaml = "doppler.yaml"
+const repoConfigFileNameYml = "doppler.yml"
 
 // RepoConfig Reads the configuration file (doppler.yaml) if exists and returns the set configuration
-func RepoConfig() (models.RepoConfig, Error) {
+func RepoConfig() (models.RepoConfig, string, Error) {
+	
+	ymlFile := filepath.Join("./", repoConfigFileNameYml)
+	yamlFile := filepath.Join("./", repoConfigFileNameYaml)
+	var repoConfigFile string
+	if utils.Exists(ymlFile) {
+		repoConfigFile = ymlFile
+	} else if utils.Exists(yamlFile) {
+		repoConfigFile = yamlFile
+	}
+	if repoConfigFile != "" {
+		utils.LogDebug(fmt.Sprintf("Reading repo config file %s", repoConfigFile))
 
-	RepoConfigFile := filepath.Join("./", repoConfigFileName)
-
-	if utils.Exists(RepoConfigFile) {
-		utils.LogDebug(fmt.Sprintf("Reading repo config file %s", RepoConfigFile))
-
-		yamlFile, err := ioutil.ReadFile(RepoConfigFile) // #nosec G304
+		yamlFile, err := ioutil.ReadFile(repoConfigFile) // #nosec G304
 
 		if err != nil {
 			var e Error
 			e.Err = err
 			e.Message = "Unable to read doppler repo config file"
-			return models.RepoConfig{}, e
+			return models.RepoConfig{}, repoConfigFile, e
 		}
 
 		var repoConfig models.RepoConfig
@@ -51,10 +57,10 @@ func RepoConfig() (models.RepoConfig, Error) {
 			var e Error
 			e.Err = err
 			e.Message = "Unable to parse doppler repo config file"
-			return models.RepoConfig{}, e
+			return models.RepoConfig{}, repoConfigFile, e
 		}
 
-		return repoConfig, Error{}
+		return repoConfig, repoConfigFile, Error{}
 	}
-	return models.RepoConfig{}, Error{}
+	return models.RepoConfig{}, repoConfigFile, Error{}
 }
