@@ -38,21 +38,21 @@ beforeAll
 beforeEach
 
 # test fallback-only fails when no fallback files exist
-"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo ERROR: "--fallback-only flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo "ERROR: --fallback-only flag is not respected" && exit 1)
 
 beforeEach
 
 # test fallback-readonly doesn't write a fallback file
 "$DOPPLER_BINARY" run --fallback-readonly -- echo -n > /dev/null
-"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo ERROR: "--fallback-readonly flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo "ERROR: --fallback-readonly flag is not respected" && exit 1)
 
 beforeEach
 
 # test 'run' respects custom fallback file location
 "$DOPPLER_BINARY" run --fallback ./fallback.json -- echo -n > /dev/null
 # should fail due to non-existence of default fallback file
-"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo ERROR: "--fallback flag is not respected" && exit 1)
-"$DOPPLER_BINARY" run --fallback ./fallback.json --fallback-only -- echo -n > /dev/null 2>&1 || (echo ERROR: "--fallback flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo "ERROR: --fallback flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback ./fallback.json --fallback-only -- echo -n > /dev/null 2>&1 || (echo "ERROR: --fallback flag is not respected" && exit 1)
 rm -f fallback.json
 
 beforeEach
@@ -60,9 +60,9 @@ beforeEach
 # test 'run' respects custom passphrase
 "$DOPPLER_BINARY" run --passphrase=123456 -- echo -n > /dev/null
 # ensure default passphrase fails
-"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo ERROR: "--passphrase flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo "ERROR: --passphrase flag is not respected" && exit 1)
 # test decryption with custom passphrase
-"$DOPPLER_BINARY" run --fallback-only --passphrase=123456 -- echo -n > /dev/null || (echo ERROR: "--passphrase2 flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback-only --passphrase=123456 -- echo -n > /dev/null || (echo "ERROR: --passphrase2 flag is not respected" && exit 1)
 
 beforeEach
 
@@ -70,9 +70,9 @@ beforeEach
 mkdir ./temp-fallback
 chmod 500 ./temp-fallback
 # this should fail
-"$DOPPLER_BINARY" run --fallback=./temp-fallback -- echo -n > /dev/null 2>&1 && (echo ERROR: "--no-exit-on-write-failure flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback=./temp-fallback -- echo -n > /dev/null 2>&1 && (echo "ERROR: --no-exit-on-write-failure flag is not respected" && exit 1)
 # this should succeed
-"$DOPPLER_BINARY" run --fallback=./temp-fallback --no-exit-on-write-failure -- echo -n > /dev/null || (echo ERROR: "--no-exit-on-write-failure flag is not respected" && exit 1)
+"$DOPPLER_BINARY" run --fallback=./temp-fallback --no-exit-on-write-failure -- echo -n > /dev/null || (echo "ERROR: --no-exit-on-write-failure flag is not respected" && exit 1)
 rm -rf ./temp-fallback
 
 afterAll

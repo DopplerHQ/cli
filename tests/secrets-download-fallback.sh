@@ -38,21 +38,21 @@ beforeAll
 beforeEach
 
 # test fallback-only fails when no fallback files exist
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "--fallback-only flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --fallback-only flag is not respected" && exit 1)
 
 beforeEach
 
 # test fallback-readonly doesn't write a fallback file
 "$DOPPLER_BINARY" secrets download --no-file --fallback-readonly > /dev/null
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "--fallback-readonly flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --fallback-readonly flag is not respected" && exit 1)
 
 beforeEach
 
 # test 'secrets download' respects custom fallback file location
 "$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null
 # should fail due to non-existence of default fallback file
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "--fallback flag is not respected" && exit 1)
-"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json --fallback-only > /dev/null 2>&1 || (echo ERROR: "--fallback flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --fallback flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json --fallback-only > /dev/null 2>&1 || (echo "ERROR: --fallback flag is not respected" && exit 1)
 rm -f fallback.json
 
 beforeEach
@@ -60,9 +60,9 @@ beforeEach
 # test 'secrets download' respects custom passphrase
 "$DOPPLER_BINARY" secrets download --no-file --fallback-passphrase=123456 > /dev/null
 # ensure default passphrase fails
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "--passphrase flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --passphrase flag is not respected" && exit 1)
 # test decryption with custom passphrase
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback-passphrase=123456 > /dev/null || (echo ERROR: "--passphrase flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback-passphrase=123456 > /dev/null || (echo "ERROR: --passphrase flag is not respected" && exit 1)
 
 beforeEach
 
@@ -70,9 +70,9 @@ beforeEach
 mkdir ./temp-fallback
 chmod 500 ./temp-fallback
 # this should fail
-"$DOPPLER_BINARY" secrets download --no-file --fallback=./temp-fallback > /dev/null 2>&1 && (echo ERROR: "--no-exit-on-write-failure flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback=./temp-fallback > /dev/null 2>&1 && (echo "ERROR: --no-exit-on-write-failure flag is not respected" && exit 1)
 # this should succeed
-"$DOPPLER_BINARY" secrets download --no-file --fallback=./temp-fallback --no-exit-on-write-failure > /dev/null || (echo ERROR: "--no-exit-on-write-failure flag is not respected" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback=./temp-fallback --no-exit-on-write-failure > /dev/null || (echo "ERROR: --no-exit-on-write-failure flag is not respected" && exit 1)
 rm -rf ./temp-fallback
 
 beforeEach
@@ -133,7 +133,7 @@ beforeEach
 
 # test 'secrets download' doesn't write fallback when format is env
 "$DOPPLER_BINARY" secrets download --no-file --format=env > /dev/null
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "'secrets download' should not write fallback file when format is env" && exit 1)
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is env" && exit 1)
 
 beforeEach
 
