@@ -22,14 +22,14 @@ beforeAll() {
 
 beforeEach() {
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json secrets.yaml
+  rm -f fallback.json secrets.yaml doppler.env
   rm -rf ./temp-fallback
 }
 
 afterAll() {
   echo "INFO: Completed '$TEST_NAME' tests"
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json secrets.yaml
+  rm -f fallback.json secrets.yaml doppler.env
   rm -rf ./temp-fallback
 }
 
@@ -124,7 +124,14 @@ rm -f fallback.json
 
 beforeEach
 
-# test 'secrets download' doesn't write fallback when using env format
+# test 'secrets download' writes correct file name when format is env
+"$DOPPLER_BINARY" secrets download --format=env > /dev/null
+[[ -f doppler.env ]] || (echo "ERROR: 'secrets download' did not save doppler.env when format is env" && exit 1)
+rm -f ./doppler.env
+
+beforeEach
+
+# test 'secrets download' doesn't write fallback when format is env
 "$DOPPLER_BINARY" secrets download --no-file --format=env > /dev/null
 "$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo ERROR: "'secrets download' should not write fallback file when format is env" && exit 1)
 
