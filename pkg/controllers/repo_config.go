@@ -27,16 +27,19 @@ import (
 
 // repoConfigFileName (doppler.yaml)
 const repoConfigFileName = "doppler.yaml"
+// ymlRepoConfigFileName (doppler.yml)
+const ymlRepoConfigFileName = "doppler.yml"
 
 // RepoConfig Reads the configuration file (doppler.yaml) if exists and returns the set configuration
 func RepoConfig() (models.RepoConfig, Error) {
 
-	RepoConfigFile := filepath.Join("./", repoConfigFileName)
+	repoConfigFile := filepath.Join("./", repoConfigFileName)
+	ymlRepoConfigFile := filepath.Join("./", ymlRepoConfigFileName)
 
-	if utils.Exists(RepoConfigFile) {
-		utils.LogDebug(fmt.Sprintf("Reading repo config file %s", RepoConfigFile))
+	if utils.Exists(repoConfigFile) {
+		utils.LogDebug(fmt.Sprintf("Reading repo config file %s", repoConfigFile))
 
-		yamlFile, err := ioutil.ReadFile(RepoConfigFile) // #nosec G304
+		yamlFile, err := ioutil.ReadFile(repoConfigFile) // #nosec G304
 
 		if err != nil {
 			var e Error
@@ -55,6 +58,8 @@ func RepoConfig() (models.RepoConfig, Error) {
 		}
 
 		return repoConfig, Error{}
+	} else if utils.Exists(ymlRepoConfigFile) {
+		utils.LogWarning(fmt.Sprintf("Found %s file, please rename to %s for repo configuration", ymlRepoConfigFile, repoConfigFileName))
 	}
 	return models.RepoConfig{}, Error{}
 }
