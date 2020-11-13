@@ -205,24 +205,29 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	format := cmd.Flag("format").Value.String()
+	formatString := cmd.Flag("format").Value.String()
+	var format models.SecretsFormat
 	if jsonFlag {
-		format = "json"
+		format = models.JSON
 	}
 
-	validFormats := []string{"json", "env", "yaml"}
-	if format != "" {
+	if formatString != "" {
 		isValid := false
 
-		for _, val := range validFormats {
-			if val == format {
+		for _, val := range models.SecretsFormatList {
+			if val.String() == formatString {
+				format = val
 				isValid = true
 				break
 			}
 		}
 
 		if !isValid {
-			utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", strings.Join(validFormats, ", ")))
+			validFormatList := []string{}
+			for _, format := range models.SecretsFormatList {
+				validFormatList = append(validFormatList, format.String())
+			}
+			utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", strings.Join(validFormatList, ", ")))
 		}
 	}
 
@@ -232,7 +237,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	var body []byte
-	if format == "json" {
+	if format == models.JSON {
 		fallbackPath := ""
 		legacyFallbackPath := ""
 		metadataPath := ""
@@ -279,12 +284,8 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		if err != nil {
 			utils.HandleError(err, "Unable to parse download file path")
 		}
-	} else if format == "env" {
-		filePath = filepath.Join(".", "doppler.env")
-	} else if format == "yaml" {
-		filePath = filepath.Join(".", "secrets.yaml")
 	} else {
-		filePath = filepath.Join(".", "doppler.json")
+		filePath = filepath.Join(".", format.OutputFile())
 	}
 
 	utils.LogDebug("Encrypting secrets")
@@ -332,7 +333,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", "json", "output format. one of [json, env, yaml]")
+	secretsDownloadCmd.Flags().String("format", models.JSON.String(), "output format. one of [json, env, yaml]")
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	// fallback flags
