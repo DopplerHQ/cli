@@ -257,7 +257,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		}
 	}
 
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, true, etag)
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, etag)
 	if !httpErr.IsNil() {
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
