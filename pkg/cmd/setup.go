@@ -63,6 +63,12 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.LogDebugError(err.Unwrap())
 	}
 
+	// prompt whether to use repoConfig
+	useRepoConfig := true
+	if promptUser && (repoConfig.Setup.Project != "" || repoConfig.Setup.Config != "") {
+		useRepoConfig = utils.ConfirmationPrompt("Use default settings from repo config file (doppler.yaml)?", true)
+	}
+
 	currentProject := localConfig.EnclaveProject.Value
 	selectedProject := ""
 
@@ -73,11 +79,12 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
-		if repoConfig.Setup.Project != "" {
-			utils.Log("Reading project from repo config file doppler.yaml")
+		if useRepoConfig && repoConfig.Setup.Project != "" {
+			utils.Log("Auto-selecting project from repo config file")
 			selectedProject = repoConfig.Setup.Project
 			break
 		}
+
 		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
 		if !httpErr.IsNil() {
 			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
@@ -86,7 +93,12 @@ func setup(cmd *cobra.Command, args []string) {
 			utils.HandleError(errors.New("you do not have access to any projects"))
 		}
 
-		selectedProject = selectProject(projects, scopedConfig.EnclaveProject.Value, promptUser)
+		defaultProject := scopedConfig.EnclaveProject.Value
+		if repoConfig.Setup.Project != "" {
+			defaultProject = repoConfig.Setup.Project
+		}
+
+		selectedProject = selectProject(projects, defaultProject, promptUser)
 		if selectedProject == "" {
 			utils.HandleError(errors.New("Invalid project"))
 		}
@@ -102,11 +114,12 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
-		if repoConfig.Setup.Config != "" {
-			utils.Log("Reading config from repo config file doppler.yaml")
+		if useRepoConfig && repoConfig.Setup.Config != "" {
+			utils.Log("Auto-selecting config from repo config file")
 			selectedConfig = repoConfig.Setup.Config
 			break
 		}
+
 		configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject)
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
@@ -116,7 +129,12 @@ func setup(cmd *cobra.Command, args []string) {
 			break
 		}
 
-		selectedConfig = selectConfig(configs, selectedConfiguredProject, scopedConfig.EnclaveConfig.Value, promptUser)
+		defaultConfig := scopedConfig.EnclaveConfig.Value
+		if repoConfig.Setup.Config != "" {
+			defaultConfig = repoConfig.Setup.Config
+		}
+
+		selectedConfig = selectConfig(configs, selectedConfiguredProject, defaultConfig, promptUser)
 		if selectedConfig == "" {
 			utils.HandleError(errors.New("Invalid config"))
 		}
@@ -166,7 +184,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	}
 
 	if !promptUser {
-		utils.HandleError(errors.New("project must be specified via --project flag or DOPPLER_PROJECT environment variable when using --no-prompt"))
+		utils.HandleError(errors.New("project must be specified via --project flag, DOPPLER_PROJECT environment variable, or repo config file when using --no-prompt"))
 	}
 
 	selectedProject := utils.SelectPrompt("Select a project:", options, defaultOption)
@@ -202,7 +220,7 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 	}
 
 	if !promptUser {
-		utils.HandleError(errors.New("config must be specified via --config flag or DOPPLER_CONFIG environment variable when using --no-prompt"))
+		utils.HandleError(errors.New("config must be specified via --config flag, DOPPLER_CONFIG environment variable, or repo config file when using --no-prompt"))
 	}
 
 	selectedConfig := utils.SelectPrompt("Select a config:", options, defaultOption)
