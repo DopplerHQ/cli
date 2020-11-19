@@ -267,9 +267,12 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		if !err.IsNil() {
 			utils.LogDebugError(err.Unwrap())
 			utils.LogDebug(err.Message)
-		} else {
-			return cache
+
+			// we have to exit here as we don't have any secrets to parse
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
+
+		return cache
 	}
 
 	// ensure the response can be parsed before proceeding

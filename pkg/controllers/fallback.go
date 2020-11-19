@@ -104,24 +104,24 @@ func SecretsCacheFile(path string, passphrase string) (map[string]string, Error)
 	utils.LogDebug(fmt.Sprintf("Using fallback file for cache %s", path))
 
 	if _, err := os.Stat(path); err != nil {
-		return nil, Error{Err: err, Message: "Unable to stat fallback file"}
+		return nil, Error{Err: err, Message: "Unable to stat cache file"}
 	}
 
 	response, err := ioutil.ReadFile(path) // #nosec G304
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to read fallback file"}
+		return nil, Error{Err: err, Message: "Unable to read cache file"}
 	}
 
-	utils.LogDebug("Decrypting fallback file")
+	utils.LogDebug("Decrypting cache file")
 	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to decrypt fallback file"}
+		return nil, Error{Err: err, Message: "Unable to decrypt cache file"}
 	}
 
 	secrets := map[string]string{}
 	err = json.Unmarshal([]byte(decryptedSecrets), &secrets)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to parse fallback file"}
+		return nil, Error{Err: err, Message: "Unable to parse cache file"}
 	}
 
 	return secrets, Error{}
