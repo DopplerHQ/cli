@@ -19,6 +19,7 @@ package models
 type SecretsFileMetadata struct {
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 	ETag    string `json:"etag,omitempty" yaml:"etag,omitempty"`
+	Hash    string `json:"hash,omitempty" yaml:"hash,omitempty"`
 }
 
 // ParseSecretsFileMetadata parse secrets file metadata
@@ -30,6 +31,9 @@ func ParseSecretsFileMetadata(data map[string]interface{}) SecretsFileMetadata {
 	}
 	if data["etag"] != nil {
 		parsedMetadata.ETag = data["etag"].(string)
+	}
+	if data["hash"] != nil {
+		parsedMetadata.Hash = data["hash"].(string)
 	}
 
 	return parsedMetadata

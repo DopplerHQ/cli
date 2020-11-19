@@ -248,13 +248,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 	enableCache = enableCache && metadataPath != ""
 	etag := ""
 	if enableCache {
-		metadata, err := controllers.MetadataFile(metadataPath)
-		if !err.IsNil() {
-			utils.LogDebugError(err.Unwrap())
-			utils.LogDebug(err.Message)
-		} else {
-			etag = metadata.ETag
-		}
+		etag = getCacheFileETag(metadataPath, fallbackPath)
 	}
 
 	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, etag)
@@ -322,7 +316,9 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 
 		if enableCache {
 			if etag := respHeaders.Get("etag"); etag != "" {
-				if err := controllers.WriteMetadataFile(metadataPath, etag); !err.IsNil() {
+				hash := crypto.Hash(encryptedResponse)
+
+				if err := controllers.WriteMetadataFile(metadataPath, etag, hash); !err.IsNil() {
 					utils.LogDebugError(err.Unwrap())
 					utils.LogDebug(err.Message)
 				}
@@ -491,6 +487,34 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWrit
 	}
 
 	return fallbackPath, legacyFallbackPath
+}
+
+func getCacheFileETag(metadataPath string, cachePath string) string {
+	metadata, Err := controllers.MetadataFile(metadataPath)
+	if !Err.IsNil() {
+		utils.LogDebugError(Err.Unwrap())
+		utils.LogDebug(Err.Message)
+		return ""
+	}
+
+	if metadata.Hash == "" {
+		return metadata.ETag
+	}
+
+	// verify hash
+	cacheFileBytes, err := ioutil.ReadFile(cachePath) // #nosec G304
+	if err == nil {
+		cacheFileContents := string(cacheFileBytes)
+		hash := crypto.Hash(cacheFileContents)
+
+		if hash == metadata.Hash {
+			return metadata.ETag
+		}
+
+		utils.LogDebug("Fallback file failed hash check, ignoring cached secrets")
+	}
+
+	return ""
 }
 
 func init() {

@@ -22,14 +22,14 @@ beforeAll() {
 
 beforeEach() {
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json
+  rm -f fallback.json nonexistent-fallback.json
   rm -rf ./temp-fallback
 }
 
 afterAll() {
   echo "INFO: Completed '$TEST_NAME' tests"
   "$DOPPLER_BINARY" run clean --max-age=0s --silent
-  rm -f fallback.json
+  rm -f fallback.json nonexistent-fallback.json
   rm -rf ./temp-fallback
 }
 
@@ -74,5 +74,27 @@ chmod 500 ./temp-fallback
 # this should succeed
 "$DOPPLER_BINARY" run --fallback=./temp-fallback --no-exit-on-write-failure -- echo -n > /dev/null || (echo "ERROR: --no-exit-on-write-failure flag is not respected" && exit 1)
 rm -rf ./temp-fallback
+
+beforeEach
+
+# test 'run' w/ no cache and invalid fallback file
+"$DOPPLER_BINARY" run --fallback ./fallback.json -- echo -n > /dev/null
+rm -f fallback.json
+
+beforeEach
+
+# test 'run' w/ valid cache and invalid fallback file
+"$DOPPLER_BINARY" run --fallback ./fallback.json -- echo -n > /dev/null
+rm -f fallback.json
+echo "foo" > ./fallback.json
+"$DOPPLER_BINARY" run --fallback ./fallback.json -- echo -n > /dev/null || (echo "ERROR: run w/ valid cache is not ignoring invalid fallback file" && exit 1)
+rm -f fallback.json
+
+beforeEach
+
+# test 'run' w/ valid cache and non-existent fallback file
+"$DOPPLER_BINARY" run --fallback ./fallback.json -- echo -n > /dev/null
+"$DOPPLER_BINARY" run --fallback ./nonexistent-fallback.json -- echo -n > /dev/null || (echo "ERROR: run w/ valid cache is not ignoring nonexistent fallback file" && exit 1)
+rm -f fallback.json nonexistent-fallback.json
 
 afterAll
