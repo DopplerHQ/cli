@@ -278,6 +278,8 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 	// ensure the response can be parsed before proceeding
 	secrets, err := parseSecrets(response)
 	if err != nil {
+		utils.LogDebugError(err)
+
 		if enableFallback {
 			utils.Log("Unable to parse the Doppler API response")
 			utils.LogError(httpErr.Unwrap())
