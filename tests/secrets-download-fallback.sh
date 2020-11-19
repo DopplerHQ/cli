@@ -158,4 +158,26 @@ beforeEach
 # test 'secrets download' ignores fallback flags when format is yaml
 "$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=yaml > /dev/null
 
+beforeEach
+
+# test 'secrets download' w/ no cache and invalid fallback file
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null
+rm -f fallback.json
+
+beforeEach
+
+# test 'secrets download' w/ valid cache and invalid fallback file
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null
+rm -f fallback.json
+echo "foo" > ./fallback.json
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null || (echo "ERROR: run w/ valid cache is not ignoring invalid fallback file" && exit 1)
+rm -f fallback.json
+
+beforeEach
+
+# test 'secrets download' w/ valid cache and non-existent fallback file
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null
+"$DOPPLER_BINARY" secrets download --no-file --fallback ./nonexistent-fallback.json > /dev/null || (echo "ERROR: run w/ valid cache is not ignoring nonexistent fallback file" && exit 1)
+rm -f fallback.json
+
 afterAll
