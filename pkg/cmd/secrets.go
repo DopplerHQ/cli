@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -64,6 +65,20 @@ Ex: set the secrets "API_KEY" and "CRYPTO_KEY":
 doppler secrets set API_KEY=123 CRYPTO_KEY=456`,
 	Args: cobra.MinimumNArgs(1),
 	Run:  setSecrets,
+}
+
+var secretsUploadCmd = &cobra.Command{
+	Use:   "upload <filepath>",
+	Short: "Upload a secrets file",
+	Long: `Upload a json or env secrets file.
+
+Ex: upload an env file:
+doppler secrets upload dev.env
+
+Ex: upload a json file:
+doppler secrets upload secrets.json`,
+	Args: cobra.ExactArgs(1),
+	Run:  uploadSecrets,
 }
 
 var secretsDeleteCmd = &cobra.Command{
@@ -164,6 +179,38 @@ func setSecrets(cmd *cobra.Command, args []string) {
 
 	if !utils.Silent {
 		printer.Secrets(response, keys, jsonFlag, false, raw, false)
+	}
+}
+
+func uploadSecrets(cmd *cobra.Command, args []string) {
+	jsonFlag := utils.OutputJSON
+	raw := utils.GetBoolFlag(cmd, "raw")
+	localConfig := configuration.LocalConfig(cmd)
+
+	utils.RequireValue("token", localConfig.Token.Value)
+
+	filePath, err := utils.GetFilePath(args[0])
+	if err != nil {
+		utils.HandleError(err, "Unable to parse upload file path")
+	}
+
+	if !utils.Exists(filePath) {
+		utils.HandleError(errors.New("Upload file does not exist"))
+	}
+
+	var file []byte
+	file, err = ioutil.ReadFile(filePath) // #nosec G304
+	if err != nil {
+		utils.HandleError(err, "Unable to read upload file")
+	}
+
+	response, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
+	if !httpErr.IsNil() {
+		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	}
+
+	if !utils.Silent {
+		printer.Secrets(response, []string{}, jsonFlag, false, raw, false)
 	}
 }
 
@@ -324,6 +371,11 @@ func init() {
 	secretsSetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.AddCommand(secretsSetCmd)
+
+	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	secretsUploadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")

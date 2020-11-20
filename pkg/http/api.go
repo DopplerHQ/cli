@@ -203,6 +203,39 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return computed, Error{}
 }
 
+// UploadSecrets for specified project and config
+func UploadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets string) (map[string]models.ComputedSecret, Error) {
+	reqBody := map[string]interface{}{}
+	reqBody["file"] = secrets
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Invalid file"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets/upload", params, body)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to upload secrets", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	computed := map[string]models.ComputedSecret{}
+	for key, secret := range result["secrets"].(map[string]interface{}) {
+		val := secret.(map[string]interface{})
+		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
+	}
+
+	return computed, Error{}
+}
+
 // GetWorkplaceSettings get specified workplace settings
 func GetWorkplaceSettings(host string, verifyTLS bool, apiKey string) (models.WorkplaceSettings, Error) {
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/workplace/v1", []queryParam{})
