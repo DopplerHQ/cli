@@ -162,13 +162,23 @@ func setSecrets(cmd *cobra.Command, args []string) {
 
 	secrets := map[string]interface{}{}
 	var keys []string
-	for _, arg := range args {
-		secretArr := strings.Split(arg, "=")
-		keys = append(keys, secretArr[0])
-		if len(secretArr) < 2 {
-			secrets[secretArr[0]] = ""
-		} else {
-			secrets[secretArr[0]] = secretArr[1]
+
+	if len(args) == 2 {
+		// format: 'doppler secrets set KEY value'
+		key := args[0]
+		value := args[1]
+		keys = append(keys, key)
+		secrets[key] = value
+	} else {
+		// format: 'doppler secrets set KEY=value'
+		for _, arg := range args {
+			secretArr := strings.Split(arg, "=")
+			keys = append(keys, secretArr[0])
+			if len(secretArr) < 2 {
+				secrets[secretArr[0]] = ""
+			} else {
+				secrets[secretArr[0]] = secretArr[1]
+			}
 		}
 	}
 
