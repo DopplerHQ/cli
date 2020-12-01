@@ -1,4 +1,0 @@
-FROM python:3-alpine
-RUN apk add --no-cache tini
-COPY doppler /bin/doppler
-ENTRYPOINT ["/sbin/tini", "--", "/bin/doppler"]
