@@ -63,13 +63,7 @@ See [Install](INSTALL.md#linux) page for instructions.
 
 ### Docker
 
-We currently build these Docker images:
-- `dopplerhq/cli` based on `alpine`
-- `dopplerhq/cli:node` based on `node:lts-alpine`
-- `dopplerhq/cli:python` based on `python:3-alpine`
-- `dopplerhq/cli:ruby` based on `ruby:2-alpine`
-
-For more info, see the [Install](INSTALL.md#docker) page.
+See [Install](INSTALL.md#docker) page for instructions.
 
 ### GitHub Action
 
