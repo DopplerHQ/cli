@@ -93,7 +93,7 @@ You can find the source `install.sh` file in this repo's `scripts` directory.
 
 We currently publish a `dopplerhq/cli` Docker image based on `alpine`. For more info, check out our [Docker guide](https://docs.doppler.com/docs/docker-base-image-guide).
 
-You can find all source Dockerfiles in this repo's `/docker` ([folder](https://github.com/DopplerHQ/cli/tree/master/docker)).
+You can find all source Dockerfiles in this repo's `/docker` [folder](https://github.com/DopplerHQ/cli/tree/master/docker).
 
 ## GitHub Action
 
