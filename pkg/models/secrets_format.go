@@ -23,15 +23,16 @@ const (
 	JSON SecretsFormat = iota
 	ENV
 	YAML
+	DOCKER
 )
 
 func (s SecretsFormat) String() string {
-	return [...]string{"json", "env", "yaml"}[s]
+	return [...]string{"json", "env", "yaml", "docker"}[s]
 }
 
 // OutputFile the default secrets file name
 func (s SecretsFormat) OutputFile() string {
-	return [...]string{"doppler.json", "doppler.env", "secrets.yaml"}[s]
+	return [...]string{"doppler.json", "doppler.env", "secrets.yaml", "doppler.env"}[s]
 }
 
 // SecretsFormatList list of supported secrets formats
@@ -41,4 +42,5 @@ func init() {
 	SecretsFormatList = append(SecretsFormatList, JSON)
 	SecretsFormatList = append(SecretsFormatList, ENV)
 	SecretsFormatList = append(SecretsFormatList, YAML)
+	SecretsFormatList = append(SecretsFormatList, DOCKER)
 }
