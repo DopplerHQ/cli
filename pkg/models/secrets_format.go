@@ -34,11 +34,6 @@ func (s SecretsFormat) OutputFile() string {
 	return [...]string{"doppler.json", "doppler.env", "secrets.yaml"}[s]
 }
 
-// MimeType the mime type of a given format
-func (s SecretsFormat) MimeType() string {
-	return [...]string{"application/json", "text/plain", "text/yaml"}[s]
-}
-
 // SecretsFormatList list of supported secrets formats
 var SecretsFormatList []SecretsFormat
 
