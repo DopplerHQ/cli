@@ -139,9 +139,9 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "format", Value: format.String()})
 
 	headers := apiKeyHeader(apiKey)
-	headers["Accept"] = format.MimeType()
 	if etag != "" {
 		headers["If-None-Match"] = etag
 	}
