@@ -38,7 +38,7 @@ var setupCmd = &cobra.Command{
 }
 
 func setup(cmd *cobra.Command, args []string) {
-	promptUser := !utils.GetBoolFlag(cmd, "no-prompt")
+	canPromptUser := !utils.GetBoolFlag(cmd, "no-prompt")
 	canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
 	localConfig := configuration.LocalConfig(cmd)
 	scopedConfig := configuration.Get(configuration.Scope)
@@ -65,7 +65,7 @@ func setup(cmd *cobra.Command, args []string) {
 
 	// prompt whether to use repoConfig
 	useRepoConfig := true
-	if promptUser && (repoConfig.Setup.Project != "" || repoConfig.Setup.Config != "") {
+	if canPromptUser && (repoConfig.Setup.Project != "" || repoConfig.Setup.Config != "") {
 		useRepoConfig = utils.ConfirmationPrompt("Use default settings from repo config file (doppler.yaml)?", true)
 	}
 
@@ -98,7 +98,7 @@ func setup(cmd *cobra.Command, args []string) {
 			defaultProject = repoConfig.Setup.Project
 		}
 
-		selectedProject = selectProject(projects, defaultProject, promptUser)
+		selectedProject = selectProject(projects, defaultProject, canPromptUser)
 		if selectedProject == "" {
 			utils.HandleError(errors.New("Invalid project"))
 		}
@@ -134,7 +134,7 @@ func setup(cmd *cobra.Command, args []string) {
 			defaultConfig = repoConfig.Setup.Config
 		}
 
-		selectedConfig = selectConfig(configs, selectedConfiguredProject, defaultConfig, promptUser)
+		selectedConfig = selectConfig(configs, selectedConfiguredProject, defaultConfig, canPromptUser)
 		if selectedConfig == "" {
 			utils.HandleError(errors.New("Invalid config"))
 		}
@@ -160,7 +160,7 @@ func setup(cmd *cobra.Command, args []string) {
 	}
 }
 
-func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, promptUser bool) string {
+func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, canPromptUser bool) string {
 	var options []string
 	var defaultOption string
 	for _, val := range projects {
@@ -177,13 +177,13 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 
 	if len(projects) == 1 {
 		// the user is expecting to a prompt, so print a message instead
-		if promptUser {
+		if canPromptUser {
 			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available project:"), options[0]))
 		}
 		return projects[0].ID
 	}
 
-	if !promptUser {
+	if !canPromptUser {
 		utils.HandleError(errors.New("project must be specified via --project flag, DOPPLER_PROJECT environment variable, or repo config file when using --no-prompt"))
 	}
 
@@ -197,7 +197,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	return ""
 }
 
-func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, prevConfiguredConfig string, promptUser bool) string {
+func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, prevConfiguredConfig string, canPromptUser bool) string {
 	var options []string
 	var defaultOption string
 	for _, val := range configs {
@@ -213,13 +213,13 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 	if len(configs) == 1 {
 		config := configs[0].Name
 		// the user is expecting to a prompt, so print a message instead
-		if promptUser {
+		if canPromptUser {
 			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available config:"), config))
 		}
 		return config
 	}
 
-	if !promptUser {
+	if !canPromptUser {
 		utils.HandleError(errors.New("config must be specified via --config flag, DOPPLER_CONFIG environment variable, or repo config file when using --no-prompt"))
 	}
 
