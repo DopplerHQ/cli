@@ -63,9 +63,15 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.LogDebugError(err.Unwrap())
 	}
 
-	// prompt whether to use repoConfig
+	ignoreRepoConfig :=
+		// ignore when repo config is blank
+		(repoConfig.Setup.Project == "" && repoConfig.Setup.Config == "") ||
+			// ignore when project and config are already specified
+			(localConfig.EnclaveProject.Source == models.FlagSource.String() && localConfig.EnclaveConfig.Source == models.FlagSource.String())
+
+	// default to true so repo config is used on --no-prompt
 	useRepoConfig := true
-	if canPromptUser && (repoConfig.Setup.Project != "" || repoConfig.Setup.Config != "") {
+	if !ignoreRepoConfig && canPromptUser {
 		useRepoConfig = utils.ConfirmationPrompt("Use default settings from repo config file (doppler.yaml)?", true)
 	}
 
