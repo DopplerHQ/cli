@@ -72,7 +72,7 @@ func setup(cmd *cobra.Command, args []string) {
 	// default to true so repo config is used on --no-prompt
 	useRepoConfig := true
 	if !ignoreRepoConfig && canPromptUser {
-		useRepoConfig = utils.ConfirmationPrompt("Use default settings from repo config file (doppler.yaml)?", true)
+		useRepoConfig = utils.ConfirmationPrompt("Use settings from repo config file (doppler.yaml)?", true)
 	}
 
 	currentProject := localConfig.EnclaveProject.Value
