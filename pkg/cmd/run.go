@@ -31,6 +31,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"gopkg.in/gookit/color.v1"
 )
@@ -72,6 +73,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 		preserveEnv := utils.GetBoolFlag(cmd, "preserve-env")
+		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
 		localConfig := configuration.LocalConfig(cmd)
 
 		utils.RequireValue("token", localConfig.Token.Value)
@@ -143,9 +145,9 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 
 		if cmd.Flags().Changed("command") {
 			command := cmd.Flag("command").Value.String()
-			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr)
+			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
 		} else {
-			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr)
+			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
 		}
 
 		if err != nil {
@@ -526,6 +528,8 @@ func init() {
 	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
 	controllers.DefaultMetadataDir = defaultFallbackDir
 
+	forwardSignals := !isatty.IsTerminal(os.Stdout.Fd())
+
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
@@ -539,6 +543,7 @@ func init() {
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
+	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
 
 	// deprecated
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")
