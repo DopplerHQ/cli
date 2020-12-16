@@ -105,18 +105,18 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File) (int, error) {
+func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (int, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	return execCommand(cmd)
+	return execCommand(cmd, forwardSignals)
 }
 
 // RunCommandString runs the specified command string
-func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File) (int, error) {
+func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (int, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -137,10 +137,10 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	return execCommand(cmd)
+	return execCommand(cmd, forwardSignals)
 }
 
-func execCommand(cmd *exec.Cmd) (int, error) {
+func execCommand(cmd *exec.Cmd, forwardSignals bool) (int, error) {
 	// signal handling logic adapted from aws-vault https://github.com/99designs/aws-vault/
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan)
@@ -149,12 +149,19 @@ func execCommand(cmd *exec.Cmd) (int, error) {
 		return 1, err
 	}
 
-	// catch and ignore all signals
-	// no need to manually send them to the subprocess since it's in the same process group
+	// handle all signals
 	go func() {
 		for {
-			// ignore
-			<-sigChan
+			// When running with a TTY, user-generated signals (like SIGINT) are sent to the entire process group.
+			// If we forward the signal, the child process will end up receiving the signal twice.
+			if forwardSignals {
+				// forward to process
+				sig := <-sigChan
+				cmd.Process.Signal(sig) // #nosec G104
+			} else {
+				// ignore
+				<-sigChan
+			}
 		}
 	}()
 
