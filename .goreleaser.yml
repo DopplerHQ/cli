@@ -82,7 +82,7 @@ dockers:
   - dockerfile: docker/alpine
     goos: linux
     goarch: amd64
-    binaries:
+    ids:
       - doppler
     image_templates:
       - "dopplerhq/cli:{{ .Version }}"             # Ex: 1.4.2
