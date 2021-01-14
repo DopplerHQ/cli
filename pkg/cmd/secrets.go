@@ -395,7 +395,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", models.JSON.String(), "output format. one of [json, env, yaml]")
+	secretsDownloadCmd.Flags().String("format", models.JSON.String(), fmt.Sprintf("output format. one of %s", models.SecretsFormatList))
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	// fallback flags
