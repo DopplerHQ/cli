@@ -24,15 +24,16 @@ const (
 	ENV
 	YAML
 	DOCKER
+	ENV_NO_FILE
 )
 
 func (s SecretsFormat) String() string {
-	return [...]string{"json", "env", "yaml", "docker"}[s]
+	return [...]string{"json", "env", "yaml", "docker", "env-no-quotes"}[s]
 }
 
 // OutputFile the default secrets file name
 func (s SecretsFormat) OutputFile() string {
-	return [...]string{"doppler.json", "doppler.env", "secrets.yaml", "doppler.env"}[s]
+	return [...]string{"doppler.json", "doppler.env", "secrets.yaml", "doppler.env", "doppler.env"}[s]
 }
 
 // SecretsFormatList list of supported secrets formats
@@ -43,4 +44,5 @@ func init() {
 	SecretsFormatList = append(SecretsFormatList, ENV)
 	SecretsFormatList = append(SecretsFormatList, YAML)
 	SecretsFormatList = append(SecretsFormatList, DOCKER)
+	SecretsFormatList = append(SecretsFormatList, ENV_NO_FILE)
 }

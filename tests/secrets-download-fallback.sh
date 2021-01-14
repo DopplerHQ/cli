@@ -160,6 +160,17 @@ beforeEach
 
 beforeEach
 
+# test 'secrets download' doesn't write fallback when format is docker
+"$DOPPLER_BINARY" secrets download --no-file --format=docker > /dev/null
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is docker" && exit 1)
+
+beforeEach
+
+# test 'secrets download' ignores fallback flags when format is docker
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=docker > /dev/null
+
+beforeEach
+
 # test 'secrets download' w/ no cache and invalid fallback file
 "$DOPPLER_BINARY" secrets download --no-file --fallback ./fallback.json > /dev/null
 rm -f fallback.json
