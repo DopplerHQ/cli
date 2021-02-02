@@ -172,7 +172,8 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 			return nil
 		}
 
-		if isRetry(resp.StatusCode) {
+		contentType := resp.Header.Get("content-type")
+		if isRetry(resp.StatusCode, contentType) {
 			// start logging retries after 10 seconds so it doesn't feel like we've frozen
 			// we subtract 1 millisecond so that we always win the race against a request that exhausts its full 10 second time out
 			if time.Now().After(startTime.Add(10 * time.Second).Add(-1 * time.Millisecond)) {
@@ -224,8 +225,11 @@ func isSuccess(statusCode int) bool {
 	return (statusCode >= 200 && statusCode <= 299) || (statusCode >= 300 && statusCode <= 399)
 }
 
-func isRetry(statusCode int) bool {
-	return (statusCode == 429) || (statusCode >= 100 && statusCode <= 199) || (statusCode >= 500 && statusCode <= 599)
+func isRetry(statusCode int, contentType string) bool {
+	return (statusCode == 429) ||
+		(statusCode >= 100 && statusCode <= 199) ||
+		// don't retry 5xx errors w/ a JSON body
+		(statusCode >= 500 && statusCode <= 599 && !strings.HasPrefix(contentType, "application/json"))
 }
 
 func isTimeout(err error) bool {
