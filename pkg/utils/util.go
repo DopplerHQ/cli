@@ -379,6 +379,11 @@ func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
 
+// IsMacOS whether the host os is macOS
+func IsMacOS() bool {
+	return runtime.GOOS == "darwin"
+}
+
 // UUID generates a random UUID
 func UUID() (string, error) {
 	uuid, err := uuid.NewRandom()
