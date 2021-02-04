@@ -24,7 +24,15 @@ import (
 
 var openCmd = &cobra.Command{
 	Use:   "open",
-	Short: "open a web page in your browser",
+	Short: "open the Doppler dashboard",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		localConfig := configuration.LocalConfig(cmd)
+		err := open.Run(localConfig.DashboardHost.Value)
+		if err != nil {
+			utils.HandleError(err)
+		}
+	},
 }
 
 var openDashboardCmd = &cobra.Command{
