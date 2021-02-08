@@ -27,8 +27,10 @@ const (
 	ENV_NO_FILE
 )
 
+var SecretFormats = []string{"json", "env", "yaml", "docker", "env-no-quotes"}
+
 func (s SecretsFormat) String() string {
-	return [...]string{"json", "env", "yaml", "docker", "env-no-quotes"}[s]
+	return SecretFormats[s]
 }
 
 // OutputFile the default secrets file name

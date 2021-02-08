@@ -92,10 +92,11 @@ doppler secrets delete API_KEY CRYPTO_KEY`,
 	Run:  deleteSecrets,
 }
 
+var validFormatList = strings.Join(models.SecretFormats, ", ")
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's secrets for later use",
-	Long:  `Download your config's secrets for later use. JSON and Env format are supported.`,
+	Long:  fmt.Sprintf("Download your config's secrets for later use. Supported formats are %s", validFormatList),
 	Example: `Save your secrets to /root/ encrypted in JSON format
 $ doppler secrets download /root/secrets.json
 
@@ -280,11 +281,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		if !isValid {
-			validFormatList := []string{}
-			for _, format := range models.SecretsFormatList {
-				validFormatList = append(validFormatList, format.String())
-			}
-			utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", strings.Join(validFormatList, ", ")))
+			utils.HandleError(fmt.Errorf("invalid format. Valid formats are %s", validFormatList))
 		}
 	}
 
@@ -395,7 +392,7 @@ func init() {
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDownloadCmd.Flags().String("format", models.JSON.String(), fmt.Sprintf("output format. one of %s", models.SecretsFormatList))
+	secretsDownloadCmd.Flags().String("format", models.JSON.String(), fmt.Sprintf("output format. one of %s", validFormatList))
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	// fallback flags
