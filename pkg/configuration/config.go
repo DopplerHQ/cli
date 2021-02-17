@@ -65,6 +65,12 @@ func Setup() {
 		}
 	}
 
+	// This may be different from `UserConfigDir` if `--configuration` was provided
+	configDir := filepath.Dir(UserConfigFile)
+	if !utils.Exists(configDir) {
+		utils.HandleError(fmt.Errorf("Configuration file directory does not exist %s", configDir))
+	}
+
 	if !utils.Exists(UserConfigFile) {
 		v1ConfigA := filepath.Join(utils.ConfigDir(), configFileName)
 		v1ConfigB := filepath.Join(utils.HomeDir(), configFileName)
