@@ -10,7 +10,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Salus Scan
       id: salus_scan
-      uses: federacy/scan-action@0.1.1
+      uses: federacy/scan-action@0.1.1-hotfix
       with:
         report_uri: file://./salus-report.txt
         report_format: txt
