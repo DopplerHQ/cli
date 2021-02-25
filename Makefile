@@ -15,7 +15,7 @@ test-e2e:
 	./tests.sh
 
 test-release:
-	goreleaser release --snapshot --skip-publish --skip-sign --rm-dist
+	doppler run -- goreleaser release --snapshot --skip-publish --rm-dist
 
 scan:
 	if [ ! -f "$$GOPATH/bin/gosec" ]; then echo "Error: gosec is not installed\n\nYou can install gosec with 'go get github.com/securego/gosec/cmd/gosec'\n" && exit 1; fi
