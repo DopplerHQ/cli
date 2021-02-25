@@ -6,7 +6,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.0.8
 	github.com/atotto/clipboard v0.1.2
 	github.com/go-openapi/strfmt v0.19.3 // indirect
-	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-version v1.2.1
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
