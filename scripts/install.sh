@@ -94,7 +94,7 @@ elif [ "$uname_machine" = "armv6" ] || [ "$uname_machine" = "armv6l" ]; then
 elif [ "$uname_machine" = "armv7" ] || [ "$uname_machine" = "armv7l" ]; then
   arch="armv7"
 # armv8?
-elif [ "$uname_machine" = "arm64" ]; then
+elif [ "$uname_machine" = "arm64" ] || [ "$uname_machine" = "aarch64" ]; then
   arch="arm64"
 else
   echo "ERROR: Unsupported architecture '$uname_machine'"
