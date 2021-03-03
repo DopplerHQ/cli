@@ -26,6 +26,7 @@ cleanup() {
   exit "$exit_code"
 }
 trap cleanup EXIT
+trap cleanup INT
 
 clean_exit() {
   CLEAN_EXIT=1
