@@ -107,19 +107,11 @@ You can also directly download the generated `.deb` and `.rpm` packages. If a bi
 
 # Verify Signature
 
-You can verify the integrity and authenticity of any released artifact using Doppler's public GPG key. The signatures of all release artifacts are placed in checksums.txt, which itself is then signed.
+You can verify the integrity and authenticity of any released artifact using Doppler's public GPG key. All release artifacts are signed and have a corresponding signature file. Release artifacts are available on the [Releases](https://github.com/DopplerHQ/cli/releases) page.
 
 ```sh
 # fetch Doppler's signing key
 gpg --keyserver keyserver.ubuntu.com --recv D3D593D50EE79DEC
-# verify content of checksums.txt against signature
-gpg --verify checksums.txt.sig checksums.txt
-# verify checksum of cli binary (downloaded file name must match download page)
-sha256sum --check --strict --ignore-missing checksums.txt
-```
-
-If the signature matches, you'll see output like this:
-```sh
-$ sha256sum --check --ignore-missing --strict checksums.txt
-doppler_3.3.2_linux_amd64.deb: OK
+# example: verify 'doppler_3.23.0_freebsd_amd64.tar.gz'
+gpg --verify doppler_3.23.0_freebsd_amd64.tar.gz.sig doppler_3.23.0_freebsd_amd64.tar.gz || echo "Verification failed!"
 ```
