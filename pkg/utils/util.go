@@ -394,3 +394,13 @@ func UUID() (string, error) {
 
 	return uuid.String(), nil
 }
+
+// RedactAuthToken returns a partially-redacted value that's safe for display
+func RedactAuthToken(token string) string {
+	// ensure there are enough characters or we'll end up giving away the whole token
+	if len(token) > 30 {
+		return fmt.Sprintf("%s…%s", token[0:10], token[len(token)-5:])
+	}
+
+	return "[REDACTED]"
+}

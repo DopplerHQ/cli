@@ -47,7 +47,7 @@ var rootCmd = &cobra.Command{
 		printConfig := utils.GetBoolFlagIfChanged(cmd, "print-config", false)
 		if printConfig {
 			fmt.Println("Active configuration")
-			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true, true)
 			fmt.Println("")
 		}
 

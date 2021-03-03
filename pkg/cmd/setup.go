@@ -160,7 +160,7 @@ func setup(cmd *cobra.Command, args []string) {
 		conf := configuration.Get(configuration.Scope)
 		valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
 		if saveToken {
-			valuesToPrint = append(valuesToPrint, models.ConfigToken.String())
+			valuesToPrint = append(valuesToPrint, utils.RedactAuthToken(models.ConfigToken.String()))
 		}
 		printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false, false)
 	}

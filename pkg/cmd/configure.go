@@ -60,7 +60,7 @@ and your config file. Flags have the highest priority; config file has the least
 		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
 
 		config := configuration.LocalConfig(cmd)
-		printer.ScopedConfigSource(config, jsonFlag, true)
+		printer.ScopedConfigSource(config, jsonFlag, true, false)
 	},
 }
 
