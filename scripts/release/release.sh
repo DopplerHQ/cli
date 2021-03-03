@@ -11,6 +11,7 @@ function cleanup {
   rm -rf "$DOCKER_CONFIG"
 }
 trap cleanup EXIT
+trap cleanup INT
 
 echo "Using Docker config $DOCKER_CONFIG"
 
