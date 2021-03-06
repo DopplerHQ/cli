@@ -3,6 +3,7 @@ project_name: doppler
 before:
   hooks:
     - go mod download
+    - ./scripts/completions.sh
 
 builds:
   -
@@ -42,6 +43,10 @@ archives:
   format_overrides:
     - goos: windows
       format: zip
+  files:
+    - README.md
+    - LICENSE
+    - completions/*
 
 release:
   github:
@@ -110,6 +115,10 @@ brews:
     folder: Formula
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets"
+    install: |-
+      bin.install "doppler"
+      bash_completion.install "completions/doppler.bash" => "doppler"
+      zsh_completion.install "completions/doppler.zsh" => "_doppler"
     test: |
       system "#{bin}/doppler --version"
 
@@ -136,6 +145,11 @@ nfpms:
     formats:
       - deb
       - rpm
+    contents:
+      - src: ./completions/doppler.bash
+        dst: /etc/bash_completion.d/doppler
+      - src: ./completions/doppler.zsh
+        dst: /usr/local/share/zsh/site-functions/_doppler
 
 blobs:
   -

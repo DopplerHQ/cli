@@ -19,3 +19,6 @@ doppler
 # credentials
 google.json
 .docker-config/
+
+# CLI completions
+completions/
