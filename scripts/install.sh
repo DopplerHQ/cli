@@ -45,6 +45,28 @@ delete_tempdir() {
   tempdir=""
 }
 
+linux_shell() {
+  user="$(whoami)"
+  grep "$user" < /etc/passwd | cut -f 7 -d ":" | head -1
+}
+
+macos_shell() {
+  dscl . -read ~/ UserShell | sed 's/UserShell: //'
+}
+
+install_completions() {
+  default_shell=""
+  if [ "$os" = "macos" ]; then
+    default_shell="$(macos_shell || "")"
+  else
+    default_shell="$(linux_shell || "")"
+  fi
+
+  log_debug "Installing shell completions for '$default_shell'"
+  # ignore all output
+  doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
+}
+
 # flag parsing
 for arg; do
   if [ "$arg" = "--debug" ]; then
@@ -245,3 +267,5 @@ elif [ "$format" = "tar" ]; then
     echo "Doppler CLI saved to ./doppler"
   fi
 fi
+
+install_completions || log_debug "Unable to install shell completions"
