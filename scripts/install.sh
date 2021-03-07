@@ -155,8 +155,8 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   filename="$tempdir/$file"
 
   if [ -x "$(command -v curl)" ]; then
-    log_debug "Using $(command -v curl)"
-    log_debug "Downloading from $url"
+    log_debug "Using $(command -v curl) for requests"
+    log_debug "Downloading binary from $url"
     # when this fails print the exit code
     headers=$(curl --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
@@ -170,8 +170,8 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
       clean_exit 1
     fi
   else
-    log_debug "Using $(command -v wget)"
-    log_debug "Downloading from $url"
+    log_debug "Using $(command -v wget) for requests"
+    log_debug "Downloading binary from $url"
     # when this fails print the exit code
     headers=$(wget -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
