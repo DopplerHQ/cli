@@ -35,7 +35,8 @@ clean_exit() {
 
 log_debug() {
   if [ "$DEBUG" -eq 1 ]; then
-    echo "DEBUG: $1"
+    # print to stderr
+    >&2 echo "DEBUG: $1"
   fi
 }
 
