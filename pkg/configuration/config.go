@@ -321,9 +321,9 @@ func Set(scope string, options map[string]string) {
 			} else {
 				value = id
 
-				utils.LogDebug("Removing previous token from system keyring")
 				// remove old token from keyring
 				if controllers.IsKeyringSecret(previousToken) {
+					utils.LogDebug("Removing previous token from system keyring")
 					if controllerError := controllers.DeleteKeyring(previousToken); !controllerError.IsNil() {
 						utils.LogDebugError(controllerError.Unwrap())
 						utils.LogDebug(controllerError.Message)
