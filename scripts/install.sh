@@ -35,7 +35,8 @@ clean_exit() {
 
 log_debug() {
   if [ "$DEBUG" -eq 1 ]; then
-    echo "DEBUG: $1"
+    # print to stderr
+    >&2 echo "DEBUG: $1"
   fi
 }
 
@@ -43,6 +44,28 @@ delete_tempdir() {
   log_debug "Removing temp directory"
   rm -rf "$tempdir"
   tempdir=""
+}
+
+linux_shell() {
+  user="$(whoami)"
+  grep "$user" < /etc/passwd | cut -f 7 -d ":" | head -1
+}
+
+macos_shell() {
+  dscl . -read ~/ UserShell | sed 's/UserShell: //'
+}
+
+install_completions() {
+  default_shell=""
+  if [ "$os" = "macos" ]; then
+    default_shell="$(macos_shell || "")"
+  else
+    default_shell="$(linux_shell || "")"
+  fi
+
+  log_debug "Installing shell completions for '$default_shell'"
+  # ignore all output
+  doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
 }
 
 # flag parsing
@@ -132,8 +155,8 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   filename="$tempdir/$file"
 
   if [ -x "$(command -v curl)" ]; then
-    log_debug "Using $(command -v curl)"
-    log_debug "Downloading from $url"
+    log_debug "Using $(command -v curl) for requests"
+    log_debug "Downloading binary from $url"
     # when this fails print the exit code
     headers=$(curl --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
@@ -147,8 +170,8 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
       clean_exit 1
     fi
   else
-    log_debug "Using $(command -v wget)"
-    log_debug "Downloading from $url"
+    log_debug "Using $(command -v wget) for requests"
+    log_debug "Downloading binary from $url"
     # when this fails print the exit code
     headers=$(wget -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
@@ -245,3 +268,5 @@ elif [ "$format" = "tar" ]; then
     echo "Doppler CLI saved to ./doppler"
   fi
 fi
+
+install_completions || log_debug "Unable to install shell completions"

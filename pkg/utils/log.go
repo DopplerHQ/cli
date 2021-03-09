@@ -53,7 +53,8 @@ func CanLogInfo() bool {
 // LogDebug prints a debug message to stdout
 func LogDebug(s string) {
 	if CanLogDebug() {
-		fmt.Println(color.Blue.Render("Debug:"), s)
+		// log debug messages to stderr
+		fmt.Fprintln(os.Stderr, color.Blue.Render("Debug:"), s)
 	}
 }
 
