@@ -14,6 +14,25 @@ jobs:
       run: sudo ./scripts/install.sh --debug
     - name: Test CLI
       run: doppler --version
+  ubuntu-wget:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Uninstall curl
+      run: sudo apt-get remove -y curl
+    - name: Verify curl has been removed
+      run: |
+        result=$(which curl) || true;
+        if [ -n "$result" ]; then
+          exit 1;
+        fi;
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
   ubuntu-no-package-manager:
     runs-on: ubuntu-latest
     steps:
