@@ -182,7 +182,7 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
     log_debug "Using $(command -v curl) for requests"
     log_debug "Downloading binary from $url"
     # when this fails print the exit code
-    headers=$(curl --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
+    headers=$(curl --tlsv1.2 --proto "=https" --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
       exit_code="$headers"
       echo "ERROR: curl failed with exit code $exit_code"
@@ -197,17 +197,28 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
     if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
       # download signature
       log_debug "Download binary signature from $sig_url"
-      curl --fail --silent --retry 3 -o "$sig_filename" -LN "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
+      curl --fail --tlsv1.2 --proto "=https" --silent --retry 3 -o "$sig_filename" -LN "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
 
       # download public key
       log_debug "Download public key from $key_url"
-      curl --fail --silent --retry 3 -o "$key_filename" -LN "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
+      curl --fail --tlsv1.2 --proto "=https" --silent --retry 3 -o "$key_filename" -LN "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
     fi
   else
     log_debug "Using $(command -v wget) for requests"
+
+    # determine what features are supported by this version of wget (BusyBox wget is limited)
+    security_flags="--secure-protocol=TLSv1_2"
+    (wget --help 2>&1 | head -1 | grep -iv busybox > /dev/null 2>&1) || security_flags=""
+    if [ -z "$security_flags" ]; then
+      log_debug "Skipping additional security flags that are unsupported by BusyBox wget"
+    fi
+
     log_debug "Downloading binary from $url"
+
     # when this fails print the exit code
-    headers=$(wget -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
+    # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
+    # shellcheck disable=SC2086
+    headers=$(wget $security_flags -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
     if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
       exit_code="$headers"
       echo "ERROR: wget failed with exit code $exit_code"
@@ -222,11 +233,15 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
     if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
       # download signature
       log_debug "Download binary signature from $sig_url"
-      wget -q -t 3 -S -O "$sig_filename" "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
+      # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
+      # shellcheck disable=SC2086
+      wget $security_flags -q -t 3 -S -O "$sig_filename" "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
 
       # download public key
       log_debug "Download public key from $key_url"
-      wget -q -t 3 -S -O "$key_filename" "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
+      # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
+      # shellcheck disable=SC2086
+      wget $security_flags -q -t 3 -S -O "$key_filename" "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
     fi
   fi
 
