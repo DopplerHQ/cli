@@ -3,7 +3,7 @@ name: Test install.sh
 on: [push]
 
 jobs:
-  ubuntu:
+  ubuntu-bash:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -11,7 +11,89 @@ jobs:
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
+      shell: bash
       run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-sh:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Uninstall bash
+      run: sudo apt-get remove -y --allow-remove-essential bash
+    - name: Verify bash has been removed
+      run: |
+        result=$(which bash) || true;
+        if [ -n "$result" ]; then
+          exit 1;
+        fi;
+    - name: Install CLI
+      shell: sh
+      run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-wget:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Uninstall curl
+      run: sudo apt-get remove -y curl
+    - name: Verify curl has been removed
+      run: |
+        result=$(which curl) || true;
+        if [ -n "$result" ]; then
+          exit 1;
+        fi;
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-no-gpg:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Uninstall gnupg
+      run: |
+        sudo apt-get remove -y gnupg;
+        sudo mv /usr/bin/gpg /usr/bin/gpg.old
+    - name: Verify gnupg has been removed
+      run: |
+        result=$(which gpg) || true;
+        if [ -n "$result" ]; then
+          exit 1;
+        fi;
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug
+    - name: Test CLI
+      run: doppler --version
+  ubuntu-no-verify-signature:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Uninstall gnupg
+      run: |
+        sudo apt-get remove -y gnupg;
+        sudo mv /usr/bin/gpg /usr/bin/gpg.old
+    - name: Verify gnupg has been removed
+      run: |
+        result=$(which gpg) || true;
+        if [ -n "$result" ]; then
+          exit 1;
+        fi;
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug --no-verify-signature
     - name: Test CLI
       run: doppler --version
   ubuntu-no-package-manager:

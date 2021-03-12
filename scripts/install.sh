@@ -6,8 +6,12 @@ DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
 USE_PACKAGE_MANAGER=1
+VERIFY_SIGNATURE=1
+
 tempdir=""
 filename=""
+sig_filename=""
+key_filename=""
 
 cleanup() {
   exit_code=$?
@@ -81,6 +85,11 @@ for arg; do
   if [ "$arg" = "--no-package-manager" ]; then
     USE_PACKAGE_MANAGER=0
   fi
+
+  if [ "$arg" = "--no-verify-signature" ]; then
+    VERIFY_SIGNATURE=0
+    echo "Disabling signature verification, this is not recommended"
+  fi
 done
 
 # identify OS
@@ -143,6 +152,19 @@ fi
 log_debug "Detected format '$format'"
 
 url="https://cli.doppler.com/download?os=$os&arch=$arch&format=$format"
+sig_url="https://cli.doppler.com/download/signature?os=$os&arch=$arch&format=$format"
+key_url="https://cli.doppler.com/keys/public"
+
+if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
+  log_debug "Checking for gpg binary"
+  if [ ! -x "$(command -v gpg)" ]; then
+    log_debug "Unable to find gpg binary, skipping signature verification"
+    VERIFY_SIGNATURE=0
+    echo "WARNING: Skipping signature verification due to no available gpg binary"
+    echo "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
+    echo "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
+  fi
+fi
 
 # download binary
 if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
@@ -153,6 +175,8 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   echo "Downloading latest release"
   file="doppler-download"
   filename="$tempdir/$file"
+  sig_filename="$filename.sig"
+  key_filename="$tempdir/publickey.gpg"
 
   if [ -x "$(command -v curl)" ]; then
     log_debug "Using $(command -v curl) for requests"
@@ -169,6 +193,16 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
       fi
       clean_exit 1
     fi
+
+    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
+      # download signature
+      log_debug "Download binary signature from $sig_url"
+      curl --fail --silent --retry 3 -o "$sig_filename" -LN "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
+
+      # download public key
+      log_debug "Download public key from $key_url"
+      curl --fail --silent --retry 3 -o "$key_filename" -LN "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
+    fi
   else
     log_debug "Using $(command -v wget) for requests"
     log_debug "Downloading binary from $url"
@@ -183,6 +217,16 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
         echo "Ensure that CA Certificates are installed for your distribution"
       fi
       clean_exit 1
+    fi
+
+    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
+      # download signature
+      log_debug "Download binary signature from $sig_url"
+      wget -q -t 3 -S -O "$sig_filename" "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
+
+      # download public key
+      log_debug "Download public key from $key_url"
+      wget -q -t 3 -S -O "$key_filename" "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
     fi
   fi
 
@@ -205,6 +249,14 @@ fi
 
 tag=$(echo "$headers" | sed -n 's/^[[:space:]]*x-cli-version: \(v[0-9]*\.[0-9]*\.[0-9]*\)[[:space:]]*$/\1/p')
 log_debug "Downloaded CLI $tag"
+
+if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
+  log_debug "Verifying GPG signature"
+  gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (echo "Failed to verify binary signature" && clean_exit 1)
+  log_debug "Signature successfully verified!"
+else
+  log_debug "Skipping signature verification"
+fi
 
 if [ "$format" = "deb" ]; then
   mv -f "$filename" "$filename.deb"
