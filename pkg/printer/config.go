@@ -27,11 +27,11 @@ import (
 
 // ScopedConfig print scoped config
 func ScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
-	ScopedConfigSource(conf, jsonFlag, false)
+	ScopedConfigSource(conf, jsonFlag, false, true)
 }
 
 // ScopedConfigSource print scoped config with source
-func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
+func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool, obfuscateToken bool) {
 	pairs := models.ScopedPairs(&conf)
 
 	if jsonFlag {
@@ -45,6 +45,7 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 				if confMap[scope] == nil {
 					confMap[scope] = map[string]string{}
 				}
+
 				confMap[scope][name] = value
 			}
 		}
@@ -58,7 +59,13 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 	for name, pair := range pairs {
 		if *pair != (models.ScopedOption{}) {
 			translatedName := configuration.TranslateConfigOption(name)
-			row := []string{translatedName, pair.Value, pair.Scope}
+
+			value := pair.Value
+			if obfuscateToken && name == models.ConfigToken.String() {
+				value = utils.RedactAuthToken(value)
+			}
+
+			row := []string{translatedName, value, pair.Scope}
 			if source {
 				row = append(row, pair.Source)
 			}
