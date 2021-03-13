@@ -7,6 +7,7 @@ INSTALL=1
 CLEAN_EXIT=0
 USE_PACKAGE_MANAGER=1
 VERIFY_SIGNATURE=1
+FORCE_VERIFY_SIGNATURE=0
 
 tempdir=""
 filename=""
@@ -90,6 +91,11 @@ for arg; do
     VERIFY_SIGNATURE=0
     echo "Disabling signature verification, this is not recommended"
   fi
+
+  if [ "$arg" = "--verify-signature" ]; then
+    VERIFY_SIGNATURE=1
+    FORCE_VERIFY_SIGNATURE=1
+  fi
 done
 
 # identify OS
@@ -158,11 +164,17 @@ key_url="https://cli.doppler.com/keys/public"
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
   log_debug "Checking for gpg binary"
   if [ ! -x "$(command -v gpg)" ]; then
-    log_debug "Unable to find gpg binary, skipping signature verification"
-    VERIFY_SIGNATURE=0
-    echo "WARNING: Skipping signature verification due to no available gpg binary"
-    echo "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
-    echo "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
+    if [ "$FORCE_VERIFY_SIGNATURE" -eq 1 ]; then
+      echo "ERROR: Unable to find gpg binary for signature verficiation"
+      echo "You can resolve this error by installing your system's gnupg package"
+      clean_exit 1
+    else
+      log_debug "Unable to find gpg binary, skipping signature verification"
+      VERIFY_SIGNATURE=0
+      echo "WARNING: Skipping signature verification due to no available gpg binary"
+      echo "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
+      echo "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
+    fi
   fi
 fi
 
