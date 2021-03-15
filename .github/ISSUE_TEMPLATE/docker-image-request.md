@@ -3,7 +3,7 @@ name: Docker image request
 about: Request support for a base image.
 title: "[DOCKER]"
 labels: enhancement
-assignees: bvallelunga, Piccirello
+assignees: Piccirello
 
 ---
 
