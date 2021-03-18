@@ -128,17 +128,20 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		client.Timeout = TimeoutDuration
 	}
 
-	transport := &http.Transport{
-		// disable keep alives to prevent multiple CLI instances from exhausting the
-		// OS's available network sockets. this adds a negligible performance penalty
-		DisableKeepAlives: true,
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
 	}
 	// set TLS config
 	// #nosec G402
 	if !verifyTLS {
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		tlsConfig.InsecureSkipVerify = true
 	}
-	client.Transport = transport
+	client.Transport = &http.Transport{
+		// disable keep alives to prevent multiple CLI instances from exhausting the
+		// OS's available network sockets. this adds a negligible performance penalty
+		DisableKeepAlives: true,
+		TLSClientConfig:   tlsConfig,
+	}
 
 	startTime := time.Now()
 	var response *http.Response

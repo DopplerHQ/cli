@@ -1,0 +1,17 @@
+name: Test new release
+
+on: [release]
+
+jobs:
+  verify-gpg-signature:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install CLI
+      shell: bash
+      run: curl --tlsv1.2 --proto "=https" -Ls https://cli.doppler.com/install.sh | sudo sh -s -- --debug --verify-signature
+    - name: Test CLI
+      run: doppler --version
