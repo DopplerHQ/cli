@@ -16,6 +16,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
@@ -41,7 +43,13 @@ var openDashboardCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		err := open.Run(localConfig.DashboardHost.Value)
+		project := localConfig.EnclaveProject.Value
+		config := localConfig.EnclaveConfig.Value
+		url := localConfig.DashboardHost.Value
+		if project != "" && config != "" {
+			url = url + fmt.Sprintf("/workplace/projects/%s/configs/%s", project, config)
+		}
+		err := open.Run(url)
 		if err != nil {
 			utils.HandleError(err)
 		}
