@@ -794,3 +794,31 @@ func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 
 	return Error{}
 }
+
+// ImportTemplate import projects from a template file
+func ImportTemplate(host string, verifyTLS bool, apiKey string, template []byte) ([]models.ProjectInfo, Error) {
+	reqBody := map[string]interface{}{}
+	reqBody["template"] = string(template)
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Invalid template"}
+	}
+
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/workplace/template/import", []queryParam{}, body)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to import project(s)", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	var info []models.ProjectInfo
+	for _, project := range result["projects"].([]interface{}) {
+		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
+		info = append(info, projectInfo)
+	}
+	return info, Error{}
+}

@@ -1,0 +1,23 @@
+# Example project for quick initialization
+projects:
+  - name: doppler-cli
+    description: Official Doppler CLI
+    environments:
+      - slug: dev
+        name: Development
+        configs:
+          - slug: dev
+          - slug: dev_ruud
+      - slug: ci
+        name: Continuous Integration
+        configs:
+          - slug: ci
+      - slug: prod
+        name: Production
+        configs:
+          - slug: prod
+    secrets:
+      # Never store sensitive secrets in this yaml file
+      dev:
+        EXAMPLE_CONFIG: NOT_SO_SECRET_VALUE
+        EXAMPLE_SECRET: ""
