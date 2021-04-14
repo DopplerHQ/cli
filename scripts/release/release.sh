@@ -21,8 +21,5 @@ echo "$GOOGLE_CREDS" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGIST
 
 # pull in latest docker images
 docker pull alpine
-docker pull node:lts-alpine
-docker pull python:3-alpine
-docker pull ruby:2-alpine
 
 GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist
