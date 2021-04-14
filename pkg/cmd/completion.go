@@ -53,6 +53,15 @@ var completionInstallCmd = &cobra.Command{
 	Short:     "Install completions for the current shell",
 	ValidArgs: []string{"bash"},
 	Args:      cobra.MaximumNArgs(1),
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// This function is used to prevent calling the global PersistentPreRun handler, which is responsible for creating the config directory.
+		// This command is called by our install.sh script, which is often run with `sudo`. If the effective user differs from the real user,
+		// the config directory will be created with the wrong ownership, resulting in an error on all subsequent CLI runs. Thus we opt to skip
+		// creation entirely since this command doesn't rely on any config settings.
+
+		// ensure we still process flags like debug, silent, etc.
+		loadFlags(cmd)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		shell := getShell(args)
 
