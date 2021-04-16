@@ -14,6 +14,9 @@ test:
 test-e2e:
 	./tests/e2e.sh
 
+test-packages:
+	./tests/packages.sh
+
 test-release:
 	doppler run -- goreleaser release --snapshot --skip-publish --rm-dist
 
