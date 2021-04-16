@@ -21,6 +21,11 @@ if [ "$GIT_BRANCH" != "master" ]; then
   exit 1
 fi
 
+if [ -z "$(command -v cloudsmith)" ]; then
+  echo "cloudsmith-cli must be installed"
+  exit 1
+fi
+
 echo "Using $(go version)"
 read -rp "Continue? (y/n) " ok
 if [ "$ok" != "y" ] && [ "$ok" != "Y" ] && [ "$ok" != "yes" ]; then
