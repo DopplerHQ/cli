@@ -33,3 +33,7 @@ publishToCloudsmith deb any-distro any-version "$PACKAGES"
 # publish rpm packages to cloudsmith
 PACKAGES=$(find dist/*.rpm  -type f)
 publishToCloudsmith rpm any-distro any-version "$PACKAGES"
+
+# publish alpine packages to cloudsmith
+PACKAGES=$(find dist/*.apk  -type f)
+publishToCloudsmith alpine alpine any-version "$PACKAGES"

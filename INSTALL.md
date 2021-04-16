@@ -36,6 +36,28 @@ $ scoop update doppler
 
 ## Linux
 
+### Alpine (apk)
+
+```sh
+# add Doppler's RSA key
+$ wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub
+
+# add Doppler's apk repo
+$ echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' | tee -a /etc/apk/repositories
+
+# fetch and install latest doppler cli
+$ apk add doppler
+
+# (optional) print cli version
+$ doppler --version
+```
+
+To update:
+
+```sh
+$ apk upgrade doppler
+```
+
 ### Debian/Ubuntu (apt)
 
 ```sh
@@ -109,7 +131,7 @@ You can install the latest version of the CLI via GitHub Action. See the cli-act
 
 You can download all binaries and release artifacts from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are built for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
 
-You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
+You can also directly download the generated `.deb`, `.rpm`, and `.apk` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
 
 # Verify Signature
 
