@@ -145,6 +145,7 @@ nfpms:
     formats:
       - deb
       - rpm
+      - apk
     contents:
       - src: ./completions/doppler.bash
         dst: /etc/bash_completion.d/doppler

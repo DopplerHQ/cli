@@ -36,14 +36,39 @@ $ scoop update doppler
 
 ## Linux
 
+### Alpine (apk)
+
+```sh
+# add Doppler's RSA key
+$ wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub
+
+# add Doppler's apk repo
+$ echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' | tee -a /etc/apk/repositories
+
+# fetch and install latest doppler cli
+$ apk add doppler
+
+# (optional) print cli version
+$ doppler --version
+```
+
+To update:
+
+```sh
+$ apk upgrade doppler
+```
+
 ### Debian/Ubuntu (apt)
 
 ```sh
-# add Bintray's GPG key
-$ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 379CE192D401AB61
+# install pre-reqs
+$ apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg sudo
+
+# add Doppler's GPG key
+$ curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo apt-key add -
 
 # add Doppler's apt repo
-$ echo "deb https://dl.bintray.com/dopplerhq/doppler-deb stable main" | sudo tee /etc/apt/sources.list.d/dopplerhq-doppler.list
+$ echo "deb https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
 
 # fetch and install latest doppler cli
 $ sudo apt-get update && sudo apt-get install doppler
@@ -61,8 +86,11 @@ $ sudo apt-get update && sudo apt-get upgrade doppler
 ### RedHat/CentOS (yum)
 
 ```sh
+# add Doppler's GPG key
+$ sudo rpm --import 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key'
+
 # add Doppler's yum repo
-$ sudo wget https://bintray.com/dopplerhq/doppler-rpm/rpm -O /etc/yum.repos.d/bintray-dopplerhq-doppler.repo
+$ sudo curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/config.rpm.txt' > /etc/yum.repos.d/doppler-cli.repo
 
 # update packages and install latest doppler cli
 $ sudo yum update && sudo yum install doppler
@@ -103,7 +131,7 @@ You can install the latest version of the CLI via GitHub Action. See the cli-act
 
 You can download all binaries and release artifacts from the [Releases](https://github.com/DopplerHQ/cli/releases/latest) page. Binaries are built for macOS, Linux, Windows, FreeBSD, OpenBSD, and NetBSD, and for 32-bit, 64-bit, armv6/armv7, and armv6/armv7 64-bit architectures.
 
-You can also directly download the generated `.deb` and `.rpm` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
+You can also directly download the generated `.deb`, `.rpm`, and `.apk` packages. If a binary does not yet exist for the OS/architecture you use, please open a GitHub Issue.
 
 # Verify Signature
 
