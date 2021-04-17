@@ -12,7 +12,10 @@ test:
 	go test ./pkg/... -v
 
 test-e2e:
-	./tests.sh
+	./tests/e2e.sh
+
+test-packages:
+	./tests/packages.sh
 
 test-release:
 	doppler run -- goreleaser release --snapshot --skip-publish --rm-dist
