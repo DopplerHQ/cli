@@ -261,6 +261,9 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   if [ "$status" -ne 302 ]; then
     echo "ERROR: Download failed with status $status"
 
+    log_debug "Response headers:"
+    log_debug "$headers"
+
     if [ "$status" -eq 404 ]; then
       echo ""
       echo "Please report this issue:"
