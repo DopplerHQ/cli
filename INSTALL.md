@@ -112,7 +112,7 @@ You can bypass package managers and quickly install the latest version of the CL
 Note that this installation method is most recommended for ephemeral environments like CI jobs. Longer-lived environments that would like to receive updates via  package manager should install the CLI via that package manager.
 
 ```sh
-(curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh
+(curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
 ```
 
 You can find the source `install.sh` file in this repo's `scripts` directory.

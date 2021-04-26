@@ -12,6 +12,6 @@ jobs:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
       shell: bash
-      run: curl --tlsv1.2 --proto "=https" -Ls https://cli.doppler.com/install.sh | sudo sh -s -- --debug --verify-signature
+      run: curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sudo sh -s -- --debug --verify-signature
     - name: Test CLI
       run: doppler --version
