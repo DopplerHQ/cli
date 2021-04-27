@@ -184,7 +184,7 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   tempdir="$(mktemp -d ~/.tmp.XXXXXXXX)"
   log_debug "Using temp directory $tempdir"
 
-  echo "Downloading latest release"
+  echo "Downloading Doppler CLI"
   file="doppler-download"
   filename="$tempdir/$file"
   sig_filename="$filename.sig"
