@@ -52,7 +52,7 @@ $ scoop update doppler
 This option is recommend for CI jobs and other environments that won't make use of package manager updates.
 
 ```sh
-$ (curl -Ls https://cli.doppler.com/install.sh || wget -qO- https://cli.doppler.com/install.sh) | sh
+$ (curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh || wget -t 3 -qO- https://cli.doppler.com/install.sh) | sh
 ```
 
 For more info, see the [Install](INSTALL.md#shell-script) page.
