@@ -219,7 +219,7 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
     log_debug "Using $(command -v wget) for requests"
 
     # determine what features are supported by this version of wget (BusyBox wget is limited)
-    security_flags="--secure-protocol=TLSv1_2"
+    security_flags="--secure-protocol=TLSv1_2 --https-only"
     (wget --help 2>&1 | head -1 | grep -iv busybox > /dev/null 2>&1) || security_flags=""
     if [ -z "$security_flags" ]; then
       log_debug "Skipping additional security flags that are unsupported by BusyBox wget"
