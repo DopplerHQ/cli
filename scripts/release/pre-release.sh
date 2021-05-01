@@ -53,6 +53,8 @@ else
   VERSION=$(./scripts/release/version.sh "-$reltype" "$PREV_VERSION")
 fi
 
+export CLI_VERSION="$VERSION"
+
 echo "Using version $VERSION"
 echo "Previous version: $PREV_VERSION"
 

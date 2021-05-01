@@ -37,3 +37,8 @@ publishToCloudsmith rpm any-distro any-version "$PACKAGES"
 # publish alpine packages to cloudsmith
 PACKAGES=$(find dist/*.apk  -type f)
 publishToCloudsmith alpine alpine any-version "$PACKAGES"
+
+# send Slack notification
+MESSAGE="Doppler CLI $CLI_VERSION has been released."
+curl --tlsv1.2 --proto "=https" -s -X "POST" "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/x-www-form-urlencoded; charset=utf-8' \
+  --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}"
