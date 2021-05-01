@@ -22,4 +22,4 @@ echo "$GOOGLE_CREDS" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGIST
 # pull in latest docker images
 docker pull alpine
 
-GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist
+GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist --parallelism=4
