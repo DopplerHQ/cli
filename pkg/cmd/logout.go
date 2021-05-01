@@ -52,25 +52,32 @@ func revokeToken(cmd *cobra.Command, args []string) {
 
 	_, err := http.RevokeAuthToken(localConfig.APIHost.Value, verifyTLS, token)
 	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+		// ignore error if token was invalid
+		invalidToken := err.Code >= 400 && err.Code < 500
+		if invalidToken {
+			utils.LogDebug("Failed to revoke token")
+			utils.LogDebugError(err.Unwrap())
+		} else {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
 	}
 
 	if updateConfig {
 		// remove key from config
 		for scope, config := range configuration.AllConfigs() {
 			if config.Token == token {
-				updatedConfig := map[string]string{models.ConfigToken.String(): ""}
+				optionsToUnset := []string{models.ConfigToken.String()}
 
 				if updateEnclaveConfig {
 					if config.EnclaveProject != "" {
-						updatedConfig[models.ConfigEnclaveProject.String()] = ""
+						optionsToUnset = append(optionsToUnset, models.ConfigEnclaveProject.String())
 					}
 					if config.EnclaveConfig != "" {
-						updatedConfig[models.ConfigEnclaveConfig.String()] = ""
+						optionsToUnset = append(optionsToUnset, models.ConfigEnclaveConfig.String())
 					}
 				}
 
-				configuration.Set(scope, updatedConfig)
+				configuration.Unset(scope, optionsToUnset)
 			}
 		}
 	}
