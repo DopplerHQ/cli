@@ -28,7 +28,7 @@ cleanup() {
     delete_tempdir
   fi
 
-  exit "$exit_code"
+  clean_exit "$exit_code"
 }
 trap cleanup EXIT
 trap cleanup INT
