@@ -8,6 +8,7 @@ CLEAN_EXIT=0
 USE_PACKAGE_MANAGER=1
 VERIFY_SIGNATURE=1
 FORCE_VERIFY_SIGNATURE=0
+DISABLE_CURL=0
 
 tempdir=""
 filename=""
@@ -233,6 +234,10 @@ for arg; do
     VERIFY_SIGNATURE=1
     FORCE_VERIFY_SIGNATURE=1
   fi
+
+  if [ "$arg" = "--disable-curl" ]; then
+    DISABLE_CURL=1
+  fi
 done
 
 # identify OS
@@ -322,7 +327,7 @@ curl_binary="$(command -v curl)"
 wget_binary="$(command -v wget)"
 
 # check if curl is available
-[ -x "$curl_binary" ]
+[ "$DISABLE_CURL" -eq 0 ] && [ -x "$curl_binary" ]
 curl_installed=$? # 0 = yes
 
 # check if wget is available
