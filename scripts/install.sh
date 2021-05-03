@@ -8,6 +8,7 @@ CLEAN_EXIT=0
 USE_PACKAGE_MANAGER=1
 VERIFY_SIGNATURE=1
 FORCE_VERIFY_SIGNATURE=0
+DISABLE_CURL=0
 
 tempdir=""
 filename=""
@@ -28,7 +29,7 @@ cleanup() {
     delete_tempdir
   fi
 
-  exit "$exit_code"
+  clean_exit "$exit_code"
 }
 trap cleanup EXIT
 trap cleanup INT
@@ -38,11 +39,21 @@ clean_exit() {
   exit "$1"
 }
 
+log() {
+  # print to stderr
+  >&2 echo "$1"
+}
+
 log_debug() {
   if [ "$DEBUG" -eq 1 ]; then
     # print to stderr
     >&2 echo "DEBUG: $1"
   fi
+}
+
+log_warning() {
+  # print to stderr
+  >&2 echo "WARNING: $1"
 }
 
 delete_tempdir() {
@@ -73,6 +84,133 @@ install_completions() {
   doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
 }
 
+curl_download() {
+  url="$1"
+  output_file="$2"
+  component="$3"
+
+  # allow curl to fail w/o exiting
+  set +e
+  headers=$(curl --tlsv1.2 --proto "=https" -w "%{http_code}" --silent --retry 5 -o "$output_file" -LN -D - "$url" 2>&1)
+  exit_code=$?
+  set -e
+
+  status_code="$(echo "$headers" | tail -1)"
+
+  if [ "$status_code" -ne 200 ]; then
+    log_debug "Request failed with http status $status_code"
+    log_debug "Response headers:"
+    log_debug "$headers"
+  fi
+
+  if [ "$exit_code" -ne 0 ]; then
+    log "ERROR: curl failed with exit code $exit_code"
+
+    if [ "$exit_code" -eq 60 ]; then
+      log ""
+      log "Ensure the ca-certificates package is installed for your distribution"
+    fi
+    clean_exit 1
+  fi
+
+  if [ "$status_code" -eq 200 ]; then
+    if [ "$component" = "Binary" ]; then
+      parse_version_header "$headers"
+    fi
+  fi
+
+  echo "$status_code"
+}
+
+# note: wget does not retry on 5xx
+wget_download() {
+  url="$1"
+  output_file="$2"
+  component="$3"
+
+  security_flags="--secure-protocol=TLSv1_2 --https-only"
+  # determine if using BusyBox wget (bad) or GNU wget (good)
+  (wget --help 2>&1 | head -1 | grep -iv busybox > /dev/null 2>&1) || security_flags=""
+  # only print this warning once per script invocation
+  if [ -z "$security_flags" ] && [ "$component" = "Binary" ]; then
+    log_debug "Skipping additional security flags that are unsupported by BusyBox wget"
+    # log to stderr b/c this function's stdout is parsed
+    log_warning "This system's wget binary is provided by BusyBox. Doppler strongly suggests installing GNU wget, which provides additional security features."
+  fi
+
+  # allow wget to fail w/o exiting
+  set +e
+  # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
+  # shellcheck disable=SC2086
+  headers=$(wget $security_flags -q -t 5 -S -O "$output_file" "$url" 2>&1)
+  exit_code=$?
+  set -e
+
+  status_code="$(echo "$headers" | sed '1!G;h;$!d' | grep HTTP | head -1 | grep -o -E '[0-9]{3}')"
+  # it's possible for this value to be blank, so confirm that it's a valid status code
+  valid_status_code=0
+  if expr "$status_code" : '[0-9][0-9][0-9]$'>/dev/null; then
+    valid_status_code=1
+  fi
+
+  if [ "$exit_code" -ne 0 ]; then
+    if [ "$valid_status_code" -eq 1 ]; then
+      # print the code and continue
+      log_debug "Request failed with http status $status_code"
+      log_debug "Response headers:"
+      log_debug "$headers"
+    else
+      # exit immediately
+      log "ERROR: wget failed with exit code $exit_code"
+
+      if [ "$exit_code" -eq 5 ]; then
+        log ""
+        log "Ensure the ca-certificates package is installed for your distribution"
+      fi
+      clean_exit 1
+    fi
+  fi
+
+  if [ "$status_code" -eq 200 ]; then
+    if [ "$component" = "Binary" ]; then
+      parse_version_header "$headers"
+    fi
+  fi
+
+  echo "$status_code"
+}
+
+parse_version_header() {
+  headers="$1"
+  tag=$(echo "$headers" | sed -n 's/^[[:space:]]*x-cli-version: \(v[0-9]*\.[0-9]*\.[0-9]*\)[[:space:]]*$/\1/p')
+  if [ -n "$tag" ]; then
+    log_debug "Downloaded CLI $tag"
+  fi
+}
+
+check_http_status() {
+  status_code="$1"
+  component="$2"
+
+  if [ "$status_code" -ne 200 ]; then
+    error="ERROR: $component download failed with status code $status_code."
+    if [ "$status_code" -ne 404 ]; then
+      error="${error} Please try again."
+    fi
+
+    echo ""
+    echo "$error"
+
+    if [ "$status_code" -eq 404 ]; then
+      echo ""
+      echo "Please report this issue:"
+      echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unexpected%20404%20using%20CLI%20install%20script"
+    fi
+
+    clean_exit 1
+  fi
+}
+
 # flag parsing
 for arg; do
   if [ "$arg" = "--debug" ]; then
@@ -95,6 +233,10 @@ for arg; do
   if [ "$arg" = "--verify-signature" ]; then
     VERIFY_SIGNATURE=1
     FORCE_VERIFY_SIGNATURE=1
+  fi
+
+  if [ "$arg" = "--disable-curl" ]; then
+    DISABLE_CURL=1
   fi
 done
 
@@ -174,12 +316,26 @@ if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
       echo "WARNING: Skipping signature verification due to no available gpg binary"
       echo "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
       echo "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
+      echo ""
     fi
   fi
 fi
 
-# download binary
-if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
+
+set +e
+curl_binary="$(command -v curl)"
+wget_binary="$(command -v wget)"
+
+# check if curl is available
+[ "$DISABLE_CURL" -eq 0 ] && [ -x "$curl_binary" ]
+curl_installed=$? # 0 = yes
+
+# check if wget is available
+[ -x "$wget_binary" ]
+wget_installed=$? # 0 = yes
+set -e
+
+if [ "$curl_installed" -eq 0 ] || [ "$wget_installed" -eq 0 ]; then
   # create hidden temp dir in user's home directory to ensure no other users have write perms
   tempdir="$(mktemp -d ~/.tmp.XXXXXXXX)"
   log_debug "Using temp directory $tempdir"
@@ -190,95 +346,48 @@ if [ -x "$(command -v curl)" ] || [ -x "$(command -v wget)" ]; then
   sig_filename="$filename.sig"
   key_filename="$tempdir/publickey.gpg"
 
-  if [ -x "$(command -v curl)" ]; then
-    log_debug "Using $(command -v curl) for requests"
-    log_debug "Downloading binary from $url"
-    # when this fails print the exit code
-    headers=$(curl --tlsv1.2 --proto "=https" --silent --retry 3 -o "$filename" -LN -D - "$url" || echo "$?")
-    if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
-      exit_code="$headers"
-      echo "ERROR: curl failed with exit code $exit_code"
+  if [ "$curl_installed" -eq 0 ]; then
+    log_debug "Using $curl_binary for requests"
 
-      if [ "$exit_code" -eq 60 ]; then
-        echo ""
-        echo "Ensure that CA Certificates are installed for your distribution"
-      fi
-      clean_exit 1
+    # download binary
+    log_debug "Downloading binary from $url"
+    status_code=$( curl_download "$url" "$filename" "Binary" )
+    check_http_status "$status_code" "Binary"
+
+    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
+      # download signature
+      log_debug "Downloading binary signature from $sig_url"
+      status_code=$( curl_download "$sig_url" "$sig_filename" "Signature" )
+      check_http_status "$status_code" "Signature"
+
+      # download public key
+      log_debug "Downloading public key from $key_url"
+      status_code=$( curl_download "$key_url" "$key_filename" "Public key" )
+      check_http_status "$status_code" "Public key"
     fi
+  elif [ "$wget_installed" -eq 0 ]; then
+    log_debug "Using $wget_binary for requests"
+
+    log_debug "Downloading binary from $url"
+    status_code=$( wget_download "$url" "$filename" "Binary" )
+    check_http_status "$status_code" "Binary"
 
     if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
       # download signature
       log_debug "Download binary signature from $sig_url"
-      curl --fail --tlsv1.2 --proto "=https" --silent --retry 3 -o "$sig_filename" -LN "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
+      status_code=$( wget_download "$sig_url" "$sig_filename" "Signature" )
+      check_http_status "$status_code" "Signature"
 
       # download public key
       log_debug "Download public key from $key_url"
-      curl --fail --tlsv1.2 --proto "=https" --silent --retry 3 -o "$key_filename" -LN "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
+      status_code=$( wget_download "$key_url" "$key_filename" "Public key" )
+      check_http_status "$status_code" "Public key"
     fi
-  else
-    log_debug "Using $(command -v wget) for requests"
-
-    # determine what features are supported by this version of wget (BusyBox wget is limited)
-    security_flags="--secure-protocol=TLSv1_2"
-    (wget --help 2>&1 | head -1 | grep -iv busybox > /dev/null 2>&1) || security_flags=""
-    if [ -z "$security_flags" ]; then
-      log_debug "Skipping additional security flags that are unsupported by BusyBox wget"
-    fi
-
-    log_debug "Downloading binary from $url"
-
-    # when this fails print the exit code
-    # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
-    # shellcheck disable=SC2086
-    headers=$(wget $security_flags -q -t 3 -S -O "$filename" "$url" 2>&1 || echo "$?")
-    if expr "$headers" : '[0-9][0-9]*$'>/dev/null; then
-      exit_code="$headers"
-      echo "ERROR: wget failed with exit code $exit_code"
-
-      if [ "$exit_code" -eq 5 ]; then
-        echo ""
-        echo "Ensure that CA Certificates are installed for your distribution"
-      fi
-      clean_exit 1
-    fi
-
-    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-      # download signature
-      log_debug "Download binary signature from $sig_url"
-      # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
-      # shellcheck disable=SC2086
-      wget $security_flags -q -t 3 -S -O "$sig_filename" "$sig_url" > /dev/null 2>&1 || (echo "Failed to download signature" && clean_exit 1)
-
-      # download public key
-      log_debug "Download public key from $key_url"
-      # we explicitly disable shellcheck here b/c security_flags isn't parsed properly when quoted
-      # shellcheck disable=SC2086
-      wget $security_flags -q -t 3 -S -O "$key_filename" "$key_url" > /dev/null 2>&1 || (echo "Failed to download public key" && clean_exit 1)
-    fi
-  fi
-
-  status=$(echo "$headers" | head -1 | sed -n 's/^[[:space:]]*HTTP.* \([0-9][0-9][0-9]\).*$/\1/p')
-  if [ "$status" -ne 302 ]; then
-    echo "ERROR: Download failed with status $status"
-
-    log_debug "Response headers:"
-    log_debug "$headers"
-
-    if [ "$status" -eq 404 ]; then
-      echo ""
-      echo "Please report this issue:"
-      echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unexpected%20404%20using%20CLI%20install%20script"
-    fi
-
-    clean_exit 1
   fi
 else
   echo "ERROR: You must have curl or wget installed"
   clean_exit 1
 fi
-
-tag=$(echo "$headers" | sed -n 's/^[[:space:]]*x-cli-version: \(v[0-9]*\.[0-9]*\.[0-9]*\)[[:space:]]*$/\1/p')
-log_debug "Downloaded CLI $tag"
 
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
   log_debug "Verifying GPG signature"
