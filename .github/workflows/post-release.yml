@@ -1,6 +1,6 @@
 name: Test new release
 
-on: [release]
+on: [release, workflow_dispatch]
 
 jobs:
   verify-gpg-signature:
