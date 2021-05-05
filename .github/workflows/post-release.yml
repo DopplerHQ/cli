@@ -15,3 +15,18 @@ jobs:
       run: curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sudo sh -s -- --debug --verify-signature
     - name: Test CLI
       run: doppler --version
+  verify-scoop:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Install Scoop and CLI
+      run: |
+        Set-ExecutionPolicy RemoteSigned -scope CurrentUser
+        iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+        scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
+        scoop install doppler
+        doppler --version
+
