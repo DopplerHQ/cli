@@ -138,6 +138,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 	plain := utils.GetBoolFlag(cmd, "plain")
 	copy := utils.GetBoolFlag(cmd, "copy")
 	raw := utils.GetBoolFlag(cmd, "raw")
+	exitOnMissingSecret := !utils.GetBoolFlag(cmd, "no-exit-on-missing-secret")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -149,6 +150,24 @@ func getSecrets(cmd *cobra.Command, args []string) {
 	secrets, parseErr := models.ParseSecrets(response)
 	if parseErr != nil {
 		utils.HandleError(parseErr, "Unable to parse API response")
+	}
+
+	if exitOnMissingSecret && len(args) > 0 {
+		var missingSecrets []string
+
+		for _, name := range args {
+			if secrets[name] == (models.ComputedSecret{}) {
+				missingSecrets = append(missingSecrets, name)
+			}
+		}
+
+		if len(missingSecrets) > 0 {
+			pluralized := "secrets"
+			if len(missingSecrets) == 1 {
+				pluralized = "secret"
+			}
+			utils.HandleError(fmt.Errorf("Could not find requested %s: %s", pluralized, strings.Join(missingSecrets, ", ")))
+		}
 	}
 
 	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy)
@@ -372,6 +391,7 @@ func init() {
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
