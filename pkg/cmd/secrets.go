@@ -173,7 +173,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	} else {
 		// format: 'doppler secrets set KEY=value'
 		for _, arg := range args {
-			secretArr := strings.Split(arg, "=")
+			secretArr := strings.SplitN(arg, "=", 2)
 			keys = append(keys, secretArr[0])
 			if len(secretArr) < 2 {
 				secrets[secretArr[0]] = ""
