@@ -211,6 +211,13 @@ check_http_status() {
   fi
 }
 
+is_dir_in_path() {
+  dir="$1"
+  found=1
+  (echo "$PATH" | grep -q "$dir:" || echo "$PATH" | grep -q -E "$dir$") || found=0
+  echo "$found"
+}
+
 # flag parsing
 for arg; do
   if [ "$arg" = "--debug" ]; then
@@ -440,11 +447,32 @@ elif [ "$format" = "tar" ]; then
   # install
   if [ "$INSTALL" -eq 1 ]; then
     echo 'Installing...'
-    log_debug "Moving binary to /usr/local/bin"
-    mv -f "$extract_dir/doppler" /usr/local/bin
-    if [ ! -x "$(command -v doppler)" ]; then
-      log_debug "Binary not in PATH, moving to /usr/bin"
-      mv -f /usr/local/bin/doppler /usr/bin/doppler
+    binary_installed=0
+
+    install_dir="/usr/local/bin"
+    if [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
+      log_debug "Moving binary to $install_dir"
+      mv -f "$extract_dir/doppler" $install_dir
+      binary_installed=1
+    fi
+
+    install_dir="/usr/bin"
+    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
+      log_debug "Moving binary to $install_dir"
+      mv -f "$extract_dir/doppler" $install_dir
+      binary_installed=1
+    fi
+
+    install_dir="/usr/sbin"
+    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
+      log_debug "Moving binary to $install_dir"
+      mv -f "$extract_dir/doppler" $install_dir
+      binary_installed=1
+    fi
+
+    if [ "$binary_installed" -eq 0 ]; then
+      log "No supported bin directories are available; please adjust your PATH"
+      clean_exit 1
     fi
   else
     log_debug "Moving binary to $(pwd) (cwd)"
