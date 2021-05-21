@@ -440,11 +440,16 @@ elif [ "$format" = "tar" ]; then
   # install
   if [ "$INSTALL" -eq 1 ]; then
     echo 'Installing...'
-    log_debug "Moving binary to /usr/local/bin"
-    mv -f "$extract_dir/doppler" /usr/local/bin
-    if [ ! -x "$(command -v doppler)" ]; then
-      log_debug "Binary not in PATH, moving to /usr/bin"
-      mv -f /usr/local/bin/doppler /usr/bin/doppler
+    if [ -d "/usr/local/bin" ]; then
+      log_debug "Moving binary to /usr/local/bin"
+      mv -f "$extract_dir/doppler" /usr/local/bin
+      if [ ! -x "$(command -v doppler)" ]; then
+        log_debug "Binary not in PATH, moving to /usr/bin"
+        mv -f /usr/local/bin/doppler /usr/bin/doppler
+      fi
+    else
+      log_debug "Moving binary to /usr/bin"
+      mv -f "$extract_dir/doppler" /usr/bin
     fi
   else
     log_debug "Moving binary to $(pwd) (cwd)"
