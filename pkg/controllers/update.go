@@ -65,7 +65,13 @@ func RunInstallScript() (bool, string, Error) {
 		fmt.Println(strOut)
 	}
 	if err != nil {
-		return false, "", Error{Err: err, Message: "Unable to install the latest Doppler CLI"}
+		message := "Unable to install the latest Doppler CLI"
+		// check for errors indicating lack of perms
+		if strings.Contains(strOut, "dpkg: error: requested operation requires superuser privilege") {
+			message = "Error: update failed due to improper permissions\nPlease re-run with `sudo` or run as the root user"
+		}
+
+		return false, "", Error{Err: err, Message: message}
 	}
 
 	// find installed version within script output
