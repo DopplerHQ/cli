@@ -20,8 +20,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
@@ -107,6 +109,32 @@ Print your secrets to stdout in env format without writing to the filesystem
 $ doppler secrets download --format=env --no-file`,
 	Args: cobra.MaximumNArgs(1),
 	Run:  downloadSecrets,
+}
+
+var secretsSubstituteCmd = &cobra.Command{
+	Use:   "substitute <filepath>",
+	Short: "Substitute secrets into a template file",
+	Long:  "Substitute secrets into a template file. See https://golang.org/pkg/text/template/ for full syntax",
+	Example: `$ cat template.yaml
+{{- /* Full comment support */ -}}
+host: {{.API_HOST}}
+port: {{.API_PORT}}
+
+{{if .OPTIONAL_SECRET}}
+optional: {{.OPTIONAL_SECRET}}
+{{- /* Only rendered if OPTIONAL_SECRET IS PRESENT */ -}}
+{{end}}
+
+{{/* tojson and fromjson have been added to support parsing JSON and stringifying values: */ -}}
+Multiline: {{tojson .MULTILINE_SECRET}}
+JSON Secret: {{tojson .JSON_SECRET}}
+$ doppler secrets template template.yaml
+host: 127.0.0.1
+port: 8080
+Multiline: "Line one\r\nLine two"
+JSON Secret: "{\"logging\": \"info\"}"`,
+	Args: cobra.ExactArgs(1),
+	Run:  substituteSecrets,
 }
 
 func secrets(cmd *cobra.Command, args []string) {
@@ -380,6 +408,88 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	utils.Log(fmt.Sprintf("Downloaded secrets to %s", filePath))
 }
 
+func substituteSecrets(cmd *cobra.Command, args []string) {
+	localConfig := configuration.LocalConfig(cmd)
+
+	utils.RequireValue("token", localConfig.Token.Value)
+
+	filePath, err := utils.GetFilePath(args[0])
+	if err != nil {
+		utils.HandleError(err, "Unable to parse template file path")
+	}
+
+	var file []byte
+	file, err = ioutil.ReadFile(filePath) // #nosec G304
+	if err != nil {
+		utils.HandleError(err, "Unable to read template file")
+	}
+
+	var outputFilePath string
+	output := cmd.Flag("output").Value.String()
+	if len(output) != 0 {
+		outputFilePath, err = utils.GetFilePath(output)
+		if err != nil {
+			utils.HandleError(err, "Unable to parse output file path")
+		}
+	}
+
+	funcs := map[string]interface{}{
+		"tojson": func(value string) (string, error) {
+			body, err := json.Marshal(value)
+			if err != nil {
+				return "", err
+			}
+			return string(body), nil
+		},
+		"fromjson": func(value string) (interface{}, error) {
+			var result interface{}
+			err = json.Unmarshal([]byte(value), &result)
+			if err != nil {
+				return "", err
+			}
+			return result, nil
+		},
+	}
+	template, err := template.New("Secrets").Funcs(funcs).Parse(string(file))
+	if err != nil {
+		utils.HandleError(err, "Unable to parse template text")
+	}
+
+	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+	if !responseErr.IsNil() {
+		utils.HandleError(responseErr.Unwrap(), responseErr.Message)
+	}
+
+	secrets, parseErr := models.ParseSecrets(response)
+	if parseErr != nil {
+		utils.HandleError(parseErr, "Unable to parse API response")
+	}
+
+	secretsMap := map[string]interface{}{}
+	for _, secret := range secrets {
+		secretsMap[secret.Name] = secret.ComputedValue
+	}
+
+	buffer := new(strings.Builder)
+	err = template.Execute(buffer, secretsMap)
+	if err != nil {
+		utils.HandleError(err, "Unable to render template")
+	}
+
+	if outputFilePath != "" {
+		err = ioutil.WriteFile(outputFilePath, []byte(buffer.String()), 0600)
+		if err != nil {
+			utils.HandleError(err, "Unable to save rendered data to file")
+		}
+		utils.Log(fmt.Sprintf("Rendered data saved to %s", outputFilePath))
+	} else {
+		_, err = os.Stdout.WriteString(buffer.String())
+		if err != nil {
+			utils.HandleError(err, "Unable to write rendered data to stdout")
+		}
+	}
+}
+
 func init() {
 	secretsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
@@ -424,6 +534,11 @@ func init() {
 	secretsDownloadCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	secretsDownloadCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	secretsCmd.AddCommand(secretsDownloadCmd)
+
+	secretsSubstituteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	secretsSubstituteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
+	secretsCmd.AddCommand(secretsSubstituteCmd)
 
 	rootCmd.AddCommand(secretsCmd)
 }
