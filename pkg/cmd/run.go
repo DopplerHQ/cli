@@ -151,6 +151,9 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		}
 
 		if err != nil {
+			if strings.HasPrefix(err.Error(), "exec") || strings.HasPrefix(err.Error(), "fork/exec") {
+				utils.LogError(err)
+			}
 			utils.LogDebugError(err)
 		}
 
