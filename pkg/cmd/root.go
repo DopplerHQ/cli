@@ -52,9 +52,11 @@ var rootCmd = &cobra.Command{
 		}
 
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
+		canPrompt := !utils.GetBoolFlagIfChanged(cmd, "no-prompt", false)
 		// only run version check if we can print the results
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
-		if utils.CanLogInfo() && !plain {
+		// also don't want to display updates if user doesn't want to be prompted (--no-prompt)
+		if utils.CanLogInfo() && !plain && canPrompt {
 			checkVersion(cmd.CalledAs())
 		}
 	},
