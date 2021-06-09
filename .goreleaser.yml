@@ -3,6 +3,7 @@ project_name: doppler
 before:
   hooks:
     - go mod download
+    - go mod tidy
     - ./scripts/completions.sh
 
 builds:
