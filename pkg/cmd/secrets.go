@@ -211,7 +211,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	secrets := map[string]interface{}{}
 	var keys []string
 
-	if len(args) == 2 {
+	if len(args) == 2 && !strings.Contains(args[0], "=") {
 		// format: 'doppler secrets set KEY value'
 		key := args[0]
 		value := args[1]
