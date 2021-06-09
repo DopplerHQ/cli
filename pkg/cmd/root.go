@@ -57,7 +57,7 @@ var rootCmd = &cobra.Command{
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt)
 		if utils.CanLogInfo() && !plain && canPrompt {
-			checkVersion(cmd.CalledAs())
+			checkVersion(cmd.CommandPath())
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -69,9 +69,14 @@ var rootCmd = &cobra.Command{
 }
 
 func checkVersion(command string) {
-	// disable version checking on the "run" command and "secrets download" command
-	if command == "run" || command == "download" {
-		return
+	// disable version checking on commands commonly used in production workflows
+	// also disable when explicitly calling 'update' command to avoid checking twice
+	disabledCommands := []string{"run", "secrets download", "update"}
+	for _, disabledCommand := range disabledCommands {
+		if command == fmt.Sprintf("doppler %s", disabledCommand) {
+			utils.LogDebug("Skipping CLI upgrade check due to disallowed command")
+			return
+		}
 	}
 
 	if !version.PerformVersionCheck || version.IsDevelopment() {
