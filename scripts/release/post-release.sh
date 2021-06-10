@@ -40,6 +40,6 @@ publishToCloudsmith alpine alpine any-version "$PACKAGES"
 
 # send Slack notification
 VERSION=$(git describe --abbrev=0)
-MESSAGE="Doppler CLI v$VERSION has been released."
+MESSAGE="Doppler CLI <https://github.com/DopplerHQ/cli/releases/tag/$VERSION|v$VERSION> has been released."
 curl --tlsv1.2 --proto "=https" -s -X "POST" "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/x-www-form-urlencoded; charset=utf-8' \
   --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}"
