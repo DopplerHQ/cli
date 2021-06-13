@@ -123,11 +123,21 @@ func loadFlags(cmd *cobra.Command) {
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
+
+	// DNS resolver
+	http.UseCustomDNSResolver = !utils.GetBoolFlag(cmd, "no-dns-resolver")
+	if configuration.CanReadEnv && os.Getenv("DOPPLER_DISABLE_DNS_RESOLVER") == "true" {
+		http.UseCustomDNSResolver = false
+	}
+
+	// output
 	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "silent", utils.Silent)
 	// no-file is used by the 'secrets download' command to output secrets to stdout
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
 	utils.OutputJSON = utils.GetBoolFlagIfChanged(cmd, "json", utils.OutputJSON)
+
+	// version check
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 
@@ -169,6 +179,11 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "do not verify the validity of TLS certificates on HTTP requests (not recommended)")
 	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "disable http timeout")
 	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "max http request duration")
+	// DNS resolver
+	rootCmd.PersistentFlags().Bool("no-dns-resolver", !http.UseCustomDNSResolver, "use the OS's default DNS resolver")
+	rootCmd.PersistentFlags().StringVar(&http.DNSResolverAddress, "dns-resolver-address", http.DNSResolverAddress, "address to use for DNS resolution")
+	rootCmd.PersistentFlags().StringVar(&http.DNSResolverProto, "dns-resolver-proto", http.DNSResolverProto, "protocol to use for DNS resolution")
+	rootCmd.PersistentFlags().DurationVar(&http.DNSResolverTimeout, "dns-resolver-timeout", http.DNSResolverTimeout, "max dns lookup duration")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read config from the environment")
 	rootCmd.PersistentFlags().String("scope", configuration.Scope, "the directory to scope your config to")

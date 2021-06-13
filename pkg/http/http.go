@@ -17,6 +17,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -41,6 +42,12 @@ type errorResponse struct {
 	Messages []string
 	Success  bool
 }
+
+// DNS resolver
+var UseCustomDNSResolver = true
+var DNSResolverAddress = "1.1.1.1:53"
+var DNSResolverProto = "udp"
+var DNSResolverTimeout = time.Duration(5) * time.Second
 
 // GetRequest perform HTTP GET
 func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
@@ -128,19 +135,42 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		client.Timeout = TimeoutDuration
 	}
 
+	// set TLS config
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
-	// set TLS config
 	// #nosec G402
 	if !verifyTLS {
 		tlsConfig.InsecureSkipVerify = true
 	}
+
+	// use custom DNS resolver
+	dialer := &net.Dialer{}
+	if UseCustomDNSResolver {
+		utils.LogDebug(fmt.Sprintf("Using custom DNS resolver %s", DNSResolverAddress))
+
+		dialer = &net.Dialer{
+			Resolver: &net.Resolver{
+				PreferGo: true,
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+					d := net.Dialer{
+						Timeout: DNSResolverTimeout,
+					}
+					return d.DialContext(ctx, DNSResolverProto, DNSResolverAddress)
+				},
+			},
+		}
+	}
+	dialContext := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network, addr)
+	}
+
 	client.Transport = &http.Transport{
 		// disable keep alives to prevent multiple CLI instances from exhausting the
 		// OS's available network sockets. this adds a negligible performance penalty
 		DisableKeepAlives: true,
 		TLSClientConfig:   tlsConfig,
+		DialContext:       dialContext,
 	}
 
 	startTime := time.Now()
