@@ -119,6 +119,7 @@ func loadFlags(cmd *cobra.Command) {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
+	configuration.CanReadEnv = !utils.GetBoolFlag(cmd, "no-read-env")
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
 	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)

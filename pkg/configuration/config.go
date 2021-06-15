@@ -44,6 +44,9 @@ var UserConfigFile string
 // Scope to use for config file
 var Scope = "."
 
+// CanReadEnv whether configuration can be read from the environment
+var CanReadEnv = true
+
 var configFileName = ".doppler.yaml"
 var configContents models.ConfigFile
 
@@ -169,7 +172,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 	localConfig := Get(Scope)
 
 	// environment variables
-	if !utils.GetBoolFlag(cmd, "no-read-env") {
+	if CanReadEnv {
 		pairs := models.EnvPairs(&localConfig)
 		envVars := []string{}
 		for envVar := range pairs {
