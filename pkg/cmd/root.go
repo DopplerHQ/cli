@@ -30,6 +30,8 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
+var printConfig = false
+
 var rootCmd = &cobra.Command{
 	Use:   "doppler",
 	Short: "The official Doppler CLI",
@@ -44,7 +46,6 @@ var rootCmd = &cobra.Command{
 		}
 
 		// this output does not honor --silent
-		printConfig := utils.GetBoolFlagIfChanged(cmd, "print-config", false)
 		if printConfig {
 			fmt.Println("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true, true)
@@ -119,14 +120,20 @@ func loadFlags(cmd *cobra.Command) {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 
+	configuration.CanReadEnv = !utils.GetBoolFlag(cmd, "no-read-env")
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
-	http.TimeoutDuration = utils.GetDurationFlagIfChanged(cmd, "timeout", http.TimeoutDuration)
-	http.UseTimeout = !utils.GetBoolFlagIfChanged(cmd, "no-timeout", !http.UseTimeout)
-	utils.Debug = utils.GetBoolFlagIfChanged(cmd, "debug", utils.Debug)
-	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "silent", utils.Silent)
+	http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")
+
+	// DNS resolver
+	http.UseCustomDNSResolver = !utils.GetBoolFlag(cmd, "no-dns-resolver")
+	if configuration.CanReadEnv && os.Getenv("DOPPLER_DISABLE_DNS_RESOLVER") == "true" {
+		http.UseCustomDNSResolver = false
+	}
+
 	// no-file is used by the 'secrets download' command to output secrets to stdout
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
-	utils.OutputJSON = utils.GetBoolFlagIfChanged(cmd, "json", utils.OutputJSON)
+
+	// version check
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 
@@ -167,13 +174,18 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-check-version", !version.PerformVersionCheck, "disable checking for Doppler CLI updates")
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "do not verify the validity of TLS certificates on HTTP requests (not recommended)")
 	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "disable http timeout")
-	rootCmd.PersistentFlags().Duration("timeout", http.TimeoutDuration, "max http request duration")
+	rootCmd.PersistentFlags().DurationVar(&http.TimeoutDuration, "timeout", http.TimeoutDuration, "max http request duration")
+	// DNS resolver
+	rootCmd.PersistentFlags().Bool("no-dns-resolver", !http.UseCustomDNSResolver, "use the OS's default DNS resolver")
+	rootCmd.PersistentFlags().StringVar(&http.DNSResolverAddress, "dns-resolver-address", http.DNSResolverAddress, "address to use for DNS resolution")
+	rootCmd.PersistentFlags().StringVar(&http.DNSResolverProto, "dns-resolver-proto", http.DNSResolverProto, "protocol to use for DNS resolution")
+	rootCmd.PersistentFlags().DurationVar(&http.DNSResolverTimeout, "dns-resolver-timeout", http.DNSResolverTimeout, "max dns lookup duration")
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read config from the environment")
 	rootCmd.PersistentFlags().String("scope", configuration.Scope, "the directory to scope your config to")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
-	rootCmd.PersistentFlags().Bool("json", utils.OutputJSON, "output json")
-	rootCmd.PersistentFlags().Bool("debug", utils.Debug, "output additional information")
-	rootCmd.PersistentFlags().Bool("print-config", false, "output active configuration")
-	rootCmd.PersistentFlags().Bool("silent", utils.Silent, "disable output of info messages")
+	rootCmd.PersistentFlags().BoolVar(&utils.OutputJSON, "json", utils.OutputJSON, "output json")
+	rootCmd.PersistentFlags().BoolVar(&utils.Debug, "debug", utils.Debug, "output additional information")
+	rootCmd.PersistentFlags().BoolVar(&printConfig, "print-config", printConfig, "output active configuration")
+	rootCmd.PersistentFlags().BoolVar(&utils.Silent, "silent", utils.Silent, "disable output of info messages")
 }
