@@ -19,6 +19,7 @@ cleanup() {
   exit "$exit_code"
 }
 trap cleanup EXIT
+trap cleanup INT
 
 beforeAll() {
   echo "INFO: Executing '$TEST_NAME' tests"
