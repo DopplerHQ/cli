@@ -166,9 +166,11 @@ var loginCmd = &cobra.Command{
 			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogDebug("Revoking previous token")
+				// this is best effort; if it fails, keep running
 				_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
 				if !err.IsNil() {
 					utils.LogDebug("Failed to revoke token")
+					utils.LogDebugError(err.Unwrap())
 				} else {
 					utils.LogDebug("Token successfully revoked")
 				}
