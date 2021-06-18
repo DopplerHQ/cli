@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # print currently configured user to aid with debugging
 cloudsmith whoami
@@ -39,7 +39,17 @@ PACKAGES=$(find dist/*.apk  -type f)
 publishToCloudsmith alpine alpine any-version "$PACKAGES"
 
 # send Slack notification
+CHANGELOG="$(doppler changelog -n 1 --no-check-version | tail -n +2)"
+# escape characters for slack https://api.slack.com/reference/surfaces/formatting#escaping
+CHANGELOG=${CHANGELOG//&/&amp;}
+CHANGELOG=${CHANGELOG//</&lt;}
+CHANGELOG=${CHANGELOG//>/&gt;}
+# escape double quotes
+CHANGELOG=${CHANGELOG//\"/\\\"}
+# replace newlines with newline character
+CHANGELOG=${CHANGELOG/$'\n'/'\\n'}
+
 VERSION=$(git describe --abbrev=0)
-MESSAGE="Doppler CLI <https://github.com/DopplerHQ/cli/releases/tag/$VERSION|v$VERSION> has been released."
+MESSAGE="Doppler CLI <https://github.com/DopplerHQ/cli/releases/tag/$VERSION|v$VERSION> has been released. Changelog:\n$CHANGELOG"
 curl --tlsv1.2 --proto "=https" -s -X "POST" "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/x-www-form-urlencoded; charset=utf-8' \
   --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}"
