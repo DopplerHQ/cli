@@ -207,6 +207,26 @@ doppler configure unset key otherkey`,
 	},
 }
 
+var configureResetCmd = &cobra.Command{
+	Use:   "reset",
+	Short: "Reset local CLI configuration to a clean initial state",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		yes := utils.GetBoolFlag(cmd, "yes")
+
+		if !yes {
+			utils.LogWarning("This will delete all local CLI configuration and auth tokens")
+			if !utils.ConfirmationPrompt("Continue?", false) {
+				utils.Log("Aborting")
+				return
+			}
+		}
+
+		configuration.ClearConfig()
+		utils.Log("Configuration has been reset. Please run 'doppler login' to authenticate")
+	},
+}
+
 func init() {
 	configureCmd.AddCommand(configureDebugCmd)
 
@@ -219,6 +239,9 @@ func init() {
 	configureCmd.AddCommand(configureSetCmd)
 
 	configureCmd.AddCommand(configureUnsetCmd)
+
+	configureResetCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	configureCmd.AddCommand(configureResetCmd)
 
 	configureCmd.Flags().Bool("all", false, "print all saved options")
 	rootCmd.AddCommand(configureCmd)
