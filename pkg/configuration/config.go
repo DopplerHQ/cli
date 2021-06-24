@@ -383,6 +383,22 @@ func Unset(scope string, options []string) {
 	writeConfig(configContents)
 }
 
+// ClearConfig delete all existing config values
+func ClearConfig() {
+	// delete existing tokens from keychain
+	for _, scopedOptions := range configContents.Scoped {
+		if controllers.IsKeyringSecret(scopedOptions.Token) {
+			utils.LogDebug(fmt.Sprintf("Removing %s from keychain", scopedOptions.Token))
+			err := controllers.DeleteKeyring(scopedOptions.Token)
+			if !err.IsNil() {
+				utils.LogDebugError(err.Unwrap())
+			}
+		}
+	}
+
+	writeConfig(models.ConfigFile{})
+}
+
 // Write config to filesystem
 func writeConfig(config models.ConfigFile) {
 	bytes, err := yaml.Marshal(config)

@@ -47,6 +47,7 @@ func revokeToken(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	if !yes && !utils.ConfirmationPrompt(fmt.Sprintf("Revoke auth token scoped to %s?", localConfig.Token.Scope), false) {
+		utils.Log("Aborting")
 		return
 	}
 
