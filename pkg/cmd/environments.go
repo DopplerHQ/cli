@@ -43,12 +43,7 @@ func environments(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	project := localConfig.EnclaveProject.Value
-	if len(args) > 0 {
-		project = args[0]
-	}
-
-	info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
+	info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
