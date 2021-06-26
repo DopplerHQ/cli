@@ -26,6 +26,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"gopkg.in/gookit/color.v1"
 )
@@ -54,10 +55,13 @@ var rootCmd = &cobra.Command{
 
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
 		canPrompt := !utils.GetBoolFlagIfChanged(cmd, "no-prompt", false)
+		// tty is required to accept user input, otherwise the update can't be accepted/declined
+		isTTY := isatty.IsTerminal(os.Stdout.Fd())
+
 		// only run version check if we can print the results
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt)
-		if utils.CanLogInfo() && !plain && canPrompt {
+		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
 			checkVersion(cmd.CommandPath())
 		}
 	},
