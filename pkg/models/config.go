@@ -15,7 +15,9 @@ limitations under the License.
 */
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // ConfigFile structure of the config file
 type ConfigFile struct {
@@ -100,8 +102,8 @@ func AllConfigOptions() []string {
 	return allConfigOptions
 }
 
-// Pairs get the pairs for the given config
-func Pairs(conf FileScopedOptions) map[string]string {
+// OptionsMap get the options for the given config
+func OptionsMap(conf FileScopedOptions) map[string]string {
 	return map[string]string{
 		ConfigToken.String():          conf.Token,
 		ConfigAPIHost.String():        conf.APIHost,
@@ -112,8 +114,8 @@ func Pairs(conf FileScopedOptions) map[string]string {
 	}
 }
 
-// ScopedPairs get the pairs for the given scoped config
-func ScopedPairs(conf *ScopedOptions) map[string]*ScopedOption {
+// ScopedOptionsMap get the options for the given scoped config
+func ScopedOptionsMap(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{
 		ConfigToken.String():          &conf.Token,
 		ConfigAPIHost.String():        &conf.APIHost,
@@ -136,8 +138,8 @@ func ScopedOptionsStringMap(conf *ScopedOptions) map[string]string {
 	}
 }
 
-// EnvPairs get the scoped config pairs for each environment variable
-func EnvPairs(conf *ScopedOptions) map[string]*ScopedOption {
+// EnvOptions get the scoped config options for each environment variable
+func EnvOptions(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{
 		"DOPPLER_TOKEN":          &conf.Token,
 		"DOPPLER_API_HOST":       &conf.APIHost,

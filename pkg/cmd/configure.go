@@ -109,7 +109,7 @@ doppler configure get key otherkey`,
 			translatedArgs = append(translatedArgs, configuration.TranslateFriendlyOption(arg))
 		}
 
-		printer.ScopedConfigValues(conf, translatedArgs, models.ScopedPairs(&conf), jsonFlag, plain, copy)
+		printer.ScopedConfigValues(conf, translatedArgs, models.ScopedOptionsMap(&conf), jsonFlag, plain, copy)
 	},
 }
 
