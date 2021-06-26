@@ -124,6 +124,18 @@ func ScopedPairs(conf *ScopedOptions) map[string]*ScopedOption {
 	}
 }
 
+// ScopedOptions get the options for the given scoped config
+func ScopedOptionsStringMap(conf *ScopedOptions) map[string]string {
+	return map[string]string{
+		ConfigToken.String():          conf.Token.Value,
+		ConfigAPIHost.String():        conf.APIHost.Value,
+		ConfigDashboardHost.String():  conf.DashboardHost.Value,
+		ConfigVerifyTLS.String():      conf.VerifyTLS.Value,
+		ConfigEnclaveProject.String(): conf.EnclaveProject.Value,
+		ConfigEnclaveConfig.String():  conf.EnclaveConfig.Value,
+	}
+}
+
 // EnvPairs get the scoped config pairs for each environment variable
 func EnvPairs(conf *ScopedOptions) map[string]*ScopedOption {
 	return map[string]*ScopedOption{

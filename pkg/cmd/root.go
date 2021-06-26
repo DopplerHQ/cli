@@ -113,6 +113,11 @@ func checkVersion(command string) {
 	configuration.SetVersionCheck(versionCheck)
 }
 
+// persistentValidArgsFunction Cobra parses flags after executing ValidArgsFunction, so we must manually initialize flags
+func persistentValidArgsFunction(cmd *cobra.Command) {
+	loadFlags(cmd)
+}
+
 func loadFlags(cmd *cobra.Command) {
 	var err error
 	scope := cmd.Flag("scope").Value.String()

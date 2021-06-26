@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -44,9 +45,10 @@ var activityCmd = &cobra.Command{
 }
 
 var activityGetCmd = &cobra.Command{
-	Use:   "get [log_id]",
-	Short: "Get workplace activity log",
-	Args:  cobra.MaximumNArgs(1),
+	Use:               "get [log_id]",
+	Short:             "Get workplace activity log",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: activityLogIDsValidArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
@@ -66,6 +68,17 @@ var activityGetCmd = &cobra.Command{
 
 		printer.ActivityLog(activity, jsonFlag, false)
 	},
+}
+
+func activityLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	ids, err := controllers.GetActivityLogIDs(localConfig)
+	if err.IsNil() {
+		return ids, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

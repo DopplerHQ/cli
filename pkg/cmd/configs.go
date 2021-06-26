@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -35,10 +36,11 @@ var configsCmd = &cobra.Command{
 }
 
 var configsGetCmd = &cobra.Command{
-	Use:   "get [config]",
-	Short: "Get info for a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigs,
+	Use:               "get [config]",
+	Short:             "Get info for a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               getConfigs,
 }
 
 var configsCreateCmd = &cobra.Command{
@@ -49,38 +51,43 @@ var configsCreateCmd = &cobra.Command{
 }
 
 var configsDeleteCmd = &cobra.Command{
-	Use:   "delete [config]",
-	Short: "Delete a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   deleteConfigs,
+	Use:               "delete [config]",
+	Short:             "Delete a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               deleteConfigs,
 }
 
 var configsUpdateCmd = &cobra.Command{
-	Use:   "update [config]",
-	Short: "Update a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   updateConfigs,
+	Use:               "update [config]",
+	Short:             "Update a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               updateConfigs,
 }
 
 var configsLockCmd = &cobra.Command{
-	Use:   "lock [config]",
-	Short: "Lock a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   lockConfigs,
+	Use:               "lock [config]",
+	Short:             "Lock a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: unlockedConfigNamesValidArgs,
+	Run:               lockConfigs,
 }
 
 var configsUnlockCmd = &cobra.Command{
-	Use:   "unlock [config]",
-	Short: "Unlock a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   unlockConfigs,
+	Use:               "unlock [config]",
+	Short:             "Unlock a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: lockedConfigNamesValidArgs,
+	Run:               unlockConfigs,
 }
 
 var configsCloneCmd = &cobra.Command{
-	Use:   "clone [config]",
-	Short: "Clone a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   cloneConfigs,
+	Use:               "clone [config]",
+	Short:             "Clone a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               cloneConfigs,
 }
 
 func configs(cmd *cobra.Command, args []string) {
@@ -284,6 +291,53 @@ func cloneConfigs(cmd *cobra.Command, args []string) {
 	if !utils.Silent {
 		printer.ConfigInfo(configInfo, jsonFlag)
 	}
+}
+
+func configNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	names, err := controllers.GetConfigNames(localConfig)
+	if err.IsNil() {
+		return names, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
+func lockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	configs, err := controllers.GetConfigs(localConfig)
+	if !err.IsNil() {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	var names []string
+	for _, config := range configs {
+		if config.Locked {
+			names = append(names, config.Name)
+		}
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
+}
+
+func unlockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	configs, err := controllers.GetConfigs(localConfig)
+	if !err.IsNil() {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	var names []string
+	for _, config := range configs {
+		if !config.Locked {
+			names = append(names, config.Name)
+		}
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

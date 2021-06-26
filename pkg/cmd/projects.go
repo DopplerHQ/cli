@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -34,10 +35,11 @@ var projectsCmd = &cobra.Command{
 }
 
 var projectsGetCmd = &cobra.Command{
-	Use:   "get [project_id]",
-	Short: "Get info for a project",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   getProjects,
+	Use:               "get [project_id]",
+	Short:             "Get info for a project",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: projectIDsValidArgs,
+	Run:               getProjects,
 }
 
 var projectsCreateCmd = &cobra.Command{
@@ -48,17 +50,19 @@ var projectsCreateCmd = &cobra.Command{
 }
 
 var projectsDeleteCmd = &cobra.Command{
-	Use:   "delete [project_id]",
-	Short: "Delete a project",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   deleteProjects,
+	Use:               "delete [project_id]",
+	Short:             "Delete a project",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: projectIDsValidArgs,
+	Run:               deleteProjects,
 }
 
 var projectsUpdateCmd = &cobra.Command{
-	Use:   "update [project_id]",
-	Short: "Update a project",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   updateProjects,
+	Use:               "update [project_id]",
+	Short:             "Update a project",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: projectIDsValidArgs,
+	Run:               updateProjects,
 }
 
 func projects(cmd *cobra.Command, args []string) {
@@ -179,6 +183,17 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	if !utils.Silent {
 		printer.ProjectInfo(info, jsonFlag)
 	}
+}
+
+func projectIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	ids, err := controllers.GetProjectIDs(localConfig)
+	if err.IsNil() {
+		return ids, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

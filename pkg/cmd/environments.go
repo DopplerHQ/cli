@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -31,10 +32,11 @@ var environmentsCmd = &cobra.Command{
 }
 
 var environmentsGetCmd = &cobra.Command{
-	Use:   "get [environment_id]",
-	Short: "Get info for an environment",
-	Args:  cobra.ExactArgs(1),
-	Run:   getEnvironments,
+	Use:               "get [environment_id]",
+	Short:             "Get info for an environment",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: configEnvironmentIDsValidArgs,
+	Run:               getEnvironments,
 }
 
 func environments(cmd *cobra.Command, args []string) {
@@ -65,6 +67,17 @@ func getEnvironments(cmd *cobra.Command, args []string) {
 	}
 
 	printer.EnvironmentInfo(info, jsonFlag)
+}
+
+func configEnvironmentIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	ids, err := controllers.GetEnvironmentIDs(localConfig)
+	if err.IsNil() {
+		return ids, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

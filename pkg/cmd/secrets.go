@@ -54,8 +54,9 @@ var secretsGetCmd = &cobra.Command{
 
 Ex: output the secrets "API_KEY" and "CRYPTO_KEY":
 doppler secrets get API_KEY CRYPTO_KEY`,
-	Args: cobra.MinimumNArgs(1),
-	Run:  getSecrets,
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: secretNamesValidArgs,
+	Run:               getSecrets,
 }
 
 var secretsSetCmd = &cobra.Command{
@@ -90,8 +91,9 @@ var secretsDeleteCmd = &cobra.Command{
 
 Ex: delete the secrets "API_KEY" and "CRYPTO_KEY":
 doppler secrets delete API_KEY CRYPTO_KEY`,
-	Args: cobra.MinimumNArgs(1),
-	Run:  deleteSecrets,
+	Args:              cobra.MinimumNArgs(1),
+	Run:               deleteSecrets,
+	ValidArgsFunction: secretNamesValidArgs,
 }
 
 var validFormatList = strings.Join(models.SecretFormats, ", ")
@@ -488,6 +490,17 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(err, "Unable to write rendered data to stdout")
 		}
 	}
+}
+
+func secretNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	names, err := controllers.GetSecretNames(localConfig)
+	if err.IsNil() {
+		return names, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {
