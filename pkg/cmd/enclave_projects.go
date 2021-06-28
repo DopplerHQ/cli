@@ -88,6 +88,7 @@ func init() {
 		utils.HandleError(err)
 	}
 	enclaveProjectsUpdateCmd.Flags().String("description", "", "project description")
+	enclaveProjectsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveProjectsCmd.AddCommand(enclaveProjectsUpdateCmd)
 
 	enclaveCmd.AddCommand(enclaveProjectsCmd)
