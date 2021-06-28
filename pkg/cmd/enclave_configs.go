@@ -108,6 +108,7 @@ func init() {
 	if err := enclaveConfigsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
+	enclaveConfigsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsUpdateCmd)
 
 	enclaveConfigsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
