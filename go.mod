@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.13
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
-	github.com/atotto/clipboard v0.1.2
+	github.com/atotto/clipboard v0.1.4
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/cpuguy83/go-md2man v1.0.10 // indirect
 	github.com/go-openapi/strfmt v0.19.3 // indirect
