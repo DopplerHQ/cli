@@ -194,6 +194,7 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 func updateConfigs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	name := cmd.Flag("name").Value.String()
+	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -202,6 +203,14 @@ func updateConfigs(cmd *cobra.Command, args []string) {
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
+	}
+
+	if !yes {
+		utils.LogWarning("Renaming this config may break your current deploys.")
+		if !utils.ConfirmationPrompt("Continue?", false) {
+			utils.Log("Aborting")
+			return
+		}
 	}
 
 	info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
@@ -358,6 +367,7 @@ func init() {
 	if err := configsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
+	configsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

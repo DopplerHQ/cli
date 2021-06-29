@@ -159,6 +159,7 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	name := cmd.Flag("name").Value.String()
 	description := cmd.Flag("description").Value.String()
+	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -167,6 +168,14 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	project := localConfig.EnclaveProject.Value
 	if len(args) > 0 {
 		project = args[0]
+	}
+
+	if !yes {
+		utils.LogWarning("Renaming this project may break your current deploys.")
+		if !utils.ConfirmationPrompt("Continue?", false) {
+			utils.Log("Aborting")
+			return
+		}
 	}
 
 	var info models.ProjectInfo
@@ -214,6 +223,7 @@ func init() {
 	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
+	projectsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	projectsCmd.AddCommand(projectsUpdateCmd)
 
 	rootCmd.AddCommand(projectsCmd)
