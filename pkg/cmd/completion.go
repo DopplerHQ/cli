@@ -29,7 +29,7 @@ import (
 var completionCmd = &cobra.Command{
 	Use:       "completion",
 	Short:     "Print shell completion script",
-	ValidArgs: []string{"bash", "zsh"},
+	ValidArgs: []string{"bash", "zsh", "fish"},
 	Args:      cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		shell := getShell(args)
@@ -41,6 +41,10 @@ var completionCmd = &cobra.Command{
 		} else if strings.HasSuffix(shell, "/zsh") {
 			if err := cmd.Root().GenZshCompletion(os.Stdout); err != nil {
 				utils.HandleError(err, "Unable to generate zsh completions.")
+			}
+		} else if strings.HasSuffix(shell, "/fish") {
+			if err := cmd.Root().GenFishCompletion(os.Stdout, true); err != nil {
+				utils.HandleError(err, "Unable to generate fish completions.")
 			}
 		} else {
 			utils.HandleError(fmt.Errorf("Your shell is not supported"))
