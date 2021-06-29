@@ -104,6 +104,13 @@ func checkVersion(command string) {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
 		utils.Log(color.Green.Sprintf("An update is available."))
+
+		changes, apiError := controllers.CLIChangeLog()
+		if apiError.IsNil() {
+			printer.ChangeLog(changes, 1, false)
+			utils.Log("")
+		}
+
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
 		if utils.ConfirmationPrompt(prompt, true) {
 			installCLIUpdate()
