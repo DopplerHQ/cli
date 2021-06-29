@@ -268,6 +268,7 @@ func unlockConfigs(cmd *cobra.Command, args []string) {
 func cloneConfigs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
+	name := cmd.Flag("name").Value.String()
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
@@ -276,7 +277,7 @@ func cloneConfigs(cmd *cobra.Command, args []string) {
 		config = args[0]
 	}
 
-	configInfo, err := http.CloneConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
+	configInfo, err := http.CloneConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -323,6 +324,7 @@ func init() {
 
 	configsCloneCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	configsCloneCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsCloneCmd.Flags().String("name", "", "new config name")
 	configsCmd.AddCommand(configsCloneCmd)
 
 	rootCmd.AddCommand(configsCmd)
