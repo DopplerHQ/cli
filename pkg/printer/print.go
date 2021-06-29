@@ -30,6 +30,7 @@ import (
 	goVersion "github.com/hashicorp/go-version"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
+	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/gookit/color.v1"
 )
 
@@ -40,7 +41,17 @@ type tableOptions struct {
 	SeparateColumns bool
 }
 
-const maxTableWidth = 100
+var maxTableWidth = 80
+
+func init() {
+	w, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		utils.LogDebugError(err)
+		utils.LogDebug("Unable to determine terminal size")
+	} else if w > 0 {
+		maxTableWidth = w - 1
+	}
+}
 
 // TableOptions customize table display
 func TableOptions() tableOptions {
@@ -64,10 +75,14 @@ func Table(headers []string, rows [][]string, options tableOptions) {
 	}
 	t.AppendHeader(tableHeaders)
 
+	numCols := numColumns(rows)
+	maxColWidths := maxColWidths(rows, numCols)
+	colWidths := optimalColWidths(maxColWidths, numCols)
+
 	for _, row := range rows {
 		tableRow := table.Row{}
-		for _, val := range row {
-			tableRow = append(tableRow, text.WrapText(val, maxTableWidth))
+		for i, val := range row {
+			tableRow = append(tableRow, text.WrapText(val, colWidths[i]))
 		}
 		t.AppendRow(tableRow)
 	}
