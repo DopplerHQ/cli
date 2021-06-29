@@ -29,5 +29,5 @@ require (
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/gookit/color.v1 v1.1.6
-	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
