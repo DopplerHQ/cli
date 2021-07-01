@@ -80,10 +80,23 @@ var openGithubCmd = &cobra.Command{
 	},
 }
 
+var openDocsCmd = &cobra.Command{
+	Use:   "docs",
+	Short: "open the Doppler documentation home page",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		err := open.Run("https://docs.doppler.com/")
+		if err != nil {
+			utils.HandleError(err)
+		}
+	},
+}
+
 func init() {
 	openCmd.AddCommand(openDashboardCmd)
 	openCmd.AddCommand(openStatusCmd)
 	openCmd.AddCommand(openGithubCmd)
+	openCmd.AddCommand(openDocsCmd)
 
 	rootCmd.AddCommand(openCmd)
 }
