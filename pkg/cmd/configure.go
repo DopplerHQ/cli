@@ -230,7 +230,7 @@ var configureResetCmd = &cobra.Command{
 	},
 }
 
-// currentConfigOptionsValidArgs the options currently in use in the current scope
+// configOptionsValidArgs all possible config options
 func configOptionsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	persistentValidArgsFunction(cmd)
 
