@@ -126,6 +126,7 @@ func checkVersion(command string) {
 
 // persistentValidArgsFunction Cobra parses flags after executing ValidArgsFunction, so we must manually initialize flags
 func persistentValidArgsFunction(cmd *cobra.Command) {
+	// more info https://github.com/spf13/cobra/issues/1291
 	loadFlags(cmd)
 }
 
