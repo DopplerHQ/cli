@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -31,17 +32,19 @@ var configsLogsCmd = &cobra.Command{
 }
 
 var configsLogsGetCmd = &cobra.Command{
-	Use:   "get [log_id]",
-	Short: "Get config audit log",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigsLogs,
+	Use:               "get [log_id]",
+	Short:             "Get config audit log",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configLogIDsValidArgs,
+	Run:               getConfigsLogs,
 }
 
 var configsLogsRollbackCmd = &cobra.Command{
-	Use:   "rollback [log_id]",
-	Short: "Rollback a config change",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   rollbackConfigsLogs,
+	Use:               "rollback [log_id]",
+	Short:             "Rollback a config change",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configLogIDsValidArgs,
+	Run:               rollbackConfigsLogs,
 }
 
 func configsLogs(cmd *cobra.Command, args []string) {
@@ -99,6 +102,17 @@ func rollbackConfigsLogs(cmd *cobra.Command, args []string) {
 	if !utils.Silent {
 		printer.ConfigLog(configLog, jsonFlag, true)
 	}
+}
+
+func configLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	ids, err := controllers.GetConfigLogIDs(localConfig)
+	if err.IsNil() {
+		return ids, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

@@ -84,13 +84,11 @@ func init() {
 
 	enclaveProjectsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveProjectsUpdateCmd.Flags().String("name", "", "project name")
-	enclaveProjectsUpdateCmd.Flags().String("description", "", "project description")
 	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
-	if err := enclaveProjectsUpdateCmd.MarkFlagRequired("description"); err != nil {
-		utils.HandleError(err)
-	}
+	enclaveProjectsUpdateCmd.Flags().String("description", "", "project description")
+	enclaveProjectsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveProjectsCmd.AddCommand(enclaveProjectsUpdateCmd)
 
 	enclaveCmd.AddCommand(enclaveProjectsCmd)

@@ -19,6 +19,7 @@ import (
 	"errors"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -33,10 +34,11 @@ var configsTokensCmd = &cobra.Command{
 }
 
 var configsTokensGetCmd = &cobra.Command{
-	Use:   "get [slug]",
-	Short: "Get a config's service token",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigsTokens,
+	Use:               "get [slug]",
+	Short:             "Get a config's service token",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configTokenSlugsValidArgs,
+	Run:               getConfigsTokens,
 }
 
 var configsTokensCreateCmd = &cobra.Command{
@@ -47,11 +49,12 @@ var configsTokensCreateCmd = &cobra.Command{
 }
 
 var configsTokensRevokeCmd = &cobra.Command{
-	Use:     "revoke [slug]",
-	Aliases: []string{"delete"},
-	Short:   "Revoke a service token from a config",
-	Args:    cobra.MaximumNArgs(1),
-	Run:     revokeConfigsTokens,
+	Use:               "revoke [slug]",
+	Aliases:           []string{"delete"},
+	Short:             "Revoke a service token from a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configTokenSlugsValidArgs,
+	Run:               revokeConfigsTokens,
 }
 
 func configsTokens(cmd *cobra.Command, args []string) {
@@ -142,6 +145,17 @@ func revokeConfigsTokens(cmd *cobra.Command, args []string) {
 
 		printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
 	}
+}
+
+func configTokenSlugsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	slugs, err := controllers.GetConfigTokenSlugs(localConfig)
+	if err.IsNil() {
+		return slugs, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

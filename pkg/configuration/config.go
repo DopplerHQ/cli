@@ -139,8 +139,8 @@ func Get(scope string) models.ScopedOptions {
 			continue
 		}
 
-		pairs := models.Pairs(conf)
-		scopedPairs := models.ScopedPairs(&scopedConfig)
+		pairs := models.OptionsMap(conf)
+		scopedPairs := models.ScopedOptionsMap(&scopedConfig)
 		for name, pair := range pairs {
 			if pair != "" {
 				scopedPair := scopedPairs[name]
@@ -173,7 +173,7 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 
 	// environment variables
 	if CanReadEnv {
-		pairs := models.EnvPairs(&localConfig)
+		pairs := models.EnvOptions(&localConfig)
 		envVars := []string{}
 		for envVar := range pairs {
 			envVars = append(envVars, envVar)

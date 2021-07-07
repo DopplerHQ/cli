@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -35,10 +36,11 @@ var configsCmd = &cobra.Command{
 }
 
 var configsGetCmd = &cobra.Command{
-	Use:   "get [config]",
-	Short: "Get info for a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   getConfigs,
+	Use:               "get [config]",
+	Short:             "Get info for a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               getConfigs,
 }
 
 var configsCreateCmd = &cobra.Command{
@@ -49,38 +51,43 @@ var configsCreateCmd = &cobra.Command{
 }
 
 var configsDeleteCmd = &cobra.Command{
-	Use:   "delete [config]",
-	Short: "Delete a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   deleteConfigs,
+	Use:               "delete [config]",
+	Short:             "Delete a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               deleteConfigs,
 }
 
 var configsUpdateCmd = &cobra.Command{
-	Use:   "update [config]",
-	Short: "Update a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   updateConfigs,
+	Use:               "update [config]",
+	Short:             "Update a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               updateConfigs,
 }
 
 var configsLockCmd = &cobra.Command{
-	Use:   "lock [config]",
-	Short: "Lock a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   lockConfigs,
+	Use:               "lock [config]",
+	Short:             "Lock a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: unlockedConfigNamesValidArgs,
+	Run:               lockConfigs,
 }
 
 var configsUnlockCmd = &cobra.Command{
-	Use:   "unlock [config]",
-	Short: "Unlock a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   unlockConfigs,
+	Use:               "unlock [config]",
+	Short:             "Unlock a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: lockedConfigNamesValidArgs,
+	Run:               unlockConfigs,
 }
 
 var configsCloneCmd = &cobra.Command{
-	Use:   "clone [config]",
-	Short: "Clone a config",
-	Args:  cobra.MaximumNArgs(1),
-	Run:   cloneConfigs,
+	Use:               "clone [config]",
+	Short:             "Clone a config",
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configNamesValidArgs,
+	Run:               cloneConfigs,
 }
 
 func configs(cmd *cobra.Command, args []string) {
@@ -187,6 +194,7 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 func updateConfigs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	name := cmd.Flag("name").Value.String()
+	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -195,6 +203,14 @@ func updateConfigs(cmd *cobra.Command, args []string) {
 	config := localConfig.EnclaveConfig.Value
 	if len(args) > 0 {
 		config = args[0]
+	}
+
+	if !yes {
+		utils.LogWarning("Renaming this config may break your current deploys.")
+		if !utils.ConfirmationPrompt("Continue?", false) {
+			utils.Log("Aborting")
+			return
+		}
 	}
 
 	info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
@@ -286,6 +302,53 @@ func cloneConfigs(cmd *cobra.Command, args []string) {
 	}
 }
 
+func configNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	names, err := controllers.GetConfigNames(localConfig)
+	if err.IsNil() {
+		return names, cobra.ShellCompDirectiveNoFileComp
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
+func lockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	configs, err := controllers.GetConfigs(localConfig)
+	if !err.IsNil() {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	var names []string
+	for _, config := range configs {
+		if config.Locked {
+			names = append(names, config.Name)
+		}
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
+}
+
+func unlockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	localConfig := configuration.LocalConfig(cmd)
+	configs, err := controllers.GetConfigs(localConfig)
+	if !err.IsNil() {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	var names []string
+	for _, config := range configs {
+		if !config.Locked {
+			names = append(names, config.Name)
+		}
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
+}
+
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 
@@ -304,6 +367,7 @@ func init() {
 	if err := configsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
 	}
+	configsUpdateCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

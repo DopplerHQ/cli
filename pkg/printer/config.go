@@ -32,7 +32,7 @@ func ScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
 
 // ScopedConfigSource print scoped config with source
 func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool, obfuscateToken bool) {
-	pairs := models.ScopedPairs(&conf)
+	pairs := models.ScopedOptionsMap(&conf)
 
 	if jsonFlag {
 		confMap := map[string]map[string]string{}
@@ -140,7 +140,7 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 
 	var rows [][]string
 	for scope, conf := range configs {
-		pairs := models.Pairs(conf)
+		pairs := models.OptionsMap(conf)
 
 		for name, value := range pairs {
 			if value != "" {

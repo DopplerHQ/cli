@@ -162,7 +162,7 @@ func setup(cmd *cobra.Command, args []string) {
 		if saveToken {
 			valuesToPrint = append(valuesToPrint, utils.RedactAuthToken(models.ConfigToken.String()))
 		}
-		printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedPairs(&conf), utils.OutputJSON, false, false)
+		printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedOptionsMap(&conf), utils.OutputJSON, false, false)
 	}
 }
 

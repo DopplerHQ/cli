@@ -83,6 +83,7 @@ var configureGetCmd = &cobra.Command{
 
 Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
+	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires at least 1 arg(s), only received 0")
@@ -108,7 +109,7 @@ doppler configure get key otherkey`,
 			translatedArgs = append(translatedArgs, configuration.TranslateFriendlyOption(arg))
 		}
 
-		printer.ScopedConfigValues(conf, translatedArgs, models.ScopedPairs(&conf), jsonFlag, plain, copy)
+		printer.ScopedConfigValues(conf, translatedArgs, models.ScopedOptionsMap(&conf), jsonFlag, plain, copy)
 	},
 }
 
@@ -119,6 +120,7 @@ var configureSetCmd = &cobra.Command{
 
 Ex: set the options "key" and "otherkey":
 doppler configure set key=123 otherkey=456`,
+	ValidArgsFunction: configOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires at least 1 arg(s), only received 0")
@@ -178,6 +180,7 @@ var configureUnsetCmd = &cobra.Command{
 
 Ex: unset the options "key" and "otherkey":
 doppler configure unset key otherkey`,
+	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires at least 1 arg(s), only received 0")
@@ -225,6 +228,36 @@ var configureResetCmd = &cobra.Command{
 		configuration.ClearConfig()
 		utils.Log("Configuration has been reset. Please run 'doppler login' to authenticate")
 	},
+}
+
+// currentConfigOptionsValidArgs the options currently in use in the current scope
+func configOptionsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	var names []string
+	for _, option := range models.AllConfigOptions() {
+		friendlyName := configuration.TranslateConfigOption(option)
+		names = append(names, friendlyName)
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
+}
+
+// currentConfigOptionsValidArgs the options currently in use in the current scope
+func currentConfigOptionsValidArgs(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	persistentValidArgsFunction(cmd)
+
+	config := configuration.Get(configuration.Scope)
+	configMap := models.ScopedOptionsStringMap(&config)
+
+	var validArgs []string
+	for _, option := range models.AllConfigOptions() {
+		value := configMap[option]
+		if value != "" {
+			friendlyName := configuration.TranslateConfigOption(option)
+			validArgs = append(validArgs, friendlyName)
+		}
+	}
+	return validArgs, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {
