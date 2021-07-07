@@ -277,7 +277,10 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 
 // GetProjects get projects
 func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
-	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", []queryParam{})
+	var params []queryParam
+	params = append(params, queryParam{Key: "per_page", Value: "100"})
+
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch projects", Code: statusCode}
 	}
@@ -438,6 +441,7 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "per_page", Value: "100"})
 
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
 	if err != nil {
