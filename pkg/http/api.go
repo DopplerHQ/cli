@@ -572,12 +572,18 @@ func UnlockConfig(host string, verifyTLS bool, apiKey string, project string, co
 }
 
 // CloneConfig clone a config
-func CloneConfig(host string, verifyTLS bool, apiKey string, project string, config string) (models.ConfigInfo, Error) {
+func CloneConfig(host string, verifyTLS bool, apiKey string, project string, config string, name string) (models.ConfigInfo, Error) {
+	postBody := map[string]interface{}{"name": name}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
+	}
+
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/clone", params, nil)
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/clone", params, body)
 	if err != nil {
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to clone config", Code: statusCode}
 	}
