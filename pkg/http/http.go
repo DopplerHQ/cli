@@ -44,7 +44,7 @@ type errorResponse struct {
 }
 
 // DNS resolver
-var UseCustomDNSResolver = true
+var UseCustomDNSResolver = false
 var DNSResolverAddress = "1.1.1.1:53"
 var DNSResolverProto = "udp"
 var DNSResolverTimeout = time.Duration(5) * time.Second

@@ -142,10 +142,16 @@ func loadFlags(cmd *cobra.Command) {
 	http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")
 
 	// DNS resolver
-	http.UseCustomDNSResolver = !utils.GetBoolFlag(cmd, "no-dns-resolver")
-	if configuration.CanReadEnv && os.Getenv("DOPPLER_DISABLE_DNS_RESOLVER") == "true" {
-		http.UseCustomDNSResolver = false
+	if configuration.CanReadEnv {
+		enableDNSResovler := os.Getenv("DOPPLER_ENABLE_DNS_RESOLVER")
+		if enableDNSResovler == "true" {
+			http.UseCustomDNSResolver = true
+		} else if enableDNSResovler == "false" {
+			http.UseCustomDNSResolver = false
+		}
 	}
+	// flag takes precedence over env var
+	http.UseCustomDNSResolver = utils.GetBoolFlagIfChanged(cmd, "enable-dns-resolver", http.UseCustomDNSResolver)
 
 	// no-file is used by the 'secrets download' command to output secrets to stdout
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
@@ -194,6 +200,13 @@ func init() {
 	rootCmd.PersistentFlags().DurationVar(&http.TimeoutDuration, "timeout", http.TimeoutDuration, "max http request duration")
 	// DNS resolver
 	rootCmd.PersistentFlags().Bool("no-dns-resolver", !http.UseCustomDNSResolver, "use the OS's default DNS resolver")
+	if err := rootCmd.PersistentFlags().MarkDeprecated("no-dns-resolver", "the DNS resolver is disabled by default"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := rootCmd.PersistentFlags().MarkHidden("no-dns-resolver"); err != nil {
+		utils.HandleError(err)
+	}
+	rootCmd.PersistentFlags().Bool("enable-dns-resolver", http.UseCustomDNSResolver, "bypass the OS's default DNS resolver")
 	rootCmd.PersistentFlags().StringVar(&http.DNSResolverAddress, "dns-resolver-address", http.DNSResolverAddress, "address to use for DNS resolution")
 	rootCmd.PersistentFlags().StringVar(&http.DNSResolverProto, "dns-resolver-proto", http.DNSResolverProto, "protocol to use for DNS resolution")
 	rootCmd.PersistentFlags().DurationVar(&http.DNSResolverTimeout, "dns-resolver-timeout", http.DNSResolverTimeout, "max dns lookup duration")
