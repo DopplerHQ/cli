@@ -3,7 +3,6 @@ name: Bug report
 about: Report an issue with the Doppler CLI
 title: "[BUG]"
 labels: bug
-assignees: Piccirello
 
 ---
 
