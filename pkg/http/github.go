@@ -28,7 +28,7 @@ import (
 func getLatestVersion() (string, error) {
 	origTimeout := TimeoutDuration
 	TimeoutDuration = 2 * time.Second
-	_, _, resp, err := GetRequest("https://api.github.com", true, nil, "/repos/DopplerHQ/cli/releases/latest", nil)
+	_, _, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/version", nil)
 	TimeoutDuration = origTimeout
 	if err != nil {
 		return "", err
@@ -40,11 +40,11 @@ func getLatestVersion() (string, error) {
 		return "", err
 	}
 
-	if version, exists := body["tag_name"]; exists {
+	if version, exists := body["version"]; exists {
 		return version.(string), nil
 	}
 
-	return "", errors.New("unable to retrieve tag_name of latest release")
+	return "", errors.New("unable to retrieve latest CLI version")
 }
 
 // GetLatestCLIVersion fetches the latest CLI version
