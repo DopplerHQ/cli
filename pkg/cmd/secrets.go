@@ -130,7 +130,7 @@ optional: {{.OPTIONAL_SECRET}}
 {{/* tojson and fromjson have been added to support parsing JSON and stringifying values: */ -}}
 Multiline: {{tojson .MULTILINE_SECRET}}
 JSON Secret: {{tojson .JSON_SECRET}}
-$ doppler secrets template template.yaml
+$ doppler secrets substitute template.yaml
 host: 127.0.0.1
 port: 8080
 Multiline: "Line one\r\nLine two"
