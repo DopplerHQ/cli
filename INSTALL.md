@@ -90,7 +90,7 @@ $ sudo apt-get update && sudo apt-get upgrade doppler
 $ sudo rpm --import 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key'
 
 # add Doppler's yum repo
-$ sudo curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/config.rpm.txt' > /etc/yum.repos.d/doppler-cli.repo
+$ curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/config.rpm.txt' | sudo tee /etc/yum.repos.d/doppler-cli.repo
 
 # update packages and install latest doppler cli
 $ sudo yum update && sudo yum install doppler
