@@ -102,7 +102,16 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase)
+		nameTransformerString := cmd.Flag("name-transformer").Value.String()
+		var nameTransformer *models.SecretsNameTransformer
+		if nameTransformerString != "" {
+			nameTransformer = models.SecretsNameTransformerMap[nameTransformerString]
+			if nameTransformer == nil || !nameTransformer.EnvCompat {
+				utils.HandleError(fmt.Errorf("invalid name transformer. Valid transformers are %s", validEnvCompatNameTransformersList))
+			}
+		}
+
+		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase, nameTransformer)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -241,22 +250,25 @@ var runCleanCmd = &cobra.Command{
 }
 
 // fetchSecrets fetches secrets, including all reading and writing of fallback files
-func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string, nameTransformer *models.SecretsNameTransformer) map[string]string {
 	if fallbackOnly {
 		if !enableFallback {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
+		}
+		if nameTransformer != nil {
+			utils.HandleError(errors.New("Conflict: unable to specify --name-transformer with --fallback-only"))
 		}
 		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
-	enableCache = enableCache && metadataPath != ""
+	enableCache = enableCache && nameTransformer == nil && metadataPath != ""
 	etag := ""
 	if enableCache {
 		etag = getCacheFileETag(metadataPath, fallbackPath)
 	}
 
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, etag)
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, nameTransformer, etag)
 	if !httpErr.IsNil() {
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
@@ -293,7 +305,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		utils.HandleError(err, "Unable to parse API response")
 	}
 
-	writeFallbackFile := enableFallback && !fallbackReadonly
+	writeFallbackFile := enableFallback && !fallbackReadonly && nameTransformer == nil
 	if writeFallbackFile {
 		utils.LogDebug("Encrypting secrets")
 		encryptedResponse, err := crypto.Encrypt(passphrase, response)
@@ -541,6 +553,7 @@ func init() {
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
+	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validEnvCompatNameTransformersList))
 	// fallback flags
 	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
 	// TODO rename this to 'fallback-passphrase' in CLI v4 (DPLR-435)

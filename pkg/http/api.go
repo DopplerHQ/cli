@@ -136,11 +136,14 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 }
 
 // DownloadSecrets for specified project and config
-func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, etag string) (int, http.Header, []byte, Error) {
+func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, etag string) (int, http.Header, []byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "format", Value: format.String()})
+	if nameTransformer != nil {
+		params = append(params, queryParam{Key: "name_transformer", Value: nameTransformer.Type})
+	}
 
 	headers := apiKeyHeader(apiKey)
 	if etag != "" {
