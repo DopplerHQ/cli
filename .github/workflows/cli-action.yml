@@ -16,7 +16,7 @@ jobs:
     - name: Install CLI
       uses: dopplerhq/cli-action@v1
     - name: Test CLI
-      run: doppler --version
+      run: doppler.exe --version
   macOS:
     runs-on: macos-latest
     steps:
