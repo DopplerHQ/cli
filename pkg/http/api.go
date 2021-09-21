@@ -51,7 +51,7 @@ func GenerateAuthCode(host string, verifyTLS bool, hostname string, os string, a
 	params = append(params, queryParam{Key: "os", Value: os})
 	params = append(params, queryParam{Key: "arch", Value: arch})
 
-	statusCode, _, response, err := GetRequest(host, verifyTLS, nil, "/v3/auth/cli/generate", params)
+	statusCode, _, response, err := GetRequest(host, verifyTLS, nil, "/v3/auth/cli/generate/2", params)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch auth code", Code: statusCode}
 	}

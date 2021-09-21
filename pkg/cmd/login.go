@@ -77,6 +77,7 @@ var loginCmd = &cobra.Command{
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 		code := response["code"].(string)
+		pollingCode := response["polling_code"].(string)
 		authURL := response["auth_url"].(string)
 
 		if copyAuthCode {
@@ -117,7 +118,7 @@ var loginCmd = &cobra.Command{
 				utils.HandleError(fmt.Errorf("login timed out after %d minutes", int(timeout.Minutes())))
 			}
 
-			resp, err := http.GetAuthToken(localConfig.APIHost.Value, verifyTLS, code)
+			resp, err := http.GetAuthToken(localConfig.APIHost.Value, verifyTLS, pollingCode)
 			if !err.IsNil() {
 				if err.Code == 409 {
 					time.Sleep(2 * time.Second)
