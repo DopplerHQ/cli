@@ -132,10 +132,12 @@ func persistentValidArgsFunction(cmd *cobra.Command) {
 
 func loadFlags(cmd *cobra.Command) {
 	var err error
+	var normalizedScope string
 	scope := cmd.Flag("scope").Value.String()
-	if configuration.Scope, err = configuration.NormalizeScope(scope); err != nil {
+	if normalizedScope, err = configuration.NormalizeScope(scope); err != nil {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
+	configuration.Scope = normalizedScope
 
 	configuration.CanReadEnv = !utils.GetBoolFlag(cmd, "no-read-env")
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)

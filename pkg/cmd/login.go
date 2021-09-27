@@ -76,9 +76,21 @@ var loginCmd = &cobra.Command{
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
-		code := response["code"].(string)
-		pollingCode := response["polling_code"].(string)
-		authURL := response["auth_url"].(string)
+		code, ok := response["code"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for auth code, expected string, got %T", response["code"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
+		pollingCode, ok := response["polling_code"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for polling code, expected string, got %T", response["polling_code"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
+		authURL, ok := response["auth_url"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for auth url, expected string, got %T", response["auth_url"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 
 		if copyAuthCode {
 			if err := utils.CopyToClipboard(code); err != nil {
@@ -142,9 +154,21 @@ var loginCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		token := response["token"].(string)
-		name := response["name"].(string)
-		dashboard := response["dashboard_url"].(string)
+		token, ok := response["token"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for token, expected string, got %T", response["token"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
+		name, ok := response["name"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for name, expected string, got %T", response["name"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
+		dashboard, ok := response["dashboard_url"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for dashboard url, expected string, got %T", response["dashboard_url"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 
 		options := map[string]string{
 			models.ConfigToken.String():         token,
@@ -201,7 +225,11 @@ Your saved configuration will be updated.`,
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		newToken := response["token"].(string)
+		newToken, ok := response["token"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for token, expected string, got %T", response["token"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 
 		if updateConfig {
 			// update token in config

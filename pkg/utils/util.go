@@ -176,7 +176,10 @@ func execCommand(cmd *exec.Cmd, forwardSignals bool) (int, error) {
 		return 2, err
 	}
 
-	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
+	waitStatus, ok := cmd.ProcessState.Sys().(syscall.WaitStatus)
+	if !ok {
+		return 2, fmt.Errorf("Unexpected ProcessState type, expected syscall.WaitStatus, got %T", waitStatus)
+	}
 	return waitStatus.ExitStatus(), nil
 }
 

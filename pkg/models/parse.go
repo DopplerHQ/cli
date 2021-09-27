@@ -17,6 +17,10 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 // ParseWorkplaceSettings parse workplace settings
@@ -137,7 +141,11 @@ func ParseConfigLog(log map[string]interface{}) ConfigLog {
 		parsedLog.Project = log["project"].(string)
 	}
 	if log["user"] != nil {
-		user := log["user"].(map[string]interface{})
+		user, ok := log["user"].(map[string]interface{})
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for ConfigLog, expected map[string]interface{}, got %T", log["user"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 		parsedLog.User.Email = user["email"].(string)
 		parsedLog.User.Name = user["name"].(string)
 		parsedLog.User.Username = user["username"].(string)
@@ -145,7 +153,11 @@ func ParseConfigLog(log map[string]interface{}) ConfigLog {
 	}
 	if log["diff"] != nil {
 		for _, diff := range log["diff"].([]interface{}) {
-			diffMap := diff.(map[string]interface{})
+			diffMap, ok := diff.(map[string]interface{})
+			if !ok {
+				utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for ConfigLog, expected map[string]interface{}, got %T", log["diff"]))
+				utils.HandleError(errors.New("Unable to parse API response"))
+			}
 			d := LogDiff{}
 			if diffMap["name"] != nil {
 				d.Name = diffMap["name"].(string)
@@ -189,7 +201,11 @@ func ParseActivityLog(log map[string]interface{}) ActivityLog {
 		parsedLog.EnclaveProject = log["enclave_project"].(string)
 	}
 	if log["user"] != nil {
-		user := log["user"].(map[string]interface{})
+		user, ok := log["user"].(map[string]interface{})
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for ActivityLog, expected map[string]interface{}, got %T", log["user"]))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 		if user["email"] != nil {
 			parsedLog.User.Email = user["email"].(string)
 		}
@@ -216,10 +232,18 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 	}
 
 	computed := map[string]ComputedSecret{}
-	secrets := result["secrets"].(map[string]interface{})
+	secrets, ok := result["secrets"].(map[string]interface{})
+	if !ok {
+		utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for Secrets, expected map[string]interface{}, got %T", result["secrets"]))
+		utils.HandleError(errors.New("Unable to parse API response"))
+	}
 	for key, secret := range secrets {
 		computedSecret := ComputedSecret{Name: key}
-		val := secret.(map[string]interface{})
+		val, ok := secret.(map[string]interface{})
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for secret, expected map[string]interface{}, got %T", secret))
+			utils.HandleError(errors.New("Unable to parse API response"))
+		}
 		if val["raw"] != nil {
 			computedSecret.RawValue = val["raw"].(string)
 		}

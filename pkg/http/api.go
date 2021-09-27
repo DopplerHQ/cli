@@ -196,7 +196,10 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 
 	computed := map[string]models.ComputedSecret{}
 	for key, secret := range result["secrets"].(map[string]interface{}) {
-		val := secret.(map[string]interface{})
+		val, ok := secret.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type mismatch for secret, expected map[string]interface{}, got %T", secret), Message: "Unable to parse API response", Code: statusCode}
+		}
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
@@ -229,7 +232,10 @@ func UploadSecrets(host string, verifyTLS bool, apiKey string, project string, c
 
 	computed := map[string]models.ComputedSecret{}
 	for key, secret := range result["secrets"].(map[string]interface{}) {
-		val := secret.(map[string]interface{})
+		val, ok := secret.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for secret, expected map[string]interface{}, got %T", secret), Message: "Unable to parse API response", Code: statusCode}
+		}
 		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
 	}
 
@@ -249,7 +255,11 @@ func GetWorkplaceSettings(host string, verifyTLS bool, apiKey string) (models.Wo
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
+	workplace, ok := result["workplace"].(map[string]interface{})
+	if !ok {
+		return models.WorkplaceSettings{}, Error{Err: fmt.Errorf("Unexpected type parsing WorkplaceSettings, expected map[string]interface{}, got %T", result["workplace"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	settings := models.ParseWorkplaceSettings(workplace)
 	return settings, Error{}
 }
 
@@ -271,7 +281,11 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 		return models.WorkplaceSettings{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	settings := models.ParseWorkplaceSettings(result["workplace"].(map[string]interface{}))
+	workplace, ok := result["workplace"].(map[string]interface{})
+	if !ok {
+		return models.WorkplaceSettings{}, Error{Err: fmt.Errorf("Unexpected type parsing WorkplaceSettings, expected map[string]interface{}, got %T", result["workplace"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	settings := models.ParseWorkplaceSettings(workplace)
 	return settings, Error{}
 }
 
@@ -293,7 +307,11 @@ func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectIn
 
 	var info []models.ProjectInfo
 	for _, project := range result["projects"].([]interface{}) {
-		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
+		project, ok := project.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for project, expected map[string]interface{}, got %T", project), Message: "Unable to parse API response", Code: statusCode}
+		}
+		projectInfo := models.ParseProjectInfo(project)
 		info = append(info, projectInfo)
 	}
 	return info, Error{}
@@ -315,7 +333,11 @@ func GetProject(host string, verifyTLS bool, apiKey string, project string) (mod
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
+	resultProject, ok := result["project"].(map[string]interface{})
+	if !ok {
+		return models.ProjectInfo{}, Error{Err: fmt.Errorf("Unexpected type for project, expected map[string]interface{}, got %T", result["project"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	projectInfo := models.ParseProjectInfo(resultProject)
 	return projectInfo, Error{}
 }
 
@@ -338,7 +360,11 @@ func CreateProject(host string, verifyTLS bool, apiKey string, name string, desc
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
+	resultProject, ok := result["project"].(map[string]interface{})
+	if !ok {
+		return models.ProjectInfo{}, Error{Err: fmt.Errorf("Unexpected type for project, expected map[string]interface{}, got %T", result["project"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	projectInfo := models.ParseProjectInfo(resultProject)
 	return projectInfo, Error{}
 }
 
@@ -369,7 +395,11 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 		return models.ProjectInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	projectInfo := models.ParseProjectInfo(result["project"].(map[string]interface{}))
+	resultProject, ok := result["project"].(map[string]interface{})
+	if !ok {
+		return models.ProjectInfo{}, Error{Err: fmt.Errorf("Unexpected type for project, expected map[string]interface{}, got %T", result["project"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	projectInfo := models.ParseProjectInfo(resultProject)
 	return projectInfo, Error{}
 }
 
@@ -410,7 +440,11 @@ func GetEnvironments(host string, verifyTLS bool, apiKey string, project string)
 
 	var info []models.EnvironmentInfo
 	for _, environment := range result["environments"].([]interface{}) {
-		environmentInfo := models.ParseEnvironmentInfo(environment.(map[string]interface{}))
+		environment, ok := environment.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for environment, expected map[string]interface{}, got %T", environment), Message: "Unable to parse API response", Code: statusCode}
+		}
+		environmentInfo := models.ParseEnvironmentInfo(environment)
 		info = append(info, environmentInfo)
 	}
 	return info, Error{}
@@ -433,7 +467,11 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
+	environmentInfo, ok := result["environment"].(map[string]interface{})
+	if !ok {
+		return models.EnvironmentInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing environment, expected map[string]interface{}, got %T", result["environment"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseEnvironmentInfo(environmentInfo)
 	return info, Error{}
 }
 
@@ -456,7 +494,11 @@ func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]m
 
 	var info []models.ConfigInfo
 	for _, config := range result["configs"].([]interface{}) {
-		configInfo := models.ParseConfigInfo(config.(map[string]interface{}))
+		config, ok := config.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type parsing config, expected map[string]interface{}, got %T", config), Message: "Unable to parse API response", Code: statusCode}
+		}
+		configInfo := models.ParseConfigInfo(config)
 		info = append(info, configInfo)
 	}
 	return info, Error{}
@@ -479,7 +521,11 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
 }
 
@@ -505,7 +551,11 @@ func CreateConfig(host string, verifyTLS bool, apiKey string, project string, na
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	config, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(config)
 	return info, Error{}
 }
 
@@ -546,7 +596,11 @@ func LockConfig(host string, verifyTLS bool, apiKey string, project string, conf
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
 }
 
@@ -567,7 +621,11 @@ func UnlockConfig(host string, verifyTLS bool, apiKey string, project string, co
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
 }
 
@@ -594,7 +652,11 @@ func CloneConfig(host string, verifyTLS bool, apiKey string, project string, con
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
 }
 
@@ -621,7 +683,11 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigInfo(result["config"].(map[string]interface{}))
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
 }
 
@@ -640,7 +706,11 @@ func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Activ
 
 	var logs []models.ActivityLog
 	for _, log := range result["logs"].([]interface{}) {
-		parsedLog := models.ParseActivityLog(log.(map[string]interface{}))
+		log, ok := log.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type parsing activity log, expected map[string]interface{}, got %T", log), Message: "Unable to parse API response", Code: statusCode}
+		}
+		parsedLog := models.ParseActivityLog(log)
 		logs = append(logs, parsedLog)
 	}
 	return logs, Error{}
@@ -659,7 +729,11 @@ func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (mod
 		return models.ActivityLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseActivityLog(result["log"].(map[string]interface{}))
+	logResult, ok := result["log"].(map[string]interface{})
+	if !ok {
+		return models.ActivityLog{}, Error{Err: fmt.Errorf("Unexpected type for log, expected map[string]interface{}, got %T", result["log"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	parsedLog := models.ParseActivityLog(logResult)
 	return parsedLog, Error{}
 }
 
@@ -682,7 +756,11 @@ func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, c
 
 	var logs []models.ConfigLog
 	for _, log := range result["logs"].([]interface{}) {
-		parsedLog := models.ParseConfigLog(log.(map[string]interface{}))
+		log, ok := log.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for ConfigLog response, expected map[string]interface{}, got %T", log), Message: "Unable to parse API response", Code: statusCode}
+		}
+		parsedLog := models.ParseConfigLog(log)
 		logs = append(logs, parsedLog)
 	}
 	return logs, Error{}
@@ -706,7 +784,11 @@ func GetConfigLog(host string, verifyTLS bool, apiKey string, project string, co
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseConfigLog(result["log"].(map[string]interface{}))
+	logResult, ok := result["log"].(map[string]interface{})
+	if !ok {
+		return models.ConfigLog{}, Error{Err: fmt.Errorf("Unexpected type parsing ConfigLog result, expected map[string]interface{}, got %T", result["log"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	parsedLog := models.ParseConfigLog(logResult)
 	return parsedLog, Error{}
 }
 
@@ -728,7 +810,11 @@ func RollbackConfigLog(host string, verifyTLS bool, apiKey string, project strin
 		return models.ConfigLog{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	parsedLog := models.ParseConfigLog(result["log"].(map[string]interface{}))
+	logResult, ok := result["log"].(map[string]interface{})
+	if !ok {
+		return models.ConfigLog{}, Error{Err: fmt.Errorf("Unexpected type for ConfigLog response, expected map[string]interface{}, got %T", result["log"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	parsedLog := models.ParseConfigLog(logResult)
 	return parsedLog, Error{}
 }
 
@@ -750,8 +836,12 @@ func GetConfigServiceTokens(host string, verifyTLS bool, apiKey string, project 
 	}
 
 	var tokens []models.ConfigServiceToken
-	for _, log := range result["tokens"].([]interface{}) {
-		parsedToken := models.ParseConfigServiceToken(log.(map[string]interface{}))
+	for _, token := range result["tokens"].([]interface{}) {
+		token, ok := token.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for ConfigServiceToken response, expected map[string]interface{}, got %T", token), Message: "Unable to parse API response", Code: statusCode}
+		}
+		parsedToken := models.ParseConfigServiceToken(token)
 		tokens = append(tokens, parsedToken)
 	}
 	return tokens, Error{}
@@ -780,7 +870,11 @@ func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 		return models.ConfigServiceToken{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	info := models.ParseConfigServiceToken(result["token"].(map[string]interface{}))
+	tokenResult, ok := result["token"].(map[string]interface{})
+	if !ok {
+		return models.ConfigServiceToken{}, Error{Err: fmt.Errorf("Unexpected type for token result in ConfigServiceToken, expected map[string]interface{}, got %T", result["token"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigServiceToken(tokenResult)
 	return info, Error{}
 }
 
@@ -827,7 +921,11 @@ func ImportTemplate(host string, verifyTLS bool, apiKey string, template []byte)
 
 	var info []models.ProjectInfo
 	for _, project := range result["projects"].([]interface{}) {
-		projectInfo := models.ParseProjectInfo(project.(map[string]interface{}))
+		project, ok := project.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for project, expected map[string]interface{}, got %T", project), Message: "Unable to parse API response", Code: statusCode}
+		}
+		projectInfo := models.ParseProjectInfo(project)
 		info = append(info, projectInfo)
 	}
 	return info, Error{}
