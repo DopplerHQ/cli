@@ -310,6 +310,27 @@ func ConfirmationPrompt(message string, defaultValue bool) bool {
 	return confirm
 }
 
+func MultiSelectPrompt(message string, options []string) []string {
+	selected := []string{}
+	prompt := &survey.MultiSelect{
+		Message:  message,
+		Options:  options,
+		PageSize: 25,
+	}
+
+	err := survey.AskOne(prompt, &selected, survey.WithKeepFilter(true))
+
+	if err != nil {
+		if err == terminal.InterruptErr {
+			Log("Exiting")
+			os.Exit(1)
+		}
+		HandleError(err)
+	}
+
+	return selected
+}
+
 // SelectPrompt prompt user to select from a list of options
 func SelectPrompt(message string, options []string, defaultOption string) string {
 	prompt := &survey.Select{

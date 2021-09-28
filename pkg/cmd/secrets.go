@@ -139,6 +139,15 @@ JSON Secret: "{\"logging\": \"info\"}"`,
 	Run:  substituteSecrets,
 }
 
+var secretsEditCmd = &cobra.Command{
+	Use:     "edit",
+	Short:   "Edit secrets in your editor",
+	Long:    "Shows a list of current secrets in the config and allows you to edit in your $EDITOR",
+	Example: `$ doppler secrets edit`,
+	Args:    cobra.NoArgs,
+	Run:     editSecrets,
+}
+
 func secrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
@@ -552,6 +561,8 @@ func init() {
 	secretsSubstituteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
 	secretsCmd.AddCommand(secretsSubstituteCmd)
+
+	secretsCmd.AddCommand(secretsEditCmd)
 
 	rootCmd.AddCommand(secretsCmd)
 }
