@@ -257,6 +257,9 @@ func ParseConfigServiceToken(token map[string]interface{}) ConfigServiceToken {
 	if token["created_at"] != nil {
 		parsedToken.CreatedAt = token["created_at"].(string)
 	}
+	if token["expires_at"] != nil {
+		parsedToken.ExpiresAt = token["expires_at"].(string)
+	}
 
 	return parsedToken
 }
