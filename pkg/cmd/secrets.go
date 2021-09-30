@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -64,8 +65,23 @@ var secretsSetCmd = &cobra.Command{
 	Short: "Set the value of one or more secrets",
 	Long: `Set the value of one or more secrets.
 
-Ex: set the secrets "API_KEY" and "CRYPTO_KEY":
-doppler secrets set API_KEY=123 CRYPTO_KEY=456`,
+There are several methods for setting secrets:
+
+1) stdin (recommended)
+$ echo -e 'multiline\nvalue' | doppler secrets set CERT
+
+2) interactive stdin (recommended)
+$ doppler secrets set CERT
+multiline
+value
+
+.
+
+3) one secret
+$ doppler secrets set API_KEY '123'
+
+4) multiple secrets
+$ doppler secrets set API_KEY='123' DATABASE_URL='postgres:random@127.0.0.1:5432'`,
 	Args: cobra.MinimumNArgs(1),
 	Run:  setSecrets,
 }
@@ -206,6 +222,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 func setSecrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	canPromptUser := !utils.GetBoolFlag(cmd, "no-interactive")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -213,7 +230,75 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	secrets := map[string]interface{}{}
 	var keys []string
 
-	if len(args) == 2 && !strings.Contains(args[0], "=") {
+	// if only one arg, read from stdin
+	if len(args) == 1 && !strings.Contains(args[0], "=") {
+		// format: 'echo "value" | doppler secrets set KEY'
+		// OR
+		// format: 'doppler secrets set KEY' (interactive)
+
+		// check for existing data on stdin
+		stat, e := os.Stdin.Stat()
+		if e != nil {
+			utils.HandleError(e, "Unable to stat stdin")
+		}
+
+		dataOnStdin := (stat.Mode() & os.ModeCharDevice) == 0
+		interactiveMode := !dataOnStdin
+		if interactiveMode {
+			if !canPromptUser {
+				utils.HandleError(errors.New("Secret value must be provided when using --no-interactive"))
+			}
+
+			utils.Log("Enter your secret value")
+			utils.Log("When finished, type a newline followed by a period")
+			utils.Log("Run 'doppler secrets set --help' for more information")
+			utils.Log("———————————————————— START INPUT ————————————————————")
+		}
+
+		isNewline := false
+		isPreviousNewline := false
+		var input []string
+		scanner := bufio.NewScanner(os.Stdin)
+		// read input from stdin
+		for {
+			if ok := scanner.Scan(); !ok {
+				if e := scanner.Err(); e != nil {
+					utils.HandleError(e, "Unable to read input from stdin")
+				}
+
+				break
+			}
+
+			s := scanner.Text()
+
+			if interactiveMode {
+				isPreviousNewline = isNewline
+				isNewline = false
+
+				if isPreviousNewline && s == "." {
+					utils.Log("————————————————————— END INPUT —————————————————————")
+					break
+				}
+
+				if len(s) == 0 {
+					isNewline = true
+				}
+			}
+
+			input = append(input, s)
+		}
+
+		if interactiveMode {
+			// remove final newline
+			input = input[:len(input)-1]
+		}
+
+		key := args[0]
+		value := strings.Join(input, "\n")
+
+		keys = append(keys, key)
+		secrets[key] = value
+	} else if len(args) == 2 && !strings.Contains(args[0], "=") {
 		// format: 'doppler secrets set KEY value'
 		key := args[0]
 		value := args[1]
@@ -520,6 +605,7 @@ func init() {
 	secretsSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsSetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

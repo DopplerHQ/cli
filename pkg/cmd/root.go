@@ -54,13 +54,13 @@ var rootCmd = &cobra.Command{
 		}
 
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
-		canPrompt := !utils.GetBoolFlagIfChanged(cmd, "no-prompt", false)
+		canPrompt := !utils.GetBoolFlagIfChanged(cmd, "no-prompt", false) && !utils.GetBoolFlagIfChanged(cmd, "no-interactive", false)
 		// tty is required to accept user input, otherwise the update can't be accepted/declined
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 
 		// only run version check if we can print the results
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
-		// also don't want to display updates if user doesn't want to be prompted (--no-prompt)
+		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
 		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
 			checkVersion(cmd.CommandPath())
 		}
