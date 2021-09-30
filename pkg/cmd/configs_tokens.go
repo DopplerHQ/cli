@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
@@ -112,7 +113,16 @@ func createConfigsTokens(cmd *cobra.Command, args []string) {
 	}
 	utils.RequireValue("name", name)
 
-	configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name)
+	maxAge := utils.GetDurationFlagIfChanged(cmd, "max-age", 0)
+	if maxAge < 0 {
+		utils.HandleError(errors.New("Max age must be positive or zero"))
+	}
+	expireAt := time.Time{}
+	if maxAge > 0 {
+		expireAt = time.Now().Add(maxAge)
+	}
+
+	configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name, expireAt)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -173,6 +183,7 @@ func init() {
 	configsTokensCreateCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
+	configsTokensCreateCmd.Flags().Duration("max-age", 0, "token will expire after specified duration, (e.g. '3h', '15m')")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")

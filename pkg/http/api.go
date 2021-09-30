@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/version"
@@ -758,8 +759,12 @@ func GetConfigServiceTokens(host string, verifyTLS bool, apiKey string, project 
 }
 
 // CreateConfigServiceToken create a config service token
-func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, name string) (models.ConfigServiceToken, Error) {
+func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, name string, expireAt time.Time) (models.ConfigServiceToken, Error) {
 	postBody := map[string]interface{}{"name": name}
+	if !expireAt.IsZero() {
+		postBody["expire_at"] = expireAt.Unix()
+	}
+
 	body, err := json.Marshal(postBody)
 	if err != nil {
 		return models.ConfigServiceToken{}, Error{Err: err, Message: "Invalid service token info"}

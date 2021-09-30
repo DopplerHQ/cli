@@ -104,6 +104,7 @@ type ConfigServiceToken struct {
 	Token       string `json:"token"`
 	Slug        string `json:"slug"`
 	CreatedAt   string `json:"created_at"`
+	ExpiresAt   string `json:"expires_at"`
 	Project     string `json:"project"`
 	Environment string `json:"environment"`
 	Config      string `json:"config"`
