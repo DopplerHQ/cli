@@ -107,6 +107,7 @@ func init() {
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveSecretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 
 	enclaveSecretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")

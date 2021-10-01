@@ -38,7 +38,7 @@ var setupCmd = &cobra.Command{
 }
 
 func setup(cmd *cobra.Command, args []string) {
-	canPromptUser := !utils.GetBoolFlag(cmd, "no-prompt")
+	canPromptUser := !utils.GetBoolFlag(cmd, "no-prompt") && !utils.GetBoolFlag(cmd, "no-interactive")
 	canSaveToken := !utils.GetBoolFlag(cmd, "no-save-token")
 	localConfig := configuration.LocalConfig(cmd)
 	scopedConfig := configuration.Get(configuration.Scope)
@@ -69,7 +69,7 @@ func setup(cmd *cobra.Command, args []string) {
 			// ignore when project and config are already specified
 			(localConfig.EnclaveProject.Source == models.FlagSource.String() && localConfig.EnclaveConfig.Source == models.FlagSource.String())
 
-	// default to true so repo config is used on --no-prompt
+	// default to true so repo config is used on --no-interactive
 	useRepoConfig := true
 	if !ignoreRepoConfig && canPromptUser {
 		useRepoConfig = utils.ConfirmationPrompt("Use settings from repo config file (doppler.yaml)?", true)
@@ -190,7 +190,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	}
 
 	if !canPromptUser {
-		utils.HandleError(errors.New("project must be specified via --project flag, DOPPLER_PROJECT environment variable, or repo config file when using --no-prompt"))
+		utils.HandleError(errors.New("project must be specified via --project flag, DOPPLER_PROJECT environment variable, or repo config file when using --no-interactive"))
 	}
 
 	selectedProject := utils.SelectPrompt("Select a project:", options, defaultOption)
@@ -226,7 +226,7 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 	}
 
 	if !canPromptUser {
-		utils.HandleError(errors.New("config must be specified via --config flag, DOPPLER_CONFIG environment variable, or repo config file when using --no-prompt"))
+		utils.HandleError(errors.New("config must be specified via --config flag, DOPPLER_CONFIG environment variable, or repo config file when using --no-interactive"))
 	}
 
 	selectedConfig := utils.SelectPrompt("Select a config:", options, defaultOption)
@@ -240,7 +240,17 @@ func valueFromEnvironmentNotice(name string) string {
 func init() {
 	setupCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	setupCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	setupCmd.Flags().Bool("no-interactive", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
+
+	// deprecated
+	setupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	if err := setupCmd.Flags().MarkDeprecated("no-prompt", "please use --no-interactive instead"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := setupCmd.Flags().MarkHidden("no-prompt"); err != nil {
+		utils.HandleError(err)
+	}
+
 	rootCmd.AddCommand(setupCmd)
 }

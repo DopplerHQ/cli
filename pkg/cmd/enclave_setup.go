@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +33,17 @@ var enclaveSetupCmd = &cobra.Command{
 func init() {
 	enclaveSetupCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveSetupCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSetupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	enclaveSetupCmd.Flags().Bool("no-interactive", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	enclaveSetupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
+
+	// deprecated
+	enclaveSetupCmd.Flags().Bool("no-prompt", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
+	if err := enclaveSetupCmd.Flags().MarkDeprecated("no-prompt", "please use --no-interactive instead"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := enclaveSetupCmd.Flags().MarkHidden("no-prompt"); err != nil {
+		utils.HandleError(err)
+	}
+
 	enclaveCmd.AddCommand(enclaveSetupCmd)
 }
