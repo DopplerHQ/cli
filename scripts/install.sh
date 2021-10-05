@@ -2,6 +2,10 @@
 
 set -e
 
+# error codes
+# 1 general
+# 2 insufficient perms
+
 DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
@@ -216,6 +220,13 @@ is_dir_in_path() {
   found=1
   (echo "$PATH" | grep -q "$dir:" || echo "$PATH" | grep -q -E "$dir$") || found=0
   echo "$found"
+}
+
+is_path_writable() {
+  dir="$1"
+  writable=1
+  test -w "$dir" || writable=0
+  echo "$writable"
 }
 
 # flag parsing
@@ -447,32 +458,47 @@ elif [ "$format" = "tar" ]; then
   # install
   if [ "$INSTALL" -eq 1 ]; then
     echo 'Installing...'
+    found_valid_path=0
     binary_installed=0
 
     install_dir="/usr/local/bin"
     if [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      log_debug "Moving binary to $install_dir"
-      mv -f "$extract_dir/doppler" $install_dir
-      binary_installed=1
+      found_valid_path=1
+      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
+        log_debug "Moving binary to $install_dir"
+        mv -f "$extract_dir/doppler" $install_dir
+        binary_installed=1
+      fi
     fi
 
     install_dir="/usr/bin"
     if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      log_debug "Moving binary to $install_dir"
-      mv -f "$extract_dir/doppler" $install_dir
-      binary_installed=1
+      found_valid_path=1
+      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
+        log_debug "Moving binary to $install_dir"
+        mv -f "$extract_dir/doppler" $install_dir
+        binary_installed=1
+      fi
     fi
 
     install_dir="/usr/sbin"
     if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      log_debug "Moving binary to $install_dir"
-      mv -f "$extract_dir/doppler" $install_dir
-      binary_installed=1
+      found_valid_path=1
+      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
+        log_debug "Moving binary to $install_dir"
+        mv -f "$extract_dir/doppler" $install_dir
+        binary_installed=1
+      fi
     fi
 
     if [ "$binary_installed" -eq 0 ]; then
-      log "No supported bin directories are available; please adjust your PATH"
-      clean_exit 1
+      if [ "$found_valid_path" -eq 0 ]; then
+        log "No supported bin directories are available; please adjust your PATH"
+        clean_exit 1
+      else
+        log "Unable to write to bin directory; please re-run with \`sudo\` or as an admin"
+        clean_exit 2
+      fi
     fi
   else
     log_debug "Moving binary to $(pwd) (cwd)"
