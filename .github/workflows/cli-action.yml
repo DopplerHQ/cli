@@ -10,6 +10,8 @@ jobs:
       uses: dopplerhq/cli-action@v1
     - name: Test CLI
       run: doppler --version
+      env:
+        DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
   windows:
     runs-on: windows-latest
     steps:
@@ -17,6 +19,8 @@ jobs:
       uses: dopplerhq/cli-action@v1
     - name: Test CLI
       run: doppler --version
+      env:
+        DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
   macOS:
     runs-on: macos-latest
     steps:
@@ -24,3 +28,5 @@ jobs:
       uses: dopplerhq/cli-action@v1
     - name: Test CLI
       run: doppler --version
+      env:
+        DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
