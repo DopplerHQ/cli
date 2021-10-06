@@ -374,7 +374,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 	return projectInfo, Error{}
 }
 
-// DeleteProject create a project
+// DeleteProject delete a project
 func DeleteProject(host string, verifyTLS bool, apiKey string, project string) Error {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
