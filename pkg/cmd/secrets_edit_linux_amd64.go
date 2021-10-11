@@ -68,9 +68,16 @@ func editSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	secretsToSave := parseEditFormat(selectedSecrets, modifiedSecrets)
-	saveSecrets(localConfig, secretsToSave)
 
-	fmt.Println("Secrets have been updated.")
+	prompt := "Secrets that will be modified:"
+	for key := range secretsToSave {
+		prompt = fmt.Sprintf("%s\n- %s", prompt, key)
+	}
+	prompt = fmt.Sprintf("%s\n\nConfirm changes:", prompt)
+	if utils.ConfirmationPrompt(prompt, false) {
+		saveSecrets(localConfig, secretsToSave)
+		fmt.Println("Secrets have been updated.")
+	}
 }
 
 func fetchSecretsForEdit(localConfig models.ScopedOptions) map[string]models.ComputedSecret {
