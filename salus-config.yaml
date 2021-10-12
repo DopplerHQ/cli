@@ -1,0 +1,21 @@
+# https://github.com/coinbase/salus/blob/master/docs/configuration.md
+
+# Used in the report to identify the project being scanned.
+project_name: CLI
+
+# Defines where to send Salus reports and in what format.
+reports:
+  - uri: file://salus-report.txt
+    format: txt
+
+# All scanners to execute, or the String value "all"/"none"
+active_scanners: "all"
+
+# All scanners that will exit non-zero if they fail, or the String value "all"/"none"
+enforced_scanners: "all"
+
+scanner_configs:
+  Semgrep:
+    matches:
+      - config: https://semgrep.dev/p/trailofbits
+        forbidden: true

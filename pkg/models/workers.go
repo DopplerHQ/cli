@@ -17,6 +17,8 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
@@ -36,7 +38,11 @@ func ParseChangeLog(response []byte) map[string]ChangeLog {
 	changes := map[string]ChangeLog{}
 
 	for _, release := range releaseMap {
-		v := release["version"].(string)
+		v, ok := release["version"].(string)
+		if !ok {
+			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for changelog, expected version to be string, got %T", release["version"]))
+			utils.HandleError(errors.New("Unable to parse changelog"))
+		}
 		var list []string
 		for _, change := range release["changes"].([]interface{}) {
 			list = append(list, change.(string))
