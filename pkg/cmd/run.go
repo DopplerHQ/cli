@@ -246,7 +246,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		if !enableFallback {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
 		}
-		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
+		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
@@ -261,7 +261,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
+			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
@@ -288,7 +288,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		if enableFallback {
 			utils.Log("Unable to parse the Doppler API response")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase)
+			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
 		}
 		utils.HandleError(err, "Unable to parse API response")
 	}
@@ -366,8 +366,12 @@ func writeFailureMessage() []string {
 	return msg
 }
 
-func readFallbackFile(path string, legacyPath string, passphrase string) map[string]string {
-	utils.Log("Reading secrets from fallback file")
+func readFallbackFile(path string, legacyPath string, passphrase string, silent bool) map[string]string {
+	// avoid re-logging if re-running for legacy file
+	// TODO remove this when removing legacy path support
+	if !silent {
+		utils.Log("Reading secrets from fallback file")
+	}
 	utils.LogDebug(fmt.Sprintf("Using fallback file %s", path))
 
 	if _, err := os.Stat(path); err != nil {
@@ -375,7 +379,7 @@ func readFallbackFile(path string, legacyPath string, passphrase string) map[str
 			// attempt to read from the legacy path, in case the fallback file was created with an older version of the CLI
 			// TODO remove this when releasing CLI v4 (DPLR-435)
 			if legacyPath != "" {
-				return readFallbackFile(legacyPath, "", passphrase)
+				return readFallbackFile(legacyPath, "", passphrase, true)
 			}
 
 			utils.HandleError(errors.New("The fallback file does not exist"))
