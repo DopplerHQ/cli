@@ -49,6 +49,8 @@ var CanReadEnv = true
 
 var configFileName = ".doppler.yaml"
 var configContents models.ConfigFile
+var configUid = -1
+var configGid = -1
 
 func init() {
 	baseConfigDir = utils.HomeDir()
@@ -102,7 +104,7 @@ func Setup() {
 
 // LoadConfig load the configuration file
 func LoadConfig() {
-	configContents = readConfig()
+	configContents, configUid, configGid = readConfig()
 }
 
 // VersionCheck the last version check
@@ -410,10 +412,22 @@ func writeConfig(config models.ConfigFile) {
 	if err := utils.WriteFile(UserConfigFile, bytes, os.FileMode(0600)); err != nil {
 		utils.HandleError(err)
 	}
+
+	// restore file's original ownership, in case doppler has been subsequently run with 'sudo'
+	if !utils.IsWindows() && configUid != -1 && configGid != -1 {
+		if err := os.Chown(UserConfigFile, configUid, configGid); err != nil {
+			utils.HandleError(err, "Unable to modify config file ownership")
+		}
+	}
 }
 
-func readConfig() models.ConfigFile {
+func readConfig() (models.ConfigFile, int, int) {
 	utils.LogDebug("Reading config file")
+
+	uid, gid, err := utils.FileOwnership(UserConfigFile)
+	if err != nil {
+		utils.HandleError(err, "Unable to stat user config file")
+	}
 
 	fileContents, err := ioutil.ReadFile(UserConfigFile) // #nosec G304
 	if err != nil {
@@ -467,7 +481,7 @@ func readConfig() models.ConfigFile {
 	}
 
 	config.Scoped = normalizedOptions
-	return config
+	return config, uid, gid
 }
 
 // IsValidConfigOption whether the specified key is a valid config option
