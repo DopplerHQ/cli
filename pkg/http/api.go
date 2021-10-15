@@ -404,7 +404,7 @@ func UpdateProject(host string, verifyTLS bool, apiKey string, project string, n
 	return projectInfo, Error{}
 }
 
-// DeleteProject create a project
+// DeleteProject delete a project
 func DeleteProject(host string, verifyTLS bool, apiKey string, project string) Error {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
@@ -474,6 +474,78 @@ func GetEnvironment(host string, verifyTLS bool, apiKey string, project string, 
 	}
 	info := models.ParseEnvironmentInfo(environmentInfo)
 	return info, Error{}
+}
+
+// CreateEnvironment create an environment
+func CreateEnvironment(host string, verifyTLS bool, apiKey string, project string, name string, slug string) (models.EnvironmentInfo, Error) {
+	postBody := map[string]string{"project": project, "name": name, "slug": slug}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Invalid environment info"}
+	}
+
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments", []queryParam{}, body)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to create environment", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	environmentInfo := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
+	return environmentInfo, Error{}
+}
+
+// DeleteEnvironment delete an environment
+func DeleteEnvironment(host string, verifyTLS bool, apiKey string, project string, environment string) Error {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "environment", Value: environment})
+
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to delete environment", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return Error{}
+}
+
+// RenameEnvironment rename an environment
+func RenameEnvironment(host string, verifyTLS bool, apiKey string, project string, environment string, name string, slug string) (models.EnvironmentInfo, Error) {
+	postBody := map[string]string{"project": project, "environment": environment}
+	if name != "" {
+		postBody["name"] = name
+	}
+	if slug != "" {
+		postBody["slug"] = slug
+	}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Invalid environment info"}
+	}
+
+	statusCode, _, response, err := PutRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", []queryParam{}, body)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to rename environment", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	environmentInfo := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
+	return environmentInfo, Error{}
 }
 
 // GetConfigs get configs

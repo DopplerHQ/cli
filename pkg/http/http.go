@@ -89,6 +89,26 @@ func PostRequest(host string, verifyTLS bool, headers map[string]string, uri str
 	return statusCode, respHeaders, body, nil
 }
 
+// PutRequest perform HTTP PUT
+func PutRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
+	url := fmt.Sprintf("%s%s", host, uri)
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(body))
+	if err != nil {
+		return 0, nil, nil, err
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
+	if err != nil {
+		return statusCode, respHeaders, body, err
+	}
+
+	return statusCode, respHeaders, body, nil
+}
+
 // DeleteRequest perform HTTP DELETE
 func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
