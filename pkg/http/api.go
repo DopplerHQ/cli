@@ -495,8 +495,14 @@ func CreateEnvironment(host string, verifyTLS bool, apiKey string, project strin
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	environmentInfo := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
-	return environmentInfo, Error{}
+	environmentInfo, ok := result["environment"].(map[string]interface{})
+	if !ok {
+		return models.EnvironmentInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing environment, expected map[string]interface{}, got %T", result["environment"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	info := models.ParseEnvironmentInfo(environmentInfo)
+
+	return info, Error{}
 }
 
 // DeleteEnvironment delete an environment
@@ -544,8 +550,13 @@ func RenameEnvironment(host string, verifyTLS bool, apiKey string, project strin
 		return models.EnvironmentInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	environmentInfo := models.ParseEnvironmentInfo(result["environment"].(map[string]interface{}))
-	return environmentInfo, Error{}
+	environmentInfo, ok := result["environment"].(map[string]interface{})
+	if !ok {
+		return models.EnvironmentInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing environment, expected map[string]interface{}, got %T", result["environment"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	info := models.ParseEnvironmentInfo(environmentInfo)
+	return info, Error{}
 }
 
 // GetConfigs get configs
