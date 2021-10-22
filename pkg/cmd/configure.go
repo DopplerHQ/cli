@@ -37,7 +37,7 @@ var configureCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 
 		if all {
-			printer.Configs(configuration.AllConfigs(), jsonFlag)
+			printer.Configs(configuration.AllConfigs(true), jsonFlag)
 			return
 		}
 

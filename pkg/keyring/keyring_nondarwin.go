@@ -21,7 +21,7 @@ import "fmt"
 
 // GenerateKeyringID generates a keyring-compliant key
 func GenerateKeyringID(id string) string {
-	return fmt.Sprintf("%s-%s", KeyringSecretPrefixV1, id)
+	return fmt.Sprintf("%s-%s", keyringSecretPrefixV1, id)
 }
 
 // GetKeyring fetches a secret from the keyring

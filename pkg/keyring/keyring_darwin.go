@@ -90,6 +90,6 @@ func ClearKeyring() Error {
 	return Error{}
 }
 
-func IsV1Secret(key string) bool {
-	return strings.HasPrefix(key, fmt.Sprintf("%s-", KeyringSecretPrefixV1))
+func isV1Secret(key string) bool {
+	return strings.HasPrefix(key, fmt.Sprintf("%s-", keyringSecretPrefixV1))
 }

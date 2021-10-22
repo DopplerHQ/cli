@@ -233,7 +233,7 @@ Your saved configuration will be updated.`,
 
 		if updateConfig {
 			// update token in config
-			for scope, config := range configuration.AllConfigs() {
+			for scope, config := range configuration.AllConfigs(true) {
 				if config.Token == oldToken {
 					configuration.Set(scope, map[string]string{models.ConfigToken.String(): newToken})
 				}

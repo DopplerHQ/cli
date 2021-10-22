@@ -23,6 +23,7 @@ import (
 type ConfigFile struct {
 	Scoped       map[string]FileScopedOptions `yaml:"scoped"`
 	VersionCheck VersionCheck                 `yaml:"version-check"`
+	Settings     Settings                     `yaml:"settings"`
 }
 
 // FileScopedOptions config options
@@ -39,6 +40,11 @@ type FileScopedOptions struct {
 type VersionCheck struct {
 	LatestVersion string    `yaml:"latest-version,omitempty"`
 	CheckedAt     time.Time `yaml:"checked-at,omitempty"`
+}
+
+// Settings settings specific to this CLI
+type Settings struct {
+	MigrationVersion int32 `yaml:"migration-version,omitempty"`
 }
 
 // ScopedOptions options with their scope

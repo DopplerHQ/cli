@@ -1018,3 +1018,19 @@ func ImportTemplate(host string, verifyTLS bool, apiKey string, template []byte)
 	}
 	return info, Error{}
 }
+
+// LogMigration log the results of a migration
+func LogMigration(host string, verifyTLS bool, migration int, durationMs int, metadata map[string]interface{}) Error {
+	statusCode, _, response, err := PostRequest(host, verifyTLS, map[string]string{}, "/v3/analytics/cli/migrations", []queryParam{}, nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to send migration analytics", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return Error{}
+}

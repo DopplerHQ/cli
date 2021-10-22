@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/zalando/go-keyring"
 )
 
 const keyringService = "doppler-cli"
-const KeyringSecretPrefixV1 = "secret"
+const keyringSecretPrefixV1 = "secret"
 const keyringSecretPrefixV2 = "secret2"
 
 // TODO update once app is signed/notarized
@@ -31,7 +32,7 @@ const keyringAccessGroup = "com.doppler.cli"
 
 // IsKeyringSecret checks whether the secret is stored in keyring
 func IsKeyringSecret(value string) bool {
-	return strings.HasPrefix(value, fmt.Sprintf("%s-", KeyringSecretPrefixV1)) || strings.HasPrefix(value, fmt.Sprintf("%s-", keyringSecretPrefixV2))
+	return strings.HasPrefix(value, fmt.Sprintf("%s-", keyringSecretPrefixV1)) || strings.HasPrefix(value, fmt.Sprintf("%s-", keyringSecretPrefixV2))
 }
 
 // Error keyring errors
@@ -79,4 +80,27 @@ func deleteKeyring(key string) Error {
 	}
 
 	return Error{}
+}
+
+func MigrateToken(token string) string {
+	if !isV1Secret(token) || !utils.IsMacOS() {
+		return ""
+	}
+
+	utils.LogDebug(fmt.Sprintf("Migrating token %s", token))
+	rawToken, err := GetKeyring(token)
+	if err != (Error{}) {
+		utils.HandleError(err.Unwrap(), "Unable to migrate tokens to new keychain library")
+	}
+
+	uuid, e := utils.UUID()
+	if e != nil {
+		utils.HandleError(e, "Unable to generate UUID for keyring")
+	}
+	id := GenerateKeyringID(uuid)
+	if err := SetKeyring(id, rawToken); err != (Error{}) {
+		utils.HandleError(err.Unwrap(), "Unable to migrate tokens to new keychain library")
+	}
+
+	return id
 }

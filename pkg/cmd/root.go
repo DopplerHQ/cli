@@ -41,6 +41,7 @@ var rootCmd = &cobra.Command{
 		loadFlags(cmd)
 		configuration.Setup()
 		configuration.LoadConfig()
+		configuration.RunMigrations()
 
 		if utils.Debug && utils.Silent {
 			utils.LogWarning("--silent has no effect when used with --debug")

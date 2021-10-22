@@ -24,7 +24,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/keyring"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -105,6 +107,44 @@ func Setup() {
 // LoadConfig load the configuration file
 func LoadConfig() {
 	configContents, configUid, configGid = readConfig()
+}
+
+// LoadConfig load the configuration file
+func RunMigrations() {
+	if configContents.Settings.MigrationVersion < 1 {
+		const migration = 1
+		var migratedTokens []string
+
+		utils.LogDebug(fmt.Sprintf("Running migration %d: keychain library", migration))
+		startedAt := time.Now()
+
+		if utils.IsMacOS() {
+			config := AllConfigs(false)
+			for scope, options := range config {
+				if id := keyring.MigrateToken(options.Token); id != "" {
+					migratedTokens = append(migratedTokens, options.Token)
+					options.Token = id
+					config[scope] = options
+				}
+			}
+
+			configContents.Scoped = config
+		}
+
+		configContents.Settings.MigrationVersion = migration
+		writeConfig(configContents)
+
+		for _, migratedToken := range migratedTokens {
+			if err := keyring.DeleteKeyring(migratedToken); err != (keyring.Error{}) {
+				utils.LogDebugError(err.Unwrap())
+			}
+		}
+
+		durationMs := int(time.Since(startedAt).Milliseconds())
+		metadata := map[string]interface{}{"numTokens": len(migratedTokens)}
+		// TODO specify api host and verify tls
+		http.LogMigration("", true, migration, durationMs, metadata)
+	}
 }
 
 // VersionCheck the last version check
@@ -276,12 +316,12 @@ func LocalConfig(cmd *cobra.Command) models.ScopedOptions {
 }
 
 // AllConfigs get all configs we know about
-func AllConfigs() map[string]models.FileScopedOptions {
+func AllConfigs(revealTokens bool) map[string]models.FileScopedOptions {
 	all := map[string]models.FileScopedOptions{}
 	for scope, scopedOptions := range configContents.Scoped {
 		options := scopedOptions
 
-		if keyring.IsKeyringSecret(options.Token) {
+		if revealTokens && keyring.IsKeyringSecret(options.Token) {
 			utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
 			token, err := keyring.GetKeyring(options.Token)
 			if !err.IsNil() {
@@ -419,6 +459,8 @@ func writeConfig(config models.ConfigFile) {
 			utils.HandleError(err, "Unable to modify config file ownership")
 		}
 	}
+
+	configContents = config
 }
 
 func readConfig() (models.ConfigFile, int, int) {

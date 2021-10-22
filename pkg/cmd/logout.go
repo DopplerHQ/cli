@@ -67,7 +67,7 @@ func revokeToken(cmd *cobra.Command, args []string) {
 
 	if updateConfig {
 		// remove key from config
-		for scope, config := range configuration.AllConfigs() {
+		for scope, config := range configuration.AllConfigs(true) {
 			if config.Token == token {
 				optionsToUnset := []string{models.ConfigToken.String()}
 
