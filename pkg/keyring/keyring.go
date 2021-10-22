@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Doppler <support@doppler.com>
+Copyright © 2021 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package controllers
+package keyring
 
 import (
 	"fmt"
@@ -23,20 +23,30 @@ import (
 )
 
 const keyringService = "doppler-cli"
-const keyringSecretPrefix = "secret"
+const KeyringSecretPrefixV1 = "secret"
+const keyringSecretPrefixV2 = "secret2"
+
+// TODO update once app is signed/notarized
+const keyringAccessGroup = "com.doppler.cli"
 
 // IsKeyringSecret checks whether the secret is stored in keyring
 func IsKeyringSecret(value string) bool {
-	return strings.HasPrefix(value, fmt.Sprintf("%s-", keyringSecretPrefix))
+	return strings.HasPrefix(value, fmt.Sprintf("%s-", KeyringSecretPrefixV1)) || strings.HasPrefix(value, fmt.Sprintf("%s-", keyringSecretPrefixV2))
 }
 
-// GenerateKeyringID generates a keyring-compliant key
-func GenerateKeyringID(id string) string {
-	return fmt.Sprintf("%s-%s", keyringSecretPrefix, id)
+// Error keyring errors
+type Error struct {
+	Err     error
+	Message string
 }
 
-// GetKeyring fetches a secret from the keyring
-func GetKeyring(id string) (string, Error) {
+// Unwrap get the original error
+func (e *Error) Unwrap() error { return e.Err }
+
+// IsNil whether the error is nil
+func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
+
+func getKeyring(id string) (string, Error) {
 	value, err := keyring.Get(keyringService, id)
 	if err != nil {
 		if err == keyring.ErrUnsupportedPlatform {
@@ -51,8 +61,7 @@ func GetKeyring(id string) (string, Error) {
 	return value, Error{}
 }
 
-// SetKeyring saves a value to the keyring
-func SetKeyring(key string, value string) Error {
+func setKeyring(key string, value string) Error {
 	if err := keyring.Set(keyringService, key, value); err != nil {
 		if err == keyring.ErrUnsupportedPlatform {
 			return Error{Err: err, Message: "Your OS does not support keyring"}
@@ -64,8 +73,7 @@ func SetKeyring(key string, value string) Error {
 	return Error{}
 }
 
-// DeleteKeyring removes a value from the keyring
-func DeleteKeyring(key string) Error {
+func deleteKeyring(key string) Error {
 	if err := keyring.Delete(keyringService, key); err != nil {
 		return Error{Err: err, Message: "Unable to remove value from keyring"}
 	}

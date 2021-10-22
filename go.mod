@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/go-version v1.3.0
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
+	github.com/keybase/go-keychain v0.0.0-20201121013009-976c83ec27a6
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.13
 	github.com/mattn/go-runewidth v0.0.5 // indirect
