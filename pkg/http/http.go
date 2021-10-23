@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
@@ -133,6 +134,8 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
+	req.Header.Set("client-os", runtime.GOOS)
+	req.Header.Set("client-arch", runtime.GOARCH)
 	req.Header.Set("user-agent", "doppler-go-cli-"+version.ProgramVersion)
 	if req.Header.Get("Accept") == "" {
 		req.Header.Set("Accept", "application/json")
