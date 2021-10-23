@@ -150,8 +150,11 @@ doppler configure set key=123 otherkey=456`,
 
 		for _, arg := range args {
 			option := strings.Split(arg, "=")
-			if len(option) < 2 || (!configuration.IsValidConfigOption(option[0]) && !configuration.IsTranslatableConfigOption(option[0])) {
+			if !configuration.IsValidConfigOption(option[0]) && !configuration.IsTranslatableConfigOption(option[0]) {
 				return errors.New("invalid option " + option[0])
+			}
+			if len(option) < 2 {
+				return errors.New("option " + option[0] + " requires a value")
 			}
 		}
 
