@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/keyring"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -226,6 +227,10 @@ var configureResetCmd = &cobra.Command{
 		}
 
 		configuration.ClearConfig()
+		if err := keyring.ClearKeyring(); err != (keyring.Error{}) {
+			utils.LogDebugError(err.Unwrap())
+		}
+
 		utils.Log("Configuration has been reset. Please run 'doppler login' to authenticate")
 	},
 }
