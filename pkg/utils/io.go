@@ -16,6 +16,7 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -75,4 +76,15 @@ func WriteTempFile(name string, data []byte, perm os.FileMode) (string, error) {
 	}
 
 	return tmpFileName, nil
+}
+
+func HasDataOnStdIn() (bool, error) {
+	stat, e := os.Stdin.Stat()
+	if e != nil {
+		LogDebugError(e)
+		return false, errors.New("Unable to stat stdin")
+	}
+
+	hasData := (stat.Mode() & os.ModeCharDevice) == 0
+	return hasData, nil
 }

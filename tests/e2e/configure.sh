@@ -101,6 +101,13 @@ config="$("$DOPPLER_BINARY" configure get config --configuration=./temp-config -
 
 beforeEach
 
+# test set using stdin
+echo 123 | "$DOPPLER_BINARY" configure set config --configuration=./temp-config --scope=/ --silent
+config="$("$DOPPLER_BINARY" configure get config --configuration=./temp-config --scope=/ --json)"
+[[ "$config" == '{"enclave.config":"123"}' ]] || error "ERROR: unexpected config contents after 'set' w/ stdin"
+
+beforeEach
+
 #
 # CLI v3 compatability tests (DPLR-435)
 #
