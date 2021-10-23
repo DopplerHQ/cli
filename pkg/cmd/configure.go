@@ -88,7 +88,7 @@ doppler configure get key otherkey`,
 	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		for _, arg := range args {
@@ -125,7 +125,7 @@ doppler configure set key=123 otherkey=456`,
 	ValidArgsFunction: configOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		if !strings.Contains(args[0], "=") {
@@ -215,7 +215,7 @@ doppler configure unset key otherkey`,
 	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		for _, arg := range args {
