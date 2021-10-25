@@ -16,7 +16,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.1.3
-	github.com/zalando/go-keyring v0.1.1
+	github.com/zalando/go-keyring v0.1.2-0.20211025122247-5267aaad6970
 	go.mongodb.org/mongo-driver v1.1.2 // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
