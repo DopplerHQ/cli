@@ -16,8 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -86,7 +88,7 @@ doppler configure get key otherkey`,
 	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		for _, arg := range args {
@@ -123,11 +125,20 @@ doppler configure set key=123 otherkey=456`,
 	ValidArgsFunction: configOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		if !strings.Contains(args[0], "=") {
-			if len(args) == 2 {
+			if len(args) == 1 {
+				hasData, e := utils.HasDataOnStdIn()
+				if e != nil {
+					utils.HandleError(e)
+				}
+				if !hasData {
+					return errors.New("Value must be suppied on stdin or as an argument")
+				}
+				return nil
+			} else if len(args) == 2 {
 				if configuration.IsValidConfigOption(args[0]) || configuration.IsTranslatableConfigOption(args[0]) {
 					return nil
 				}
@@ -139,8 +150,11 @@ doppler configure set key=123 otherkey=456`,
 
 		for _, arg := range args {
 			option := strings.Split(arg, "=")
-			if len(option) < 2 || (!configuration.IsValidConfigOption(option[0]) && !configuration.IsTranslatableConfigOption(option[0])) {
+			if !configuration.IsValidConfigOption(option[0]) && !configuration.IsTranslatableConfigOption(option[0]) {
 				return errors.New("invalid option " + option[0])
+			}
+			if len(option) < 2 {
+				return errors.New("option " + option[0] + " requires a value")
 			}
 		}
 
@@ -150,7 +164,28 @@ doppler configure set key=123 otherkey=456`,
 		jsonFlag := utils.OutputJSON
 
 		options := map[string]string{}
-		if !strings.Contains(args[0], "=") {
+
+		if len(args) == 1 && !strings.Contains(args[0], "=") {
+			var input []string
+			scanner := bufio.NewScanner(os.Stdin)
+			// read input from stdin
+			for {
+				if ok := scanner.Scan(); !ok {
+					if e := scanner.Err(); e != nil {
+						utils.HandleError(e, "Unable to read input from stdin")
+					}
+
+					break
+				}
+
+				s := scanner.Text()
+				input = append(input, s)
+			}
+
+			key := args[0]
+			value := strings.Join(input, "\n")
+			options[key] = value
+		} else if !strings.Contains(args[0], "=") {
 			options[args[0]] = args[1]
 		} else {
 			for _, option := range args {
@@ -183,7 +218,7 @@ doppler configure unset key otherkey`,
 	ValidArgsFunction: currentConfigOptionsValidArgs,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		for _, arg := range args {

@@ -237,13 +237,11 @@ func setSecrets(cmd *cobra.Command, args []string) {
 		// format: 'doppler secrets set KEY' (interactive)
 
 		// check for existing data on stdin
-		stat, e := os.Stdin.Stat()
+		hasData, e := utils.HasDataOnStdIn()
 		if e != nil {
-			utils.HandleError(e, "Unable to stat stdin")
+			utils.HandleError(e)
 		}
-
-		dataOnStdin := (stat.Mode() & os.ModeCharDevice) == 0
-		interactiveMode := !dataOnStdin
+		interactiveMode := !hasData
 		if interactiveMode {
 			if !canPromptUser {
 				utils.HandleError(errors.New("Secret value must be provided when using --no-interactive"))

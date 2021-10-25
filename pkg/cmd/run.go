@@ -61,7 +61,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 				return errors.New("arg(s) may not be set when using --command flag")
 			}
 		} else if len(args) == 0 {
-			return errors.New("requires at least 1 arg(s), only received 0")
+			return errors.New("requires at least 1 arg(s), received 0")
 		}
 
 		return nil
