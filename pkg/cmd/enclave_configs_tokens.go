@@ -75,6 +75,7 @@ func init() {
 	enclaveConfigsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	enclaveConfigsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	enclaveConfigsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
+	enclaveConfigsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensCreateCmd)
 
 	enclaveConfigsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
