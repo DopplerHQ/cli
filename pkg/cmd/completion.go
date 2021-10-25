@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -47,7 +48,7 @@ var completionCmd = &cobra.Command{
 				utils.HandleError(err, "Unable to generate fish completions.")
 			}
 		} else {
-			utils.HandleError(fmt.Errorf("Your shell is not supported"))
+			utils.HandleError(errors.New("Your shell is not supported"))
 		}
 	},
 }
@@ -72,6 +73,11 @@ var completionInstallCmd = &cobra.Command{
 		var buf bytes.Buffer
 		var path string
 		var name string
+
+		if utils.IsWindows() {
+			utils.HandleError(errors.New("Completion files are not supported on Windows. You can use completion files with Windows Subsystem for Linux (WSL)."))
+		}
+
 		if strings.HasSuffix(shell, "/bash") {
 			if err := cmd.Root().GenBashCompletion(&buf); err != nil {
 				utils.HandleError(err, "Unable to generate bash completions.")
@@ -82,8 +88,15 @@ var completionInstallCmd = &cobra.Command{
 			} else {
 				path = "/etc/bash_completion.d"
 			}
+		} else if strings.HasSuffix(shell, "/zsh") {
+			if err := cmd.Root().GenZshCompletion(&buf); err != nil {
+				utils.HandleError(err, "Unable to generate zsh completions.")
+			}
+			// zsh completions file start with an underscore
+			name = "_doppler"
+			path = "/usr/local/share/zsh/site-functions"
 		} else {
-			utils.HandleError(fmt.Errorf("Your shell is not supported"))
+			utils.HandleError(errors.New("Your shell is not supported"))
 		}
 
 		// create directory if it doesn't exist
@@ -117,7 +130,7 @@ func getShell(args []string) string {
 		shell = fmt.Sprintf("%s", args[0])
 	}
 	if shell == "" {
-		utils.HandleError(fmt.Errorf("Unable to determine current shell"), "Please provide your shell name as an argument")
+		utils.HandleError(errors.New("Unable to determine current shell"), "Please provide your shell name as an argument")
 	}
 
 	// normalize shell
