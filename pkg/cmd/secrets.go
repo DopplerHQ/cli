@@ -562,7 +562,7 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if outputFilePath != "" {
-		err = ioutil.WriteFile(outputFilePath, []byte(buffer.String()), 0600)
+		err = utils.WriteFile(outputFilePath, []byte(buffer.String()), 0600)
 		if err != nil {
 			utils.HandleError(err, "Unable to save rendered data to file")
 		}
