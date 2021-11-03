@@ -32,7 +32,7 @@ const projectTemplateFileName = "doppler-template.yaml"
 var importCommand = &cobra.Command{
 	Use:   "import",
 	Short: "Import projects into your Doppler workplace",
-	Args:  cobra.MaximumNArgs(1),
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 		localConfig := configuration.LocalConfig(cmd)
