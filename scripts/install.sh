@@ -6,6 +6,7 @@ set -e
 # 1 general
 # 2 insufficient perms
 
+DOPPLER_DOMAIN="cli.doppler.com"
 DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
@@ -317,10 +318,6 @@ fi
 
 log_debug "Detected format '$format'"
 
-url="https://cli.doppler.com/download?os=$os&arch=$arch&format=$format"
-sig_url="https://cli.doppler.com/download/signature?os=$os&arch=$arch&format=$format"
-key_url="https://cli.doppler.com/keys/public"
-
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
   log_debug "Checking for gpg binary"
   if [ ! -x "$(command -v gpg)" ]; then
@@ -338,6 +335,10 @@ if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
     fi
   fi
 fi
+
+url="https://$DOPPLER_DOMAIN/download?os=$os&arch=$arch&format=$format&verify=$VERIFY_SIGNATURE"
+sig_url="https://$DOPPLER_DOMAIN/download/signature?os=$os&arch=$arch&format=$format"
+key_url="https://$DOPPLER_DOMAIN/keys/public"
 
 
 set +e
