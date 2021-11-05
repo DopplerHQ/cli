@@ -492,6 +492,22 @@ elif [ "$format" = "tar" ]; then
       fi
     fi
 
+    # support creating /usr/local/bin if it's in the PATH but doesn't exist.
+    # this fixes an issue with clean installs on macOS 12+
+    install_dir="/usr/local/bin"
+    if [ ! -e "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
+      found_valid_path=1
+      log_debug "$install_dir is in PATH but doesn't exist"
+      log_debug "Creating $install_dir"
+      if mkdir -m 755 "$install_dir" > /dev/null 2>&1 ; then
+        if  [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
+          log_debug "Moving binary to $install_dir"
+          mv -f "$extract_dir/doppler" $install_dir
+          binary_installed=1
+        fi
+      fi
+    fi
+
     if [ "$binary_installed" -eq 0 ]; then
       if [ "$found_valid_path" -eq 0 ]; then
         log "No supported bin directories are available; please adjust your PATH"
