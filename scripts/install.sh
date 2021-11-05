@@ -14,6 +14,8 @@ USE_PACKAGE_MANAGER=1
 VERIFY_SIGNATURE=1
 FORCE_VERIFY_SIGNATURE=0
 DISABLE_CURL=0
+CUSTOM_INSTALL_PATH=""
+BINARY_INSTALLED_PATH=""
 
 tempdir=""
 filename=""
@@ -86,7 +88,7 @@ install_completions() {
 
   log_debug "Installing shell completions for '$default_shell'"
   # ignore all output
-  doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
+  "$BINARY_INSTALLED_PATH/"doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
 }
 
 curl_download() {
@@ -230,8 +232,15 @@ is_path_writable() {
   echo "$writable"
 }
 
+find_install_path_arg=0
 # flag parsing
 for arg; do
+  if [ "$find_install_path_arg" -eq 1 ]; then
+    CUSTOM_INSTALL_PATH="$arg"
+    find_install_path_arg=0
+    continue
+  fi
+
   if [ "$arg" = "--debug" ]; then
     DEBUG=1
   fi
@@ -257,7 +266,16 @@ for arg; do
   if [ "$arg" = "--disable-curl" ]; then
     DISABLE_CURL=1
   fi
+
+  if [ "$arg" = "--install-path" ]; then
+    find_install_path_arg=1
+  fi
 done
+
+if [ "$find_install_path_arg" -eq 1 ]; then
+  log "You must provide a path when specifying --install-path"
+  clean_exit 1
+fi
 
 # identify OS
 os="unknown"
@@ -423,7 +441,7 @@ if [ "$format" = "deb" ]; then
   if [ "$INSTALL" -eq 1 ]; then
     echo 'Installing...'
     dpkg -i "$filename"
-    echo "Installed Doppler CLI $(doppler -v)"
+    echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
@@ -436,7 +454,7 @@ elif [ "$format" = "rpm" ]; then
   if [ "$INSTALL" -eq 1 ]; then
     echo 'Installing...'
     rpm -i --force "$filename"
-    echo "Installed Doppler CLI $(doppler -v)"
+    echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
     log_debug "Moving installer to $(pwd) (cwd)"
     mv -f "$filename" .
@@ -462,12 +480,31 @@ elif [ "$format" = "tar" ]; then
     found_valid_path=0
     binary_installed=0
 
+    if [ "$CUSTOM_INSTALL_PATH" != "" ]; then
+      # install to this directory or fail; don't try any other paths
+      if [ ! -d "$CUSTOM_INSTALL_PATH" ]; then
+        log "Install path is not a valid directory: \"$CUSTOM_INSTALL_PATH\""
+        clean_exit 1
+      fi
+      found_valid_path=1
+      if [ "$( is_path_writable "$CUSTOM_INSTALL_PATH" )" -ne "1" ]; then
+        log "Install path is not writable: \"$CUSTOM_INSTALL_PATH\""
+        clean_exit 2
+      fi
+
+      log_debug "Moving binary to $CUSTOM_INSTALL_PATH"
+      mv -f "$extract_dir/doppler" "$CUSTOM_INSTALL_PATH"
+      BINARY_INSTALLED_PATH="$CUSTOM_INSTALL_PATH"
+      binary_installed=1
+    fi
+
     install_dir="/usr/local/bin"
-    if [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
+    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
       found_valid_path=1
       if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
         log_debug "Moving binary to $install_dir"
         mv -f "$extract_dir/doppler" $install_dir
+        BINARY_INSTALLED_PATH="$install_dir"
         binary_installed=1
       fi
     fi
@@ -478,6 +515,7 @@ elif [ "$format" = "tar" ]; then
       if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
         log_debug "Moving binary to $install_dir"
         mv -f "$extract_dir/doppler" $install_dir
+        BINARY_INSTALLED_PATH="$install_dir"
         binary_installed=1
       fi
     fi
@@ -488,6 +526,7 @@ elif [ "$format" = "tar" ]; then
       if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
         log_debug "Moving binary to $install_dir"
         mv -f "$extract_dir/doppler" $install_dir
+        BINARY_INSTALLED_PATH="$install_dir"
         binary_installed=1
       fi
     fi
@@ -497,7 +536,7 @@ elif [ "$format" = "tar" ]; then
         log "No supported bin directories are available; please adjust your PATH"
         clean_exit 1
       else
-        log "Unable to write to bin directory; please re-run with \`sudo\` or as an admin"
+        log "Unable to write to bin directory; please re-run with \`sudo\` or adjust your PATH"
         clean_exit 2
       fi
     fi
@@ -509,7 +548,11 @@ elif [ "$format" = "tar" ]; then
   delete_tempdir
 
   if [ "$INSTALL" -eq 1 ]; then
-    echo "Installed Doppler CLI $(doppler -v)"
+    message="Installed Doppler CLI $("$BINARY_INSTALLED_PATH"/doppler -v)"
+    if [ "$CUSTOM_INSTALL_PATH" != "" ]; then
+      message="$message to $BINARY_INSTALLED_PATH"
+    fi
+    echo "$message"
   else
     echo "Doppler CLI saved to ./doppler"
   fi
