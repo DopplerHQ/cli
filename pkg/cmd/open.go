@@ -16,9 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -30,9 +29,9 @@ var openCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		err := open.Run(localConfig.DashboardHost.Value)
-		if err != nil {
-			utils.HandleError(err)
+		err := controllers.OpenDashboard(localConfig)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 	},
 }
@@ -43,15 +42,9 @@ var openDashboardCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
-		project := localConfig.EnclaveProject.Value
-		config := localConfig.EnclaveConfig.Value
-		url := localConfig.DashboardHost.Value
-		if project != "" && config != "" {
-			url = url + fmt.Sprintf("/workplace/projects/%s/configs/%s", project, config)
-		}
-		err := open.Run(url)
-		if err != nil {
-			utils.HandleError(err)
+		err := controllers.OpenDashboard(localConfig)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
 		}
 	},
 }
@@ -93,10 +86,14 @@ var openDocsCmd = &cobra.Command{
 }
 
 func init() {
+	openDashboardCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	openDashboardCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	openCmd.AddCommand(openDashboardCmd)
 	openCmd.AddCommand(openStatusCmd)
 	openCmd.AddCommand(openGithubCmd)
 	openCmd.AddCommand(openDocsCmd)
 
+	openCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	openCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
 	rootCmd.AddCommand(openCmd)
 }
