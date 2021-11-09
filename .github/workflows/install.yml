@@ -167,6 +167,19 @@ jobs:
       run: sudo ./scripts/install.sh --debug --no-install --no-package-manager
     - name: Verify file existence
       run: ls -l ./doppler
+  ubuntu-custom-install-path:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Make temp directory
+      run: mkdir ./tmp
+    - name: Install CLI
+      run: sudo ./scripts/install.sh --debug --no-package-manager --install-path ./tmp
+    - name: Test CLI
+      run: ./tmp/doppler --version
   macOS:
     runs-on: macos-latest
     steps:
