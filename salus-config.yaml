@@ -24,3 +24,7 @@ scanner_configs:
         exclude:
           - pkg/printer
           - pkg/utils/log.go
+      - config: semgrep_configs/writefile.yaml
+        forbidden: true
+        exclude:
+          - pkg/utils/io.go
