@@ -337,8 +337,11 @@ fi
 log_debug "Detected format '$format'"
 
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-  log_debug "Checking for gpg binary"
-  if [ ! -x "$(command -v gpg)" ]; then
+  gpg_binary="$(command -v gpg || true)";
+  if [ -x "$gpg_binary" ]; then
+    log_debug "Using $gpg_binary for signature verification"
+  else
+    # binary not available
     if [ "$FORCE_VERIFY_SIGNATURE" -eq 1 ]; then
       log "ERROR: Unable to find gpg binary for signature verficiation"
       log "You can resolve this error by installing your system's gnupg package"
