@@ -81,9 +81,9 @@ macos_shell() {
 install_completions() {
   default_shell=""
   if [ "$os" = "macos" ]; then
-    default_shell="$(macos_shell || "")"
+    default_shell="$(macos_shell || true)"
   else
-    default_shell="$(linux_shell || "")"
+    default_shell="$(linux_shell || true)"
   fi
 
   log_debug "Installing shell completions for '$default_shell'"
