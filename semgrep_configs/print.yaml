@@ -1,0 +1,10 @@
+rules:
+  - id: prohibit-print
+    languages:
+      - go
+    message: >
+      Use utils.Print for output and utils.Log for messages.
+    pattern-either:
+      - pattern-regex: fmt\.Print[a-z]*
+      - pattern-regex: fmt\.Fprint[a-z]*
+    severity: ERROR

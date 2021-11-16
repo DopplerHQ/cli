@@ -19,3 +19,8 @@ scanner_configs:
     matches:
       - config: https://semgrep.dev/p/trailofbits
         forbidden: true
+      - config: semgrep_configs/print.yaml
+        forbidden: true
+        exclude:
+          - pkg/printer
+          - pkg/utils/log.go

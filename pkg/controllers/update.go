@@ -63,7 +63,7 @@ func RunInstallScript() (bool, string, Error) {
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
 	if utils.Debug {
 		// use Fprintln rather than LogDebug so that we don't display a duplicate "DEBUG" prefix
-		fmt.Fprintln(os.Stderr, strOut)
+		fmt.Fprintln(os.Stderr, strOut) // nosemgrep: semgrep_configs.prohibit-print
 	}
 	if err != nil {
 		exitCode := 1
