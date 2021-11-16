@@ -247,10 +247,10 @@ func setSecrets(cmd *cobra.Command, args []string) {
 				utils.HandleError(errors.New("Secret value must be provided when using --no-interactive"))
 			}
 
-			utils.Log("Enter your secret value")
-			utils.Log("When finished, type a newline followed by a period")
-			utils.Log("Run 'doppler secrets set --help' for more information")
-			utils.Log("———————————————————— START INPUT ————————————————————")
+			utils.Print("Enter your secret value")
+			utils.Print("When finished, type a newline followed by a period")
+			utils.Print("Run 'doppler secrets set --help' for more information")
+			utils.Print("———————————————————— START INPUT ————————————————————")
 		}
 
 		isNewline := false
@@ -274,7 +274,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 				isNewline = false
 
 				if isPreviousNewline && s == "." {
-					utils.Log("————————————————————— END INPUT —————————————————————")
+					utils.Print("————————————————————— END INPUT —————————————————————")
 					break
 				}
 
@@ -459,7 +459,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !saveFile {
-		fmt.Println(string(body))
+		utils.Print(string(body))
 		return
 	}
 
@@ -490,7 +490,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(err, "Unable to write the secrets file")
 	}
 
-	utils.Log(fmt.Sprintf("Downloaded secrets to %s", filePath))
+	utils.Print(fmt.Sprintf("Downloaded secrets to %s", filePath))
 }
 
 func substituteSecrets(cmd *cobra.Command, args []string) {
@@ -566,7 +566,7 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 		if err != nil {
 			utils.HandleError(err, "Unable to save rendered data to file")
 		}
-		utils.Log(fmt.Sprintf("Rendered data saved to %s", outputFilePath))
+		utils.Print(fmt.Sprintf("Rendered data saved to %s", outputFilePath))
 	} else {
 		_, err = os.Stdout.WriteString(buffer.String())
 		if err != nil {

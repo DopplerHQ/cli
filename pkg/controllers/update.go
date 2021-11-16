@@ -62,7 +62,8 @@ func RunInstallScript() (bool, string, Error) {
 	// log output before checking error
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
 	if utils.Debug {
-		fmt.Println(strOut)
+		// use Fprintln rather than LogDebug so that we don't display a duplicate "DEBUG" prefix
+		fmt.Fprintln(os.Stderr, strOut)
 	}
 	if err != nil {
 		exitCode := 1

@@ -171,7 +171,7 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	}
 
 	if !yes {
-		utils.LogWarning("Renaming this project may break your current deploys.")
+		utils.PrintWarning("Renaming this project may break your current deploys.")
 		if !utils.ConfirmationPrompt("Continue?", false) {
 			utils.Log("Aborting")
 			return

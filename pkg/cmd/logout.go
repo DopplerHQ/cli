@@ -57,12 +57,12 @@ func revokeToken(cmd *cobra.Command, args []string) {
 		invalidTokenError := err.Code >= 400 && err.Code < 500
 		if invalidTokenError {
 			utils.LogDebug("Failed to revoke token")
-			utils.Log(err.Unwrap().Error())
+			utils.Print(err.Unwrap().Error())
 		} else {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 	} else {
-		utils.Log("Auth token has been revoked")
+		utils.Print("Auth token has been revoked")
 	}
 
 	if updateConfig {

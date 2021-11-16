@@ -23,25 +23,29 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
-// Log info message to stdout
+// Print output to stdout
+func Print(info string) {
+	fmt.Println(info)
+}
+
+// Print output to stdout.
+func PrintWarning(s string) {
+	fmt.Println(color.Yellow.Render("Warning:"), s)
+}
+
+// Log info message to stderr
 func Log(info string) {
-	if CanLogInfo() {
-		fmt.Println(info)
-	}
+	fmt.Fprintln(os.Stderr, info)
 }
 
 // LogWarning message to stdout
 func LogWarning(s string) {
-	if CanLogInfo() {
-		fmt.Println(color.Yellow.Render("Warning:"), s)
-	}
+	fmt.Fprintln(os.Stderr, color.Yellow.Render("Warning:"), s)
 }
 
 // LogError prints an error message to stderr
 func LogError(e error) {
-	if CanLogInfo() {
-		printError(e)
-	}
+	printError(e)
 }
 
 // CanLogInfo messages to stdout

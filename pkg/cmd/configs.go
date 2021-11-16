@@ -206,7 +206,7 @@ func updateConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	if !yes {
-		utils.LogWarning("Renaming this config may break your current deploys.")
+		utils.PrintWarning("Renaming this config may break your current deploys.")
 		if !utils.ConfirmationPrompt("Continue?", false) {
 			utils.Log("Aborting")
 			return

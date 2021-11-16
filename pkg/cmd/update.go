@@ -44,7 +44,7 @@ var updateCmd = &cobra.Command{
 			if force {
 				utils.Log(fmt.Sprintf("Already running the latest version but proceeding anyway due to --force flag"))
 			} else {
-				utils.Log(fmt.Sprintf("You are already running the latest version"))
+				utils.Print(fmt.Sprintf("You are already running the latest version"))
 				return
 			}
 		}
@@ -54,24 +54,24 @@ var updateCmd = &cobra.Command{
 }
 
 func installCLIUpdate() {
-	utils.Log("Updating...")
+	utils.Print("Updating...")
 	wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
 	if !controllerErr.IsNil() {
 		utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
 	}
 
 	if wasUpdated {
-		utils.Log(fmt.Sprintf("Installed CLI %s", installedVersion))
+		utils.Print(fmt.Sprintf("Installed CLI %s", installedVersion))
 
 		if changes, apiError := controllers.CLIChangeLog(); apiError.IsNil() {
-			utils.Log("\nWhat's new:")
+			utils.Print("\nWhat's new:")
 			printer.ChangeLog(changes, 1, false)
-			utils.Log("\nTip: run 'doppler changelog' to see all latest changes")
+			utils.Print("\nTip: run 'doppler changelog' to see all latest changes")
 		}
 
-		utils.Log("")
+		utils.Print("")
 	} else {
-		utils.Log(fmt.Sprintf("You are already running the latest version"))
+		utils.Print(fmt.Sprintf("You are already running the latest version"))
 	}
 
 }
