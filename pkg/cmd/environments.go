@@ -178,7 +178,7 @@ func renameEnvironment(cmd *cobra.Command, args []string) {
 
 	if !yes {
 		if newSlug != "" {
-			utils.LogWarning("Modifying your environment's slug may break your current deploys. All configs within this environment will also be renamed.")
+			utils.PrintWarning("Modifying your environment's slug may break your current deploys. All configs within this environment will also be renamed.")
 		}
 		yes = utils.ConfirmationPrompt(prompt, false)
 	}

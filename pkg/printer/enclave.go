@@ -66,7 +66,7 @@ func ConfigLog(log models.ConfigLog, jsonFlag bool, diff bool) {
 
 		for i, logDiff := range log.Diff {
 			if i != 0 {
-				fmt.Print("\n")
+				fmt.Println("")
 			}
 
 			if logDiff.Name == "" {

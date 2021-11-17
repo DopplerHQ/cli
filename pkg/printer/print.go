@@ -111,14 +111,14 @@ func ChangeLog(changes map[string]models.ChangeLog, max int, jsonFlag bool) {
 			break
 		}
 		if i != 0 {
-			utils.Log("")
+			fmt.Println("")
 		}
 
 		vString := version.Normalize(v.String())
-		utils.Log(color.Cyan.Sprintf("CLI %s", vString))
+		fmt.Println(color.Cyan.Sprintf("CLI %s", vString))
 		cl := changes[vString]
 		for _, change := range cl.Changes {
-			utils.Log(fmt.Sprintf("· %s", change))
+			fmt.Println(fmt.Sprintf("· %s", change))
 		}
 	}
 }

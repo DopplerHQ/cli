@@ -59,7 +59,7 @@ and your config file. Flags have the highest priority; config file has the least
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
-		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
+		utils.Print(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
 
 		config := configuration.LocalConfig(cmd)
 		printer.ScopedConfigSource(config, jsonFlag, true, false)
@@ -253,7 +253,7 @@ var configureResetCmd = &cobra.Command{
 		yes := utils.GetBoolFlag(cmd, "yes")
 
 		if !yes {
-			utils.LogWarning("This will delete all local CLI configuration and auth tokens")
+			utils.PrintWarning("This will delete all local CLI configuration and auth tokens")
 			if !utils.ConfirmationPrompt("Continue?", false) {
 				utils.Log("Aborting")
 				return
@@ -261,7 +261,7 @@ var configureResetCmd = &cobra.Command{
 		}
 
 		configuration.ClearConfig()
-		utils.Log("Configuration has been reset. Please run 'doppler login' to authenticate")
+		utils.Print("Configuration has been reset. Please run 'doppler login' to authenticate")
 	},
 }
 

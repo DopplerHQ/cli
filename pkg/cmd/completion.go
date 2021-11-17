@@ -114,12 +114,12 @@ var completionInstallCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to write completion file")
 		}
 
-		utils.Log("Your shell has been configured for Doppler CLI completions! Restart your shell to apply.")
-		utils.Log("")
+		utils.Print("Your shell has been configured for Doppler CLI completions! Restart your shell to apply.")
+		utils.Print("")
 		if utils.IsMacOS() {
-			utils.Log("Note: The homebrew 'bash-completion' package is required for completions to work. See https://docs.brew.sh/Shell-Completion for more info.")
+			utils.Print("Note: The homebrew 'bash-completion' package is required for completions to work. See https://docs.brew.sh/Shell-Completion for more info.")
 		} else {
-			utils.Log("Note: The 'bash-completion' package is required for completions to work. See https://github.com/scop/bash-completion for more info.")
+			utils.Print("Note: The 'bash-completion' package is required for completions to work. See https://github.com/scop/bash-completion for more info.")
 		}
 	},
 }

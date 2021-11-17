@@ -177,7 +177,7 @@ var runCleanCmd = &cobra.Command{
 		if _, err := os.Stat(defaultFallbackDir); err != nil {
 			if os.IsNotExist(err) {
 				utils.LogDebug("Fallback directory does not exist")
-				utils.Log("Nothing to clean")
+				utils.Print("Nothing to clean")
 				return
 			}
 
@@ -233,9 +233,9 @@ var runCleanCmd = &cobra.Command{
 		}
 
 		if deleted == 1 {
-			utils.Log(fmt.Sprintf("%s %d fallback file\n", action, deleted))
+			utils.Print(fmt.Sprintf("%s %d fallback file\n", action, deleted))
 		} else {
-			utils.Log(fmt.Sprintf("%s %d fallback files\n", action, deleted))
+			utils.Print(fmt.Sprintf("%s %d fallback files\n", action, deleted))
 		}
 	},
 }

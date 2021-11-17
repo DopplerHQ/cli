@@ -25,10 +25,10 @@ key_filename=""
 cleanup() {
   exit_code=$?
   if [ "$exit_code" -ne 0 ] && [ "$CLEAN_EXIT" -ne 1 ]; then
-    echo "ERROR: script failed during execution"
+    log "ERROR: script failed during execution"
 
     if [ "$DEBUG" -eq 0 ]; then
-      echo "For more verbose output, re-run this script with the debug flag (./install.sh --debug)"
+      log "For more verbose output, re-run this script with the debug flag (./install.sh --debug)"
     fi
   fi
 
@@ -81,9 +81,9 @@ macos_shell() {
 install_completions() {
   default_shell=""
   if [ "$os" = "macos" ]; then
-    default_shell="$(macos_shell || "")"
+    default_shell="$(macos_shell || true)"
   else
-    default_shell="$(linux_shell || "")"
+    default_shell="$(linux_shell || true)"
   fi
 
   log_debug "Installing shell completions for '$default_shell'"
@@ -205,13 +205,13 @@ check_http_status() {
       error="${error} Please try again."
     fi
 
-    echo ""
-    echo "$error"
+    log ""
+    log "$error"
 
     if [ "$status_code" -eq 404 ]; then
-      echo ""
-      echo "Please report this issue:"
-      echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unexpected%20404%20using%20CLI%20install%20script"
+      log ""
+      log "Please report this issue:"
+      log "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unexpected%20404%20using%20CLI%20install%20script"
     fi
 
     clean_exit 1
@@ -255,7 +255,7 @@ for arg; do
 
   if [ "$arg" = "--no-verify-signature" ]; then
     VERIFY_SIGNATURE=0
-    echo "Disabling signature verification, this is not recommended"
+    log "Disabling signature verification, this is not recommended"
   fi
 
   if [ "$arg" = "--verify-signature" ]; then
@@ -291,10 +291,10 @@ elif [ "$uname_os" = "OpenBSD" ]; then
 elif [ "$uname_os" = "NetBSD" ]; then
   os="netbsd"
 else
-  echo "ERROR: Unsupported OS '$uname_os'"
-  echo ""
-  echo "Please report this issue:"
-  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
+  log "ERROR: Unsupported OS '$uname_os'"
+  log ""
+  log "Please report this issue:"
+  log "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
   clean_exit 1
 fi
 
@@ -315,10 +315,10 @@ elif [ "$uname_machine" = "armv7" ] || [ "$uname_machine" = "armv7l" ]; then
 elif [ "$uname_machine" = "arm64" ] || [ "$uname_machine" = "aarch64" ]; then
   arch="arm64"
 else
-  echo "ERROR: Unsupported architecture '$uname_machine'"
-  echo ""
-  echo "Please report this issue:"
-  echo "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20architecture"
+  log "ERROR: Unsupported architecture '$uname_machine'"
+  log ""
+  log "Please report this issue:"
+  log "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20architecture"
   clean_exit 1
 fi
 
@@ -337,19 +337,22 @@ fi
 log_debug "Detected format '$format'"
 
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-  log_debug "Checking for gpg binary"
-  if [ ! -x "$(command -v gpg)" ]; then
+  gpg_binary="$(command -v gpg || true)";
+  if [ -x "$gpg_binary" ]; then
+    log_debug "Using $gpg_binary for signature verification"
+  else
+    # binary not available
     if [ "$FORCE_VERIFY_SIGNATURE" -eq 1 ]; then
-      echo "ERROR: Unable to find gpg binary for signature verficiation"
-      echo "You can resolve this error by installing your system's gnupg package"
+      log "ERROR: Unable to find gpg binary for signature verficiation"
+      log "You can resolve this error by installing your system's gnupg package"
       clean_exit 1
     else
       log_debug "Unable to find gpg binary, skipping signature verification"
       VERIFY_SIGNATURE=0
-      echo "WARNING: Skipping signature verification due to no available gpg binary"
-      echo "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
-      echo "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
-      echo ""
+      log "WARNING: Skipping signature verification due to no available gpg binary"
+      log "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
+      log "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
+      log ""
     fi
   fi
 fi
@@ -377,7 +380,7 @@ if [ "$curl_installed" -eq 0 ] || [ "$wget_installed" -eq 0 ]; then
   tempdir="$(mktemp -d ~/.tmp.XXXXXXXX)"
   log_debug "Using temp directory $tempdir"
 
-  echo "Downloading Doppler CLI"
+  log "Downloading Doppler CLI"
   file="doppler-download"
   filename="$tempdir/$file"
   sig_filename="$filename.sig"
@@ -422,13 +425,13 @@ if [ "$curl_installed" -eq 0 ] || [ "$wget_installed" -eq 0 ]; then
     fi
   fi
 else
-  echo "ERROR: You must have curl or wget installed"
+  log "ERROR: You must have curl or wget installed"
   clean_exit 1
 fi
 
 if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-  log_debug "Verifying GPG signature"
-  gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (echo "Failed to verify binary signature" && clean_exit 1)
+  log "Verifying signature"
+  gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
   log_debug "Signature successfully verified!"
 else
   log_debug "Skipping signature verification"
@@ -439,7 +442,7 @@ if [ "$format" = "deb" ]; then
   filename="$filename.deb"
 
   if [ "$INSTALL" -eq 1 ]; then
-    echo 'Installing...'
+    log "Installing..."
     dpkg -i "$filename"
     echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
@@ -452,7 +455,7 @@ elif [ "$format" = "rpm" ]; then
   filename="$filename.rpm"
 
   if [ "$INSTALL" -eq 1 ]; then
-    echo 'Installing...'
+    log "Installing..."
     rpm -i --force "$filename"
     echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
@@ -476,7 +479,7 @@ elif [ "$format" = "tar" ]; then
 
   # install
   if [ "$INSTALL" -eq 1 ]; then
-    echo 'Installing...'
+    log "Installing..."
     found_valid_path=0
     binary_installed=0
 

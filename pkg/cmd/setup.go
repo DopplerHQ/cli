@@ -52,7 +52,7 @@ func setup(cmd *cobra.Command, args []string) {
 		case models.FlagSource.String():
 			saveToken = true
 		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
+			utils.Print(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
 			saveToken = true
 		}
 	}
@@ -82,11 +82,11 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedProject = localConfig.EnclaveProject.Value
 	case models.EnvironmentSource.String():
-		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
+		utils.Print(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
 		if useRepoConfig && repoConfig.Setup.Project != "" {
-			utils.Log("Auto-selecting project from repo config file")
+			utils.Print("Auto-selecting project from repo config file")
 			selectedProject = repoConfig.Setup.Project
 			break
 		}
@@ -117,11 +117,11 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedConfig = localConfig.EnclaveConfig.Value
 	case models.EnvironmentSource.String():
-		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
+		utils.Print(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
 		if useRepoConfig && repoConfig.Setup.Config != "" {
-			utils.Log("Auto-selecting config from repo config file")
+			utils.Print("Auto-selecting config from repo config file")
 			selectedConfig = repoConfig.Setup.Config
 			break
 		}
@@ -131,7 +131,7 @@ func setup(cmd *cobra.Command, args []string) {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
 		if len(configs) == 0 {
-			utils.Log("You project does not have any configs")
+			utils.Print("You project does not have any configs")
 			break
 		}
 
@@ -184,7 +184,7 @@ func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, 
 	if len(projects) == 1 {
 		// the user is expecting to a prompt, so print a message instead
 		if canPromptUser {
-			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available project:"), options[0]))
+			utils.Print(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available project:"), options[0]))
 		}
 		return projects[0].ID
 	}
@@ -220,7 +220,7 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 		config := configs[0].Name
 		// the user is expecting to a prompt, so print a message instead
 		if canPromptUser {
-			utils.Log(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available config:"), config))
+			utils.Print(fmt.Sprintf("%s %s", color.Bold.Render("Selected only available config:"), config))
 		}
 		return config
 	}

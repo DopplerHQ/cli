@@ -48,9 +48,9 @@ var rootCmd = &cobra.Command{
 
 		// this output does not honor --silent
 		if printConfig {
-			fmt.Println("Active configuration")
+			utils.LogDebug("Active configuration")
 			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true, true)
-			fmt.Println("")
+			utils.LogDebug("")
 		}
 
 		plain := utils.GetBoolFlagIfChanged(cmd, "plain", false)
@@ -107,12 +107,12 @@ func checkVersion(command string) {
 	} else if utils.IsWindows() {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
-		utils.Log(color.Green.Sprintf("An update is available."))
+		utils.Print(color.Green.Sprintf("An update is available."))
 
 		changes, apiError := controllers.CLIChangeLog()
 		if apiError.IsNil() {
 			printer.ChangeLog(changes, 1, false)
-			utils.Log("")
+			utils.Print("")
 		}
 
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
@@ -177,7 +177,7 @@ func Execute() {
 	defer func() {
 		if !version.IsDevelopment() {
 			if err := recover(); err != nil {
-				fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %v\n", color.Red.Render("Doppler Exception:"), err))
+				utils.Log(fmt.Sprintf("%s %v\n", color.Red.Render("Doppler Exception:"), err))
 				os.Exit(1)
 			}
 		}

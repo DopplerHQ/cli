@@ -50,17 +50,17 @@ var loginCmd = &cobra.Command{
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				if cmd.Flags().Changed("scope") {
 					// user specified scope flag, show yes/no override prompt
-					utils.LogWarning("This scope is already authorized from a previous login.")
-					utils.Log("")
+					utils.PrintWarning("This scope is already authorized from a previous login.")
+					utils.Print("")
 					if !utils.ConfirmationPrompt("Overwrite existing login", false) {
-						utils.Log("Exiting")
+						utils.Print("Exiting")
 						return
 					}
 				} else {
 					// scope flag wasn't specified, show option to scope to current directory
-					utils.LogWarning("You have already logged in.")
-					utils.Log("")
-					utils.Log("Would you like to scope your new login to the current directory, or overwrite the existing global login?")
+					utils.PrintWarning("You have already logged in.")
+					utils.Print("")
+					utils.Print("Would you like to scope your new login to the current directory, or overwrite the existing global login?")
 
 					cwd := utils.Cwd()
 					options := []string{fmt.Sprintf("Scope login to current directory (%s)", cwd), fmt.Sprintf("Overwrite global login (%s)", newScope)}
@@ -94,7 +94,7 @@ var loginCmd = &cobra.Command{
 
 		if copyAuthCode {
 			if err := utils.CopyToClipboard(code); err != nil {
-				utils.LogWarning("Unable to copy to clipboard")
+				utils.PrintWarning("Unable to copy to clipboard")
 			}
 		}
 
@@ -113,10 +113,10 @@ var loginCmd = &cobra.Command{
 		}
 
 		if printURL {
-			utils.Log(fmt.Sprintf("Complete authorization at %s", authURL))
+			utils.Print(fmt.Sprintf("Complete authorization at %s", authURL))
 		}
-		utils.Log(fmt.Sprintf("Your auth code is:\n%s\n", color.Green.Render(code)))
-		utils.Log("Waiting...")
+		utils.Print(fmt.Sprintf("Your auth code is:\n%s\n", color.Green.Render(code)))
+		utils.Print("Waiting...")
 
 		// auth flow must complete within 5 minutes
 		timeout := 5 * time.Minute
@@ -148,8 +148,8 @@ var loginCmd = &cobra.Command{
 		}
 
 		if err, ok := response["error"]; ok {
-			utils.Log("")
-			utils.Log(fmt.Sprint(err))
+			utils.Print("")
+			utils.Print(fmt.Sprint(err))
 
 			os.Exit(1)
 		}
@@ -183,8 +183,8 @@ var loginCmd = &cobra.Command{
 
 		configuration.Set(configuration.Scope, options)
 
-		utils.Log("")
-		utils.Log(fmt.Sprintf("Welcome, %s", name))
+		utils.Print("")
+		utils.Print(fmt.Sprintf("Welcome, %s", name))
 
 		if prevConfig.Token.Value != "" {
 			prevScope, err1 := filepath.Abs(prevConfig.Token.Scope)
@@ -240,7 +240,7 @@ Your saved configuration will be updated.`,
 			}
 		}
 
-		utils.Log("Auth token has been rolled")
+		utils.Print("Auth token has been rolled")
 	},
 }
 
