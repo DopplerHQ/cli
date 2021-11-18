@@ -277,6 +277,11 @@ if [ "$find_install_path_arg" -eq 1 ]; then
   clean_exit 1
 fi
 
+if [ "$CUSTOM_INSTALL_PATH" != "" ]; then
+  # disable package managers when specifying custom path
+  USE_PACKAGE_MANAGER=0
+fi
+
 # identify OS
 os="unknown"
 uname_os=$(uname -s)
