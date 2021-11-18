@@ -108,4 +108,5 @@ type ConfigServiceToken struct {
 	Project     string `json:"project"`
 	Environment string `json:"environment"`
 	Config      string `json:"config"`
+	Access      string `json:"access"`
 }

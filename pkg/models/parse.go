@@ -284,6 +284,9 @@ func ParseConfigServiceToken(token map[string]interface{}) ConfigServiceToken {
 	if token["expires_at"] != nil {
 		parsedToken.ExpiresAt = token["expires_at"].(string)
 	}
+	if token["access"] != nil {
+		parsedToken.Access = token["access"].(string)
+	}
 
 	return parsedToken
 }

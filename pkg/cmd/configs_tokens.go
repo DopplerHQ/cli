@@ -103,6 +103,7 @@ func createConfigsTokens(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	plain := utils.GetBoolFlag(cmd, "plain")
 	copy := utils.GetBoolFlag(cmd, "copy")
+	access := cmd.Flag("access").Value.String()
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -122,7 +123,7 @@ func createConfigsTokens(cmd *cobra.Command, args []string) {
 		expireAt = time.Now().Add(maxAge)
 	}
 
-	configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name, expireAt)
+	configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name, expireAt, access)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -184,6 +185,7 @@ func init() {
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCreateCmd.Flags().Duration("max-age", 0, "token will expire after specified duration, (e.g. '3h', '15m')")
+	configsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
