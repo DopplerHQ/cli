@@ -40,6 +40,16 @@ var defaultFallbackDir string
 
 const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
 
+type fallbackOptions struct {
+	enable             bool
+	path               string
+	legacyPath         string
+	readonly           bool
+	exclusive          bool
+	exitOnWriteFailure bool
+	passphrase         string
+}
+
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
 	Short: "Run a command with secrets injected into the environment",
@@ -112,7 +122,16 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase, nameTransformer, dynamicSecretsTTL)
+		fallbackOpts := fallbackOptions{
+			enable:             enableFallback,
+			path:               fallbackPath,
+			legacyPath:         legacyFallbackPath,
+			readonly:           fallbackReadonly,
+			exclusive:          fallbackOnly,
+			exitOnWriteFailure: exitOnWriteFailure,
+			passphrase:         passphrase,
+		}
+		secrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -251,37 +270,37 @@ var runCleanCmd = &cobra.Command{
 }
 
 // fetchSecrets fetches secrets, including all reading and writing of fallback files
-func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration) map[string]string {
-	if fallbackOnly {
-		if !enableFallback {
+func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts fallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration) map[string]string {
+	if fallbackOpts.exclusive {
+		if !fallbackOpts.enable {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
 		}
 		if nameTransformer != nil {
 			utils.HandleError(errors.New("Conflict: unable to specify --name-transformer with --fallback-only"))
 		}
-		return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
+		return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
 	enableCache = enableCache && nameTransformer == nil && metadataPath != ""
 	etag := ""
 	if enableCache {
-		etag = getCacheFileETag(metadataPath, fallbackPath)
+		etag = getCacheFileETag(metadataPath, fallbackOpts.path)
 	}
 
 	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, nameTransformer, etag, dynamicSecretsTTL)
 	if !httpErr.IsNil() {
-		if enableFallback {
+		if fallbackOpts.enable {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
+			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
 
 	if enableCache && statusCode == 304 {
 		utils.LogDebug("Using cached secrets from fallback file")
-		cache, err := controllers.SecretsCacheFile(fallbackPath, passphrase)
+		cache, err := controllers.SecretsCacheFile(fallbackOpts.path, fallbackOpts.passphrase)
 		if !err.IsNil() {
 			utils.LogDebugError(err.Unwrap())
 			utils.LogDebug(err.Message)
@@ -298,26 +317,26 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 	if err != nil {
 		utils.LogDebugError(err)
 
-		if enableFallback {
+		if fallbackOpts.enable {
 			utils.Log("Unable to parse the Doppler API response")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackPath, legacyFallbackPath, passphrase, false)
+			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 		}
 		utils.HandleError(err, "Unable to parse API response")
 	}
 
-	writeFallbackFile := enableFallback && !fallbackReadonly && nameTransformer == nil
+	writeFallbackFile := fallbackOpts.enable && !fallbackOpts.readonly && nameTransformer == nil
 	if writeFallbackFile {
 		utils.LogDebug("Encrypting secrets")
-		encryptedResponse, err := crypto.Encrypt(passphrase, response, "base64")
+		encryptedResponse, err := crypto.Encrypt(fallbackOpts.passphrase, response, "base64")
 		if err != nil {
 			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
 		}
 
-		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackPath))
-		if err := utils.WriteFile(fallbackPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
+		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackOpts.path))
+		if err := utils.WriteFile(fallbackOpts.path, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
 			utils.Log("Unable to write to fallback file")
-			if exitOnWriteFailure {
+			if fallbackOpts.exitOnWriteFailure {
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
 				utils.LogDebugError(err)
@@ -325,11 +344,11 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		}
 
 		// TODO remove this when releasing CLI v4 (DPLR-435)
-		if legacyFallbackPath != "" && localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", legacyFallbackPath))
-			if err := utils.WriteFile(legacyFallbackPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
+		if fallbackOpts.legacyPath != "" && localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
+			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", fallbackOpts.legacyPath))
+			if err := utils.WriteFile(fallbackOpts.legacyPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
 				utils.Log("Unable to write to legacy fallback file")
-				if exitOnWriteFailure {
+				if fallbackOpts.exitOnWriteFailure {
 					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 				} else {
 					utils.LogDebugError(err)
