@@ -53,11 +53,13 @@ type fallbackOptions struct {
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
 	Short: "Run a command with secrets injected into the environment",
-	Long: `Run a command with secrets injected into the environment
+	Long: `Run a command with secrets injected into the environment.
+Secrets can also be mounted to an ephemeral file using the --mount flag.
 
 To view the CLI's active configuration, run ` + "`doppler configure debug`",
 	Example: `doppler run -- YOUR_COMMAND --YOUR-FLAG
-doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
+doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"
+doppler run --mount secrets.json -- cat secrets.json`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		// The --command flag and args are mututally exclusive
 		usingCommandFlag := cmd.Flags().Changed("command")
@@ -131,52 +133,105 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			exitOnWriteFailure: exitOnWriteFailure,
 			passphrase:         passphrase,
 		}
-		secrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
+		// retrieve secrets
+		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
+
+		mountPath := cmd.Flag("mount").Value.String()
+		mountFormat := cmd.Flag("mount-format").Value.String()
+		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
+		// only auto-detect the format if it hasn't been explicitly specified
+		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
+		shouldMountFile := mountPath != ""
 
 		if preserveEnv {
-			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
+			if shouldMountFile {
+				utils.LogWarning("--preserve-env has no effect when used with --mount")
+			} else {
+				utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
+			}
 		}
 
-		env := os.Environ()
+		originalEnv := os.Environ()
 		existingEnvKeys := map[string]bool{}
-		for _, envVar := range env {
+		for _, envVar := range originalEnv {
 			// key=value format
 			parts := strings.SplitN(envVar, "=", 2)
 			key := parts[0]
 			existingEnvKeys[key] = true
 		}
 
+		secrets := map[string]string{}
 		excludedKeys := []string{"PATH", "PS1", "HOME"}
-		for name, value := range secrets {
+		for name, value := range dopplerSecrets {
 			useSecret := true
-			for _, excludedKey := range excludedKeys {
-				if excludedKey == name {
-					useSecret = false
-					break
+			if !shouldMountFile {
+				// ignore secrets that might conflict with the environment
+				for _, excludedKey := range excludedKeys {
+					if excludedKey == name {
+						utils.LogDebug(fmt.Sprintf("Ignoring restricted secret %s", name))
+						useSecret = false
+						break
+					}
 				}
-			}
 
-			if useSecret && preserveEnv {
 				// skip secret if environment already contains variable w/ same name
-				if existingEnvKeys[name] == true {
+				if preserveEnv && existingEnvKeys[name] == true {
 					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
 					useSecret = false
 				}
 			}
 
-			if useSecret {
-				env = append(env, fmt.Sprintf("%s=%s", name, value))
+			if !useSecret {
+				continue
+			}
+
+			secrets[name] = value
+		}
+
+		var env []string
+		var onExit func()
+		if shouldMountFile {
+			if shouldAutoDetectFormat {
+				if strings.HasSuffix(mountPath, ".env") {
+					mountFormat = "env"
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+				} else if strings.HasSuffix(mountPath, ".json") {
+					mountFormat = "json"
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+				} else {
+					parts := strings.Split(mountPath, ".")
+					detectedFormat := parts[len(parts)-1]
+					utils.LogWarning(fmt.Sprintf("Detected \"%s\" file format, which is not supported. Using default JSON format for mounted secrets", detectedFormat))
+				}
+			}
+
+			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat, mountPath, maxReads)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
+			mountPath = absMountPath
+			onExit = handler
+
+			// export path to mounted file
+			env = append(env, fmt.Sprintf("%s=%s", "DOPPLER_CLI_SECRETS_PATH", mountPath))
+		} else {
+			// export doppler secrets
+			for _, envVar := range controllers.MapToEnvFormat(secrets, false) {
+				env = append(env, envVar)
 			}
 		}
+
+		// include original environment variables
+		env = append(env, originalEnv...)
 
 		exitCode := 0
 		var err error
 
 		if cmd.Flags().Changed("command") {
 			command := cmd.Flag("command").Value.String()
-			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
 		} else {
-			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
 		}
 
 		if err != nil {
@@ -269,7 +324,7 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
-// fetchSecrets fetches secrets, including all reading and writing of fallback files
+// fetchSecrets from Doppler and handle fallback file
 func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts fallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration) map[string]string {
 	if fallbackOpts.exclusive {
 		if !fallbackOpts.enable {
@@ -591,6 +646,10 @@ func init() {
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
+	// secrets mount flags
+	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
+	runCmd.Flags().String("mount-format", "json", "file format to use. if not specified, will be auto-detected from mount name. one of [json, env]")
+	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 
 	// deprecated
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")

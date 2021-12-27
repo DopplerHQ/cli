@@ -105,18 +105,18 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (int, error) {
+func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool, onExit func()) (int, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	return execCommand(cmd, forwardSignals)
+	return execCommand(cmd, forwardSignals, onExit)
 }
 
 // RunCommandString runs the specified command string
-func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (int, error) {
+func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool, onExit func()) (int, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -137,10 +137,15 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	return execCommand(cmd, forwardSignals)
+	return execCommand(cmd, forwardSignals, onExit)
 }
 
-func execCommand(cmd *exec.Cmd, forwardSignals bool) (int, error) {
+func execCommand(cmd *exec.Cmd, forwardSignals bool, onExit func()) (int, error) {
+	if onExit != nil {
+		// ensure the onExit handler is called, regardless of how/when we return
+		defer onExit()
+	}
+
 	// signal handling logic adapted from aws-vault https://github.com/99designs/aws-vault/
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan)
