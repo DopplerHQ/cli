@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -113,7 +114,13 @@ func SecretsCacheFile(path string, passphrase string) (map[string]string, Error)
 	}
 
 	utils.LogDebug("Decrypting cache file")
-	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
+	// default to hex for backwards compatibility b/c we didn't always include a prefix
+	// TODO remove support for optional prefix when releasing CLI v4 (DPLR-435)
+	encoding := "hex"
+	if strings.HasPrefix(string(response), crypto.Base64EncodingPrefix) {
+		encoding = "base64"
+	}
+	decryptedSecrets, err := crypto.Decrypt(passphrase, response, encoding)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to decrypt cache file"}
 	}
