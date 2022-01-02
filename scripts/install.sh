@@ -221,7 +221,9 @@ check_http_status() {
 is_dir_in_path() {
   dir="$1"
   found=1
-  (echo "$PATH" | grep -q "$dir:" || echo "$PATH" | grep -q -E "$dir$") || found=0
+  # ensure dir is the full path and not a substring of some longer path.
+  # after performing a regex search, perform another search w/o regex to filter out matches due to special characters in `$dir`
+  (echo "$PATH" | grep -o -E "(^|:)$dir(:|$)" | grep -q -F "$dir") || found=0
   echo "$found"
 }
 
