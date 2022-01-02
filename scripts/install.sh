@@ -194,7 +194,7 @@ wget_download() {
   exit_code=$?
   set -e
 
-  status_code="$(echo "$headers" | sed '1!G;h;$!d' | grep -o -E 'HTTP/[0-9.]+ [0-9]{3}' | head -1 | grep -o -E '[0-9]{3}')"
+  status_code="$(echo "$headers" | grep -o -E '^\s*HTTP/[0-9.]+ [0-9]{3}' | tail -1 | grep -o -E '[0-9]{3}')"
   # it's possible for this value to be blank, so confirm that it's a valid status code
   valid_status_code=0
   if expr "$status_code" : '[0-9][0-9][0-9]$'>/dev/null; then
