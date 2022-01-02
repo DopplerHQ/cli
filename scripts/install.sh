@@ -71,7 +71,7 @@ delete_tempdir() {
 
 linux_shell() {
   user="$(whoami)"
-  grep "$user" < /etc/passwd | cut -f 7 -d ":" | head -1
+  grep -E "^$user:" < /etc/passwd | cut -f 7 -d ":" | head -1
 }
 
 macos_shell() {
