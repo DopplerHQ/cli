@@ -451,6 +451,8 @@ if [ "$format" = "deb" ]; then
   if [ "$INSTALL" -eq 1 ]; then
     log "Installing..."
     dpkg -i "$filename"
+    # dpkg doesn't provide us the actual path, so take a best guess
+    BINARY_INSTALLED_PATH="$(dirname "$(command -v doppler)")"
     echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
     log_debug "Moving installer to $(pwd) (cwd)"
@@ -464,6 +466,8 @@ elif [ "$format" = "rpm" ]; then
   if [ "$INSTALL" -eq 1 ]; then
     log "Installing..."
     rpm -i --force "$filename"
+    # rpm doesn't provide us the actual path, so take a best guess
+    BINARY_INSTALLED_PATH="$(dirname "$(command -v doppler)")"
     echo "Installed Doppler CLI $("$BINARY_INSTALLED_PATH/"doppler -v)"
   else
     log_debug "Moving installer to $(pwd) (cwd)"
