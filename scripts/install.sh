@@ -91,6 +91,46 @@ install_completions() {
   "$BINARY_INSTALLED_PATH/"doppler completion install "$default_shell" --no-check-version > /dev/null 2>&1
 }
 
+# exit code
+# 0=installed
+# 1=path not writable
+# 2=path not in PATH
+# 3=path not a directory
+# 4=path not found
+install_binary() {
+  install_dir="$1"
+  # defaults to true
+  require_dir_in_path="$2"
+  # defaults to false
+  create_if_not_exist="$3"
+
+  if [ "$require_dir_in_path" != "false" ] && ! is_dir_in_path "$install_dir"; then
+    return 2
+  fi
+
+  if [ "$create_if_not_exist" = "true" ] && [ ! -e "$install_dir" ]; then
+    log_debug "$install_dir is in PATH but doesn't exist"
+    log_debug "Creating $install_dir"
+    mkdir -m 755 "$install_dir" > /dev/null 2>&1
+  fi
+
+  if [ ! -e "$install_dir" ]; then
+    return 4
+  fi
+
+  if [ ! -d "$install_dir" ]; then
+    return 3
+  fi
+
+  if ! is_path_writable "$install_dir"; then
+    return 1
+  fi
+
+  log_debug "Moving binary to $install_dir"
+  mv -f "$extract_dir/doppler" "$install_dir"
+  return 0
+}
+
 curl_download() {
   url="$1"
   output_file="$2"
@@ -126,6 +166,7 @@ curl_download() {
     fi
   fi
 
+  # this could be >255, so print HTTP status code rather than using as return code
   echo "$status_code"
 }
 
@@ -184,6 +225,7 @@ wget_download() {
     fi
   fi
 
+  # this could be >255, so print HTTP status code rather than using as return code
   echo "$status_code"
 }
 
@@ -220,18 +262,14 @@ check_http_status() {
 
 is_dir_in_path() {
   dir="$1"
-  found=1
   # ensure dir is the full path and not a substring of some longer path.
   # after performing a regex search, perform another search w/o regex to filter out matches due to special characters in `$dir`
-  (echo "$PATH" | grep -o -E "(^|:)$dir(:|$)" | grep -q -F "$dir") || found=0
-  echo "$found"
+  echo "$PATH" | grep -o -E "(^|:)$dir(:|$)" | grep -q -F "$dir"
 }
 
 is_path_writable() {
   dir="$1"
-  writable=1
-  test -w "$dir" || writable=0
-  echo "$writable"
+  test -w "$dir"
 }
 
 find_install_path_arg=0
@@ -491,83 +529,101 @@ elif [ "$format" = "tar" ]; then
   # install
   if [ "$INSTALL" -eq 1 ]; then
     log "Installing..."
-    found_valid_path=0
     binary_installed=0
+    found_non_writable_path=0
 
     if [ "$CUSTOM_INSTALL_PATH" != "" ]; then
       # install to this directory or fail; don't try any other paths
-      if [ ! -d "$CUSTOM_INSTALL_PATH" ]; then
-        log "Install path is not a valid directory: \"$CUSTOM_INSTALL_PATH\""
-        clean_exit 1
-      fi
-      found_valid_path=1
-      if [ "$( is_path_writable "$CUSTOM_INSTALL_PATH" )" -ne "1" ]; then
+
+      # capture exit code without exiting
+      set +e
+      install_binary "$CUSTOM_INSTALL_PATH" "false" "false"
+      exit_code=$?
+      set -e
+      if [ $exit_code -eq 0 ]; then
+        binary_installed=1
+        BINARY_INSTALLED_PATH="$CUSTOM_INSTALL_PATH"
+      elif [ $exit_code -eq 1 ]; then
         log "Install path is not writable: \"$CUSTOM_INSTALL_PATH\""
         clean_exit 2
-      fi
-
-      log_debug "Moving binary to $CUSTOM_INSTALL_PATH"
-      mv -f "$extract_dir/doppler" "$CUSTOM_INSTALL_PATH"
-      BINARY_INSTALLED_PATH="$CUSTOM_INSTALL_PATH"
-      binary_installed=1
-    fi
-
-    install_dir="/usr/local/bin"
-    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      found_valid_path=1
-      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
-        log_debug "Moving binary to $install_dir"
-        mv -f "$extract_dir/doppler" $install_dir
-        BINARY_INSTALLED_PATH="$install_dir"
-        binary_installed=1
-      fi
-    fi
-
-    install_dir="/usr/bin"
-    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      found_valid_path=1
-      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
-        log_debug "Moving binary to $install_dir"
-        mv -f "$extract_dir/doppler" $install_dir
-        BINARY_INSTALLED_PATH="$install_dir"
-        binary_installed=1
-      fi
-    fi
-
-    install_dir="/usr/sbin"
-    if [ "$binary_installed" -eq 0 ] && [ -d "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      found_valid_path=1
-      if [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
-        log_debug "Moving binary to $install_dir"
-        mv -f "$extract_dir/doppler" $install_dir
-        BINARY_INSTALLED_PATH="$install_dir"
-        binary_installed=1
-      fi
-    fi
-
-    # support creating /usr/local/bin if it's in the PATH but doesn't exist.
-    # this fixes an issue with clean installs on macOS 12+
-    install_dir="/usr/local/bin"
-    if [ ! -e "$install_dir" ] && [ "$( is_dir_in_path "$install_dir" )" -eq "1" ]; then
-      found_valid_path=1
-      log_debug "$install_dir is in PATH but doesn't exist"
-      log_debug "Creating $install_dir"
-      if mkdir -m 755 "$install_dir" > /dev/null 2>&1 ; then
-        if  [ "$( is_path_writable "$install_dir" )" -eq "1" ]; then
-          log_debug "Moving binary to $install_dir"
-          mv -f "$extract_dir/doppler" $install_dir
-          binary_installed=1
-        fi
+      elif [ $exit_code -eq 4 ]; then
+        log "Install path does not exist: \"$CUSTOM_INSTALL_PATH\""
+        clean_exit 1
+      else
+        log "Install path is not a valid directory: \"$CUSTOM_INSTALL_PATH\""
+        clean_exit 1
       fi
     fi
 
     if [ "$binary_installed" -eq 0 ]; then
-      if [ "$found_valid_path" -eq 0 ]; then
-        log "No supported bin directories are available; please adjust your PATH"
-        clean_exit 1
-      else
+      install_dir="/usr/local/bin"
+      # capture exit code without exiting
+      set +e
+      install_binary "$install_dir"
+      exit_code=$?
+      set -e
+      if [ $exit_code -eq 0 ]; then
+        binary_installed=1
+        BINARY_INSTALLED_PATH="$install_dir"
+      elif [ $exit_code -eq 1 ]; then
+        found_non_writable_path=1
+      fi
+    fi
+
+    if [ "$binary_installed" -eq 0 ]; then
+      install_dir="/usr/bin"
+      # capture exit code without exiting
+      set +e
+      install_binary "$install_dir"
+      exit_code=$?
+      set -e
+      if [ $exit_code -eq 0 ]; then
+        binary_installed=1
+        BINARY_INSTALLED_PATH="$install_dir"
+      elif [ $exit_code -eq 1 ]; then
+        found_non_writable_path=1
+      fi
+    fi
+
+    if [ "$binary_installed" -eq 0 ]; then
+      install_dir="/usr/sbin"
+      # capture exit code without exiting
+      set +e
+      install_binary "$install_dir"
+      exit_code=$?
+      set -e
+      if [ $exit_code -eq 0 ]; then
+        binary_installed=1
+        BINARY_INSTALLED_PATH="$install_dir"
+      elif [ $exit_code -eq 1 ]; then
+        found_non_writable_path=1
+      fi
+    fi
+
+    if [ "$binary_installed" -eq 0 ]; then
+      # run again for this directory, but this time create it if it doesn't exist
+      # this fixes an issue with clean installs on macOS 12+
+      install_dir="/usr/local/bin"
+      # capture exit code without exiting
+      set +e
+      install_binary "$install_dir" "true" "true"
+      exit_code=$?
+      set -e
+      if [ $exit_code -eq 0 ]; then
+        binary_installed=1
+        BINARY_INSTALLED_PATH="$install_dir"
+      elif [ $exit_code -eq 1 ]; then
+        found_non_writable_path=1
+      fi
+    fi
+
+    if [ "$binary_installed" -eq 0 ]; then
+      if [ "$found_non_writable_path" -eq 1 ]; then
         log "Unable to write to bin directory; please re-run with \`sudo\` or adjust your PATH"
         clean_exit 2
+      else
+        log "No supported bin directories are available; please adjust your PATH"
+        clean_exit 1
       fi
     fi
   else
