@@ -492,7 +492,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(errors.New("invalid passphrase"))
 	}
 
-	encryptedBody, err := crypto.Encrypt(passphrase, body)
+	encryptedBody, err := crypto.Encrypt(passphrase, body, "base64")
 	if err != nil {
 		utils.HandleError(err, "Unable to encrypt your secrets. No file has been written.")
 	}
