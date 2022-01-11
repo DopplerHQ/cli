@@ -345,6 +345,11 @@ fi
 
 log_debug "Detected OS '$os'"
 
+# disable package managers on macOS (their use would be most unexpected)
+if [ "$os" = "macos" ]; then
+  USE_PACKAGE_MANAGER=0
+fi
+
 # identify arch
 arch="unknown"
 uname_machine=$(uname -m)
