@@ -165,7 +165,7 @@ func secrets(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, false, 0)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -191,7 +191,11 @@ func getSecrets(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+	var requestedSecrets []string
+	if len(args) > 0 {
+		requestedSecrets = args
+	}
+	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, requestedSecrets, false, 0)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -394,6 +398,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 	fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 	exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
+	dynamicSecretsExpire := utils.GetDurationFlag(cmd, "expire-dynamics")
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
@@ -444,7 +449,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		if enableCache {
 			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 		}
-		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, fallbackPassphrase, nameTransformer)
+		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, fallbackPassphrase, nameTransformer, dynamicSecretsExpire)
 
 		var err error
 		body, err = json.Marshal(secrets)
@@ -463,7 +468,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		var apiError http.Error
-		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, "")
+		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, "", dynamicSecretsExpire)
 		if !apiError.IsNil() {
 			utils.HandleError(apiError.Unwrap(), apiError.Message)
 		}
@@ -551,7 +556,8 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(err, "Unable to parse template text")
 	}
 
-	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+	dynamicSecretsExpire := utils.GetDurationFlag(cmd, "expire-dynamics")
+	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsExpire)
 	if !responseErr.IsNil() {
 		utils.HandleError(responseErr.Unwrap(), responseErr.Message)
 	}
@@ -634,6 +640,7 @@ func init() {
 	secretsDownloadCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validNameTransformersList))
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
+	secretsDownloadCmd.Flags().Duration("expire-dynamics", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	// fallback flags
 	secretsDownloadCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
 	secretsDownloadCmd.Flags().Bool("no-cache", false, "disable using the fallback file to speed up fetches. the fallback file is only used when the API indicates that it's still current.")
@@ -647,6 +654,7 @@ func init() {
 	secretsSubstituteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	secretsSubstituteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
+	secretsSubstituteCmd.Flags().Duration("expire-dynamics", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	secretsCmd.AddCommand(secretsSubstituteCmd)
 
 	rootCmd.AddCommand(secretsCmd)
