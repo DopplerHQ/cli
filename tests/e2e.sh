@@ -14,6 +14,7 @@ export DOPPLER_CONFIG="prd_e2e_tests"
 "$DIR/e2e/run-fallback.sh"
 "$DIR/e2e/configure.sh"
 "$DIR/e2e/install-sh-install-path.sh"
+"$DIR/e2e/legacy-commands.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0
