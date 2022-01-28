@@ -104,6 +104,7 @@ func init() {
 	enclaveSecretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
