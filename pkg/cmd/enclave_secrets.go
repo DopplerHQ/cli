@@ -16,6 +16,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/spf13/cobra"
 )
@@ -102,6 +104,7 @@ func init() {
 	enclaveSecretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	enclaveSecretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
@@ -121,6 +124,8 @@ func init() {
 	enclaveSecretsDownloadCmd.Flags().String("format", models.JSON.String(), "output format. one of [json, env]")
 	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
+	enclaveSecretsDownloadCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validNameTransformersList))
+	enclaveSecretsDownloadCmd.Flags().Duration("expire-dynamics", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	// fallback flags
 	enclaveSecretsDownloadCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-cache", false, "disable using the fallback file to speed up fetches. the fallback file is only used when the API indicates that it's still current.")
