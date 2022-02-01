@@ -138,15 +138,15 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 }
 
 // DownloadSecrets for specified project and config
-func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, etag string, dynamicSecretsExpire time.Duration) (int, http.Header, []byte, Error) {
+func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, etag string, dynamicSecretsTTL time.Duration) (int, http.Header, []byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "format", Value: format.String()})
 	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: "true"})
 
-	if dynamicSecretsExpire > 0 {
-		ttlSeconds := int(dynamicSecretsExpire.Seconds())
+	if dynamicSecretsTTL > 0 {
+		ttlSeconds := int(dynamicSecretsTTL.Seconds())
 		params = append(params, queryParam{Key: "dynamic_secrets_ttl_sec", Value: strconv.Itoa(ttlSeconds)})
 	}
 	if nameTransformer != nil {
@@ -167,7 +167,7 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 }
 
 // GetSecrets for specified project and config
-func GetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets []string, includeDynamicSecrets bool, dynamicSecretsExpire time.Duration) ([]byte, Error) {
+func GetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets []string, includeDynamicSecrets bool, dynamicSecretsTTL time.Duration) ([]byte, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
@@ -182,8 +182,8 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	}
 	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: includeDynamicSecretsOption})
 
-	if dynamicSecretsExpire > 0 {
-		ttlSeconds := int(dynamicSecretsExpire.Seconds())
+	if dynamicSecretsTTL > 0 {
+		ttlSeconds := int(dynamicSecretsTTL.Seconds())
 		params = append(params, queryParam{Key: "dynamic_secrets_ttl_sec", Value: strconv.Itoa(ttlSeconds)})
 	}
 
