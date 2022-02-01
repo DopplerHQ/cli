@@ -75,7 +75,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 		preserveEnv := utils.GetBoolFlag(cmd, "preserve-env")
 		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
 		localConfig := configuration.LocalConfig(cmd)
-		dynamicSecretsExpire := utils.GetDurationFlag(cmd, "expire-dynamics")
+		dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
@@ -112,7 +112,7 @@ doppler run --command "YOUR_COMMAND && YOUR_OTHER_COMMAND"`,
 			}
 		}
 
-		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase, nameTransformer, dynamicSecretsExpire)
+		secrets := fetchSecrets(localConfig, enableCache, enableFallback, fallbackPath, legacyFallbackPath, metadataPath, fallbackReadonly, fallbackOnly, exitOnWriteFailure, passphrase, nameTransformer, dynamicSecretsTTL)
 
 		if preserveEnv {
 			utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
@@ -251,7 +251,7 @@ var runCleanCmd = &cobra.Command{
 }
 
 // fetchSecrets fetches secrets, including all reading and writing of fallback files
-func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsExpire time.Duration) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFallback bool, fallbackPath string, legacyFallbackPath string, metadataPath string, fallbackReadonly bool, fallbackOnly bool, exitOnWriteFailure bool, passphrase string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration) map[string]string {
 	if fallbackOnly {
 		if !enableFallback {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
@@ -269,7 +269,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, enableFall
 		etag = getCacheFileETag(metadataPath, fallbackPath)
 	}
 
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, nameTransformer, etag, dynamicSecretsExpire)
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, nameTransformer, etag, dynamicSecretsTTL)
 	if !httpErr.IsNil() {
 		if enableFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
@@ -561,7 +561,7 @@ func init() {
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
 	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validEnvCompatNameTransformersList))
-	runCmd.Flags().Duration("expire-dynamics", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
+	runCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	// fallback flags
 	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
 	// TODO rename this to 'fallback-passphrase' in CLI v4 (DPLR-435)
