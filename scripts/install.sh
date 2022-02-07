@@ -11,8 +11,6 @@ DEBUG=0
 INSTALL=1
 CLEAN_EXIT=0
 USE_PACKAGE_MANAGER=1
-VERIFY_SIGNATURE=1
-FORCE_VERIFY_SIGNATURE=0
 DISABLE_CURL=0
 CUSTOM_INSTALL_PATH=""
 BINARY_INSTALLED_PATH=""
@@ -293,16 +291,6 @@ for arg; do
     USE_PACKAGE_MANAGER=0
   fi
 
-  if [ "$arg" = "--no-verify-signature" ]; then
-    VERIFY_SIGNATURE=0
-    log "Disabling signature verification, this is not recommended"
-  fi
-
-  if [ "$arg" = "--verify-signature" ]; then
-    VERIFY_SIGNATURE=1
-    FORCE_VERIFY_SIGNATURE=1
-  fi
-
   if [ "$arg" = "--disable-curl" ]; then
     DISABLE_CURL=1
   fi
@@ -386,28 +374,16 @@ fi
 
 log_debug "Detected format '$format'"
 
-if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-  gpg_binary="$(command -v gpg || true)";
-  if [ -x "$gpg_binary" ]; then
-    log_debug "Using $gpg_binary for signature verification"
-  else
-    # binary not available
-    if [ "$FORCE_VERIFY_SIGNATURE" -eq 1 ]; then
-      log "ERROR: Unable to find gpg binary for signature verficiation"
-      log "You can resolve this error by installing your system's gnupg package"
-      clean_exit 1
-    else
-      log_debug "Unable to find gpg binary, skipping signature verification"
-      VERIFY_SIGNATURE=0
-      log "WARNING: Skipping signature verification due to no available gpg binary"
-      log "Signature verification is an additional measure to ensure you're executing code that Doppler produced"
-      log "You can remove this warning by installing your system's gnupg package, or by specifying --no-verify-signature"
-      log ""
-    fi
-  fi
+gpg_binary="$(command -v gpg || true)";
+if [ -x "$gpg_binary" ]; then
+  log_debug "Using $gpg_binary for signature verification"
+else
+  log "ERROR: Unable to find gpg binary for signature verficiation"
+  log "You can resolve this error by installing your system's gnupg package"
+  clean_exit 1
 fi
 
-url="https://$DOPPLER_DOMAIN/download?os=$os&arch=$arch&format=$format&verify=$VERIFY_SIGNATURE"
+url="https://$DOPPLER_DOMAIN/download?os=$os&arch=$arch&format=$format"
 sig_url="https://$DOPPLER_DOMAIN/download/signature?os=$os&arch=$arch&format=$format"
 key_url="https://$DOPPLER_DOMAIN/keys/public"
 
@@ -444,17 +420,15 @@ if [ "$curl_installed" -eq 0 ] || [ "$wget_installed" -eq 0 ]; then
     status_code=$( curl_download "$url" "$filename" "Binary" )
     check_http_status "$status_code" "Binary"
 
-    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-      # download signature
-      log_debug "Downloading binary signature from $sig_url"
-      status_code=$( curl_download "$sig_url" "$sig_filename" "Signature" )
-      check_http_status "$status_code" "Signature"
+    # download signature
+    log_debug "Downloading binary signature from $sig_url"
+    status_code=$( curl_download "$sig_url" "$sig_filename" "Signature" )
+    check_http_status "$status_code" "Signature"
 
-      # download public key
-      log_debug "Downloading public key from $key_url"
-      status_code=$( curl_download "$key_url" "$key_filename" "Public key" )
-      check_http_status "$status_code" "Public key"
-    fi
+    # download public key
+    log_debug "Downloading public key from $key_url"
+    status_code=$( curl_download "$key_url" "$key_filename" "Public key" )
+    check_http_status "$status_code" "Public key"
   elif [ "$wget_installed" -eq 0 ]; then
     log_debug "Using $wget_binary for requests"
 
@@ -462,30 +436,24 @@ if [ "$curl_installed" -eq 0 ] || [ "$wget_installed" -eq 0 ]; then
     status_code=$( wget_download "$url" "$filename" "Binary" )
     check_http_status "$status_code" "Binary"
 
-    if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-      # download signature
-      log_debug "Download binary signature from $sig_url"
-      status_code=$( wget_download "$sig_url" "$sig_filename" "Signature" )
-      check_http_status "$status_code" "Signature"
+    # download signature
+    log_debug "Download binary signature from $sig_url"
+    status_code=$( wget_download "$sig_url" "$sig_filename" "Signature" )
+    check_http_status "$status_code" "Signature"
 
-      # download public key
-      log_debug "Download public key from $key_url"
-      status_code=$( wget_download "$key_url" "$key_filename" "Public key" )
-      check_http_status "$status_code" "Public key"
-    fi
+    # download public key
+    log_debug "Download public key from $key_url"
+    status_code=$( wget_download "$key_url" "$key_filename" "Public key" )
+    check_http_status "$status_code" "Public key"
   fi
 else
   log "ERROR: You must have curl or wget installed"
   clean_exit 1
 fi
 
-if [ "$VERIFY_SIGNATURE" -eq 1 ]; then
-  log "Verifying signature"
-  gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
-  log_debug "Signature successfully verified!"
-else
-  log_debug "Skipping signature verification"
-fi
+log "Verifying signature"
+gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
+log_debug "Signature successfully verified!"
 
 if [ "$format" = "deb" ]; then
   mv -f "$filename" "$filename.deb"
