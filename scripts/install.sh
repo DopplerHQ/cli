@@ -378,7 +378,7 @@ gpg_binary="$(command -v gpg || true)";
 if [ -x "$gpg_binary" ]; then
   log_debug "Using $gpg_binary for signature verification"
 else
-  log "ERROR: Unable to find gpg binary for signature verficiation"
+  log "ERROR: Unable to find gpg binary for signature verification"
   log "You can resolve this error by installing your system's gnupg package"
   clean_exit 1
 fi
