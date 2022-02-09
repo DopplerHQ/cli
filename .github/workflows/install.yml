@@ -54,39 +54,7 @@ jobs:
       run: sudo ./scripts/install.sh --debug
     - name: Test CLI
       run: doppler --version
-  ubuntu-no-gpg:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-      with:
-        path: ./src/github.com/${{ github.repository }}
-    - name: Uninstall gnupg
-      run: |
-        sudo apt-get remove -y gnupg;
-        sudo mv /usr/bin/gpg /usr/bin/gpg.old
-    - name: Verify gnupg has been removed
-      run: |
-        result=$(which gpg) || true;
-        if [ -n "$result" ]; then
-          exit 1;
-        fi;
-    - name: Install CLI
-      run: sudo ./scripts/install.sh --debug
-    - name: Test CLI
-      run: doppler --version
-  ubuntu-force-verify-signature:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-      with:
-        path: ./src/github.com/${{ github.repository }}
-    - name: Install CLI
-      run: sudo ./scripts/install.sh --debug --verify-signature
-    - name: Test CLI
-      run: doppler --version
-  ubuntu-force-verify-signature-fail:
+  ubuntu-no-gpg-fail:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -105,7 +73,7 @@ jobs:
         fi;
     - name: Install CLI
       continue-on-error: true
-      run: sudo ./scripts/install.sh --debug --verify-signature
+      run: sudo ./scripts/install.sh --debug
     - name: Verify install failed
       if: ${{ always() }}
       run: |
@@ -113,27 +81,6 @@ jobs:
         if [ -n "$result" ]; then
           exit 1;
         fi;
-  ubuntu-no-verify-signature:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v1
-      with:
-        path: ./src/github.com/${{ github.repository }}
-    - name: Uninstall gnupg
-      run: |
-        sudo apt-get remove -y gnupg;
-        sudo mv /usr/bin/gpg /usr/bin/gpg.old
-    - name: Verify gnupg has been removed
-      run: |
-        result=$(which gpg) || true;
-        if [ -n "$result" ]; then
-          exit 1;
-        fi;
-    - name: Install CLI
-      run: sudo ./scripts/install.sh --debug --no-verify-signature
-    - name: Test CLI
-      run: doppler --version
   ubuntu-no-package-manager:
     runs-on: ubuntu-latest
     steps:
