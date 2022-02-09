@@ -69,12 +69,17 @@ func RunInstallScript() (bool, string, Error) {
 		exitCode := 1
 		if exitError, ok := err.(*exec.ExitError); ok {
 			exitCode = exitError.ExitCode()
-		}
+		}		
 
 		message := "Unable to install the latest Doppler CLI"
 		permissionError := exitCode == 2 || strings.Contains(strOut, "dpkg: error: requested operation requires superuser privilege")
 		if permissionError {
 			message = "Error: update failed due to improper permissions\nPlease re-run with `sudo` or as an admin"
+		}
+
+		gpgError := strings.Contains(strOut, "Unable to find gpg")
+		if gpgError {
+			message = "Error: Unable to find gpg binary for signature verification\nYou can resolve this error by installing your system's gnupg package"
 		}
 
 		return false, "", Error{Err: err, Message: message}

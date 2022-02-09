@@ -22,3 +22,4 @@ google.json
 
 # CLI completions
 completions/
+.DS_Store
