@@ -22,3 +22,6 @@ google.json
 
 # CLI completions
 completions/
+
+# macOS
+.DS_Store
