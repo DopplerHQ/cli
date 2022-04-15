@@ -99,22 +99,18 @@ var loginCmd = &cobra.Command{
 		}
 
 		openBrowser := yes || utils.Silent || utils.ConfirmationPrompt("Open the authorization page in your browser?", true)
-		printURL := !openBrowser
 		if openBrowser {
 			if err := open.Run(authURL); err != nil {
 				if utils.Silent {
 					utils.HandleError(err, "Unable to launch a browser")
 				}
 
-				printURL = true
 				utils.Log("Unable to launch a browser")
 				utils.LogDebugError(err)
 			}
 		}
 
-		if printURL {
-			utils.Print(fmt.Sprintf("Complete authorization at %s", authURL))
-		}
+		utils.Print(fmt.Sprintf("Complete authorization at %s", authURL))
 		utils.Print(fmt.Sprintf("Your auth code is:\n%s\n", color.Green.Render(code)))
 		utils.Print("Waiting...")
 
