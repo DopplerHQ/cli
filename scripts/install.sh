@@ -528,6 +528,25 @@ elif [ "$format" = "tar" ]; then
       fi
     fi
 
+    # check for an existing Doppler binary
+    if [ "$binary_installed" -eq 0 ]; then
+      existing_install_dir="$(command -v doppler || true)"
+      if [ "$existing_install_dir" != "" ]; then
+        install_dir="$(dirname "$existing_install_dir")"
+        # capture exit code without exiting
+        set +e
+        install_binary "$install_dir"
+        exit_code=$?
+        set -e
+        if [ $exit_code -eq 0 ]; then
+          binary_installed=1
+          BINARY_INSTALLED_PATH="$install_dir"
+        elif [ $exit_code -eq 1 ]; then
+          found_non_writable_path=1
+        fi
+      fi
+    fi
+
     if [ "$binary_installed" -eq 0 ]; then
       install_dir="/usr/local/bin"
       # capture exit code without exiting
