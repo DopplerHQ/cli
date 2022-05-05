@@ -74,7 +74,7 @@ func MapToEnvFormat(secrets map[string]string, wrapInQuotes bool) []string {
 	return env
 }
 
-func MountSecrets(secrets map[string]string, format string, mountPath string, maxReads int) (string, func(), Error) {
+func MountSecrets(secrets map[string]string, format string, mountPath string, maxReads int, templateBody string) (string, func(), Error) {
 	if !utils.SupportsNamedPipes {
 		return "", nil, Error{Err: errors.New("This OS does not support mounting a secrets file")}
 	}
@@ -84,7 +84,9 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 	}
 
 	var mountData []byte
-	if format == "env" {
+	if format == "template" {
+		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
+	} else if format == "env" {
 		mountData = []byte(strings.Join(MapToEnvFormat(secrets, true), "\n"))
 	} else if format == "json" {
 		envStr, err := json.Marshal(secrets)
