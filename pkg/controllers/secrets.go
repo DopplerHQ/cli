@@ -19,10 +19,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -158,4 +160,50 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 	}()
 
 	return mountPath, cleanupFIFO, Error{}
+}
+
+func ReadTemplateFile(filePath string) string {
+	templateFilePath, err := utils.GetFilePath(filePath)
+	if err != nil {
+		utils.HandleError(err, "Unable to parse template file path")
+	}
+
+	var templateFile []byte
+	templateFile, err = ioutil.ReadFile(templateFilePath) // #nosec G304
+	if err != nil {
+		utils.HandleError(err, "Unable to read template file")
+	}
+	return string(templateFile)
+}
+
+func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) string {
+	funcs := map[string]interface{}{
+		"tojson": func(value string) (string, error) {
+			body, err := json.Marshal(value)
+			if err != nil {
+				return "", err
+			}
+			return string(body), nil
+		},
+		"fromjson": func(value string) (interface{}, error) {
+			var result interface{}
+			err := json.Unmarshal([]byte(value), &result)
+			if err != nil {
+				return "", err
+			}
+			return result, nil
+		},
+	}
+	template, err := template.New("Secrets").Funcs(funcs).Parse(templateBody)
+	if err != nil {
+		utils.HandleError(err, "Unable to parse template text")
+	}
+
+	buffer := new(strings.Builder)
+	err = template.Execute(buffer, secretsMap)
+	if err != nil {
+		utils.HandleError(err, "Unable to render template")
+	}
+
+	return buffer.String()
 }

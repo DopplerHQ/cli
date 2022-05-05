@@ -24,7 +24,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
@@ -524,46 +523,14 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	filePath, err := utils.GetFilePath(args[0])
-	if err != nil {
-		utils.HandleError(err, "Unable to parse template file path")
-	}
-
-	var file []byte
-	file, err = ioutil.ReadFile(filePath) // #nosec G304
-	if err != nil {
-		utils.HandleError(err, "Unable to read template file")
-	}
-
 	var outputFilePath string
+	var err error
 	output := cmd.Flag("output").Value.String()
 	if len(output) != 0 {
 		outputFilePath, err = utils.GetFilePath(output)
 		if err != nil {
 			utils.HandleError(err, "Unable to parse output file path")
 		}
-	}
-
-	funcs := map[string]interface{}{
-		"tojson": func(value string) (string, error) {
-			body, err := json.Marshal(value)
-			if err != nil {
-				return "", err
-			}
-			return string(body), nil
-		},
-		"fromjson": func(value string) (interface{}, error) {
-			var result interface{}
-			err = json.Unmarshal([]byte(value), &result)
-			if err != nil {
-				return "", err
-			}
-			return result, nil
-		},
-	}
-	template, err := template.New("Secrets").Funcs(funcs).Parse(string(file))
-	if err != nil {
-		utils.HandleError(err, "Unable to parse template text")
 	}
 
 	dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
@@ -577,25 +544,22 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(parseErr, "Unable to parse API response")
 	}
 
-	secretsMap := map[string]interface{}{}
+	secretsMap := map[string]string{}
 	for _, secret := range secrets {
 		secretsMap[secret.Name] = secret.ComputedValue
 	}
 
-	buffer := new(strings.Builder)
-	err = template.Execute(buffer, secretsMap)
-	if err != nil {
-		utils.HandleError(err, "Unable to render template")
-	}
+	templateBody := controllers.ReadTemplateFile(args[0])
+	outputString := controllers.RenderSecretsTemplate(templateBody, secretsMap)
 
 	if outputFilePath != "" {
-		err = utils.WriteFile(outputFilePath, []byte(buffer.String()), 0600)
+		err = utils.WriteFile(outputFilePath, []byte(outputString), 0600)
 		if err != nil {
 			utils.HandleError(err, "Unable to save rendered data to file")
 		}
 		utils.Print(fmt.Sprintf("Rendered data saved to %s", outputFilePath))
 	} else {
-		_, err = os.Stdout.WriteString(buffer.String())
+		_, err = os.Stdout.WriteString(outputString)
 		if err != nil {
 			utils.HandleError(err, "Unable to write rendered data to stdout")
 		}
