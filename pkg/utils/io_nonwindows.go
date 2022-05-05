@@ -23,6 +23,8 @@ import (
 	"syscall"
 )
 
+const SupportsNamedPipes = true
+
 func FileOwnership(path string) (int, int, error) {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -35,4 +37,10 @@ func FileOwnership(path string) (int, int, error) {
 	}
 
 	return int(stat.Uid), int(stat.Gid), nil
+}
+
+func CreateNamedPipe(path string, mode uint32) error {
+	// this path must be cleaned up manually, but the pipe's contents are
+	// only available while the writer (i.e. this program) is alive
+	return syscall.Mkfifo(path, mode)
 }

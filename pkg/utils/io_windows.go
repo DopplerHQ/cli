@@ -15,6 +15,14 @@ limitations under the License.
 */
 package utils
 
+import "errors"
+
+const SupportsNamedPipes = false
+
 func FileOwnership(path string) (int, int, error) {
 	return -1, -1, nil
+}
+
+func CreateNamedPipe(path string, mode uint32) error {
+	return errors.New("This platform does not support named pipes")
 }
