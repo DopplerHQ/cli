@@ -178,7 +178,7 @@ func ReadTemplateFile(filePath string) string {
 
 func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) string {
 	funcs := map[string]interface{}{
-		"tojson": func(value string) (string, error) {
+		"tojson": func(value interface{}) (string, error) {
 			body, err := json.Marshal(value)
 			if err != nil {
 				return "", err
