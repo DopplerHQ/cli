@@ -11,6 +11,7 @@ export DOPPLER_CONFIG="prd_e2e_tests"
 
 # Run tests
 "$DIR/e2e/secrets-download-fallback.sh"
+"$DIR/e2e/run.sh"
 "$DIR/e2e/run-fallback.sh"
 "$DIR/e2e/run-mount.sh"
 "$DIR/e2e/configure.sh"
