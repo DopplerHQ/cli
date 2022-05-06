@@ -152,45 +152,22 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		originalEnv := os.Environ()
-		existingEnvKeys := map[string]bool{}
+		existingEnvKeys := map[string]string{}
 		for _, envVar := range originalEnv {
 			// key=value format
 			parts := strings.SplitN(envVar, "=", 2)
 			key := parts[0]
-			existingEnvKeys[key] = true
+			value := parts[1]
+			existingEnvKeys[key] = value
 		}
 
+		env := []string{}
 		secrets := map[string]string{}
-		excludedKeys := []string{"PATH", "PS1", "HOME"}
-		for name, value := range dopplerSecrets {
-			useSecret := true
-			if !shouldMountFile {
-				// ignore secrets that might conflict with the environment
-				for _, excludedKey := range excludedKeys {
-					if excludedKey == name {
-						utils.LogDebug(fmt.Sprintf("Ignoring restricted secret %s", name))
-						useSecret = false
-						break
-					}
-				}
-
-				// skip secret if environment already contains variable w/ same name
-				if preserveEnv && existingEnvKeys[name] == true {
-					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
-					useSecret = false
-				}
-			}
-
-			if !useSecret {
-				continue
-			}
-
-			secrets[name] = value
-		}
-
-		var env []string
 		var onExit func()
 		if shouldMountFile {
+			secrets = dopplerSecrets
+			env = originalEnv
+
 			if shouldAutoDetectFormat {
 				if strings.HasSuffix(mountPath, ".env") {
 					mountFormat = "env"
@@ -215,14 +192,42 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			// export path to mounted file
 			env = append(env, fmt.Sprintf("%s=%s", "DOPPLER_CLI_SECRETS_PATH", mountPath))
 		} else {
-			// export doppler secrets
+			// remove any reserved keys from secrets
+			reservedKeys := []string{"PATH", "PS1", "HOME"}
+			for _, reservedKey := range reservedKeys {
+				if _, found := dopplerSecrets[reservedKey]; found == true {
+					utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
+					delete(dopplerSecrets, reservedKey)
+				}
+			}
+
+			if preserveEnv {
+				// use doppler secrets
+				for name, value := range dopplerSecrets {
+					secrets[name] = value
+				}
+				// then use existing env vars
+				for name, value := range existingEnvKeys {
+					if _, found := secrets[name]; found == true {
+						utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
+					}
+					secrets[name] = value
+				}
+			} else {
+				// use existing env vars
+				for name, value := range existingEnvKeys {
+					secrets[name] = value
+				}
+				// then use doppler secrets
+				for name, value := range dopplerSecrets {
+					secrets[name] = value
+				}
+			}
+
 			for _, envVar := range controllers.MapToEnvFormat(secrets, false) {
 				env = append(env, envVar)
 			}
 		}
-
-		// include original environment variables
-		env = append(env, originalEnv...)
 
 		exitCode := 0
 		var err error
