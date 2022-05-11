@@ -138,10 +138,12 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 		mountPath := cmd.Flag("mount").Value.String()
 		mountFormat := cmd.Flag("mount-format").Value.String()
+		mountTemplate := cmd.Flag("mount-template").Value.String()
 		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
 		// only auto-detect the format if it hasn't been explicitly specified
 		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
 		shouldMountFile := mountPath != ""
+		shouldMountTemplate := mountTemplate != ""
 
 		if preserveEnv {
 			if shouldMountFile {
@@ -169,7 +171,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			env = originalEnv
 
 			if shouldAutoDetectFormat {
-				if strings.HasSuffix(mountPath, ".env") {
+				if shouldMountTemplate {
+					mountFormat = "template"
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+				} else if strings.HasSuffix(mountPath, ".env") {
 					mountFormat = "env"
 					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
 				} else if strings.HasSuffix(mountPath, ".json") {
@@ -182,7 +187,17 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 			}
 
-			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat, mountPath, maxReads)
+			var templateBody string
+			if shouldMountTemplate {
+				if mountFormat != "template" {
+					utils.HandleError(errors.New("--mount-template can only be used with --mount-format=template"))
+				}
+				templateBody = controllers.ReadTemplateFile(mountTemplate)
+			} else if mountFormat == "template" {
+				utils.HandleError(errors.New("--mount-template must be specified when using --mount-format=template"))
+			}
+
+			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat, mountPath, maxReads, templateBody)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -653,7 +668,8 @@ func init() {
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
-	runCmd.Flags().String("mount-format", "json", "file format to use. if not specified, will be auto-detected from mount name. one of [json, env]")
+	runCmd.Flags().String("mount-format", "json", "file format to use. if not specified, will be auto-detected from mount name. one of [json, env, template]")
+	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 
 	// deprecated

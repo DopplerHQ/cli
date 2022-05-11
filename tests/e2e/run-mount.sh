@@ -94,6 +94,32 @@ fi
 
 beforeEach
 
+# verify template is used
+EXPECTED_SECRETS='prd_e2e_tests'
+actual="$("$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}')"
+if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
+ echo "ERROR: mounted secrets file with template has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify --mount-template can be used with --mount-format=template
+EXPECTED_SECRETS='prd_e2e_tests'
+actual="$("$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --mount-format template --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}')"
+if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
+ echo "ERROR: mounted secrets file with template has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify --mount-template cannot be used with --mount-format=json
+"$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}' && \
+  (echo "ERROR: mounted secrets with template was successful with invalid --mount-format" && exit 1)
+
+beforeEach
+
 # verify existing env value is ignored even when --preserve-env is specified
 EXPECTED_SECRETS='{"DOPPLER_CONFIG":"prd_e2e_tests","DOPPLER_ENCLAVE_CONFIG":"prd_e2e_tests","DOPPLER_ENCLAVE_ENVIRONMENT":"prd","DOPPLER_ENCLAVE_PROJECT":"cli","DOPPLER_ENVIRONMENT":"prd","DOPPLER_PROJECT":"cli","HOME":"123"}'
 actual="$(DOPPLER_CONFIG="test" "$DOPPLER_BINARY" run --preserve-env --config prd_e2e_tests --mount secrets.json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
