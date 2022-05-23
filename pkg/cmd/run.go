@@ -153,6 +153,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
+		if shouldMountTemplate && !shouldMountFile {
+			utils.HandleError(errors.New("--mount-template must be used with --mount"))
+		}
+
 		originalEnv := os.Environ()
 		existingEnvKeys := map[string]string{}
 		for _, envVar := range originalEnv {
