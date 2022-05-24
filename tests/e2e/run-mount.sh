@@ -120,6 +120,12 @@ beforeEach
 
 beforeEach
 
+# verify --mount-template cannot be used without --mount
+"$DOPPLER_BINARY" run --mount-template /dev/stdin --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}' && \
+  (echo "ERROR: mounted secrets with template was successful without --mount" && exit 1)
+
+beforeEach
+
 # verify existing env value is ignored even when --preserve-env is specified
 EXPECTED_SECRETS='{"DOPPLER_CONFIG":"prd_e2e_tests","DOPPLER_ENCLAVE_CONFIG":"prd_e2e_tests","DOPPLER_ENCLAVE_ENVIRONMENT":"prd","DOPPLER_ENCLAVE_PROJECT":"cli","DOPPLER_ENVIRONMENT":"prd","DOPPLER_PROJECT":"cli","HOME":"123"}'
 actual="$(DOPPLER_CONFIG="test" "$DOPPLER_BINARY" run --preserve-env --config prd_e2e_tests --mount secrets.json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
