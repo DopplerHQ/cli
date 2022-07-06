@@ -3,11 +3,6 @@
 build:
 	go build -o doppler -ldflags="-X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=dev-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)" main.go
 
-release:
-	./scripts/release/pre-release.sh $(v)
-	doppler run -- ./scripts/release/release.sh
-	doppler run -- ./scripts/release/post-release.sh
-
 test:
 	go test ./pkg/... -v
 
