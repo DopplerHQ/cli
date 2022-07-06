@@ -1,0 +1,43 @@
+name: release-tests
+
+on:
+  pull_request:
+    branches:
+      - master
+      - releases/*
+  push:
+    branches:
+      - master
+      - releases/*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: '1.18'
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: GoReleaser Action
+      uses: goreleaser/goreleaser-action@v1
+      with:
+        version: latest
+        args: release --snapshot --skip-publish --skip-sign
+      env:
+        GOPATH: ${{ runner.workspace }}
+    - uses: actions/upload-artifact@master
+      with:
+        name: macOS build (amd64)
+        path: ./dist/doppler_darwin_amd64/doppler
+    - uses: actions/upload-artifact@master
+      with:
+        name: Linux build (amd64)
+        path: ./dist/doppler_linux_amd64/doppler
+    - uses: actions/upload-artifact@master
+      with:
+        name: Windows build (amd64)
+        path: ./dist/doppler_windows_amd64/doppler.exe
