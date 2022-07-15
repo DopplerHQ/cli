@@ -16,6 +16,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: github.actor == 'piccirello'
+    permissions:
+      contents: write
     steps:
     - name: Set up Go
       uses: actions/setup-go@v1
