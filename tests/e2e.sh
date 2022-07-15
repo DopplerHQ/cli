@@ -7,7 +7,7 @@ DIR="$(dirname "$0")"
 export DOPPLER_BINARY="$DIR/../doppler"
 export DOPPLER_SCRIPTS_DIR="$DIR/../scripts"
 export DOPPLER_PROJECT="cli"
-export DOPPLER_CONFIG="prd_e2e_tests"
+export DOPPLER_CONFIG="e2e"
 
 # Run tests
 "$DIR/e2e/secrets-download-fallback.sh"

@@ -41,7 +41,7 @@ beforeEach
 
 # verify template substitution behavior
 config="$("$DOPPLER_BINARY" secrets substitute /dev/stdin <<<'{{.DOPPLER_CONFIG}}')"
-[[ "$config" == "prd_e2e_tests" ]] || error "ERROR: secrets substitute output was incorrect"
+[[ "$config" == "e2e" ]] || error "ERROR: secrets substitute output was incorrect"
 
 "$DOPPLER_BINARY" secrets substitute nonexistent-file.txt && \
   error "ERROR: secrets substitute did not fail on nonexistent file"

@@ -40,13 +40,13 @@ beforeAll
 beforeEach
 
 # verify local env is ignored
-config="$(DOPPLER_CONFIG=123 "$DOPPLER_BINARY" run --config prd_e2e_tests -- printenv DOPPLER_CONFIG)"
-[[ "$config" == "prd_e2e_tests" ]] || error "ERROR: conflicting local env var is not ignored"
+config="$(DOPPLER_CONFIG=123 "$DOPPLER_BINARY" run --config e2e -- printenv DOPPLER_CONFIG)"
+[[ "$config" == "e2e" ]] || error "ERROR: conflicting local env var is not ignored"
 
 beforeEach
 
 # verify local env is used when specifying --preserve-env
-config="$(DOPPLER_CONFIG=123 "$DOPPLER_BINARY" run --config prd_e2e_tests --preserve-env -- printenv DOPPLER_CONFIG)"
+config="$(DOPPLER_CONFIG=123 "$DOPPLER_BINARY" run --config e2e --preserve-env -- printenv DOPPLER_CONFIG)"
 [[ "$config" == "123" ]] || error "ERROR: conflicting local env var is not used with --preserve-env"
 
 beforeEach
