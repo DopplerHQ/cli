@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -eu -o pipefail -o functrace
 
 # make sure docker daemon is running
 docker ps > /dev/null 2>&1 || (echo "Docker daemon must be running" && exit 1)
@@ -12,24 +12,6 @@ fi
 
 if [ $# -eq 0 ]; then
   echo "You must specify a release type or version: major|minor|patch|v1.0.0"
-  exit 1
-fi
-
-GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ "$GIT_BRANCH" != "master" ]; then
-  echo "You must be on the master branch"
-  exit 1
-fi
-
-if [ -z "$(command -v cloudsmith)" ]; then
-  echo "cloudsmith-cli must be installed"
-  exit 1
-fi
-
-echo "Using $(go version)"
-read -rp "Continue? (y/n) " ok
-if [ "$ok" != "y" ] && [ "$ok" != "Y" ] && [ "$ok" != "yes" ]; then
-  echo "Exiting"
   exit 1
 fi
 
@@ -58,7 +40,6 @@ export CLI_VERSION="$VERSION"
 echo "Using version $VERSION"
 echo "Previous version: $PREV_VERSION"
 
-# get git in order
-git push --quiet
+# create and push tag
 git tag -a "$VERSION" -m "$VERSION"
-git push --quiet origin "$VERSION"  # push only this tag
+git push --quiet origin "$VERSION"
