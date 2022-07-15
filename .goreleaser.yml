@@ -54,6 +54,13 @@ release:
     owner: DopplerHQ
     name: cli
 
+  footer: |
+    ## Docker images
+
+    - `docker pull dopplerhq/cli:{{ .Version }}"`
+    - `docker pull dopplerhq/cli:{{ .Major }}.{{ .Minor }}`
+    - `docker pull dopplerhq/cli:{{ .Major }}"`
+
 checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
