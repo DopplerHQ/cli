@@ -24,9 +24,7 @@ jobs:
         path: ./src/github.com/${{ github.repository }}
     - name: Install Scoop and CLI
       run: |
-        Set-ExecutionPolicy RemoteSigned -scope CurrentUser
-        iex (new-object net.webclient).downloadstring('https://get.scoop.sh')
+        iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
         scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
         scoop install doppler
         doppler --version
-
