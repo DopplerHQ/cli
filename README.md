@@ -47,6 +47,8 @@ To update:
 $ scoop update doppler
 ```
 
+For additional options, see the [Install](INSTALL.md#windows) page.
+
 ### Shell script
 
 This option is recommend for CI jobs and other environments that won't make use of package manager updates.

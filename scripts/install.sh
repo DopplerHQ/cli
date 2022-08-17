@@ -76,10 +76,18 @@ macos_shell() {
   dscl . -read ~/ UserShell | sed 's/UserShell: //'
 }
 
+# we currently only support Git Bash for Windows with this script
+# so the shell will always be /usr/bin/bash
+windows_shell() {
+  echo "/usr/bin/bash"
+}
+
 install_completions() {
   default_shell=""
   if [ "$os" = "macos" ]; then
     default_shell="$(macos_shell || true)"
+  elif [ "$os" = "windows" ]; then
+    default_shell="$(windows_shell || true)"
   else
     default_shell="$(linux_shell || true)"
   fi
@@ -313,28 +321,26 @@ fi
 # identify OS
 os="unknown"
 uname_os=$(uname -s)
-if [ "$uname_os" = "Darwin" ]; then
-  os="macos"
-elif [ "$uname_os" = "Linux" ]; then
-  os="linux"
-elif [ "$uname_os" = "FreeBSD" ]; then
-  os="freebsd"
-elif [ "$uname_os" = "OpenBSD" ]; then
-  os="openbsd"
-elif [ "$uname_os" = "NetBSD" ]; then
-  os="netbsd"
-else
-  log "ERROR: Unsupported OS '$uname_os'"
-  log ""
-  log "Please report this issue:"
-  log "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
-  clean_exit 1
-fi
+case "$uname_os" in
+  Darwin)    os="macos"   ;;
+  Linux)     os="linux"   ;;
+  FreeBSD)   os="freebsd" ;;
+  OpenBSD)   os="openbsd" ;;
+  NetBSD)    os="netbsd"  ;;
+  *MINGW64*) os="windows" ;;
+  *)
+    log "ERROR: Unsupported OS '$uname_os'"
+    log ""
+    log "Please report this issue:"
+    log "https://github.com/DopplerHQ/cli/issues/new?template=bug_report.md&title=[BUG]%20Unsupported%20OS"
+    clean_exit 1
+    ;;
+esac
 
 log_debug "Detected OS '$os'"
 
-# disable package managers on macOS (their use would be most unexpected)
-if [ "$os" = "macos" ]; then
+# disable package managers on macOS and windows (their use would be most unexpected)
+if [ "$os" = "macos" ] || [ "$os" = "windows" ]; then
   USE_PACKAGE_MANAGER=0
 fi
 
@@ -363,7 +369,12 @@ fi
 log_debug "Detected architecture '$arch'"
 
 # identify format
-format="tar"
+if [ "$os" = "windows" ]; then
+  format="zip"
+else
+  format="tar"
+fi
+
 if [ "$USE_PACKAGE_MANAGER" -eq 1 ]; then
   if [ -x "$(command -v dpkg)" ]; then
     format="deb"
@@ -485,19 +496,34 @@ elif [ "$format" = "rpm" ]; then
     mv -f "$filename" .
     echo "Doppler CLI installer saved to ./$file.rpm"
   fi
-elif [ "$format" = "tar" ]; then
-  mv -f "$filename" "$filename.tar.gz"
-  filename="$filename.tar.gz"
+elif [ "$format" = "tar" ] || [ "$format" = "zip" ]; then
+  if [ "$format" = "tar" ]; then
+    mv -f "$filename" "$filename.tar.gz"
+    filename="$filename.tar.gz"
 
-  # extract
-  extract_dir="$tempdir/x"
-  mkdir "$extract_dir"
-  log_debug "Extracting tarball to $extract_dir"
-  tar -xzf "$filename" -C "$extract_dir"
+    # extract
+    extract_dir="$tempdir/x"
+    mkdir "$extract_dir"
+    log_debug "Extracting tarball to $extract_dir"
+    tar -xzf "$filename" -C "$extract_dir"
 
-  # set appropriate perms
-  chown "$(id -u):$(id -g)" "$extract_dir/doppler"
-  chmod 755 "$extract_dir/doppler"
+    # set appropriate perms
+    chown "$(id -u):$(id -g)" "$extract_dir/doppler"
+    chmod 755 "$extract_dir/doppler"
+  elif [ "$format" = "zip" ]; then
+    mv -f "$filename" "$filename.zip"
+    filename="$filename.zip"
+
+    # extract
+    extract_dir="$tempdir/x"
+    mkdir "$extract_dir"
+    log_debug "Extracting zip to $extract_dir"
+    unzip -d "$extract_dir" "$filename"
+
+    # set appropriate perms
+    chown "$(id -u):$(id -g)" "$extract_dir/doppler"
+    chmod 755 "$extract_dir/doppler"
+  fi
 
   # install
   if [ "$INSTALL" -eq 1 ]; then

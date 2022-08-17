@@ -149,3 +149,19 @@ jobs:
       run: ./scripts/install.sh --debug --no-install
     - name: Verify file existence
       run: ls -l ./doppler
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        path: ./src/github.com/${{ github.repository }}
+    - name: Create user bin directory
+      shell: bash
+      run: mkdir -p $HOME/bin
+    - name: Install CLI
+      shell: bash
+      run: ./scripts/install.sh --debug --install-path $HOME/bin
+    - name: Test CLI
+      shell: bash
+      run: doppler --version
