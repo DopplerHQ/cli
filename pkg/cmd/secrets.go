@@ -114,6 +114,7 @@ doppler secrets delete API_KEY CRYPTO_KEY`,
 var validFormatList = strings.Join(models.SecretFormats, ", ")
 var validNameTransformersList = strings.Join(models.SecretsNameTransformerTypes, ", ")
 var validEnvCompatNameTransformersList = strings.Join(models.SecretsEnvCompatNameTransformerTypes, ", ")
+var validMountFormatsList = strings.Join(models.SecretsMountFormatTypes, ", ")
 var secretsDownloadCmd = &cobra.Command{
 	Use:   "download <filepath>",
 	Short: "Download a config's secrets for later use",

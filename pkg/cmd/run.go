@@ -137,13 +137,21 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
 
 		mountPath := cmd.Flag("mount").Value.String()
-		mountFormat := cmd.Flag("mount-format").Value.String()
+		mountFormatString := cmd.Flag("mount-format").Value.String()
 		mountTemplate := cmd.Flag("mount-template").Value.String()
 		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
 		// only auto-detect the format if it hasn't been explicitly specified
 		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
 		shouldMountFile := mountPath != ""
 		shouldMountTemplate := mountTemplate != ""
+
+		var mountFormat *models.SecretsMountFormat
+		if mountFormatString != "" {
+			mountFormat = models.SecretsMountFormatMap[mountFormatString]
+			if mountFormat == nil {
+				utils.HandleError(fmt.Errorf("invalid mount format. Valid formats are %s", validMountFormatsList))
+			}
+		}
 
 		if preserveEnv {
 			if shouldMountFile {
@@ -176,14 +184,14 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			if shouldAutoDetectFormat {
 				if shouldMountTemplate {
-					mountFormat = "template"
-					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+					mountFormat = models.TemplateMountFormat
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat.Type))
 				} else if strings.HasSuffix(mountPath, ".env") {
-					mountFormat = "env"
-					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+					mountFormat = models.EnvMountFormat
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat.Type))
 				} else if strings.HasSuffix(mountPath, ".json") {
-					mountFormat = "json"
-					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
+					mountFormat = models.JSONMountFormat
+					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat.Type))
 				} else {
 					parts := strings.Split(mountPath, ".")
 					detectedFormat := parts[len(parts)-1]
@@ -193,15 +201,15 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			var templateBody string
 			if shouldMountTemplate {
-				if mountFormat != "template" {
+				if mountFormat != models.TemplateMountFormat {
 					utils.HandleError(errors.New("--mount-template can only be used with --mount-format=template"))
 				}
 				templateBody = controllers.ReadTemplateFile(mountTemplate)
-			} else if mountFormat == "template" {
+			} else if mountFormat == models.TemplateMountFormat {
 				utils.HandleError(errors.New("--mount-template must be specified when using --mount-format=template"))
 			}
 
-			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat, mountPath, maxReads, templateBody)
+			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat.Type, mountPath, maxReads, templateBody)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -672,7 +680,7 @@ func init() {
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
-	runCmd.Flags().String("mount-format", "json", "file format to use. if not specified, will be auto-detected from mount name. one of [json, env, template]")
+	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", validMountFormatsList))
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 

@@ -84,11 +84,11 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 	}
 
 	var mountData []byte
-	if format == "template" {
+	if format == models.TemplateMountFormat.Type {
 		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
-	} else if format == "env" {
+	} else if format == models.EnvMountFormat.Type {
 		mountData = []byte(strings.Join(MapToEnvFormat(secrets, true), "\n"))
-	} else if format == "json" {
+	} else if format == models.JSONMountFormat.Type {
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
 			return "", nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
