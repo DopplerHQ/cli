@@ -20,6 +20,8 @@ Alternatively, you can install the CLI via [shell script](#linuxmacosbsd-shell-s
 
 ## Windows
 
+### Scoop
+
 Using [scoop](https://scoop.sh/) is recommended:
 
 ```sh
@@ -32,6 +34,16 @@ To update:
 
 ```sh
 $ scoop update doppler
+```
+
+### Git Bash
+
+Using [Git Bash](https://git-scm.com/download/win) is also supported:
+
+```sh
+$ mkdir -p $HOME/bin
+$ curl -Ls --tlsv1.2 --proto "=https" --retry 3 https://cli.doppler.com/install.sh | sh -s -- --install-path $HOME/bin
+$ doppler --version
 ```
 
 ## Linux
