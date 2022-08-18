@@ -15,36 +15,21 @@ limitations under the License.
 */
 package models
 
-type SecretsMountFormat struct {
-	Name string
-	Type string
-}
+const JSONMountFormat = "json"
+const EnvMountFormat = "env"
+const TemplateMountFormat = "template"
+const DotNETJSONMountFormat = "dotnet-json"
 
-var JSONMountFormat = &SecretsMountFormat{
-	Name: "json",
-	Type: "json",
-}
-var EnvMountFormat = &SecretsMountFormat{
-	Name: "env",
-	Type: "env",
-}
-var TemplateMountFormat = &SecretsMountFormat{
-	Name: "template",
-	Type: "template",
-}
-var SecretsMountFormatList = []*SecretsMountFormat{
+var SecretsMountFormats = []string{
 	EnvMountFormat,
 	JSONMountFormat,
+	DotNETJSONMountFormat,
 	TemplateMountFormat,
 }
 
-var SecretsMountFormatTypes []string
-var SecretsMountFormatMap map[string]*SecretsMountFormat
-
-func init() {
-	SecretsMountFormatMap = map[string]*SecretsMountFormat{}
-	for _, format := range SecretsMountFormatList {
-		SecretsMountFormatMap[format.Type] = format
-		SecretsMountFormatTypes = append(SecretsMountFormatTypes, format.Type)
-	}
+var SecretsMountFormatMap = map[string]string{
+	EnvMountFormat:        EnvMountFormat,
+	JSONMountFormat:       JSONMountFormat,
+	DotNETJSONMountFormat: DotNETJSONMountFormat,
+	TemplateMountFormat:   TemplateMountFormat,
 }

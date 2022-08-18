@@ -46,7 +46,7 @@ var DotNETTransformer = &SecretsNameTransformer{
 	Type:      "dotnet",
 	EnvCompat: false,
 }
-var DotNETENVTransformer = &SecretsNameTransformer{
+var DotNETEnvTransformer = &SecretsNameTransformer{
 	Name:      ".NET (ENV)",
 	Type:      "dotnet-env",
 	EnvCompat: true,
@@ -58,7 +58,7 @@ var SecretsNameTransformersList = []*SecretsNameTransformer{
 	LowerSnakeTransformer,
 	TFVarTransformer,
 	DotNETTransformer,
-	DotNETENVTransformer,
+	DotNETEnvTransformer,
 }
 
 var SecretsNameTransformerTypes []string
