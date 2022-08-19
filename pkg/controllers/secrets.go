@@ -54,26 +54,6 @@ func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	return secretsNames, Error{}
 }
 
-func MapToEnvFormat(secrets map[string]string, wrapInQuotes bool) []string {
-	var env []string
-	for k, v := range secrets {
-		if wrapInQuotes {
-			v = strings.ReplaceAll(v, "\\", "\\\\")
-			v = strings.ReplaceAll(v, "\"", "\\\"")
-			env = append(env, fmt.Sprintf("%s=\"%s\"", k, v))
-		} else {
-			env = append(env, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
-
-	// sort keys alphabetically for deterministic order
-	sort.Slice(env, func(a, b int) bool {
-		return env[a] < env[b]
-	})
-
-	return env
-}
-
 func MountSecrets(secrets map[string]string, format string, mountPath string, maxReads int, templateBody string) (string, func(), Error) {
 	if !utils.SupportsNamedPipes {
 		return "", nil, Error{Err: errors.New("This OS does not support mounting a secrets file")}
@@ -84,18 +64,25 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 	}
 
 	var mountData []byte
-	if format == "template" {
+	if format == models.TemplateMountFormat {
 		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
-	} else if format == "env" {
-		mountData = []byte(strings.Join(MapToEnvFormat(secrets, true), "\n"))
-	} else if format == "json" {
+	} else if format == models.EnvMountFormat {
+		mountData = []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n"))
+	} else if format == models.JSONMountFormat {
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
 			return "", nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
 		}
 		mountData = envStr
+	} else if format == models.DotNETJSONMountFormat {
+		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
+		if err != nil {
+			return "", nil, Error{Err: err, Message: "Unable to marshall .NET formatted secrets to json"}
+		}
+		mountData = envStr
 	} else {
-		return "", nil, Error{Err: fmt.Errorf("Invalid mount format: %s", format)}
+		return "", nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
+
 	}
 
 	// convert mount path to absolute path
