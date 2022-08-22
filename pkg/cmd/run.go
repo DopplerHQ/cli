@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -33,6 +35,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/transform"
 	"gopkg.in/gookit/color.v1"
 )
 
@@ -261,11 +264,41 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		exitCode := 0
 		var err error
 
+		sortedSecrets := make([]string, 0)
+		for _, secret := range secrets {
+			sortedSecrets = append(sortedSecrets, secret)
+		}
+		// if a longer secrets includes a shorter secret and i replace the shorter first, the longer secret won't be replaced in full
+		sort.Slice(sortedSecrets, func(i, j int) bool {
+			return len(sortedSecrets[i]) > len(sortedSecrets[j])
+		})
+
+		transformers := make([]transform.Transformer, 0)
+		for _, secret := range sortedSecrets {
+			transformers = append(
+				transformers,
+				utils.BytesReplacer([]byte(secret), []byte(strings.Repeat("*", len(secret)))),
+			)
+		}
+
+		hideSecretsTransformer := transform.Chain(transformers...)
+
+		var stdout io.Writer
+		var stderr io.Writer
+
+		if utils.GetBoolFlag(cmd, "hide-secrets") {
+			stdout = transform.NewWriter(os.Stdout, hideSecretsTransformer)
+			stderr = transform.NewWriter(os.Stdout, hideSecretsTransformer)
+		} else {
+			stdout = os.Stdout
+			stderr = os.Stderr
+		}
+
 		if cmd.Flags().Changed("command") {
 			command := cmd.Flag("command").Value.String()
-			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
+			exitCode, err = utils.RunCommandString(command, env, os.Stdin, stdout, stderr, forwardSignals, onExit)
 		} else {
-			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
+			exitCode, err = utils.RunCommand(args, env, os.Stdin, stdout, stderr, forwardSignals, onExit)
 		}
 
 		if err != nil {
@@ -685,7 +718,7 @@ func init() {
 	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
-
+	runCmd.Flags().Bool("hide-secrets", false, "Replace secrets with '******' in the output")
 	// deprecated
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")
 	if err := runCmd.Flags().MarkDeprecated("silent-exit", "this behavior is now the default"); err != nil {
