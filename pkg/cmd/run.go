@@ -264,29 +264,29 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		exitCode := 0
 		var err error
 
-		sortedSecrets := make([]string, 0)
-		for _, secret := range secrets {
-			sortedSecrets = append(sortedSecrets, secret)
-		}
-		// if a longer secrets includes a shorter secret and i replace the shorter first, the longer secret won't be replaced in full
-		sort.Slice(sortedSecrets, func(i, j int) bool {
-			return len(sortedSecrets[i]) > len(sortedSecrets[j])
-		})
-
-		transformers := make([]transform.Transformer, 0)
-		for _, secret := range sortedSecrets {
-			transformers = append(
-				transformers,
-				utils.BytesReplacer([]byte(secret), []byte(strings.Repeat("*", len(secret)))),
-			)
-		}
-
-		hideSecretsTransformer := transform.Chain(transformers...)
-
 		var stdout io.Writer
 		var stderr io.Writer
 
+		// replace secrets with *** in command stdout and stderr
 		if utils.GetBoolFlag(cmd, "hide-secrets") {
+			sortedSecrets := make([]string, 0)
+			for _, secret := range secrets {
+				sortedSecrets = append(sortedSecrets, secret)
+			}
+			// if a longer secret includes a shorter secret and i replace the shorter first, the longer secret won't be replaced in full
+			sort.Slice(sortedSecrets, func(i, j int) bool {
+				return len(sortedSecrets[i]) > len(sortedSecrets[j])
+			})
+
+			transformers := make([]transform.Transformer, 0)
+			for _, secret := range sortedSecrets {
+				transformers = append(
+					transformers,
+					utils.BytesReplacer([]byte(secret), []byte(strings.Repeat("*", len(secret)))),
+				)
+			}
+
+			hideSecretsTransformer := transform.Chain(transformers...)
 			stdout = transform.NewWriter(os.Stdout, hideSecretsTransformer)
 			stderr = transform.NewWriter(os.Stdout, hideSecretsTransformer)
 		} else {
