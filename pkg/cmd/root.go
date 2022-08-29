@@ -200,6 +200,7 @@ func init() {
 	rootCmd.PersistentFlags().Bool("no-verify-tls", false, "do not verify the validity of TLS certificates on HTTP requests (not recommended)")
 	rootCmd.PersistentFlags().Bool("no-timeout", !http.UseTimeout, "disable http timeout")
 	rootCmd.PersistentFlags().DurationVar(&http.TimeoutDuration, "timeout", http.TimeoutDuration, "max http request duration")
+	rootCmd.PersistentFlags().IntVar(&http.RequestAttempts, "attempts", http.RequestAttempts, "number of http request attempts made before failing")
 	// DNS resolver
 	rootCmd.PersistentFlags().Bool("no-dns-resolver", !http.UseCustomDNSResolver, "use the OS's default DNS resolver")
 	if err := rootCmd.PersistentFlags().MarkDeprecated("no-dns-resolver", "the DNS resolver is disabled by default"); err != nil {
