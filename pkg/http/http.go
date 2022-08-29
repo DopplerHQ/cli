@@ -200,7 +200,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	var response *http.Response
 	response = nil
 
-	requestErr := retry(5, 100*time.Millisecond, func() error {
+	requestErr := retry(RequestAttempts, 100*time.Millisecond, func() error {
 		resp, err := client.Do(req)
 		if err != nil {
 			if resp != nil {

@@ -22,3 +22,6 @@ var UseTimeout = true
 
 // TimeoutDuration how long to wait for a request to complete before timing out
 var TimeoutDuration = 10 * time.Second
+
+// RequestAttempts how many request attempts are made before giving up
+var RequestAttempts = 5
