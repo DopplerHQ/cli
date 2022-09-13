@@ -70,4 +70,22 @@ home="$HOME"
 value="$("$DOPPLER_BINARY" run -- printenv HOME)"
 [[ "$value" == "$home" ]] || error "ERROR: reserved secret is not ignored"
 
+beforeEach
+
+# verify command's exit code is properly returned
+exit_code=0
+"$DOPPLER_BINARY" run --command "true && exit 7" || exit_code=$?
+[[ $exit_code == 7 ]] || error "ERROR: invalid exit code"
+
+beforeEach
+
+# verify proper quote handling
+value="$("$DOPPLER_BINARY" run echo "a'b" "c'd")"
+[[ "$value" == "a'b c'd" ]] || error "ERROR: quotes are improperly handled"
+
+beforeEach
+
+# verify flags specified after '--' are passed to subcommand
+"$DOPPLER_BINARY" run -- true --config invalidconfig || error "ERROR: flags specified after '--' are improperly handled"
+
 afterAll
