@@ -166,6 +166,13 @@ nfpms:
         dst: /etc/bash_completion.d/doppler
       - src: ./completions/doppler.zsh
         dst: /usr/local/share/zsh/site-functions/_doppler
+        packager: deb
+      - src: ./completions/doppler.zsh
+        dst: /usr/local/share/zsh/site-functions/_doppler
+        packager: apk
+      - src: ./completions/doppler.zsh
+        dst: /usr/share/zsh/site-functions/_doppler
+        packager: rpm
       - src: ./completions/doppler.fish
         dst: /usr/share/fish/completions/doppler.fish
 
