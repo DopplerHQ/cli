@@ -25,7 +25,7 @@ const (
 	ENV
 	YAML
 	DOCKER
-	ENV_NO_FILE
+	ENV_NO_QUOTES
 )
 
 var SecretFormats = []string{"json", "dotnet-json", "env", "yaml", "docker", "env-no-quotes"}
@@ -48,5 +48,5 @@ func init() {
 	SecretsFormatList = append(SecretsFormatList, ENV)
 	SecretsFormatList = append(SecretsFormatList, YAML)
 	SecretsFormatList = append(SecretsFormatList, DOCKER)
-	SecretsFormatList = append(SecretsFormatList, ENV_NO_FILE)
+	SecretsFormatList = append(SecretsFormatList, ENV_NO_QUOTES)
 }
