@@ -21,13 +21,14 @@ type SecretsFormat int
 // the source of the value
 const (
 	JSON SecretsFormat = iota
+	DOTNET_JSON
 	ENV
 	YAML
 	DOCKER
-	ENV_NO_FILE
+	ENV_NO_QUOTES
 )
 
-var SecretFormats = []string{"json", "env", "yaml", "docker", "env-no-quotes"}
+var SecretFormats = []string{"json", "dotnet-json", "env", "yaml", "docker", "env-no-quotes"}
 
 func (s SecretsFormat) String() string {
 	return SecretFormats[s]
@@ -35,7 +36,7 @@ func (s SecretsFormat) String() string {
 
 // OutputFile the default secrets file name
 func (s SecretsFormat) OutputFile() string {
-	return [...]string{"doppler.json", "doppler.env", "secrets.yaml", "doppler.env", "doppler.env"}[s]
+	return [...]string{"doppler.json", "appsettings.json", "doppler.env", "secrets.yaml", "doppler.env", "doppler.env"}[s]
 }
 
 // SecretsFormatList list of supported secrets formats
@@ -43,8 +44,9 @@ var SecretsFormatList []SecretsFormat
 
 func init() {
 	SecretsFormatList = append(SecretsFormatList, JSON)
+	SecretsFormatList = append(SecretsFormatList, DOTNET_JSON)
 	SecretsFormatList = append(SecretsFormatList, ENV)
 	SecretsFormatList = append(SecretsFormatList, YAML)
 	SecretsFormatList = append(SecretsFormatList, DOCKER)
-	SecretsFormatList = append(SecretsFormatList, ENV_NO_FILE)
+	SecretsFormatList = append(SecretsFormatList, ENV_NO_QUOTES)
 }
