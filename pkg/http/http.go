@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -201,7 +201,8 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 	response = nil
 
 	requestErr := retry(RequestAttempts, 100*time.Millisecond, func() error {
-		resp, err := client.Do(req)
+		// disable semgrep rule b/c we properly check that resp isn't nil before using it within the err block
+		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
 			if resp != nil {
 				defer resp.Body.Close()
