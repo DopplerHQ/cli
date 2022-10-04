@@ -15,6 +15,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: "production"
     if: github.actor == 'piccirello'
     permissions:
       contents: write
