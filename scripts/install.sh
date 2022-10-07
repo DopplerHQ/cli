@@ -5,6 +5,7 @@ set -e
 # error codes
 # 1 general
 # 2 insufficient perms
+# 3 gnupg package not installed
 
 DOPPLER_DOMAIN="cli.doppler.com"
 DEBUG=0
@@ -391,7 +392,7 @@ if [ -x "$gpg_binary" ]; then
 else
   log "ERROR: Unable to find gpg binary for signature verification"
   log "You can resolve this error by installing your system's gnupg package"
-  clean_exit 1
+  clean_exit 3
 fi
 
 url="https://$DOPPLER_DOMAIN/download?os=$os&arch=$arch&format=$format"
