@@ -34,7 +34,7 @@ jobs:
     - name: Update alpine image
       run: docker pull alpine
     - name: Install Doppler CLI
-      uses: dopplerhq/cli-action@v1
+      uses: dopplerhq/cli-action@v2
     - name: Install Cloudsmith CLI
       run: pip install --upgrade cloudsmith-cli
     - name: Configure git
