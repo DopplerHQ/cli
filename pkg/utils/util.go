@@ -16,8 +16,10 @@ limitations under the License.
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -34,6 +36,7 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/transform"
 )
 
 // ConfigDir DEPRECATED get configuration directory
@@ -105,7 +108,7 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool, onExit func()) (int, error) {
+func RunCommand(command []string, env []string, inFile *os.File, outFile io.Writer, errFile io.Writer, forwardSignals bool, onExit func()) (int, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204
 	cmd.Env = env
 	cmd.Stdin = inFile
@@ -116,7 +119,7 @@ func RunCommand(command []string, env []string, inFile *os.File, outFile *os.Fil
 }
 
 // RunCommandString runs the specified command string
-func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool, onExit func()) (int, error) {
+func RunCommandString(command string, env []string, inFile *os.File, outFile io.Writer, errFile io.Writer, forwardSignals bool, onExit func()) (int, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -411,4 +414,83 @@ func RedactAuthToken(token string) string {
 	}
 
 	return "[REDACTED]"
+}
+
+// ReplaceTransformer replaces text in a stream
+// Taken from https://github.com/icholy/replace/blob/a7e12fe69d82503d82c3f85a9ca3973a11a2085f/replace.go#L12
+// See: http://golang.org/x/text/transform
+type ReplaceTransformer struct {
+	transform.NopResetter
+
+	old, new []byte
+	oldlen   int
+}
+
+var _ transform.Transformer = (*ReplaceTransformer)(nil)
+
+// BytesReplacer returns a transformer that replaces all instances of old with new.
+// Unlike bytes.Replace, empty old values don't match anything.
+func BytesReplacer(old, new []byte) ReplaceTransformer {
+	return ReplaceTransformer{old: old, new: new, oldlen: len(old)}
+}
+
+// Transform implements golang.org/x/text/transform#Transformer
+func (t ReplaceTransformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+	var n int
+	// don't do anything for empty old string. We're forced to do this because an optimization in
+	// transform.String prevents us from generating any output when the src is empty.
+	// see: https://github.com/golang/text/blob/master/transform/transform.go#L570-L576
+	if t.oldlen == 0 {
+		n, err = fullcopy(dst, src)
+		return n, n, err
+	}
+	// replace all instances of old with new
+	for {
+		i := bytes.Index(src[nSrc:], t.old)
+		if i == -1 {
+			break
+		}
+		// copy everything up to the match
+		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+i])
+		nSrc += n
+		nDst += n
+		if err != nil {
+			return
+		}
+		// copy the new value
+		n, err = fullcopy(dst[nDst:], t.new)
+		if err != nil {
+			return
+		}
+		nDst += n
+		nSrc += t.oldlen
+	}
+	// if we're at the end, tack on any remaining bytes
+	if atEOF {
+		n, err = fullcopy(dst[nDst:], src[nSrc:])
+		nDst += n
+		nSrc += n
+		return
+	}
+	// skip everything except the trailing len(r.old) - 1
+	// we do this because there could be a match straddling
+	// the boundary
+	if skip := len(src[nSrc:]) - t.oldlen + 1; skip > 0 {
+		n, err = fullcopy(dst[nDst:], src[nSrc:nSrc+skip])
+		nSrc += n
+		nDst += n
+		if err != nil {
+			return
+		}
+	}
+	err = transform.ErrShortSrc
+	return
+}
+
+func fullcopy(dst, src []byte) (n int, err error) {
+	n = copy(dst, src)
+	if n < len(src) {
+		err = transform.ErrShortDst
+	}
+	return
 }
