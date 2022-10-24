@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -302,7 +301,7 @@ var runCleanCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
 
-		entries, err := ioutil.ReadDir(defaultFallbackDir)
+		entries, err := os.ReadDir(defaultFallbackDir)
 		if err != nil {
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
@@ -324,7 +323,11 @@ var runCleanCmd = &cobra.Command{
 			if all {
 				delete = true
 			} else {
-				validUntil := entry.ModTime().Add(maxAge)
+				fileInfo, err := entry.Info()
+				if err != nil {
+					utils.HandleError(err)
+				}
+				validUntil := fileInfo.ModTime().Add(maxAge)
 				if validUntil.Before(now) {
 					delete = true
 				}
