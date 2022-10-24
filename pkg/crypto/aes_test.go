@@ -24,30 +24,31 @@ const originalPassphrase = "secret"
 const originalPlaintext = "{\"TEST_SECRET\":\"value\"}"
 
 func TestDecrypt(t *testing.T) {
+	var ciphertext string
+
 	// decode hex w/o prefix
-	ciphertext := "9bc0a6db97dadea4-0d16d53716f505651f894aba-11b04a80eafd8ea700c7755de860aeb0347cff4ae93b626e858681e7e123034b4c11691a412843"
-	plaintext, err := Decrypt(originalPassphrase, []byte(ciphertext), "hex")
+	ciphertextData := "9bc0a6db97dadea4-0d16d53716f505651f894aba-11b04a80eafd8ea700c7755de860aeb0347cff4ae93b626e858681e7e123034b4c11691a412843"
+	plaintext, err := Decrypt(originalPassphrase, []byte(ciphertextData))
 	if err != nil || plaintext != originalPlaintext {
 		t.Error("Invalid plaintext when decrypting non-prefixed hex value")
 	}
 
 	// decode hex w/ prefix
-	ciphertext = fmt.Sprintf("hex:%s", ciphertext)
-	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext), "hex")
+	ciphertext = fmt.Sprintf("hex:%s", ciphertextData)
+	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext))
 	if err != nil || plaintext != originalPlaintext {
 		t.Error("Invalid plaintext when decrypting hex value")
 	}
 
-	// decode base64 w/o prefix (should error)
-	ciphertext = "qwbkFMWB7FE=-Ew968YdkAXRb6l46-eA4o9Pf9mSIaOofa8YIEP+FqJ6DwScHsYIObAw3dvKvHbe5SDTzB"
-	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext), "base64")
+	ciphertextData = "qwbkFMWB7FE=-Ew968YdkAXRb6l46-eA4o9Pf9mSIaOofa8YIEP+FqJ6DwScHsYIObAw3dvKvHbe5SDTzB"
+	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertextData))
 	if err == nil {
 		t.Error("Expected error when decrypting non-prefixed base64 value")
 	}
 
 	// decode base64 w/ prefix
-	ciphertext = fmt.Sprintf("base64:%s", ciphertext)
-	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext), "base64")
+	ciphertext = fmt.Sprintf("base64:%s", ciphertextData)
+	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext))
 	if err != nil || plaintext != originalPlaintext {
 		t.Error("Invalid plaintext when decrypting base64 value")
 	}
@@ -59,7 +60,7 @@ func TestEncrypt(t *testing.T) {
 	if err != nil {
 		t.Error("Invalid ciphertext when encrypting value w/ hex encoding")
 	}
-	plaintext, err := Decrypt(originalPassphrase, []byte(ciphertext), "hex")
+	plaintext, err := Decrypt(originalPassphrase, []byte(ciphertext))
 	if err != nil || plaintext != originalPlaintext {
 		t.Error("Invalid plaintext when decrypting hex value")
 	}
@@ -69,7 +70,7 @@ func TestEncrypt(t *testing.T) {
 	if err != nil {
 		t.Error("Invalid ciphertext when encrypting value w/ base64 encoding")
 	}
-	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext), "base64")
+	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext))
 	if err != nil || plaintext != originalPlaintext {
 		t.Error("Invalid plaintext when decrypting base64 value")
 	}
