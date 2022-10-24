@@ -5,5 +5,5 @@ rules:
     message: >
       Use utils.WriteFile to ensure writes are atomic.
     pattern-either:
-      - pattern: ioutil.WriteFile
+      - pattern: os.WriteFile
     severity: ERROR

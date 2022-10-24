@@ -18,7 +18,6 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -39,7 +38,7 @@ func WriteFile(filename string, data []byte, perm os.FileMode) error {
 	// write to a unique temp file first before performing an atomic move to the actual file name
 	// this prevents a race condition between multiple CLIs reading/writing the same file
 	LogDebug(fmt.Sprintf("Writing to temp file %s", temp))
-	if err := ioutil.WriteFile(temp, data, os.FileMode(perm)); err != nil {
+	if err := os.WriteFile(temp, data, os.FileMode(perm)); err != nil {
 		return err
 	}
 
