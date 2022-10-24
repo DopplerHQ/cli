@@ -38,7 +38,8 @@ import (
 const base64EncodingPrefix = "base64"
 const hexEncodingPrefix = "hex"
 
-const pbkdf2Rounds = 50000
+const pbkdf2Rounds = 500000
+const legacyPbkdf2Rounds = 50000
 
 func deriveKey(passphrase string, salt []byte, numRounds int) ([]byte, []byte, error) {
 	if salt == nil {
@@ -201,7 +202,7 @@ func Decrypt(passphrase string, ciphertext []byte) (string, error) {
 		return "", errors.New("Invalid encoding, must be one of [base64, hex]")
 	}
 
-	numPbkdf2Rounds := pbkdf2Rounds
+	numPbkdf2Rounds := legacyPbkdf2Rounds
 	if rawNumRounds != "" {
 		n, err := strconv.ParseInt(rawNumRounds, 10, 32)
 		if err != nil {
