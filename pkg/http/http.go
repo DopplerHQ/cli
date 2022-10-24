@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -251,7 +251,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		return 0, nil, nil, requestErr
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return response.StatusCode, nil, nil, err
 	}
