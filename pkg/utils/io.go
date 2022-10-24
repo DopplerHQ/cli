@@ -56,7 +56,7 @@ func WriteFile(filename string, data []byte, perm os.FileMode) error {
 // WriteTempFile writes data to a unique temp file and returns the file name
 func WriteTempFile(name string, data []byte, perm os.FileMode) (string, error) {
 	// create hidden file in user's home dir to ensure no other users have write access
-	tmpFile, err := ioutil.TempFile(HomeDir(), fmt.Sprintf(".%s.", name))
+	tmpFile, err := os.CreateTemp(HomeDir(), fmt.Sprintf(".%s.", name))
 	if err != nil {
 		return "", err
 	}
