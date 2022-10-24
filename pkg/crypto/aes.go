@@ -27,6 +27,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,6 +49,10 @@ func deriveKey(passphrase string, salt []byte, numRounds int) ([]byte, []byte, e
 		if err != nil {
 			return nil, nil, err
 		}
+	}
+
+	if numRounds < 0 {
+		return nil, nil, errors.New("Invalid number of key derivation rounds")
 	}
 
 	return pbkdf2.Key([]byte(passphrase), salt, numRounds, 32, sha256.New), salt, nil
@@ -98,7 +103,7 @@ func Encrypt(passphrase string, plaintext []byte, encoding string) (string, erro
 		return "", errors.New("Invalid encoding, must be one of [base64, hex]")
 	}
 
-	s := fmt.Sprintf("%s:%s-%s-%s", encoding, encodedSalt, encodedIV, encodedData)
+	s := fmt.Sprintf("%s:%d:%s-%s-%s", encoding, pbkdf2Rounds, encodedSalt, encodedIV, encodedData)
 	return s, nil
 }
 
@@ -160,8 +165,9 @@ func decodeHex(passphrase string, ciphertext string) ([]byte, []byte, []byte, er
 
 // Decrypt ciphertext with a passphrase.
 // Formats:
-// 1) `encoding:text`
-// 2) `text`
+// 1) `encoding:numRounds:text`
+// 2) `encoding:text`
+// 3) `text`
 func Decrypt(passphrase string, ciphertext []byte) (string, error) {
 	var salt []byte
 	var iv []byte
@@ -169,8 +175,13 @@ func Decrypt(passphrase string, ciphertext []byte) (string, error) {
 
 	cParts := strings.SplitN(string(ciphertext), ":", 3)
 	rawEncoding := ""
+	rawNumRounds := ""
 	ciphertextData := ""
-	if len(cParts) == 2 {
+	if len(cParts) == 3 {
+		rawEncoding = cParts[0]
+		rawNumRounds = cParts[1]
+		ciphertextData = cParts[2]
+	} else if len(cParts) == 2 {
 		rawEncoding = cParts[0]
 		ciphertextData = cParts[1]
 	} else if len(cParts) == 1 {
@@ -190,6 +201,16 @@ func Decrypt(passphrase string, ciphertext []byte) (string, error) {
 		return "", errors.New("Invalid encoding, must be one of [base64, hex]")
 	}
 
+	numPbkdf2Rounds := pbkdf2Rounds
+	if rawNumRounds != "" {
+		n, err := strconv.ParseInt(rawNumRounds, 10, 32)
+		if err != nil {
+			return "", errors.New("Unable to parse number of rounds")
+		}
+
+		numPbkdf2Rounds = int(n)
+	}
+
 	if encoding == base64EncodingPrefix {
 		var err error
 		salt, iv, data, err = decodeBase64(passphrase, ciphertextData)
@@ -204,7 +225,7 @@ func Decrypt(passphrase string, ciphertext []byte) (string, error) {
 		}
 	}
 
-	key, _, err := deriveKey(passphrase, salt, pbkdf2Rounds)
+	key, _, err := deriveKey(passphrase, salt, numPbkdf2Rounds)
 	if err != nil {
 		return "", err
 	}
