@@ -32,6 +32,33 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
+// Documentation about potentially dangerous secret names can be found here: https://docs.doppler.com/docs/accessing-secrets#injection
+var dangerousSecretNames = [...]string{
+	// Operating Systems environment variable names
+	// Linux
+	"PROMPT_COMMAND",
+	"LD_PRELOAD",
+	"LD_LIBRARY_PATH",
+	// Windows
+	"WINDIR",
+	"USERPROFILE",
+	// MacOS
+	"DYLD_INSERT_LIBRARIES",
+
+	// Language Interpreters environment variable names
+	// Perl & Python
+	"PERL5OPT",
+	// Python
+	"PYTHONWARNINGS",
+	"BROWSER",
+	// PHP
+	"HOSTNAME",
+	"PHPRC",
+	// NodeJS
+	"NODE_VERSION",
+	"NODE_OPTIONS",
+}
+
 func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
@@ -213,4 +240,22 @@ func SelectSecrets(secrets map[string]string, secretsToSelect []string) (map[str
 	}
 
 	return selectedSecrets, err
+}
+
+// CheckForDangerousSecretNames checks for potential dangerous secret names.
+// Documentation about potentially dangerous secret names can be found here: https://docs.doppler.com/docs/accessing-secrets#injection
+func CheckForDangerousSecretNames(secrets map[string]string) error {
+	dangerousSecretNamesFound := []string{}
+
+	for _, dangerousName := range dangerousSecretNames {
+		if _, ok := secrets[dangerousName]; ok {
+			dangerousSecretNamesFound = append(dangerousSecretNamesFound, dangerousName)
+		}
+	}
+
+	if len(dangerousSecretNamesFound) > 0 {
+		return fmt.Errorf("your config contains the following potentially dangerous secret names (https://docs.doppler.com/docs/accessing-secrets#injection):\n- %s", strings.Join(dangerousSecretNamesFound, "\n- "))
+	}
+
+	return nil
 }

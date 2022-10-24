@@ -23,6 +23,56 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type dangerousSecretNameTestCase struct {
+	name                         string
+	secrets                      map[string]string
+	expectedDangerousSecretNames []string
+}
+
+func TestCheckForDangerousSecretNames(t *testing.T) {
+	testCases := []dangerousSecretNameTestCase{
+		{
+			name: "Should not find any dangerous secret names",
+			secrets: map[string]string{
+				"MY_SECRET": "123",
+			},
+			expectedDangerousSecretNames: nil,
+		},
+		{
+			name: "Should find a dangerous secret name",
+			secrets: map[string]string{
+				"DYLD_INSERT_LIBRARIES": "123",
+				"MY_SECRET":             "123",
+			},
+			expectedDangerousSecretNames: []string{"DYLD_INSERT_LIBRARIES"},
+		},
+		{
+			name: "Should find multiple dangerous secret names",
+			secrets: map[string]string{
+				"DYLD_INSERT_LIBRARIES": "123",
+				"MY_SECRET":             "123",
+				"LD_LIBRARY_PATH":       "123",
+				"WINDIR":                "123",
+				"PROMPT_COMMAND":        "123",
+			},
+			expectedDangerousSecretNames: []string{"DYLD_INSERT_LIBRARIES", "LD_LIBRARY_PATH", "WINDIR", "PROMPT_COMMAND"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			err := CheckForDangerousSecretNames(testCase.secrets)
+			if testCase.expectedDangerousSecretNames == nil {
+				assert.Nil(t, nil, err)
+			} else {
+				for _, v := range testCase.expectedDangerousSecretNames {
+					assert.Contains(t, err.Error(), v)
+				}
+			}
+		})
+	}
+}
+
 type selectSecretsTestCase struct {
 	name         string
 	origMap      map[string]string

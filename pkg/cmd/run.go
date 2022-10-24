@@ -138,6 +138,23 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		// retrieve secrets
 		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
 
+		mountPath := cmd.Flag("mount").Value.String()
+		mountFormatString := cmd.Flag("mount-format").Value.String()
+		mountTemplate := cmd.Flag("mount-template").Value.String()
+		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
+		// only auto-detect the format if it hasn't been explicitly specified
+		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
+		shouldMountFile := mountPath != ""
+		shouldMountTemplate := mountTemplate != ""
+
+		// The potentially dangerous secret names only are only dangerous when they are set
+		// as environment variables since they have the potential to change the default shell behavior.
+		// When mounting the secrets into a file these are not dangerous
+		if !shouldMountFile {
+			if err := controllers.CheckForDangerousSecretNames(dopplerSecrets); err != nil {
+				utils.LogWarning(err.Error())
+			}
+		}
 
 		if cmd.Flags().Changed("only-secrets") {
 			if len(secretsToInclude) == 0 {
@@ -156,15 +173,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 			}
 		}
-
-		mountPath := cmd.Flag("mount").Value.String()
-		mountFormatString := cmd.Flag("mount-format").Value.String()
-		mountTemplate := cmd.Flag("mount-template").Value.String()
-		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
-		// only auto-detect the format if it hasn't been explicitly specified
-		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
-		shouldMountFile := mountPath != ""
-		shouldMountTemplate := mountTemplate != ""
 
 		var mountFormat string
 		if mountFormatVal, ok := models.SecretsMountFormatMap[mountFormatString]; ok {
