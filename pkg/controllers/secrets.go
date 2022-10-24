@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -158,7 +157,7 @@ func ReadTemplateFile(filePath string) string {
 	}
 
 	var templateFile []byte
-	templateFile, err = ioutil.ReadFile(templateFilePath) // #nosec G304
+	templateFile, err = os.ReadFile(templateFilePath) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read template file")
 	}

@@ -17,7 +17,7 @@ package configuration
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -58,7 +58,7 @@ func convertOldConfig(oldConfig map[string]oldConfig) models.ConfigFile {
 }
 
 func parseJSONConfig() map[string]oldConfig {
-	fileContents, err := ioutil.ReadFile(jsonFile) // #nosec G304
+	fileContents, err := os.ReadFile(jsonFile) // #nosec G304
 	if err != nil {
 		utils.HandleError(err)
 	}

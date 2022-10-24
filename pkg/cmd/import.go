@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -56,7 +56,7 @@ func readTemplateFile(projectTemplateFile string) []byte {
 		utils.HandleError(fmt.Errorf("Unable to find project template file: %s", projectTemplateFile))
 	}
 	utils.LogDebug(fmt.Sprintf("Reading template file %s", projectTemplateFile))
-	yamlFile, err := ioutil.ReadFile(projectTemplateFile) // #nosec G304
+	yamlFile, err := os.ReadFile(projectTemplateFile) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, fmt.Sprintf("Unable to read project template file: %s", projectTemplateFile))
 	}

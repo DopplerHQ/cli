@@ -17,7 +17,7 @@ package controllers
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -40,7 +40,7 @@ func RepoConfig() (models.RepoConfig, Error) {
 	if utils.Exists(repoConfigFile) {
 		utils.LogDebug(fmt.Sprintf("Reading repo config file %s", repoConfigFile))
 
-		yamlFile, err := ioutil.ReadFile(repoConfigFile) // #nosec G304
+		yamlFile, err := os.ReadFile(repoConfigFile) // #nosec G304
 
 		if err != nil {
 			var e Error

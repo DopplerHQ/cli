@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -347,7 +346,7 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	var file []byte
-	file, err = ioutil.ReadFile(filePath) // #nosec G304
+	file, err = os.ReadFile(filePath) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read upload file")
 	}

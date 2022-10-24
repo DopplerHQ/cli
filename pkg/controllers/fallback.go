@@ -18,7 +18,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,7 +64,7 @@ func MetadataFile(path string) (models.SecretsFileMetadata, Error) {
 	}
 
 	utils.LogDebug(fmt.Sprintf("Reading metadata file %s", path))
-	response, err := ioutil.ReadFile(path) // #nosec G304
+	response, err := os.ReadFile(path) // #nosec G304
 	if err != nil {
 		return models.SecretsFileMetadata{}, Error{Err: err, Message: "Unable to read metadata file"}
 	}
@@ -108,7 +107,7 @@ func SecretsCacheFile(path string, passphrase string) (map[string]string, Error)
 		return nil, Error{Err: err, Message: "Unable to stat cache file"}
 	}
 
-	response, err := ioutil.ReadFile(path) // #nosec G304
+	response, err := os.ReadFile(path) // #nosec G304
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to read cache file"}
 	}

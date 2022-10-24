@@ -509,7 +509,7 @@ func readFallbackFile(path string, legacyPath string, passphrase string, silent 
 		utils.HandleError(err, "Unable to read fallback file")
 	}
 
-	response, err := ioutil.ReadFile(path) // #nosec G304
+	response, err := os.ReadFile(path) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read fallback file")
 	}
@@ -643,7 +643,7 @@ func getCacheFileETag(metadataPath string, cachePath string) string {
 	}
 
 	// verify hash
-	cacheFileBytes, err := ioutil.ReadFile(cachePath) // #nosec G304
+	cacheFileBytes, err := os.ReadFile(cachePath) // #nosec G304
 	if err == nil {
 		cacheFileContents := string(cacheFileBytes)
 		hash := crypto.Hash(cacheFileContents)

@@ -18,7 +18,6 @@ package configuration
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -429,7 +428,7 @@ func readConfig() (models.ConfigFile, int, int) {
 		utils.HandleError(err, "Unable to stat user config file")
 	}
 
-	fileContents, err := ioutil.ReadFile(UserConfigFile) // #nosec G304
+	fileContents, err := os.ReadFile(UserConfigFile) // #nosec G304
 	if err != nil {
 		utils.HandleError(err, "Unable to read user config file")
 	}
