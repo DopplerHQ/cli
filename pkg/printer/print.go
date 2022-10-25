@@ -26,7 +26,7 @@ import (
 	goVersion "github.com/hashicorp/go-version"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/jedib0t/go-pretty/text"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"gopkg.in/gookit/color.v1"
 )
 
@@ -40,7 +40,7 @@ type tableOptions struct {
 var maxTableWidth = 80
 
 func init() {
-	w, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+	w, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
 		utils.LogDebugError(err)
 		utils.LogDebug("Unable to determine terminal size")
