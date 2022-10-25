@@ -48,33 +48,33 @@ func init() {
 func TestParsePathTilde(t *testing.T) {
 	path, err := ParsePath("~")
 	if err != nil || path != homeDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, homeDir))
+		t.Errorf("Got %s, expected %s", path, homeDir)
 	}
 
 	path, err = ParsePath("~/")
 	if err != nil || path != homeDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, homeDir))
+		t.Errorf("Got %s, expected %s", path, homeDir)
 	}
 
 	path, err = ParsePath(fmt.Sprintf("~%s", username))
 	if err != nil || path != homeDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, homeDir))
+		t.Errorf("Got %s, expected %s", path, homeDir)
 	}
 
 	path, err = ParsePath(fmt.Sprintf("~%s/", username))
 	if err != nil || path != homeDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, homeDir))
+		t.Errorf("Got %s, expected %s", path, homeDir)
 	}
 
 	// expect error
 	path, err = ParsePath(fmt.Sprintf("~%s/", username+"1"))
 	if err == nil || path != "" {
-		t.Error(fmt.Sprintf("Got %s, expected error", path))
+		t.Errorf("Got %s, expected error", path)
 	}
 
 	path, err = ParsePath("")
 	if err == nil || path != "" {
-		t.Error(fmt.Sprintf("Got %s, expected error", path))
+		t.Errorf("Got %s, expected error", path)
 	}
 }
 
@@ -83,44 +83,44 @@ func TestParsePathRelative(t *testing.T) {
 
 	path, err := ParsePath(".")
 	if err != nil || path != cwd {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, cwd))
+		t.Errorf("Got %s, expected %s", path, cwd)
 	}
 
 	path, err = ParsePath("./")
 	if err != nil || path != cwd {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, cwd))
+		t.Errorf("Got %s, expected %s", path, cwd)
 	}
 
 	path, err = ParsePath("..")
 	if err != nil || path != parentDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, parentDir))
+		t.Errorf("Got %s, expected %s", path, parentDir)
 	}
 
 	path, err = ParsePath("../")
 	if err != nil || path != parentDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, parentDir))
+		t.Errorf("Got %s, expected %s", path, parentDir)
 	}
 
 	path, err = ParsePath("./..")
 	if err != nil || path != parentDir {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, parentDir))
+		t.Errorf("Got %s, expected %s", path, parentDir)
 	}
 }
 
 func TestParsePathAbsolute(t *testing.T) {
 	path, err := ParsePath("/")
 	if err != nil || path != "/" {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, "/"))
+		t.Errorf("Got %s, expected %s", path, "/")
 	}
 
 	path, err = ParsePath("/root")
 	if err != nil || path != "/root" {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, "/root"))
+		t.Errorf("Got %s, expected %s", path, "/root")
 	}
 
 	path, err = ParsePath("root")
 	if err != nil || path != filepath.Join(cwd, "root") {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, filepath.Join(cwd, "root")))
+		t.Errorf("Got %s, expected %s", path, filepath.Join(cwd, "root"))
 	}
 }
 
@@ -128,11 +128,11 @@ func TestGetFilePath(t *testing.T) {
 	expected := filepath.Join(cwd, "doppler.env")
 	path, err := GetFilePath("./doppler.env")
 	if err != nil || path != expected {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, expected))
+		t.Errorf("Got %s, expected %s", path, expected)
 	}
 
 	path, err = GetFilePath("/root/")
 	if err != nil || path != "/root" {
-		t.Error(fmt.Sprintf("Got %s, expected %s", path, "/root"))
+		t.Errorf("Got %s, expected %s", path, "/root")
 	}
 }
