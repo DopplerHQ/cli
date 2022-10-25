@@ -59,7 +59,7 @@ func Encrypt(passphrase string, plaintext []byte, encoding string) (string, erro
 		return "", err
 	}
 
-	utils.LogDebug(fmt.Sprintf("PBKDF2 key derivation took %d ms", time.Now().Sub(now).Milliseconds()))
+	utils.LogDebug(fmt.Sprintf("PBKDF2 key derivation took %d ms", time.Since(now).Milliseconds()))
 
 	iv := make([]byte, 12)
 	// http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
