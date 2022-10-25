@@ -40,7 +40,7 @@ func TestDecrypt(t *testing.T) {
 
 	// decode base64 w/o prefix (should error)
 	ciphertext = "qwbkFMWB7FE=-Ew968YdkAXRb6l46-eA4o9Pf9mSIaOofa8YIEP+FqJ6DwScHsYIObAw3dvKvHbe5SDTzB"
-	plaintext, err = Decrypt(originalPassphrase, []byte(ciphertext), "base64")
+	_, err = Decrypt(originalPassphrase, []byte(ciphertext), "base64")
 	if err == nil {
 		t.Error("Expected error when decrypting non-prefixed base64 value")
 	}
