@@ -223,7 +223,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			// remove any reserved keys from secrets
 			reservedKeys := []string{"PATH", "PS1", "HOME"}
 			for _, reservedKey := range reservedKeys {
-				if _, found := dopplerSecrets[reservedKey]; found == true {
+				if _, found := dopplerSecrets[reservedKey]; found {
 					utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
 					delete(dopplerSecrets, reservedKey)
 				}
@@ -236,7 +236,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 				// then use existing env vars
 				for name, value := range existingEnvKeys {
-					if _, found := secrets[name]; found == true {
+					if _, found := secrets[name]; found {
 						utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
 					}
 					secrets[name] = value
