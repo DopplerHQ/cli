@@ -252,9 +252,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 			}
 
-			for _, envVar := range utils.MapToEnvFormat(secrets, false) {
-				env = append(env, envVar)
-			}
+			env = append(env, utils.MapToEnvFormat(secrets, false)...)
 		}
 
 		exitCode := 0
