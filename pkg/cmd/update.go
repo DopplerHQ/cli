@@ -42,9 +42,9 @@ var updateCmd = &cobra.Command{
 
 		if !available {
 			if force {
-				utils.Log(fmt.Sprintf("Already running the latest version but proceeding anyway due to --force flag"))
+				utils.Log("Already running the latest version but proceeding anyway due to --force flag")
 			} else {
-				utils.Print(fmt.Sprintf("You are already running the latest version"))
+				utils.Print("You are already running the latest version")
 				return
 			}
 		}
@@ -71,7 +71,7 @@ func installCLIUpdate() {
 
 		utils.Print("")
 	} else {
-		utils.Print(fmt.Sprintf("You are already running the latest version"))
+		utils.Print("You are already running the latest version")
 	}
 
 }
