@@ -63,23 +63,24 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 	}
 
 	var mountData []byte
-	if format == models.TemplateMountFormat {
+	switch format {
+	case models.TemplateMountFormat:
 		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
-	} else if format == models.EnvMountFormat {
+	case models.EnvMountFormat:
 		mountData = []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n"))
-	} else if format == models.JSONMountFormat {
+	case models.JSONMountFormat:
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
 			return "", nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
 		}
 		mountData = envStr
-	} else if format == models.DotNETJSONMountFormat {
+	case models.DotNETJSONMountFormat:
 		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
 		if err != nil {
 			return "", nil, Error{Err: err, Message: "Unable to marshall .NET formatted secrets to json"}
 		}
 		mountData = envStr
-	} else {
+	default:
 		return "", nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
 
 	}

@@ -85,17 +85,18 @@ func Encrypt(passphrase string, plaintext []byte, encoding string) (string, erro
 	var encodedSalt string
 	var encodedIV string
 	var encodedData string
-	if encoding == "base64" {
+	switch encoding {
+	case "base64":
 		prefix = Base64EncodingPrefix
 		encodedSalt = base64.StdEncoding.EncodeToString(salt)
 		encodedIV = base64.StdEncoding.EncodeToString(iv)
 		encodedData = base64.StdEncoding.EncodeToString(data)
-	} else if encoding == "hex" {
+	case "hex":
 		prefix = HexEncodingPrefix
 		encodedSalt = hex.EncodeToString(salt)
 		encodedIV = hex.EncodeToString(iv)
 		encodedData = hex.EncodeToString(data)
-	} else {
+	default:
 		return "", errors.New("Invalid encoding, must be one of [base64, hex]")
 	}
 
@@ -175,19 +176,20 @@ func Decrypt(passphrase string, ciphertext []byte, encoding string) (string, err
 	var salt []byte
 	var iv []byte
 	var data []byte
-	if encoding == "base64" {
+	switch encoding {
+	case "base64":
 		var err error
 		salt, iv, data, err = decodeBase64(passphrase, string(ciphertext))
 		if err != nil {
 			return "", err
 		}
-	} else if encoding == "hex" {
+	case "hex":
 		var err error
 		salt, iv, data, err = decodeHex(passphrase, string(ciphertext))
 		if err != nil {
 			return "", err
 		}
-	} else {
+	default:
 		return "", errors.New("Invalid encoding, must be one of [base64, hex]")
 	}
 

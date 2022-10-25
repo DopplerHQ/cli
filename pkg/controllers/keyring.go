@@ -39,11 +39,12 @@ func GenerateKeyringID(id string) string {
 func GetKeyring(id string) (string, Error) {
 	value, err := keyring.Get(keyringService, id)
 	if err != nil {
-		if err == keyring.ErrUnsupportedPlatform {
+		switch err {
+		case keyring.ErrUnsupportedPlatform:
 			return "", Error{Err: err, Message: "Your OS does not support keyring"}
-		} else if err == keyring.ErrNotFound {
+		case keyring.ErrNotFound:
 			return "", Error{Err: err, Message: "Token not found in system keyring"}
-		} else {
+		default:
 			return "", Error{Err: err, Message: "Unable to retrieve value from system keyring"}
 		}
 	}

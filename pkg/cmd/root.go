@@ -146,9 +146,10 @@ func loadFlags(cmd *cobra.Command) {
 	// DNS resolver
 	if configuration.CanReadEnv {
 		enableDNSResovler := os.Getenv("DOPPLER_ENABLE_DNS_RESOLVER")
-		if enableDNSResovler == "true" {
+		switch enableDNSResovler {
+		case "true":
 			http.UseCustomDNSResolver = true
-		} else if enableDNSResovler == "false" {
+		case "false":
 			http.UseCustomDNSResolver = false
 		}
 	}
