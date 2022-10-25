@@ -51,6 +51,9 @@ func RunInstallScript() (bool, string, Error) {
 
 	// write script to temp file
 	tmpFile, err := utils.WriteTempFile("install.sh", script, 0555)
+	if err != nil {
+		return false, "", Error{Err: err, Message: "Unable to create temporary install.sh file"}
+	}
 	// clean up temp file once we're done with it
 	defer os.Remove(tmpFile)
 
