@@ -127,7 +127,7 @@ var completionInstallCmd = &cobra.Command{
 func getShell(args []string) string {
 	shell := os.Getenv("SHELL")
 	if len(args) > 0 {
-		shell = fmt.Sprintf("%s", args[0])
+		shell = args[0]
 	}
 	if shell == "" {
 		utils.HandleError(errors.New("Unable to determine current shell"), "Please provide your shell name as an argument")
