@@ -139,7 +139,7 @@ func createConfigs(cmd *cobra.Command, args []string) {
 		utils.HandleError(errors.New("you must specify a name"))
 	}
 
-	if environment == "" && strings.Index(name, "_") != -1 {
+	if environment == "" && strings.Contains(name, "_") {
 		environment = name[0:strings.Index(name, "_")]
 	}
 
