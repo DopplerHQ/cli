@@ -139,9 +139,7 @@ func decodeBase64(passphrase string, ciphertext string) ([]byte, []byte, []byte,
 func decodeHex(passphrase string, ciphertext string) ([]byte, []byte, []byte, error) {
 	// prefix is optional
 	// TODO make this required when releasing CLI v4 (DPLR-435)
-	if strings.HasPrefix(ciphertext, HexEncodingPrefix) {
-		ciphertext = ciphertext[len(HexEncodingPrefix):]
-	}
+	ciphertext = strings.TrimPrefix(ciphertext, HexEncodingPrefix)
 
 	arr := strings.SplitN(string(ciphertext), "-", 3)
 	if len(arr) != 3 {

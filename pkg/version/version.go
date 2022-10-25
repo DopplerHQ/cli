@@ -72,9 +72,7 @@ func CompareVersions(a Version, b Version) int {
 
 // ParseVersion from a string
 func ParseVersion(s string) (Version, error) {
-	if strings.HasPrefix(s, "v") {
-		s = s[1:]
-	}
+	s = strings.TrimPrefix(s, "v")
 	parts := strings.Split(s, ".")
 	if len(parts) != 3 {
 		return Version{}, fmt.Errorf("Invalid version %s", s)
