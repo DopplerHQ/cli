@@ -75,7 +75,7 @@ var completionInstallCmd = &cobra.Command{
 		var name string
 
 		if utils.IsWindows() {
-			utils.HandleError(errors.New("Completion files are not supported on Windows. You can use completion files with Windows Subsystem for Linux (WSL)."))
+			utils.HandleError(errors.New("Completion files are not supported on Windows. You can use completion files with Windows Subsystem for Linux (WSL)"))
 		}
 
 		if strings.HasSuffix(shell, "/bash") {
