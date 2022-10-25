@@ -35,7 +35,7 @@ var DefaultMetadataDir string
 func MetadataFilePath(token string, project string, config string) string {
 	var name string
 	if project == "" && config == "" {
-		name = fmt.Sprintf("%s", token)
+		name = token
 	} else {
 		name = fmt.Sprintf("%s:%s:%s", token, project, config)
 	}
