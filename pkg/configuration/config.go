@@ -32,9 +32,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// baseConfigDir (e.g. /home/user/)
-var baseConfigDir string
-
 // UserConfigDir (e.g. /home/user/.doppler)
 var UserConfigDir string
 
@@ -53,13 +50,17 @@ var configUid = -1
 var configGid = -1
 
 func init() {
-	baseConfigDir = utils.HomeDir()
-	UserConfigDir = filepath.Join(baseConfigDir, ".doppler")
+	SetConfigDir(filepath.Join(utils.HomeDir(), ".doppler"))
+}
+
+func SetConfigDir(dir string) {
+	UserConfigDir = dir
 	UserConfigFile = filepath.Join(UserConfigDir, configFileName)
 }
 
 // Setup the config directory and config file
 func Setup() {
+	utils.LogDebug(fmt.Sprintf("Using config dir %s", UserConfigDir))
 	utils.LogDebug(fmt.Sprintf("Using config file %s", UserConfigFile))
 
 	if !utils.Exists(UserConfigDir) {

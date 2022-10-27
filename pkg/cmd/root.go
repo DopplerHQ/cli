@@ -140,6 +140,7 @@ func loadFlags(cmd *cobra.Command) {
 	configuration.Scope = normalizedScope
 
 	configuration.CanReadEnv = !utils.GetBoolFlag(cmd, "no-read-env")
+	configuration.SetConfigDir(utils.GetPathFlagIfChanged(cmd, "config-dir", configuration.UserConfigDir))
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")
 
@@ -216,7 +217,14 @@ func init() {
 
 	rootCmd.PersistentFlags().Bool("no-read-env", false, "do not read config from the environment")
 	rootCmd.PersistentFlags().String("scope", configuration.Scope, "the directory to scope your config to")
+	rootCmd.PersistentFlags().String("config-dir", configuration.UserConfigDir, "config directory")
 	rootCmd.PersistentFlags().String("configuration", configuration.UserConfigFile, "config file")
+	if err := rootCmd.PersistentFlags().MarkDeprecated("configuration", "please use --config-dir instead"); err != nil {
+		utils.HandleError(err)
+	}
+	if err := rootCmd.PersistentFlags().MarkHidden("configuration"); err != nil {
+		utils.HandleError(err)
+	}
 	rootCmd.PersistentFlags().BoolVar(&utils.OutputJSON, "json", utils.OutputJSON, "output json")
 	rootCmd.PersistentFlags().BoolVar(&utils.Debug, "debug", utils.Debug, "output additional information")
 	rootCmd.PersistentFlags().BoolVar(&printConfig, "print-config", printConfig, "output active configuration")
