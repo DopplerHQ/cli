@@ -11,6 +11,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.6.0
+	github.com/stretchr/testify v1.8.1
 	github.com/zalando/go-keyring v0.2.1
 	golang.org/x/crypto v0.1.0
 	gopkg.in/gookit/color.v1 v1.1.6
@@ -21,6 +22,7 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/errors v0.20.3 // indirect
 	github.com/go-openapi/strfmt v0.21.3 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
@@ -32,6 +34,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.mongodb.org/mongo-driver v1.10.3 // indirect
