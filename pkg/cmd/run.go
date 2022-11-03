@@ -515,13 +515,7 @@ func readFallbackFile(path string, legacyPath string, passphrase string, silent 
 	}
 
 	utils.LogDebug("Decrypting fallback file")
-	// default to hex for backwards compatibility b/c we didn't always include a prefix
-	// TODO remove support for optional prefix when releasing CLI v4 (DPLR-435)
-	encoding := "hex"
-	if strings.HasPrefix(string(response), crypto.Base64EncodingPrefix) {
-		encoding = "base64"
-	}
-	decryptedSecrets, err := crypto.Decrypt(passphrase, response, encoding)
+	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
 	if err != nil {
 		var msg []string
 		msg = append(msg, "")
