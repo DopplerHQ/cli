@@ -194,6 +194,7 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		DisableKeepAlives: true,
 		TLSClientConfig:   tlsConfig,
 		DialContext:       dialContext,
+		Proxy:             http.ProxyFromEnvironment,
 	}
 
 	startTime := time.Now()
