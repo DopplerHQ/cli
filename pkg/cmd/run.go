@@ -50,6 +50,8 @@ type fallbackOptions struct {
 	passphrase         string
 }
 
+var secretsToInclude []string
+
 var runCmd = &cobra.Command{
 	Use:   "run [command]",
 	Short: "Run a command with secrets injected into the environment",
@@ -144,6 +146,33 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
 		shouldMountFile := mountPath != ""
 		shouldMountTemplate := mountTemplate != ""
+
+		// The potentially dangerous secret names only are only dangerous when they are set
+		// as environment variables since they have the potential to change the default shell behavior.
+		// When mounting the secrets into a file these are not dangerous
+		if !shouldMountFile {
+			if err := controllers.CheckForDangerousSecretNames(dopplerSecrets); err != nil {
+				utils.LogWarning(err.Error())
+			}
+		}
+
+		if cmd.Flags().Changed("only-secrets") {
+			if len(secretsToInclude) == 0 {
+				utils.HandleError(fmt.Errorf("you must specify secrets when using --only-secrets"))
+			}
+
+			var err error
+			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
+			dopplerSecrets, err = controllers.SelectSecrets(dopplerSecrets, secretsToInclude)
+
+			if err != nil {
+				if noExitOnMissingIncludedSecrets {
+					utils.LogWarning(err.Error())
+				} else {
+					utils.HandleError(err)
+				}
+			}
+		}
 
 		var mountFormat string
 		if mountFormatVal, ok := models.SecretsMountFormatMap[mountFormatString]; ok {
@@ -679,6 +708,8 @@ func init() {
 	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
+	runCmd.Flags().StringSliceVar(&secretsToInclude, "only-secrets", []string{}, "only include the specified secrets")
+	runCmd.Flags().Bool("no-exit-on-missing-only-secrets", false, "do not exit on missing secrets via --only-secrets")
 
 	// deprecated
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")

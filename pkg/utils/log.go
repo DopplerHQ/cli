@@ -38,7 +38,7 @@ func Log(info string) {
 	fmt.Fprintln(os.Stderr, info)
 }
 
-// LogWarning message to stdout
+// LogWarning message to stderr
 func LogWarning(s string) {
 	fmt.Fprintln(os.Stderr, color.Yellow.Render("Warning:"), s)
 }
