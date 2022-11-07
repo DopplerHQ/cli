@@ -188,13 +188,23 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		return dialer.DialContext(ctx, network, addr)
 	}
 
+	proxyUrl, err := http.ProxyFromEnvironment(req)
+	if err != nil {
+		utils.LogDebug("Unable to read proxy from environment")
+		utils.LogDebugError(err)
+		proxyUrl = nil
+	}
+	if proxyUrl != nil {
+		utils.LogDebug(fmt.Sprintf("Using proxy %s", proxyUrl))
+	}
+
 	client.Transport = &http.Transport{
 		// disable keep alives to prevent multiple CLI instances from exhausting the
 		// OS's available network sockets. this adds a negligible performance penalty
 		DisableKeepAlives: true,
 		TLSClientConfig:   tlsConfig,
 		DialContext:       dialContext,
-		Proxy:             http.ProxyFromEnvironment,
+		Proxy:             http.ProxyURL(proxyUrl),
 	}
 
 	startTime := time.Now()
