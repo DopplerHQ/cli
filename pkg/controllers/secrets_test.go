@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -121,5 +122,26 @@ func TestSelectSecrets(t *testing.T) {
 		})
 
 	}
+}
 
+func TestSecretsToBytes(t *testing.T) {
+	secrets := map[string]string{"S1": "foo", "SECRET2": "bar"}
+
+	format := "env"
+	bytes, err := SecretsToBytes(secrets, format, "")
+	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1="foo"`, `SECRET2="bar"`}, "\n") {
+		t.Errorf("Unable to convert secrets to byte array in %s format", format)
+	}
+
+	format = "json"
+	bytes, err = SecretsToBytes(secrets, format, "")
+	if !err.IsNil() || string(bytes) != `{"S1":"foo","SECRET2":"bar"}` {
+		t.Errorf("Unable to convert secrets to byte array in %s format", format)
+	}
+
+	format = "dotnet-json"
+	bytes, err = SecretsToBytes(secrets, format, "")
+	if !err.IsNil() || string(bytes) != `{"S1":"foo","Secret2":"bar"}` {
+		t.Errorf("Unable to convert secrets to byte array in %s format", format)
+	}
 }
