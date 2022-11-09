@@ -803,7 +803,7 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 
 // GetActivityLogs get activity logs
 func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.ActivityLog, Error) {
-	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1", []queryParam{})
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/logs", []queryParam{})
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch activity logs", Code: statusCode}
 	}
@@ -828,7 +828,8 @@ func GetActivityLogs(host string, verifyTLS bool, apiKey string) ([]models.Activ
 
 // GetActivityLog get specified activity log
 func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (models.ActivityLog, Error) {
-	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/logs/v1/"+log, []queryParam{})
+	params := []queryParam{{Key: "log", Value: log}}
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/logs/log", params)
 	if err != nil {
 		return models.ActivityLog{}, Error{Err: err, Message: "Unable to fetch activity log", Code: statusCode}
 	}
