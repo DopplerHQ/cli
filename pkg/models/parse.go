@@ -146,10 +146,18 @@ func ParseConfigLog(log map[string]interface{}) ConfigLog {
 			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for ConfigLog, expected map[string]interface{}, got %T", log["user"]))
 			utils.HandleError(errors.New("Unable to parse API response"))
 		}
-		parsedLog.User.Email = user["email"].(string)
-		parsedLog.User.Name = user["name"].(string)
-		parsedLog.User.Username = user["username"].(string)
-		parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+		if user["email"] != nil {
+			parsedLog.User.Email = user["email"].(string)
+		}
+		if user["name"] != nil {
+			parsedLog.User.Name = user["name"].(string)
+		}
+		if user["username"] != nil {
+			parsedLog.User.Username = user["username"].(string)
+		}
+		if user["profile_image_url"] != nil {
+			parsedLog.User.ProfileImage = user["profile_image_url"].(string)
+		}
 	}
 	if log["diff"] != nil {
 		for _, diff := range log["diff"].([]interface{}) {
