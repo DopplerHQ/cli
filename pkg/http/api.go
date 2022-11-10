@@ -802,10 +802,13 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 }
 
 // GetActivityLogs get activity logs
-func GetActivityLogs(host string, verifyTLS bool, apiKey string, page int) ([]models.ActivityLog, Error) {
+func GetActivityLogs(host string, verifyTLS bool, apiKey string, page int, number int) ([]models.ActivityLog, Error) {
 	var params []queryParam
 	if page != 0 {
 		params = append(params, queryParam{Key: "page", Value: fmt.Sprint(page)})
+	}
+	if number != 0 {
+		params = append(params, queryParam{Key: "per_page", Value: fmt.Sprint(number)})
 	}
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/logs", params)
 	if err != nil {
@@ -853,12 +856,15 @@ func GetActivityLog(host string, verifyTLS bool, apiKey string, log string) (mod
 }
 
 // GetConfigLogs get config audit logs
-func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string, page int) ([]models.ConfigLog, Error) {
+func GetConfigLogs(host string, verifyTLS bool, apiKey string, project string, config string, page int, number int) ([]models.ConfigLog, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 	if page != 0 {
 		params = append(params, queryParam{Key: "page", Value: fmt.Sprint(page)})
+	}
+	if number != 0 {
+		params = append(params, queryParam{Key: "per_page", Value: fmt.Sprint(number)})
 	}
 
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/logs", params)
