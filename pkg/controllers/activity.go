@@ -24,7 +24,7 @@ import (
 func GetActivityLogIDs(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
-	logs, err := http.GetActivityLogs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value)
+	logs, err := http.GetActivityLogs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, 0, 0)
 	if !err.IsNil() {
 		return nil, Error{Err: err.Unwrap(), Message: err.Message}
 	}

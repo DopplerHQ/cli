@@ -52,8 +52,8 @@ var enclaveConfigsLogsRollbackCmd = &cobra.Command{
 func init() {
 	enclaveConfigsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveConfigsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	// TODO: hide this flag until the api supports it
-	// enclaveConfigsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	enclaveConfigsLogsCmd.Flags().Int("page", 1, "log page to display")
+	enclaveConfigsLogsCmd.Flags().IntP("number", "n", 20, "max number of logs to display")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsLogsCmd)
 
 	enclaveConfigsLogsGetCmd.Flags().String("log", "", "audit log id")

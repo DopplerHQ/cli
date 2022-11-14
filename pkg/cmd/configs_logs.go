@@ -50,11 +50,12 @@ var configsLogsRollbackCmd = &cobra.Command{
 func configsLogs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
-	// number := utils.GetIntFlag(cmd, "number", 16)
+	page := utils.GetIntFlag(cmd, "page", 16)
+	number := utils.GetIntFlag(cmd, "number", 16)
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+	logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, page, number)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -118,8 +119,8 @@ func configLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string)
 func init() {
 	configsLogsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	configsLogsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	// TODO: hide this flag until the api supports it
-	// configsLogsCmd.Flags().IntP("number", "n", 5, "max number of logs to display")
+	configsLogsCmd.Flags().Int("page", 1, "log page to display")
+	configsLogsCmd.Flags().IntP("number", "n", 20, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
