@@ -171,16 +171,11 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: strconv.FormatBool(includeDynamicSecrets)})
 
 	if secrets != nil {
 		params = append(params, queryParam{Key: "secrets", Value: strings.Join(secrets, ",")})
 	}
-
-	includeDynamicSecretsOption := "false"
-	if includeDynamicSecrets {
-		includeDynamicSecretsOption = "true"
-	}
-	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: includeDynamicSecretsOption})
 
 	if dynamicSecretsTTL > 0 {
 		ttlSeconds := int(dynamicSecretsTTL.Seconds())
