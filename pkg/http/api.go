@@ -233,6 +233,29 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return computed, Error{}
 }
 
+// GetSecretNames for specified project and config
+func GetSecretNames(host string, verifyTLS bool, apiKey string, project string, config string, includeDynamicSecrets bool) ([]string, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: strconv.FormatBool(includeDynamicSecrets)})
+
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets/names", params)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to fetch secret names", Code: statusCode}
+	}
+
+	var result struct {
+		Names []string `json:"names"`
+	}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return result.Names, Error{}
+}
+
 // UploadSecrets for specified project and config
 func UploadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets string) (map[string]models.ComputedSecret, Error) {
 	reqBody := map[string]interface{}{}
