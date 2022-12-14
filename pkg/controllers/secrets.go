@@ -62,20 +62,11 @@ var dangerousSecretNames = [...]string{
 func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
-	response, err := http.GetSecrets(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, nil, false, 0)
+	secretsNames, err := http.GetSecretNames(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, false)
 	if !err.IsNil() {
 		return nil, Error{Err: err.Unwrap(), Message: err.Message}
 	}
 
-	secrets, parseErr := models.ParseSecrets(response)
-	if parseErr != nil {
-		return nil, Error{Err: parseErr, Message: "Unable to parse API response"}
-	}
-
-	var secretsNames []string
-	for name := range secrets {
-		secretsNames = append(secretsNames, name)
-	}
 	sort.Strings(secretsNames)
 
 	return secretsNames, Error{}
