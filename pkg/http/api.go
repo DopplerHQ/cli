@@ -616,10 +616,13 @@ func RenameEnvironment(host string, verifyTLS bool, apiKey string, project strin
 }
 
 // GetConfigs get configs
-func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]models.ConfigInfo, Error) {
+func GetConfigs(host string, verifyTLS bool, apiKey string, project string, environment string) ([]models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "per_page", Value: "100"})
+	if environment != "" {
+		params = append(params, queryParam{Key: "environment", Value: environment})
+	}
 
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
 	if err != nil {
