@@ -32,19 +32,20 @@ import (
 // DefaultMetadataDir the directory containing metadata files
 var DefaultMetadataDir string
 
-func GenerateFallbackFileHash(token string, project string, config string) string {
+func GenerateFallbackFileHash(token string, project string, config string, format models.SecretsFormat) string {
 	parts := []string{token}
 	if project != "" && config != "" {
 		parts = append(parts, project)
 		parts = append(parts, config)
 	}
+	parts = append(parts, format.String())
 
 	return crypto.Hash(strings.Join(parts, ":"))
 }
 
 // MetadataFilePath calculates the name of the metadata file
-func MetadataFilePath(token string, project string, config string) string {
-	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config))
+func MetadataFilePath(token string, project string, config string, format models.SecretsFormat) string {
+	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config, format))
 	path := filepath.Join(DefaultMetadataDir, fileName)
 	if absPath, err := filepath.Abs(path); err == nil {
 		return absPath
