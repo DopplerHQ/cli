@@ -399,14 +399,11 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		if !fallbackOpts.enable {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
 		}
-		if nameTransformer != nil {
-			utils.HandleError(errors.New("Conflict: unable to specify --name-transformer with --fallback-only"))
-		}
 		return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
-	enableCache = enableCache && nameTransformer == nil && metadataPath != ""
+	enableCache = enableCache && metadataPath != ""
 	etag := ""
 	if enableCache {
 		etag = getCacheFileETag(metadataPath, fallbackOpts.path)
