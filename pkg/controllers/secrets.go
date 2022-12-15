@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"text/template/parse"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -83,7 +84,11 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 
 	var mountData []byte
 	if format == models.TemplateMountFormat {
-		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
+		template, err := ParseSecretsTemplate(templateBody)
+		if !err.IsNil() {
+			return "", nil, err
+		}
+		mountData = []byte(RenderSecretsTemplate(template, secrets))
 	} else if format == models.EnvMountFormat {
 		mountData = []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n"))
 	} else if format == models.JSONMountFormat {
@@ -183,7 +188,24 @@ func ReadTemplateFile(filePath string) string {
 	return string(templateFile)
 }
 
-func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) string {
+func TemplateFields(t *template.Template) []string {
+	return nodeFields(t.Tree.Root, nil)
+}
+
+func nodeFields(node parse.Node, res []string) []string {
+	if node.Type() == parse.NodeAction {
+		res = append(res, node.String())
+	}
+
+	if ln, ok := node.(*parse.ListNode); ok {
+		for _, n := range ln.Nodes {
+			res = nodeFields(n, res)
+		}
+	}
+	return res
+}
+
+func ParseSecretsTemplate(templateBody string) (*template.Template, Error) {
 	funcs := map[string]interface{}{
 		"tojson": func(value interface{}) (string, error) {
 			body, err := json.Marshal(value)
@@ -203,12 +225,15 @@ func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) st
 	}
 	template, err := template.New("Secrets").Funcs(funcs).Parse(templateBody)
 	if err != nil {
-		utils.HandleError(err, "Unable to parse template text")
+		return nil, Error{Err: err, Message: "Unable to parse template text"}
 	}
 
+	return template, Error{}
+}
+
+func RenderSecretsTemplate(template *template.Template, secretsMap map[string]string) string {
 	buffer := new(strings.Builder)
-	err = template.Execute(buffer, secretsMap)
-	if err != nil {
+	if err := template.Execute(buffer, secretsMap); err != nil {
 		utils.HandleError(err, "Unable to render template")
 	}
 

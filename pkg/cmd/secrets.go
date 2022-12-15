@@ -538,8 +538,29 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// parse template file
+	templateBody := controllers.ReadTemplateFile(args[0])
+	template, e := controllers.ParseSecretsTemplate(templateBody)
+	if !e.IsNil() {
+		utils.HandleError(e.Unwrap(), e.Message)
+	}
+
+	fetchAllSecrets := utils.GetBoolFlag(cmd, "fetch-all")
+	var secretNames []string
+	if !fetchAllSecrets {
+		// parse secrets from template
+		for _, field := range controllers.TemplateFields(template) {
+			if strings.HasPrefix(field, "{{.") && strings.HasSuffix(field, "}}") {
+				f := strings.TrimPrefix(field, "{{.")
+				f = strings.TrimSuffix(f, "}}")
+				secretNames = append(secretNames, f)
+			}
+		}
+	}
+
+	// fetch secrets
 	dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
-	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsTTL)
+	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secretNames, true, dynamicSecretsTTL)
 	if !responseErr.IsNil() {
 		utils.HandleError(responseErr.Unwrap(), responseErr.Message)
 	}
@@ -554,8 +575,8 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 		secretsMap[secret.Name] = secret.ComputedValue
 	}
 
-	templateBody := controllers.ReadTemplateFile(args[0])
-	outputString := controllers.RenderSecretsTemplate(templateBody, secretsMap)
+	// substitute secrets into template
+	outputString := controllers.RenderSecretsTemplate(template, secretsMap)
 
 	if outputFilePath != "" {
 		err = utils.WriteFile(outputFilePath, []byte(outputString), 0600)
@@ -634,6 +655,7 @@ func init() {
 	secretsSubstituteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
 	secretsSubstituteCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
+	secretsSubstituteCmd.Flags().Bool("fetch-all", false, "Fetch all config secrets. The default behavior is to only fetch the secrets parsed from the template, but this can be error-prone.")
 	secretsCmd.AddCommand(secretsSubstituteCmd)
 
 	rootCmd.AddCommand(secretsCmd)
