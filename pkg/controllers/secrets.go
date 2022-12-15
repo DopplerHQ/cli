@@ -226,22 +226,15 @@ func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) st
 	return buffer.String()
 }
 
-func SelectSecrets(secrets map[string]string, secretsToSelect []string) (map[string]string, error) {
-	selectedSecrets := utils.FilterMap(secrets, secretsToSelect)
-	nonExistentSecretNames := []string{}
-
-	for _, secretName := range secretsToSelect {
-		if _, found := selectedSecrets[secretName]; !found {
-			nonExistentSecretNames = append(nonExistentSecretNames, secretName)
+func MissingSecrets(secrets map[string]string, secretsToInclude []string) []string {
+	var missingSecrets []string
+	for _, name := range secretsToInclude {
+		if _, ok := secrets[name]; !ok {
+			missingSecrets = append(missingSecrets, name)
 		}
 	}
 
-	var err error
-	if len(nonExistentSecretNames) > 0 {
-		err = fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(nonExistentSecretNames, "\n- "))
-	}
-
-	return selectedSecrets, err
+	return missingSecrets
 }
 
 // CheckForDangerousSecretNames checks for potential dangerous secret names.

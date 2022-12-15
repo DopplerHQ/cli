@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
@@ -32,7 +33,7 @@ import (
 // DefaultMetadataDir the directory containing metadata files
 var DefaultMetadataDir string
 
-func GenerateFallbackFileHash(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer) string {
+func GenerateFallbackFileHash(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
 	parts := []string{token}
 	if project != "" && config != "" {
 		parts = append(parts, project)
@@ -42,13 +43,26 @@ func GenerateFallbackFileHash(token string, project string, config string, forma
 	if nameTransformer != nil {
 		parts = append(parts, nameTransformer.Type)
 	}
+	if len(secretNames) > 0 {
+		// ensure consistent ordering w/ dedupe and sort
+		namesMap := map[string]bool{}
+		for _, name := range secretNames {
+			namesMap[name] = true
+		}
+		var names []string
+		for name := range namesMap {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		parts = append(parts, strings.Join(names, ","))
+	}
 
 	return crypto.Hash(strings.Join(parts, ":"))
 }
 
 // MetadataFilePath calculates the name of the metadata file
-func MetadataFilePath(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer) string {
-	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config, format, nameTransformer))
+func MetadataFilePath(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
+	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config, format, nameTransformer, secretNames))
 	path := filepath.Join(DefaultMetadataDir, fileName)
 	if absPath, err := filepath.Abs(path); err == nil {
 		return absPath
