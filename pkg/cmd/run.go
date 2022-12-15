@@ -111,10 +111,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		legacyFallbackPath := ""
 		metadataPath := ""
 		if enableFallback {
-			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, exitOnWriteFailure)
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, exitOnWriteFailure)
 		}
 		if enableCache {
-			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format)
+			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer)
 		}
 
 		passphrase := getPassphrase(cmd, "passphrase", localConfig)
@@ -593,7 +593,7 @@ func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions)
 	return config.Token.Value
 }
 
-func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format models.SecretsFormat, exitOnWriteFailure bool) (string, string) {
+func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, exitOnWriteFailure bool) (string, string) {
 	fallbackPath := ""
 	legacyFallbackPath := ""
 	if cmd.Flags().Changed("fallback") {
@@ -603,7 +603,7 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 			utils.HandleError(err, "Unable to parse --fallback flag")
 		}
 	} else {
-		fallbackFileName := fmt.Sprintf(".secrets-%s.json", controllers.GenerateFallbackFileHash(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, format))
+		fallbackFileName := fmt.Sprintf(".secrets-%s.json", controllers.GenerateFallbackFileHash(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, format, nameTransformer))
 		fallbackPath = filepath.Join(defaultFallbackDir, fallbackFileName)
 		// TODO remove this when releasing CLI v4 (DPLR-435)
 		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
