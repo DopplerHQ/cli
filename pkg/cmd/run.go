@@ -230,6 +230,8 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 			}
 
+			utils.LogDebug(fmt.Sprintf("Using %s format", mountFormat))
+
 			var templateBody string
 			if shouldMountTemplate {
 				if mountFormat != models.TemplateMountFormat {
@@ -240,7 +242,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				utils.HandleError(errors.New("--mount-template must be specified when using --mount-format=template"))
 			}
 
-			absMountPath, handler, err := controllers.MountSecrets(secrets, mountFormat, mountPath, maxReads, templateBody)
+			secretsBytes, err := controllers.SecretsToBytes(secrets, mountFormat, templateBody)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
+			absMountPath, handler, err := controllers.MountSecrets(secretsBytes, mountPath, maxReads)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}

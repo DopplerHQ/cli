@@ -81,35 +81,43 @@ func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	return secretsNames, Error{}
 }
 
-func MountSecrets(secrets map[string]string, format string, mountPath string, maxReads int, templateBody string) (string, func(), Error) {
+// SecretsToBytes converts secrets to byte array
+func SecretsToBytes(secrets map[string]string, format string, templateBody string) ([]byte, Error) {
+	if format == models.TemplateMountFormat {
+		return []byte(RenderSecretsTemplate(templateBody, secrets)), Error{}
+	}
+
+	if format == models.EnvMountFormat {
+		return []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n")), Error{}
+	}
+
+	if format == models.JSONMountFormat {
+		envStr, err := json.Marshal(secrets)
+		if err != nil {
+			return nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
+		}
+		return envStr, Error{}
+	}
+
+	if format == models.DotNETJSONMountFormat {
+		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
+		if err != nil {
+			return nil, Error{Err: err, Message: "Unable to marshall .NET formatted secrets to json"}
+		}
+		return envStr, Error{}
+	}
+
+	return nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
+}
+
+// MountSecrets mounts
+func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(), Error) {
 	if !utils.SupportsNamedPipes {
 		return "", nil, Error{Err: errors.New("This OS does not support mounting a secrets file")}
 	}
 
 	if mountPath == "" {
 		return "", nil, Error{Err: errors.New("Mount path cannot be blank")}
-	}
-
-	var mountData []byte
-	if format == models.TemplateMountFormat {
-		mountData = []byte(RenderSecretsTemplate(templateBody, secrets))
-	} else if format == models.EnvMountFormat {
-		mountData = []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n"))
-	} else if format == models.JSONMountFormat {
-		envStr, err := json.Marshal(secrets)
-		if err != nil {
-			return "", nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
-		}
-		mountData = envStr
-	} else if format == models.DotNETJSONMountFormat {
-		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
-		if err != nil {
-			return "", nil, Error{Err: err, Message: "Unable to marshall .NET formatted secrets to json"}
-		}
-		mountData = envStr
-	} else {
-		return "", nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
-
 	}
 
 	// convert mount path to absolute path
@@ -138,13 +146,14 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 		}
 	}
 
-	// prevent this from blocking later operations
+	utils.LogDebug(fmt.Sprintf("Mounting secrets to %s", mountPath))
+
+	// open, write, and close the named pipe, repeatedly.
+	// run as goroutine to prevent blocking later operations
 	go func() {
 		message := "Unable to mount secrets file"
 		enableReadsLimit := maxReads > 0
 		numReads := 0
-
-		utils.LogDebug(fmt.Sprintf("Mounting secrets in %s format to %s", format, mountPath))
 
 		for {
 			if enableReadsLimit && numReads >= maxReads {
@@ -152,15 +161,16 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 				break
 			}
 
-			numReads++
-
 			// this operation blocks until the FIFO is opened for reads
 			f, err := os.OpenFile(mountPath, os.O_WRONLY, os.ModeNamedPipe) // #nosec G304
 			if err != nil {
 				utils.HandleError(err, message)
 			}
 
-			if _, err := f.Write(mountData); err != nil {
+			numReads++
+			utils.LogDebug("Secrets mount opened by reader")
+
+			if _, err := f.Write(secrets); err != nil {
 				utils.HandleError(err, message)
 			}
 
@@ -168,7 +178,8 @@ func MountSecrets(secrets map[string]string, format string, mountPath string, ma
 				utils.HandleError(err, message)
 			}
 
-			// delay before re-opening file so reader can detect an EOF
+			// delay before re-opening file so reader can detect an EOF.
+			// if we immediately re-open the file, the original reader will keep reading
 			time.Sleep(time.Millisecond * 10)
 		}
 
