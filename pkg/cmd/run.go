@@ -468,19 +468,6 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 			}
 		}
 
-		// TODO remove this when releasing CLI v4 (DPLR-435)
-		if fallbackOpts.legacyPath != "" && localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", fallbackOpts.legacyPath))
-			if err := utils.WriteFile(fallbackOpts.legacyPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
-				utils.Log("Unable to write to legacy fallback file")
-				if fallbackOpts.exitOnWriteFailure {
-					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
-				} else {
-					utils.LogDebugError(err)
-				}
-			}
-		}
-
 		if enableCache {
 			if etag := respHeaders.Get("etag"); etag != "" {
 				hash := crypto.Hash(encryptedResponse)
