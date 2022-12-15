@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -31,16 +32,19 @@ import (
 // DefaultMetadataDir the directory containing metadata files
 var DefaultMetadataDir string
 
-// MetadataFilePath calculates the name of the metadata file
-func MetadataFilePath(token string, project string, config string) string {
-	var name string
-	if project == "" && config == "" {
-		name = fmt.Sprintf("%s", token)
-	} else {
-		name = fmt.Sprintf("%s:%s:%s", token, project, config)
+func GenerateFallbackFileHash(token string, project string, config string) string {
+	parts := []string{token}
+	if project != "" && config != "" {
+		parts = append(parts, project)
+		parts = append(parts, config)
 	}
 
-	fileName := fmt.Sprintf(".metadata-%s.json", crypto.Hash(name))
+	return crypto.Hash(strings.Join(parts, ":"))
+}
+
+// MetadataFilePath calculates the name of the metadata file
+func MetadataFilePath(token string, project string, config string) string {
+	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config))
 	path := filepath.Join(DefaultMetadataDir, fileName)
 	if absPath, err := filepath.Abs(path); err == nil {
 		return absPath

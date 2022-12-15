@@ -592,19 +592,6 @@ func legacyFallbackFile(project string, config string) string {
 	return filepath.Join(defaultFallbackDir, fileName)
 }
 
-func defaultFallbackFile(token string, project string, config string) string {
-	var fileName string
-	var name string
-	if project == "" && config == "" {
-		name = fmt.Sprintf("%s", token)
-	} else {
-		name = fmt.Sprintf("%s:%s:%s", token, project, config)
-	}
-
-	fileName = fmt.Sprintf(".secrets-%s.json", crypto.Hash(name))
-	return filepath.Join(defaultFallbackDir, fileName)
-}
-
 // generate the passphrase used for encrypting a secrets file
 func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions) string {
 	if cmd.Flags().Changed(flag) {
@@ -628,7 +615,8 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWrit
 			utils.HandleError(err, "Unable to parse --fallback flag")
 		}
 	} else {
-		fallbackPath = defaultFallbackFile(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		fallbackFileName := fmt.Sprintf(".secrets-%s.json", controllers.GenerateFallbackFileHash(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value))
+		fallbackPath = filepath.Join(defaultFallbackDir, fallbackFileName)
 		// TODO remove this when releasing CLI v4 (DPLR-435)
 		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
 			// save to old path to maintain backwards compatibility
