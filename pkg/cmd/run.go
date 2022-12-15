@@ -93,6 +93,20 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
+		if cmd.Flags().Changed("only-secrets") && len(secretsToInclude) == 0 {
+			utils.HandleError(fmt.Errorf("you must specify secrets when using --only-secrets"))
+		}
+
+		nameTransformerString := cmd.Flag("name-transformer").Value.String()
+		var nameTransformer *models.SecretsNameTransformer
+		if nameTransformerString != "" {
+			nameTransformer = models.SecretsNameTransformerMap[nameTransformerString]
+			if nameTransformer == nil || !nameTransformer.EnvCompat {
+				utils.HandleError(fmt.Errorf("invalid name transformer. Valid transformers are %s", validEnvCompatNameTransformersList))
+			}
+		}
+
+		const format = models.JSON
 		fallbackPath := ""
 		legacyFallbackPath := ""
 		metadataPath := ""
@@ -114,15 +128,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				if cmd.Flags().Changed(flag) {
 					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
 				}
-			}
-		}
-
-		nameTransformerString := cmd.Flag("name-transformer").Value.String()
-		var nameTransformer *models.SecretsNameTransformer
-		if nameTransformerString != "" {
-			nameTransformer = models.SecretsNameTransformerMap[nameTransformerString]
-			if nameTransformer == nil || !nameTransformer.EnvCompat {
-				utils.HandleError(fmt.Errorf("invalid name transformer. Valid transformers are %s", validEnvCompatNameTransformersList))
 			}
 		}
 
@@ -157,10 +162,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		if cmd.Flags().Changed("only-secrets") {
-			if len(secretsToInclude) == 0 {
-				utils.HandleError(fmt.Errorf("you must specify secrets when using --only-secrets"))
-			}
-
 			var err error
 			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
 			dopplerSecrets, err = controllers.SelectSecrets(dopplerSecrets, secretsToInclude)
