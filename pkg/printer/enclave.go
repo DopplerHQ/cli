@@ -227,10 +227,11 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		secretsMap := map[string]map[string]string{}
 		for _, name := range secretsToPrint {
 			if secrets[name] != (models.ComputedSecret{}) {
-				secretsMap[name] = map[string]string{"computed": secrets[name].ComputedValue}
+				secretsMap[name] = map[string]string{"computed": secrets[name].ComputedValue, "note": secrets[name].Note}
 				if raw {
 					secretsMap[name]["raw"] = secrets[name].RawValue
 				}
+				secretsMap[name]["note"] = secrets[name].Note
 			}
 		}
 
@@ -263,6 +264,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	if raw {
 		headers = append(headers, "raw")
 	}
+	headers = append(headers, "note")
 
 	var rows [][]string
 	for _, secret := range matchedSecrets {
@@ -270,6 +272,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		if raw {
 			row = append(row, secret.RawValue)
 		}
+		row = append(row, secret.Note)
 
 		rows = append(rows, row)
 	}
