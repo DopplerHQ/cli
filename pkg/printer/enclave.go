@@ -296,6 +296,22 @@ func SecretsNames(secretsNames []string, jsonFlag bool) {
 	Table([]string{"name"}, rows, TableOptions())
 }
 
+// SecretNote print a secret's note
+func SecretNote(secret models.SecretNote, jsonFlag bool) {
+	if jsonFlag {
+		note := map[string]string{}
+		note["name"] = secret.Secret
+		note["note"] = secret.Note
+
+		JSON(note)
+		return
+	}
+
+	var rows [][]string
+	rows = append(rows, []string{secret.Secret, secret.Note})
+	Table([]string{"name", "note"}, rows, TableOptions())
+}
+
 // Settings print settings
 func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	if jsonFlag {

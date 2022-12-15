@@ -22,6 +22,12 @@ type ComputedSecret struct {
 	ComputedValue string `json:"computed"`
 }
 
+// SecretNote contains a secret and its note
+type SecretNote struct {
+	Secret string `json:"secret"`
+	Note   string `json:"note"`
+}
+
 // WorkplaceSettings workplace settings
 type WorkplaceSettings struct {
 	ID           string `json:"id"`
