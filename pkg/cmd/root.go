@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -31,6 +32,7 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
+var wg *sync.WaitGroup
 var printConfig = false
 
 var rootCmd = &cobra.Command{
@@ -41,6 +43,9 @@ var rootCmd = &cobra.Command{
 		loadFlags(cmd)
 		configuration.Setup()
 		configuration.LoadConfig()
+
+		wg.Add(1)
+		go controllers.CaptureCommand(wg, cmd.CommandPath())
 
 		if utils.Debug && utils.Silent {
 			utils.LogWarning("--silent has no effect when used with --debug")
@@ -184,7 +189,15 @@ func Execute() {
 		}
 	}()
 
-	if err := rootCmd.Execute(); err != nil {
+	// initialize the wait group before executing the command
+	wg = new(sync.WaitGroup)
+
+	err := rootCmd.Execute()
+
+	// wait for group before checking error
+	wg.Wait()
+
+	if err != nil {
 		os.Exit(1)
 	}
 }
