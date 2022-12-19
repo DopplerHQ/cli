@@ -278,13 +278,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 }
 
 // SecretsNames print secrets names
-func SecretsNames(secrets map[string]models.ComputedSecret, jsonFlag bool) {
-	var secretsNames []string
-	for name := range secrets {
-		secretsNames = append(secretsNames, name)
-	}
-	sort.Strings(secretsNames)
-
+func SecretsNames(secretsNames []string, jsonFlag bool) {
 	if jsonFlag {
 		secretsMap := map[string]map[string]string{}
 		for _, name := range secretsNames {

@@ -164,18 +164,23 @@ func secrets(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, false, 0)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
-	}
-	secrets, parseErr := models.ParseSecrets(response)
-	if parseErr != nil {
-		utils.HandleError(parseErr, "Unable to parse API response")
-	}
-
 	if onlyNames {
-		printer.SecretsNames(secrets, jsonFlag)
+		secretNames, err := http.GetSecretNames(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+
+		printer.SecretsNames(secretNames, jsonFlag)
 	} else {
+		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, false, 0)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.HandleError(parseErr, "Unable to parse API response")
+		}
+
 		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false)
 	}
 }

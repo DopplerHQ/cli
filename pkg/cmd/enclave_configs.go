@@ -92,6 +92,7 @@ var enclaveConfigsUnlockCmd = &cobra.Command{
 
 func init() {
 	enclaveConfigsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsCmd.Flags().StringP("environment", "e", "", "config environment")
 
 	enclaveConfigsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveConfigsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")

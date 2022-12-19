@@ -171,16 +171,11 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: strconv.FormatBool(includeDynamicSecrets)})
 
 	if secrets != nil {
 		params = append(params, queryParam{Key: "secrets", Value: strings.Join(secrets, ",")})
 	}
-
-	includeDynamicSecretsOption := "false"
-	if includeDynamicSecrets {
-		includeDynamicSecretsOption = "true"
-	}
-	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: includeDynamicSecretsOption})
 
 	if dynamicSecretsTTL > 0 {
 		ttlSeconds := int(dynamicSecretsTTL.Seconds())
@@ -231,6 +226,29 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	}
 
 	return computed, Error{}
+}
+
+// GetSecretNames for specified project and config
+func GetSecretNames(host string, verifyTLS bool, apiKey string, project string, config string, includeDynamicSecrets bool) ([]string, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: strconv.FormatBool(includeDynamicSecrets)})
+
+	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets/names", params)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to fetch secret names", Code: statusCode}
+	}
+
+	var result struct {
+		Names []string `json:"names"`
+	}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return result.Names, Error{}
 }
 
 // UploadSecrets for specified project and config
@@ -586,10 +604,13 @@ func RenameEnvironment(host string, verifyTLS bool, apiKey string, project strin
 }
 
 // GetConfigs get configs
-func GetConfigs(host string, verifyTLS bool, apiKey string, project string) ([]models.ConfigInfo, Error) {
+func GetConfigs(host string, verifyTLS bool, apiKey string, project string, environment string) ([]models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "per_page", Value: "100"})
+	if environment != "" {
+		params = append(params, queryParam{Key: "environment", Value: environment})
+	}
 
 	statusCode, _, response, err := GetRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs", params)
 	if err != nil {
