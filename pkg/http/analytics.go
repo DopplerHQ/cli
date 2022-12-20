@@ -31,7 +31,12 @@ func CaptureCommand(command string) ([]byte, Error) {
 
 	utils.LogDebug(fmt.Sprintf("Sending anonymous analytics payload: '%s'", body))
 
-	_, _, resp, err := PostRequest("https://cli.doppler.com", true, map[string]string{"Content-Type": "application/json"}, "/v1/analytics", nil, body)
+	url, err := generateURL(cliHostname, "/v1/analytics", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	_, _, resp, err := PutRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
 	}
@@ -47,7 +52,12 @@ func CaptureEvent(event string) ([]byte, Error) {
 
 	utils.LogDebug(fmt.Sprintf("Sending anonymous analytics payload: '%s'", body))
 
-	_, _, resp, err := PostRequest("https://cli.doppler.com", true, map[string]string{"Content-Type": "application/json"}, "/v1/analytics", nil, body)
+	url, err := generateURL(cliHostname, "/v1/analytics", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
 	}

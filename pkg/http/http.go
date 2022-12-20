@@ -50,10 +50,28 @@ var DNSResolverAddress = "1.1.1.1:53"
 var DNSResolverProto = "udp"
 var DNSResolverTimeout = time.Duration(5) * time.Second
 
+func generateURL(host string, uri string, params []queryParam) (*url.URL, error) {
+	host = strings.TrimSuffix(host, "/")
+	if !strings.HasPrefix(uri, "/") {
+		uri = fmt.Sprintf("/%s", uri)
+	}
+	url, err := url.Parse(fmt.Sprintf("%s%s", host, uri))
+	if err != nil {
+		return nil, err
+	}
+
+	values := url.Query()
+	for _, param := range params {
+		values.Add(param.Key, param.Value)
+	}
+	url.RawQuery = values.Encode()
+
+	return url, nil
+}
+
 // GetRequest perform HTTP GET
-func GetRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
-	url := fmt.Sprintf("%s%s", host, uri)
-	req, err := http.NewRequest("GET", url, nil)
+func GetRequest(url *url.URL, verifyTLS bool, headers map[string]string) (int, http.Header, []byte, error) {
+	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
 		return 0, nil, nil, err
 	}
@@ -62,7 +80,7 @@ func GetRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 		req.Header.Set(key, value)
 	}
 
-	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS)
 	if err != nil {
 		return statusCode, respHeaders, body, err
 	}
@@ -71,9 +89,8 @@ func GetRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 }
 
 // PostRequest perform HTTP POST
-func PostRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
-	url := fmt.Sprintf("%s%s", host, uri)
-	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
+func PostRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []byte) (int, http.Header, []byte, error) {
+	req, err := http.NewRequest("POST", url.String(), bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, nil, err
 	}
@@ -82,7 +99,7 @@ func PostRequest(host string, verifyTLS bool, headers map[string]string, uri str
 		req.Header.Set(key, value)
 	}
 
-	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS)
 	if err != nil {
 		return statusCode, respHeaders, body, err
 	}
@@ -91,9 +108,8 @@ func PostRequest(host string, verifyTLS bool, headers map[string]string, uri str
 }
 
 // PutRequest perform HTTP PUT
-func PutRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
-	url := fmt.Sprintf("%s%s", host, uri)
-	req, err := http.NewRequest("PUT", url, bytes.NewReader(body))
+func PutRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []byte) (int, http.Header, []byte, error) {
+	req, err := http.NewRequest("PUT", url.String(), bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, nil, err
 	}
@@ -102,7 +118,7 @@ func PutRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 		req.Header.Set(key, value)
 	}
 
-	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS)
 	if err != nil {
 		return statusCode, respHeaders, body, err
 	}
@@ -111,9 +127,8 @@ func PutRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
-	url := fmt.Sprintf("%s%s", host, uri)
-	req, err := http.NewRequest("DELETE", url, bytes.NewReader(body))
+func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []byte) (int, http.Header, []byte, error) {
+	req, err := http.NewRequest("DELETE", url.String(), bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, nil, err
 	}
@@ -122,7 +137,7 @@ func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri s
 		req.Header.Set(key, value)
 	}
 
-	statusCode, respHeaders, body, err := performRequest(req, verifyTLS, params)
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS)
 	if err != nil {
 		return statusCode, respHeaders, body, err
 	}
@@ -130,7 +145,7 @@ func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri s
 	return statusCode, respHeaders, body, nil
 }
 
-func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int, http.Header, []byte, error) {
+func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -141,13 +156,6 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		req.Header.Set("Accept", "application/json")
 	}
 	req.Header.Set("Content-Type", "application/json")
-
-	// set url query parameters
-	query := req.URL.Query()
-	for _, param := range params {
-		query.Add(param.Key, param.Value)
-	}
-	req.URL.RawQuery = query.Encode()
 
 	// close the connection after reading the response, to help prevent socket exhaustion
 	req.Close = true
