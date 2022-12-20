@@ -21,6 +21,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -31,16 +33,36 @@ import (
 // DefaultMetadataDir the directory containing metadata files
 var DefaultMetadataDir string
 
-// MetadataFilePath calculates the name of the metadata file
-func MetadataFilePath(token string, project string, config string) string {
-	var name string
-	if project == "" && config == "" {
-		name = fmt.Sprintf("%s", token)
-	} else {
-		name = fmt.Sprintf("%s:%s:%s", token, project, config)
+func GenerateFallbackFileHash(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
+	parts := []string{token}
+	if project != "" && config != "" {
+		parts = append(parts, project)
+		parts = append(parts, config)
+	}
+	parts = append(parts, format.String())
+	if nameTransformer != nil {
+		parts = append(parts, nameTransformer.Type)
+	}
+	if len(secretNames) > 0 {
+		// ensure consistent ordering w/ dedupe and sort
+		namesMap := map[string]bool{}
+		for _, name := range secretNames {
+			namesMap[name] = true
+		}
+		var names []string
+		for name := range namesMap {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		parts = append(parts, strings.Join(names, ","))
 	}
 
-	fileName := fmt.Sprintf(".metadata-%s.json", crypto.Hash(name))
+	return crypto.Hash(strings.Join(parts, ":"))
+}
+
+// MetadataFilePath calculates the name of the metadata file
+func MetadataFilePath(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
+	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config, format, nameTransformer, secretNames))
 	path := filepath.Join(DefaultMetadataDir, fileName)
 	if absPath, err := filepath.Abs(path); err == nil {
 		return absPath

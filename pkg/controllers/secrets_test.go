@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
@@ -71,56 +70,6 @@ func TestCheckForDangerousSecretNames(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-type selectSecretsTestCase struct {
-	name         string
-	origMap      map[string]string
-	keysToSelect []string
-	expectedMap  map[string]string
-	missingKeys  []string
-}
-
-func TestSelectSecrets(t *testing.T) {
-	testCases := []selectSecretsTestCase{
-		{
-			name:         "Select one exisiting secret and two nonexistent secrets",
-			origMap:      map[string]string{"MY_SECRET": "value"},
-			keysToSelect: []string{"DEV", "LOGGING", "MY_SECRET"},
-			expectedMap:  map[string]string{"MY_SECRET": "value"},
-			missingKeys:  []string{"DEV", "LOGGING"},
-		},
-		{
-			name:         "Select one secret",
-			origMap:      map[string]string{"DEV": "true", "LOGGING": "true"},
-			keysToSelect: []string{"DEV"},
-			expectedMap:  map[string]string{"DEV": "true"},
-		},
-		{
-			name:         "Select multiple secrets",
-			origMap:      map[string]string{"DEV": "true", "LOGGING": "true", "MY_SECRET": "value", "PROD": "false"},
-			keysToSelect: []string{"DEV", "LOGGING", "PROD"},
-			expectedMap:  map[string]string{"DEV": "true", "LOGGING": "true", "PROD": "false"},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			filteredSecrets, err := SelectSecrets(testCase.origMap, testCase.keysToSelect)
-
-			if testCase.missingKeys != nil {
-				assert.NotNil(t, err)
-				for _, missingKey := range testCase.missingKeys {
-					assert.Contains(t, err.Error(), missingKey)
-				}
-			} else {
-				assert.Nil(t, err)
-			}
-
-			assert.True(t, reflect.DeepEqual(filteredSecrets, testCase.expectedMap))
-		})
-
 	}
 }
 

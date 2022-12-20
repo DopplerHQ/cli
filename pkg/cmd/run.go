@@ -93,14 +93,28 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
+		if cmd.Flags().Changed("only-secrets") && len(secretsToInclude) == 0 {
+			utils.HandleError(fmt.Errorf("you must specify secrets when using --only-secrets"))
+		}
+
+		nameTransformerString := cmd.Flag("name-transformer").Value.String()
+		var nameTransformer *models.SecretsNameTransformer
+		if nameTransformerString != "" {
+			nameTransformer = models.SecretsNameTransformerMap[nameTransformerString]
+			if nameTransformer == nil || !nameTransformer.EnvCompat {
+				utils.HandleError(fmt.Errorf("invalid name transformer. Valid transformers are %s", validEnvCompatNameTransformersList))
+			}
+		}
+
+		const format = models.JSON
 		fallbackPath := ""
 		legacyFallbackPath := ""
 		metadataPath := ""
 		if enableFallback {
-			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, exitOnWriteFailure)
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, secretsToInclude, exitOnWriteFailure)
 		}
 		if enableCache {
-			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
+			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, secretsToInclude)
 		}
 
 		passphrase := getPassphrase(cmd, "passphrase", localConfig)
@@ -117,15 +131,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
-		nameTransformerString := cmd.Flag("name-transformer").Value.String()
-		var nameTransformer *models.SecretsNameTransformer
-		if nameTransformerString != "" {
-			nameTransformer = models.SecretsNameTransformerMap[nameTransformerString]
-			if nameTransformer == nil || !nameTransformer.EnvCompat {
-				utils.HandleError(fmt.Errorf("invalid name transformer. Valid transformers are %s", validEnvCompatNameTransformersList))
-			}
-		}
-
 		fallbackOpts := fallbackOptions{
 			enable:             enableFallback,
 			path:               fallbackPath,
@@ -136,7 +141,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			passphrase:         passphrase,
 		}
 		// retrieve secrets
-		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL)
+		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
 
 		mountPath := cmd.Flag("mount").Value.String()
 		mountFormatString := cmd.Flag("mount-format").Value.String()
@@ -156,16 +161,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
-		if cmd.Flags().Changed("only-secrets") {
-			if len(secretsToInclude) == 0 {
-				utils.HandleError(fmt.Errorf("you must specify secrets when using --only-secrets"))
-			}
-
-			var err error
+		if len(secretsToInclude) > 0 {
 			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
-			dopplerSecrets, err = controllers.SelectSecrets(dopplerSecrets, secretsToInclude)
-
-			if err != nil {
+			missingSecrets := controllers.MissingSecrets(dopplerSecrets, secretsToInclude)
+			if len(missingSecrets) > 0 {
+				err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
 				if noExitOnMissingIncludedSecrets {
 					utils.LogWarning(err.Error())
 				} else {
@@ -394,25 +394,22 @@ var runCleanCmd = &cobra.Command{
 }
 
 // fetchSecrets from Doppler and handle fallback file
-func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts fallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration) map[string]string {
+func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts fallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) map[string]string {
 	if fallbackOpts.exclusive {
 		if !fallbackOpts.enable {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
-		}
-		if nameTransformer != nil {
-			utils.HandleError(errors.New("Conflict: unable to specify --name-transformer with --fallback-only"))
 		}
 		return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
-	enableCache = enableCache && nameTransformer == nil && metadataPath != ""
+	enableCache = enableCache && metadataPath != ""
 	etag := ""
 	if enableCache {
 		etag = getCacheFileETag(metadataPath, fallbackOpts.path)
 	}
 
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, models.JSON, nameTransformer, etag, dynamicSecretsTTL)
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
 	if !httpErr.IsNil() {
 		if fallbackOpts.enable {
 			utils.Log("Unable to fetch secrets from the Doppler API")
@@ -464,19 +461,6 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
 			} else {
 				utils.LogDebugError(err)
-			}
-		}
-
-		// TODO remove this when releasing CLI v4 (DPLR-435)
-		if fallbackOpts.legacyPath != "" && localConfig.EnclaveProject.Value != "" && localConfig.EnclaveConfig.Value != "" {
-			utils.LogDebug(fmt.Sprintf("Writing to legacy fallback file %s", fallbackOpts.legacyPath))
-			if err := utils.WriteFile(fallbackOpts.legacyPath, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
-				utils.Log("Unable to write to legacy fallback file")
-				if fallbackOpts.exitOnWriteFailure {
-					utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
-				} else {
-					utils.LogDebugError(err)
-				}
 			}
 		}
 
@@ -592,19 +576,6 @@ func legacyFallbackFile(project string, config string) string {
 	return filepath.Join(defaultFallbackDir, fileName)
 }
 
-func defaultFallbackFile(token string, project string, config string) string {
-	var fileName string
-	var name string
-	if project == "" && config == "" {
-		name = fmt.Sprintf("%s", token)
-	} else {
-		name = fmt.Sprintf("%s:%s:%s", token, project, config)
-	}
-
-	fileName = fmt.Sprintf(".secrets-%s.json", crypto.Hash(name))
-	return filepath.Join(defaultFallbackDir, fileName)
-}
-
 // generate the passphrase used for encrypting a secrets file
 func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions) string {
 	if cmd.Flags().Changed(flag) {
@@ -618,7 +589,7 @@ func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions)
 	return config.Token.Value
 }
 
-func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWriteFailure bool) (string, string) {
+func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string, exitOnWriteFailure bool) (string, string) {
 	fallbackPath := ""
 	legacyFallbackPath := ""
 	if cmd.Flags().Changed("fallback") {
@@ -628,7 +599,8 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, exitOnWrit
 			utils.HandleError(err, "Unable to parse --fallback flag")
 		}
 	} else {
-		fallbackPath = defaultFallbackFile(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+		fallbackFileName := fmt.Sprintf(".secrets-%s.json", controllers.GenerateFallbackFileHash(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, format, nameTransformer, secretNames))
+		fallbackPath = filepath.Join(defaultFallbackDir, fallbackFileName)
 		// TODO remove this when releasing CLI v4 (DPLR-435)
 		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
 			// save to old path to maintain backwards compatibility
