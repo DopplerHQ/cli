@@ -231,6 +231,31 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return computed, Error{}
 }
 
+// SetSecretNote for specified project and config
+func SetSecretNote(host string, verifyTLS bool, apiKey string, project string, config string, secret string, note string) (models.SecretNote, Error) {
+	body, err := json.Marshal(models.SecretNote{Secret: secret, Note: note})
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Invalid secret note"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	statusCode, _, response, err := PostRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/secrets/note", params, body)
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Unable to set secret note", Code: statusCode}
+	}
+
+	var secretNote models.SecretNote
+	err = json.Unmarshal(response, &secretNote)
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return secretNote, Error{}
+}
+
 // GetSecretNames for specified project and config
 func GetSecretNames(host string, verifyTLS bool, apiKey string, project string, config string, includeDynamicSecrets bool) ([]string, Error) {
 	var params []queryParam

@@ -258,6 +258,9 @@ func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
 		if val["computed"] != nil {
 			computedSecret.ComputedValue = val["computed"].(string)
 		}
+		if val["note"] != nil {
+			computedSecret.Note = val["note"].(string)
+		}
 		computed[key] = computedSecret
 	}
 
