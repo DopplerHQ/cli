@@ -16,10 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"bufio"
-	"os"
-	"strings"
-
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
@@ -47,40 +43,23 @@ func setSecretNote(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	secret := args[0]
+	utils.RequireValue("secret", secret)
+
 	var note string
 	if len(args) > 1 {
 		note = args[1]
 	} else {
 		// read from stdin
-		hasData, e := utils.HasDataOnStdIn()
-		if e != nil {
-			utils.HandleError(e)
+		noteString, err := utils.GetStdIn()
+		if err != nil {
+			utils.HandleError(err)
 		}
-
-		// note must be supplied
-		if !hasData {
+		if noteString == nil {
 			utils.RequireValue("note", note)
 		}
 
-		var input []string
-		scanner := bufio.NewScanner(os.Stdin)
-		for {
-			if ok := scanner.Scan(); !ok {
-				if e := scanner.Err(); e != nil {
-					utils.HandleError(e, "Unable to read input from stdin")
-				}
-
-				break
-			}
-
-			s := scanner.Text()
-			input = append(input, s)
-		}
-
-		note = strings.Join(input, "\n")
+		note = *noteString
 	}
-
-	utils.RequireValue("secret", secret)
 
 	response, httpErr := http.SetSecretNote(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secret, note)
 	if !httpErr.IsNil() {

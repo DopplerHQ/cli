@@ -16,10 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -166,25 +164,15 @@ doppler configure set key=123 otherkey=456`,
 		options := map[string]string{}
 
 		if len(args) == 1 && !strings.Contains(args[0], "=") {
-			var input []string
-			scanner := bufio.NewScanner(os.Stdin)
-			// read input from stdin
-			for {
-				if ok := scanner.Scan(); !ok {
-					if e := scanner.Err(); e != nil {
-						utils.HandleError(e, "Unable to read input from stdin")
-					}
-
-					break
-				}
-
-				s := scanner.Text()
-				input = append(input, s)
+			value, err := utils.GetStdIn()
+			if err != nil {
+				utils.HandleError(err)
+			}
+			if value == nil {
+				utils.HandleError(errors.New("Unable to read input from stdin"))
 			}
 
-			key := args[0]
-			value := strings.Join(input, "\n")
-			options[key] = value
+			options[args[0]] = *value
 		} else if !strings.Contains(args[0], "=") {
 			options[args[0]] = args[1]
 		} else {
