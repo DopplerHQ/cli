@@ -37,3 +37,19 @@ func CaptureCommand(command string) ([]byte, Error) {
 	}
 	return resp, Error{}
 }
+
+func CaptureEvent(event string) ([]byte, Error) {
+	postBody := map[string]interface{}{"event": event}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to marshal event"}
+	}
+
+	utils.LogDebug(fmt.Sprintf("Sending anonymous analytics payload: '%s'", body))
+
+	_, _, resp, err := PostRequest("https://cli.doppler.com", true, map[string]string{"Content-Type": "application/json"}, "/v1/analytics", nil, body)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
+	}
+	return resp, Error{}
+}

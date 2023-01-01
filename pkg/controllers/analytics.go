@@ -19,7 +19,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 // This package collects anonymous analytics for the purpose of improving the Doppler CLI
@@ -33,6 +35,18 @@ func CaptureCommand(wg *sync.WaitGroup, command string) {
 
 	command = strings.ReplaceAll(command, " ", ".")
 	if _, err := http.CaptureCommand(command); !err.IsNil() {
+		utils.LogDebugError(err.Unwrap())
+	}
+}
+
+func CaptureEvent(wg *sync.WaitGroup, event string) {
+	defer wg.Done()
+
+	if !configuration.IsAnalyticsEnabled() {
+		return
+	}
+
+	if _, err := http.CaptureEvent(event); !err.IsNil() {
 		utils.LogDebugError(err.Unwrap())
 	}
 }
