@@ -77,10 +77,11 @@ $ apk upgrade doppler
 $ apt-get update && apt-get install -y apt-transport-https ca-certificates curl gnupg sudo
 
 # add Doppler's GPG key
-$ curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo apt-key add -
+$  curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | gpg --dearmor | sudo tee /usr/share/keyrings/doppler.gpg
 
 # add Doppler's apt repo
-$ echo "deb https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
+$ echo "deb [signed-by=/usr/share/keyrings/doppler.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
+
 
 # fetch and install latest doppler cli
 $ sudo apt-get update && sudo apt-get install doppler
