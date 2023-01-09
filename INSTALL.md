@@ -82,7 +82,6 @@ $ curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/p
 # add Doppler's apt repo
 $ echo "deb [signed-by=/usr/share/keyrings/doppler.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list
 
-
 # fetch and install latest doppler cli
 $ sudo apt-get update && sudo apt-get install doppler
 
