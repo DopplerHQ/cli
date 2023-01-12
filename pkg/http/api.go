@@ -1057,13 +1057,22 @@ func CreateConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 }
 
 // DeleteConfigServiceToken delete a config service token
-func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, slug string) Error {
-	var params []queryParam
-	params = append(params, queryParam{Key: "project", Value: project})
-	params = append(params, queryParam{Key: "config", Value: config})
-	params = append(params, queryParam{Key: "slug", Value: slug})
+func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, project string, config string, slug string, token string) Error {
+	postBody := map[string]interface{}{}
+	if slug != "" {
+		postBody["slug"] = slug
+	}
+	if token != "" {
+		postBody["token"] = token
+	}
 
-	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params, nil)
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return Error{Err: err, Message: "Invalid service token info"}
+	}
+
+	params := []queryParam{{Key: "project", Value: project}, {Key: "config", Value: config}}
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params, body)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete service token", Code: statusCode}
 	}
