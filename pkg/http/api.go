@@ -481,7 +481,7 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/projects/project", params, nil)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete project", Code: statusCode}
 	}
@@ -583,7 +583,7 @@ func DeleteEnvironment(host string, verifyTLS bool, apiKey string, project strin
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "environment", Value: environment})
 
-	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/environments/environment", params, nil)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete environment", Code: statusCode}
 	}
@@ -724,7 +724,7 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config", params, nil)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete config", Code: statusCode}
 	}
@@ -1063,7 +1063,7 @@ func DeleteConfigServiceToken(host string, verifyTLS bool, apiKey string, projec
 	params = append(params, queryParam{Key: "config", Value: config})
 	params = append(params, queryParam{Key: "slug", Value: slug})
 
-	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params)
+	statusCode, _, response, err := DeleteRequest(host, verifyTLS, apiKeyHeader(apiKey), "/v3/configs/config/tokens/token", params, nil)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to delete service token", Code: statusCode}
 	}
