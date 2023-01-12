@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
@@ -156,9 +155,9 @@ func Get(scope string) models.ScopedOptions {
 		}
 	}
 
-	if controllers.IsKeyringSecret(scopedConfig.Token.Value) {
+	if IsKeyringSecret(scopedConfig.Token.Value) {
 		utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
-		token, err := controllers.GetKeyring(scopedConfig.Token.Value)
+		token, err := GetKeyring(scopedConfig.Token.Value)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
@@ -282,9 +281,9 @@ func AllConfigs() map[string]models.FileScopedOptions {
 	for scope, scopedOptions := range configContents.Scoped {
 		options := scopedOptions
 
-		if controllers.IsKeyringSecret(options.Token) {
+		if IsKeyringSecret(options.Token) {
 			utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
-			token, err := controllers.GetKeyring(options.Token)
+			token, err := GetKeyring(options.Token)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -319,18 +318,18 @@ func Set(scope string, options map[string]string) {
 			if err != nil {
 				utils.HandleError(err, "Unable to generate UUID for keyring")
 			}
-			id := controllers.GenerateKeyringID(uuid)
+			id := GenerateKeyringID(uuid)
 
-			if controllerError := controllers.SetKeyring(id, value); !controllerError.IsNil() {
+			if controllerError := SetKeyring(id, value); !controllerError.IsNil() {
 				utils.LogDebugError(controllerError.Unwrap())
 				utils.LogDebug(controllerError.Message)
 			} else {
 				value = id
 
 				// remove old token from keyring
-				if controllers.IsKeyringSecret(previousToken) {
+				if IsKeyringSecret(previousToken) {
 					utils.LogDebug("Removing previous token from system keyring")
-					if controllerError := controllers.DeleteKeyring(previousToken); !controllerError.IsNil() {
+					if controllerError := DeleteKeyring(previousToken); !controllerError.IsNil() {
 						utils.LogDebugError(controllerError.Unwrap())
 						utils.LogDebug(controllerError.Message)
 					}
@@ -367,8 +366,8 @@ func Unset(scope string, options []string) {
 		if key == models.ConfigToken.String() {
 			previousToken := config.Token
 			// remove old token from keyring
-			if controllers.IsKeyringSecret(previousToken) {
-				if controllerError := controllers.DeleteKeyring(previousToken); !controllerError.IsNil() {
+			if IsKeyringSecret(previousToken) {
+				if controllerError := DeleteKeyring(previousToken); !controllerError.IsNil() {
 					utils.LogDebugError(controllerError.Unwrap())
 					utils.LogDebug(controllerError.Message)
 				}
@@ -390,9 +389,9 @@ func Unset(scope string, options []string) {
 func ClearConfig() {
 	// delete existing tokens from keychain
 	for _, scopedOptions := range configContents.Scoped {
-		if controllers.IsKeyringSecret(scopedOptions.Token) {
+		if IsKeyringSecret(scopedOptions.Token) {
 			utils.LogDebug(fmt.Sprintf("Removing %s from keychain", scopedOptions.Token))
-			err := controllers.DeleteKeyring(scopedOptions.Token)
+			err := DeleteKeyring(scopedOptions.Token)
 			if !err.IsNil() {
 				utils.LogDebugError(err.Unwrap())
 			}
