@@ -1,5 +1,5 @@
 /*
-Copyright © 2020 Doppler <support@doppler.com>
+Copyright © 2022 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package controllers
+package configuration
 
 import (
 	"fmt"
@@ -24,6 +24,17 @@ import (
 
 const keyringService = "doppler-cli"
 const keyringSecretPrefix = "secret"
+
+type Error struct {
+	Err     error
+	Message string
+}
+
+// Unwrap get the original error
+func (e *Error) Unwrap() error { return e.Err }
+
+// IsNil whether the error is nil
+func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
 
 // IsKeyringSecret checks whether the secret is stored in keyring
 func IsKeyringSecret(value string) bool {

@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -31,6 +32,7 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
+var wg *sync.WaitGroup
 var printConfig = false
 
 var rootCmd = &cobra.Command{
@@ -41,6 +43,9 @@ var rootCmd = &cobra.Command{
 		loadFlags(cmd)
 		configuration.Setup()
 		configuration.LoadConfig()
+
+		wg.Add(1)
+		go controllers.CaptureCommand(wg, cmd.CommandPath())
 
 		if utils.Debug && utils.Silent {
 			utils.LogWarning("--silent has no effect when used with --debug")
@@ -62,7 +67,7 @@ var rootCmd = &cobra.Command{
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
 		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
-			checkVersion(cmd.CommandPath())
+			checkVersion(wg, cmd.CommandPath())
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -73,7 +78,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func checkVersion(command string) {
+func checkVersion(wg *sync.WaitGroup, command string) {
 	// disable version checking on commands commonly used in production workflows
 	// also disable when explicitly calling 'update' command to avoid checking twice
 	disabledCommands := []string{"run", "secrets download", "update"}
@@ -94,6 +99,9 @@ func checkVersion(command string) {
 		return
 	}
 
+	wg.Add(1)
+	go controllers.CaptureEvent(wg, "VersionCheck")
+
 	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
 	if err != nil {
 		// retry on next run
@@ -107,6 +115,9 @@ func checkVersion(command string) {
 	} else if utils.IsWindows() {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
+		wg.Add(1)
+		go controllers.CaptureEvent(wg, "UpgradeAvailable")
+
 		utils.Print(color.Green.Sprintf("An update is available."))
 
 		changes, apiError := controllers.CLIChangeLog()
@@ -117,6 +128,9 @@ func checkVersion(command string) {
 
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
 		if utils.ConfirmationPrompt(prompt, true) {
+			wg.Add(1)
+			go controllers.CaptureEvent(wg, "UpgradeFromPrompt")
+
 			installCLIUpdate()
 		}
 	}
@@ -184,7 +198,15 @@ func Execute() {
 		}
 	}()
 
-	if err := rootCmd.Execute(); err != nil {
+	// initialize the wait group before executing the command
+	wg = new(sync.WaitGroup)
+
+	err := rootCmd.Execute()
+
+	// wait for group before checking error
+	wg.Wait()
+
+	if err != nil {
 		os.Exit(1)
 	}
 }
