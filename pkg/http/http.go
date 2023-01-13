@@ -111,9 +111,9 @@ func PutRequest(host string, verifyTLS bool, headers map[string]string, uri stri
 }
 
 // DeleteRequest perform HTTP DELETE
-func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam) (int, http.Header, []byte, error) {
+func DeleteRequest(host string, verifyTLS bool, headers map[string]string, uri string, params []queryParam, body []byte) (int, http.Header, []byte, error) {
 	url := fmt.Sprintf("%s%s", host, uri)
-	req, err := http.NewRequest("DELETE", url, nil)
+	req, err := http.NewRequest("DELETE", url, bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, nil, err
 	}

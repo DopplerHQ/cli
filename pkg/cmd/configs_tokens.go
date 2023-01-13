@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -50,7 +51,7 @@ var configsTokensCreateCmd = &cobra.Command{
 }
 
 var configsTokensRevokeCmd = &cobra.Command{
-	Use:               "revoke [slug]",
+	Use:               "revoke [slug|token]",
 	Aliases:           []string{"delete"},
 	Short:             "Revoke a service token from a config",
 	Args:              cobra.MaximumNArgs(1),
@@ -137,13 +138,30 @@ func revokeConfigsTokens(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	slug := cmd.Flag("slug").Value.String()
-	if len(args) > 0 {
-		slug = args[0]
-	}
-	utils.RequireValue("slug", slug)
+	slugFlagUsed := cmd.Flag("slug").Value.String() != ""
 
-	err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug)
+	// users can revoke tokens via slug or via the raw token value (i.e. the secret)
+	var slug string
+	var token string
+	if len(args) > 0 {
+		if slugFlagUsed {
+			utils.LogWarning("slug flag is ignored when arg is specified")
+		}
+
+		value := args[0]
+		isSlug := utils.IsValidUUID(value)
+		if isSlug {
+			slug = value
+		} else {
+			token = value
+		}
+	} else if slugFlagUsed {
+		slug = cmd.Flag("slug").Value.String()
+	}
+
+	utils.RequireValue("slug or token", fmt.Sprintf("%s%s", slug, token))
+
+	err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug, token)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
