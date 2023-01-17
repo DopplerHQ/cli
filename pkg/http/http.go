@@ -207,6 +207,8 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 		Proxy:             http.ProxyURL(proxyUrl),
 	}
 
+	utils.LogDebug(fmt.Sprintf("Performing HTTP %s to %s", req.Method, req.URL))
+
 	startTime := time.Now()
 	var response *http.Response
 	response = nil
@@ -231,7 +233,6 @@ func performRequest(req *http.Request, verifyTLS bool, params []queryParam) (int
 
 		response = resp
 
-		utils.LogDebug(fmt.Sprintf("Performing HTTP %s to %s", req.Method, req.URL))
 		if requestID := resp.Header.Get("x-request-id"); requestID != "" {
 			utils.LogDebug(fmt.Sprintf("Request ID %s", requestID))
 		}
