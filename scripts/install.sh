@@ -6,6 +6,7 @@ set -e
 # 1 general
 # 2 insufficient perms
 # 3 gnupg package not installed
+# 4 ~/.gnupg ownership issue
 
 DOPPLER_DOMAIN="cli.doppler.com"
 DEBUG=0
@@ -464,6 +465,11 @@ else
 fi
 
 log "Verifying signature"
+# verify we can read ~/.gnupg so that we can provide a helpful error message
+if [ -d ~/.gnupg ]; then
+  # Run sudo chown -r $(whoami) ~/.gnupg to fix this
+  ls -l ~/.gnupg > /dev/null 2>&1 || (log "Failed to read ~/.gnupg. Please verify the directory's ownership, or run 'sudo chown -R $(whoami) ~/.gnupg' to fix this." && clean_exit 4)
+fi
 gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
 log_debug "Signature successfully verified!"
 

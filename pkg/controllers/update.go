@@ -74,10 +74,13 @@ func RunInstallScript() (bool, string, Error) {
 		message := "Unable to install the latest Doppler CLI"
 		permissionError := exitCode == 2 || strings.Contains(strOut, "dpkg: error: requested operation requires superuser privilege")
 		gnupgError := exitCode == 3
+		gnupgOwnershipError := exitCode == 4
 		if permissionError {
 			message = "Error: update failed due to improper permissions\nPlease re-run with `sudo` or as an admin"
 		} else if gnupgError {
 			message = "Error: Unable to find gpg binary for signature verification\nYou can resolve this error by installing your system's gnupg package"
+		} else if gnupgOwnershipError {
+			message = "Error: Unable to read ~/.gnupg directory\nYou can resolve this error by running 'sudo chown -R $(whoami) ~/.gnupg'"
 		}
 
 		return false, "", Error{Err: err, Message: message}
