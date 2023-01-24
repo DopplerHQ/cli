@@ -25,10 +25,18 @@ import (
 	"github.com/DopplerHQ/cli/pkg/version"
 )
 
+const cliHostname = "https://cli.doppler.com"
+
 func getLatestVersion() (string, error) {
 	origTimeout := TimeoutDuration
 	TimeoutDuration = 2 * time.Second
-	_, _, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/version", nil)
+
+	url, err := generateURL(cliHostname, "/version", nil)
+	if err != nil {
+		return "", err
+	}
+
+	_, _, resp, err := GetRequest(url, true, nil)
 	TimeoutDuration = origTimeout
 	if err != nil {
 		return "", err
@@ -63,7 +71,12 @@ func GetLatestCLIVersion() (models.VersionCheck, error) {
 
 // GetCLIInstallScript from cli.doppler.com
 func GetCLIInstallScript() ([]byte, Error) {
-	_, _, resp, err := GetRequest("https://cli.doppler.com", true, nil, "/install.sh", nil)
+	url, err := generateURL(cliHostname, "/install.sh", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	_, _, resp, err := GetRequest(url, true, nil)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to download CLI install script"}
 	}
@@ -72,8 +85,13 @@ func GetCLIInstallScript() ([]byte, Error) {
 
 // GetChangelog of CLI releases
 func GetChangelog() ([]byte, Error) {
+	url, err := generateURL(cliHostname, "/changes", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
 	headers := map[string]string{"Accept": "application/json"}
-	_, _, resp, err := GetRequest("https://cli.doppler.com", true, headers, "/changes", nil)
+	_, _, resp, err := GetRequest(url, true, headers)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to fetch changelog"}
 	}
