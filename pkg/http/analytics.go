@@ -36,7 +36,7 @@ func CaptureCommand(command string) ([]byte, Error) {
 		return nil, Error{Err: err, Message: "Unable to generate url"}
 	}
 
-	_, _, resp, err := PutRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
+	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
 	}
