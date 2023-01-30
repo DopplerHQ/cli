@@ -27,6 +27,11 @@ import (
 // This package collects anonymous analytics for the purpose of improving the Doppler CLI
 
 func CaptureCommand(command string) {
+	global.WaitGroup.Add(1)
+	go captureCommand(command)
+}
+
+func captureCommand(command string) {
 	defer global.WaitGroup.Done()
 
 	if !configuration.IsAnalyticsEnabled() {
@@ -40,6 +45,11 @@ func CaptureCommand(command string) {
 }
 
 func CaptureEvent(event string, metadata map[string]interface{}) {
+	global.WaitGroup.Add(1)
+	go captureEvent(event, metadata)
+}
+
+func captureEvent(event string, metadata map[string]interface{}) {
 	defer global.WaitGroup.Done()
 
 	if !configuration.IsAnalyticsEnabled() {

@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DopplerHQ/cli/pkg/global"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -53,8 +52,7 @@ func RunInstallScript() (bool, string, Error) {
 	}
 	fetchScriptDuration := time.Now().Sub(startTime).Milliseconds()
 
-	global.WaitGroup.Add(1)
-	go CaptureEvent("InstallScriptDownloaded", map[string]interface{}{"durationMs": fetchScriptDuration})
+	CaptureEvent("InstallScriptDownloaded", map[string]interface{}{"durationMs": fetchScriptDuration})
 
 	// write script to temp file
 	tmpFile, err := utils.WriteTempFile("install.sh", script, 0555)
@@ -82,8 +80,7 @@ func RunInstallScript() (bool, string, Error) {
 			exitCode = exitError.ExitCode()
 		}
 
-		global.WaitGroup.Add(1)
-		go CaptureEvent("InstallScriptFailed", map[string]interface{}{"durationMs": executeDuration, "exitCode": exitCode})
+		CaptureEvent("InstallScriptFailed", map[string]interface{}{"durationMs": executeDuration, "exitCode": exitCode})
 
 		message := "Unable to install the latest Doppler CLI"
 		permissionError := exitCode == 2 || strings.Contains(strOut, "dpkg: error: requested operation requires superuser privilege")
@@ -101,8 +98,7 @@ func RunInstallScript() (bool, string, Error) {
 	}
 
 	// only capture when install is successful
-	global.WaitGroup.Add(1)
-	go CaptureEvent("InstallScriptCompleted", map[string]interface{}{"durationMs": executeDuration})
+	CaptureEvent("InstallScriptCompleted", map[string]interface{}{"durationMs": executeDuration})
 
 	// find installed version within script output
 	// Ex: `Installed Doppler CLI v3.7.1`

@@ -44,8 +44,7 @@ var rootCmd = &cobra.Command{
 		configuration.Setup()
 		configuration.LoadConfig()
 
-		global.WaitGroup.Add(1)
-		go controllers.CaptureCommand(cmd.CommandPath())
+		controllers.CaptureCommand(cmd.CommandPath())
 
 		if utils.Debug && utils.Silent {
 			utils.LogWarning("--silent has no effect when used with --debug")
@@ -99,8 +98,7 @@ func checkVersion(command string) {
 		return
 	}
 
-	global.WaitGroup.Add(1)
-	go controllers.CaptureEvent("VersionCheck", nil)
+	controllers.CaptureEvent("VersionCheck", nil)
 
 	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
 	if err != nil {
@@ -115,8 +113,7 @@ func checkVersion(command string) {
 	} else if utils.IsWindows() {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
-		global.WaitGroup.Add(1)
-		go controllers.CaptureEvent("UpgradeAvailable", nil)
+		controllers.CaptureEvent("UpgradeAvailable", nil)
 
 		utils.Print(color.Green.Sprintf("An update is available."))
 
@@ -128,8 +125,7 @@ func checkVersion(command string) {
 
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
 		if utils.ConfirmationPrompt(prompt, true) {
-			global.WaitGroup.Add(1)
-			go controllers.CaptureEvent("UpgradeFromPrompt", nil)
+			controllers.CaptureEvent("UpgradeFromPrompt", nil)
 
 			installCLIUpdate()
 		}
