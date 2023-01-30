@@ -23,6 +23,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
+	"github.com/DopplerHQ/cli/pkg/global"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -32,7 +33,6 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
-var wg *sync.WaitGroup
 var printConfig = false
 
 var rootCmd = &cobra.Command{
@@ -44,8 +44,8 @@ var rootCmd = &cobra.Command{
 		configuration.Setup()
 		configuration.LoadConfig()
 
-		wg.Add(1)
-		go controllers.CaptureCommand(wg, cmd.CommandPath())
+		global.WaitGroup.Add(1)
+		go controllers.CaptureCommand(cmd.CommandPath())
 
 		if utils.Debug && utils.Silent {
 			utils.LogWarning("--silent has no effect when used with --debug")
@@ -67,7 +67,7 @@ var rootCmd = &cobra.Command{
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
 		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
-			checkVersion(wg, cmd.CommandPath())
+			checkVersion(cmd.CommandPath())
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -78,7 +78,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func checkVersion(wg *sync.WaitGroup, command string) {
+func checkVersion(command string) {
 	// disable version checking on commands commonly used in production workflows
 	// also disable when explicitly calling 'update' command to avoid checking twice
 	disabledCommands := []string{"run", "secrets download", "update"}
@@ -99,8 +99,8 @@ func checkVersion(wg *sync.WaitGroup, command string) {
 		return
 	}
 
-	wg.Add(1)
-	go controllers.CaptureEvent(wg, "VersionCheck")
+	global.WaitGroup.Add(1)
+	go controllers.CaptureEvent("VersionCheck")
 
 	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
 	if err != nil {
@@ -115,8 +115,8 @@ func checkVersion(wg *sync.WaitGroup, command string) {
 	} else if utils.IsWindows() {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
-		wg.Add(1)
-		go controllers.CaptureEvent(wg, "UpgradeAvailable")
+		global.WaitGroup.Add(1)
+		go controllers.CaptureEvent("UpgradeAvailable")
 
 		utils.Print(color.Green.Sprintf("An update is available."))
 
@@ -128,8 +128,8 @@ func checkVersion(wg *sync.WaitGroup, command string) {
 
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
 		if utils.ConfirmationPrompt(prompt, true) {
-			wg.Add(1)
-			go controllers.CaptureEvent(wg, "UpgradeFromPrompt")
+			global.WaitGroup.Add(1)
+			go controllers.CaptureEvent("UpgradeFromPrompt")
 
 			installCLIUpdate()
 		}
@@ -199,12 +199,12 @@ func Execute() {
 	}()
 
 	// initialize the wait group before executing the command
-	wg = new(sync.WaitGroup)
+	global.WaitGroup = new(sync.WaitGroup)
 
 	err := rootCmd.Execute()
 
 	// wait for group before checking error
-	wg.Wait()
+	global.WaitGroup.Wait()
 
 	if err != nil {
 		os.Exit(1)

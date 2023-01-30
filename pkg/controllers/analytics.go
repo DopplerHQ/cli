@@ -17,17 +17,17 @@ package controllers
 
 import (
 	"strings"
-	"sync"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/global"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 // This package collects anonymous analytics for the purpose of improving the Doppler CLI
 
-func CaptureCommand(wg *sync.WaitGroup, command string) {
-	defer wg.Done()
+func CaptureCommand(command string) {
+	defer global.WaitGroup.Done()
 
 	if !configuration.IsAnalyticsEnabled() {
 		return
@@ -39,8 +39,8 @@ func CaptureCommand(wg *sync.WaitGroup, command string) {
 	}
 }
 
-func CaptureEvent(wg *sync.WaitGroup, event string) {
-	defer wg.Done()
+func CaptureEvent(event string) {
+	defer global.WaitGroup.Done()
 
 	if !configuration.IsAnalyticsEnabled() {
 		return
