@@ -43,8 +43,11 @@ func CaptureCommand(command string) ([]byte, Error) {
 	return resp, Error{}
 }
 
-func CaptureEvent(event string) ([]byte, Error) {
+func CaptureEvent(event string, metadata map[string]interface{}) ([]byte, Error) {
 	postBody := map[string]interface{}{"event": event}
+	if metadata != nil {
+		postBody["metadata"] = metadata
+	}
 	body, err := json.Marshal(postBody)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to marshal event"}

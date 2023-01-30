@@ -39,14 +39,14 @@ func CaptureCommand(command string) {
 	}
 }
 
-func CaptureEvent(event string) {
+func CaptureEvent(event string, metadata map[string]interface{}) {
 	defer global.WaitGroup.Done()
 
 	if !configuration.IsAnalyticsEnabled() {
 		return
 	}
 
-	if _, err := http.CaptureEvent(event); !err.IsNil() {
+	if _, err := http.CaptureEvent(event, metadata); !err.IsNil() {
 		utils.LogDebugError(err.Unwrap())
 	}
 }

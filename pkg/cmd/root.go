@@ -100,7 +100,7 @@ func checkVersion(command string) {
 	}
 
 	global.WaitGroup.Add(1)
-	go controllers.CaptureEvent("VersionCheck")
+	go controllers.CaptureEvent("VersionCheck", nil)
 
 	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
 	if err != nil {
@@ -116,7 +116,7 @@ func checkVersion(command string) {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 	} else {
 		global.WaitGroup.Add(1)
-		go controllers.CaptureEvent("UpgradeAvailable")
+		go controllers.CaptureEvent("UpgradeAvailable", nil)
 
 		utils.Print(color.Green.Sprintf("An update is available."))
 
@@ -129,7 +129,7 @@ func checkVersion(command string) {
 		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
 		if utils.ConfirmationPrompt(prompt, true) {
 			global.WaitGroup.Add(1)
-			go controllers.CaptureEvent("UpgradeFromPrompt")
+			go controllers.CaptureEvent("UpgradeFromPrompt", nil)
 
 			installCLIUpdate()
 		}
