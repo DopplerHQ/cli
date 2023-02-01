@@ -24,7 +24,7 @@ import (
 func GetConfigs(config models.ScopedOptions) ([]models.ConfigInfo, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
-	configs, err := http.GetConfigs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, "")
+	configs, err := http.GetConfigs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, "", 1, 100)
 	if !err.IsNil() {
 		return nil, Error{Err: err.Unwrap(), Message: err.Message}
 	}

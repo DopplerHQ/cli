@@ -93,11 +93,13 @@ var configsCloneCmd = &cobra.Command{
 func configs(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	environment := cmd.Flag("environment").Value.String()
+	number := utils.GetIntFlag(cmd, "number", 16)
+	page := utils.GetIntFlag(cmd, "page", 16)
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment)
+	configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment, page, number)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -182,7 +184,7 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, "")
+			configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, "", 1, 100)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -354,6 +356,8 @@ func unlockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete 
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	configsCmd.Flags().StringP("environment", "e", "", "config environment")
+	configsCmd.Flags().IntP("number", "n", 100, "max number of configs to display")
+	configsCmd.Flags().Int("page", 1, "page to display")
 
 	configsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	configsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
