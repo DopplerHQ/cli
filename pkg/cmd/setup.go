@@ -91,7 +91,7 @@ func setup(cmd *cobra.Command, args []string) {
 			break
 		}
 
-		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
 		if !httpErr.IsNil() {
 			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 		}
