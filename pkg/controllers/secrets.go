@@ -74,6 +74,17 @@ func GetSecrets(config models.ScopedOptions) (map[string]models.ComputedSecret, 
 	return secrets, Error{}
 }
 
+func SetSecrets(config models.ScopedOptions, changeRequests []models.ChangeRequest) (map[string]models.ComputedSecret, Error) {
+	utils.RequireValue("token", config.Token.Value)
+
+	secrets, err := http.SetSecrets(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, nil, changeRequests)
+	if !err.IsNil() {
+		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	}
+
+	return secrets, Error{}
+}
+
 func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
