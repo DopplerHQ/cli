@@ -18,6 +18,9 @@ package utils
 // Debug whether we're running in debug mode
 var Debug = false
 
+// DebugTUI whether to log TUI debug messages to $config_dir/tui.log
+var DebugTUI = false
+
 // Silent whether we should display Info messages
 var Silent = false
 
