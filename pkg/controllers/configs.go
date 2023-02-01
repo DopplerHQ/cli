@@ -78,7 +78,7 @@ func GetConfigTokenSlugs(config models.ScopedOptions) ([]string, Error) {
 func GetEnvironmentIDs(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
-	environments, err := http.GetEnvironments(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value)
+	environments, err := http.GetEnvironments(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, 1, 100)
 	if !err.IsNil() {
 		return nil, Error{Err: err.Unwrap(), Message: err.Message}
 	}

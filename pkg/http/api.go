@@ -581,9 +581,11 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 }
 
 // GetEnvironments get environments
-func GetEnvironments(host string, verifyTLS bool, apiKey string, project string) ([]models.EnvironmentInfo, Error) {
+func GetEnvironments(host string, verifyTLS bool, apiKey string, project string, page int, number int) ([]models.EnvironmentInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "page", Value: strconv.Itoa(page)})
+	params = append(params, queryParam{Key: "per_page", Value: strconv.Itoa(number)})
 
 	url, err := generateURL(host, "/v3/environments", params)
 	if err != nil {

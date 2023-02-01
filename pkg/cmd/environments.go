@@ -68,10 +68,12 @@ var environmentsRenameCmd = &cobra.Command{
 func environments(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
+	number := utils.GetIntFlag(cmd, "number", 16)
+	page := utils.GetIntFlag(cmd, "page", 16)
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
+	info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, page, number)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -146,7 +148,7 @@ func deleteEnvironment(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value)
+			info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, 1, 100)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -213,5 +215,7 @@ func init() {
 	environmentsCmd.AddCommand(environmentsRenameCmd)
 
 	environmentsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsCmd.Flags().IntP("number", "n", 100, "max number of environments to display")
+	environmentsCmd.Flags().Int("page", 1, "page to display")
 	rootCmd.AddCommand(environmentsCmd)
 }
