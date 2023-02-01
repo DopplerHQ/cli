@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
@@ -43,11 +44,15 @@ func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
 
 // RunInstallScript downloads and executes the CLI install scriptm, returning true if an update was installed
 func RunInstallScript() (bool, string, Error) {
+	startTime := time.Now()
 	// download script
 	script, apiErr := http.GetCLIInstallScript()
 	if !apiErr.IsNil() {
 		return false, "", Error{Err: apiErr.Unwrap(), Message: apiErr.Message}
 	}
+	fetchScriptDuration := time.Now().Sub(startTime).Milliseconds()
+
+	CaptureEvent("InstallScriptDownloaded", map[string]interface{}{"durationMs": fetchScriptDuration})
 
 	// write script to temp file
 	tmpFile, err := utils.WriteTempFile("install.sh", script, 0555)
@@ -57,7 +62,11 @@ func RunInstallScript() (bool, string, Error) {
 	// execute script
 	utils.LogDebug("Executing install script")
 	command := []string{tmpFile, "--debug"}
+
+	startTime = time.Now()
 	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+	executeDuration := time.Now().Sub(startTime).Milliseconds()
+
 	strOut := string(out)
 	// log output before checking error
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
@@ -70,6 +79,8 @@ func RunInstallScript() (bool, string, Error) {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			exitCode = exitError.ExitCode()
 		}
+
+		CaptureEvent("InstallScriptFailed", map[string]interface{}{"durationMs": executeDuration, "exitCode": exitCode})
 
 		message := "Unable to install the latest Doppler CLI"
 		permissionError := exitCode == 2 || strings.Contains(strOut, "dpkg: error: requested operation requires superuser privilege")
@@ -85,6 +96,9 @@ func RunInstallScript() (bool, string, Error) {
 
 		return false, "", Error{Err: err, Message: message}
 	}
+
+	// only capture when install is successful
+	CaptureEvent("InstallScriptCompleted", map[string]interface{}{"durationMs": executeDuration})
 
 	// find installed version within script output
 	// Ex: `Installed Doppler CLI v3.7.1`
