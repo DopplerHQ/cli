@@ -422,9 +422,10 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 }
 
 // GetProjects get projects
-func GetProjects(host string, verifyTLS bool, apiKey string) ([]models.ProjectInfo, Error) {
+func GetProjects(host string, verifyTLS bool, apiKey string, page int, number int) ([]models.ProjectInfo, Error) {
 	var params []queryParam
-	params = append(params, queryParam{Key: "per_page", Value: "100"})
+	params = append(params, queryParam{Key: "page", Value: strconv.Itoa(page)})
+	params = append(params, queryParam{Key: "per_page", Value: strconv.Itoa(number)})
 
 	url, err := generateURL(host, "/v3/projects", params)
 	if err != nil {
@@ -580,9 +581,11 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 }
 
 // GetEnvironments get environments
-func GetEnvironments(host string, verifyTLS bool, apiKey string, project string) ([]models.EnvironmentInfo, Error) {
+func GetEnvironments(host string, verifyTLS bool, apiKey string, project string, page int, number int) ([]models.EnvironmentInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "page", Value: strconv.Itoa(page)})
+	params = append(params, queryParam{Key: "per_page", Value: strconv.Itoa(number)})
 
 	url, err := generateURL(host, "/v3/environments", params)
 	if err != nil {
@@ -741,10 +744,11 @@ func RenameEnvironment(host string, verifyTLS bool, apiKey string, project strin
 }
 
 // GetConfigs get configs
-func GetConfigs(host string, verifyTLS bool, apiKey string, project string, environment string) ([]models.ConfigInfo, Error) {
+func GetConfigs(host string, verifyTLS bool, apiKey string, project string, environment string, page int, number int) ([]models.ConfigInfo, Error) {
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
-	params = append(params, queryParam{Key: "per_page", Value: "100"})
+	params = append(params, queryParam{Key: "per_page", Value: strconv.Itoa(number)})
+	params = append(params, queryParam{Key: "page", Value: strconv.Itoa(page)})
 	if environment != "" {
 		params = append(params, queryParam{Key: "environment", Value: environment})
 	}

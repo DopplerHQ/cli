@@ -71,6 +71,9 @@ var enclaveProjectsUpdateCmd = &cobra.Command{
 }
 
 func init() {
+	enclaveProjectsCmd.Flags().IntP("number", "n", 100, "max number of projects to display")
+	enclaveProjectsCmd.Flags().Int("page", 1, "page to display")
+
 	enclaveProjectsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	enclaveProjectsCmd.AddCommand(enclaveProjectsGetCmd)
 

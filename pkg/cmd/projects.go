@@ -68,10 +68,12 @@ var projectsUpdateCmd = &cobra.Command{
 func projects(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	localConfig := configuration.LocalConfig(cmd)
+	number := utils.GetIntFlag(cmd, "number", 16)
+	page := utils.GetIntFlag(cmd, "page", 16)
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+	info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, page, number)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
@@ -145,7 +147,7 @@ func deleteProjects(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
+			info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
@@ -206,6 +208,9 @@ func projectIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) (
 }
 
 func init() {
+	projectsCmd.Flags().IntP("number", "n", 100, "max number of projects to display")
+	projectsCmd.Flags().Int("page", 1, "page to display")
+
 	projectsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	projectsCmd.AddCommand(projectsGetCmd)
 

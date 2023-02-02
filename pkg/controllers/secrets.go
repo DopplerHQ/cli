@@ -85,7 +85,7 @@ func SecretsToBytes(secrets map[string]string, format string, templateBody strin
 	if format == models.JSONMountFormat {
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshall secrets to json"}
+			return nil, Error{Err: err, Message: "Unable to marshal secrets to json"}
 		}
 		return envStr, Error{}
 	}
@@ -93,7 +93,7 @@ func SecretsToBytes(secrets map[string]string, format string, templateBody strin
 	if format == models.DotNETJSONMountFormat {
 		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
 		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshall .NET formatted secrets to json"}
+			return nil, Error{Err: err, Message: "Unable to marshal .NET formatted secrets to json"}
 		}
 		return envStr, Error{}
 	}
