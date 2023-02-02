@@ -28,3 +28,6 @@ scanner_configs:
         forbidden: true
         exclude:
           - pkg/utils/io.go
+  GoVersionScanner:
+    error:
+      min_version: '1.18.0'
