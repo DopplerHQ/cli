@@ -38,9 +38,17 @@ builds:
 
 archives:
 -
-  replacements:
-    darwin: macOS
-    386: i386
+  rlcp: true
+  name_template: >-
+    {{ .ProjectName }}_
+    {{- .Version }}_
+    {{- if eq .Os "darwin" }}macOS
+    {{- else }}{{ .Os }}{{ end }}_
+    {{- if eq .Arch "386" }}i386
+    {{- else }}{{ .Arch }}{{ end }}
+    {{- with .Arm }}v{{ . }}{{ end }}
+    {{- with .Mips }}_{{ . }}{{ end }}
+    {{- if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
   format_overrides:
     - goos: windows
       format: zip
@@ -66,6 +74,7 @@ checksum:
   algorithm: sha256
 
 source:
+  rlcp: true
   enabled: true
   name_template: '{{ .ProjectName }}_{{ .Version }}_src'
   format: 'tar.gz'
@@ -150,8 +159,15 @@ scoop:
 
 nfpms:
   - id: doppler
-    replacements:
-      386: i386
+    file_name_template: >-
+      {{ .PackageName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- with .Arm }}v{{ . }}{{ end }}
+      {{- with .Mips }}_{{ . }}{{ end }}
+      {{- if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
     homepage: "https://doppler.com"
     maintainer: Doppler Bot <bot@doppler.com>
     description: "The official Doppler CLI for managing your secrets"
