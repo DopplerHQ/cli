@@ -582,6 +582,14 @@ func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions)
 		return cmd.Flag(flag).Value.String()
 	}
 
+	if configuration.CanReadEnv {
+		passphrase := os.Getenv("DOPPLER_PASSPHRASE")
+		if passphrase != "" {
+			utils.Print(valueFromEnvironmentNotice("DOPPLER_PASSPHRASE"))
+			return passphrase
+		}
+	}
+
 	if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
 		return fmt.Sprintf("%s:%s:%s", config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
 	}
