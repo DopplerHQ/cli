@@ -150,6 +150,15 @@ func loadFlags(cmd *cobra.Command) {
 	configuration.Scope = normalizedScope
 
 	configuration.CanReadEnv = !utils.GetBoolFlag(cmd, "no-read-env")
+
+	// User Config Dir
+	if configuration.CanReadEnv {
+		userConfigDir := os.Getenv("DOPPLER_CONFIG_DIR")
+		if userConfigDir != "" {
+			utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG_DIR"))
+			configuration.SetConfigDir(userConfigDir)
+		}
+	}
 	configuration.SetConfigDir(utils.GetPathFlagIfChanged(cmd, "config-dir", configuration.UserConfigDir))
 	configuration.UserConfigFile = utils.GetPathFlagIfChanged(cmd, "configuration", configuration.UserConfigFile)
 	http.UseTimeout = !utils.GetBoolFlag(cmd, "no-timeout")

@@ -58,6 +58,7 @@ and your config file. Flags have the highest priority; config file has the least
 		jsonFlag := utils.OutputJSON
 
 		utils.Print(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
+		utils.Print(fmt.Sprintf("%s %s", color.Green.Render("Configuration directory:"), configuration.UserConfigDir))
 
 		config := configuration.LocalConfig(cmd)
 		printer.ScopedConfigSource(config, jsonFlag, true, false)
