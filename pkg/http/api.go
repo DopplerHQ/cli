@@ -685,7 +685,7 @@ func DeleteEnvironment(host string, verifyTLS bool, apiKey string, project strin
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "environment", Value: environment})
 
-	url, err := generateURL(host, "/v3/environments/environment", nil)
+	url, err := generateURL(host, "/v3/environments/environment", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to generate url"}
 	}
@@ -852,7 +852,7 @@ func DeleteConfig(host string, verifyTLS bool, apiKey string, project string, co
 	params = append(params, queryParam{Key: "project", Value: project})
 	params = append(params, queryParam{Key: "config", Value: config})
 
-	url, err := generateURL(host, "/v3/configs/config", nil)
+	url, err := generateURL(host, "/v3/configs/config", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to generate url"}
 	}
