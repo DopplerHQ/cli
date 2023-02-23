@@ -66,6 +66,17 @@ beforeEach
 
 beforeEach
 
+# test 'secrets download' respects custom passphrase from environment
+DOPPLER_PASSPHRASE=123456 "$DOPPLER_BINARY" secrets download --no-file > /dev/null
+# ensure default passphrase fails
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --passphrase flag is not respected (1)" && exit 1)
+# test decryption with custom passphrase flag
+"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback-passphrase=123456 > /dev/null || (echo "ERROR: --passphrase flag is not respected (2)" && exit 1)
+# test decryption with custom passphrase from environment
+DOPPLER_PASSPHRASE=123456 "$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null || (echo "ERROR: --passphrase flag is not respected (3)" && exit 1)
+
+beforeEach
+
 # test 'secrets download' respects --no-exit-on-write-failure
 mkdir ./temp-fallback
 chmod 500 ./temp-fallback

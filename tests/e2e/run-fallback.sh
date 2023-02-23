@@ -66,6 +66,17 @@ beforeEach
 
 beforeEach
 
+# test 'run' respects custom passphrase from environment
+DOPPLER_PASSPHRASE=123456 "$DOPPLER_BINARY" run -- echo -n > /dev/null
+# ensure default passphrase fails
+"$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null 2>&1 && (echo "ERROR: --passphrase flag is not respected (1)" && exit 1)
+# test decryption with custom passphrase flag
+"$DOPPLER_BINARY" run --fallback-only --passphrase=123456 -- echo -n > /dev/null || (echo "ERROR: --passphrase flag is not respected (2)" && exit 1)
+# test decryption with custom passphrase from environment
+DOPPLER_PASSPHRASE=123456 "$DOPPLER_BINARY" run --fallback-only -- echo -n > /dev/null || (echo "ERROR: --passphrase flag is not respected (3)" && exit 1)
+
+beforeEach
+
 # test 'run' respects --no-exit-on-write-failure
 mkdir ./temp-fallback
 chmod 500 ./temp-fallback
