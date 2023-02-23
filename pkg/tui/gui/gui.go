@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/tui/common"
 	"github.com/DopplerHQ/gocui"
 	"github.com/sasha-s/go-deadlock"
@@ -77,8 +78,12 @@ func (gui *Gui) run() error {
 	g.SelFgColor = gocui.ColorMagenta
 	g.SelFrameColor = gocui.ColorMagenta
 
-	// Focus the secrets component by default
-	gui.focusComponent(gui.cmps.secrets)
+	// Set the default component focus
+	if configuration.TUIShouldShowIntro() {
+		gui.focusComponent(gui.cmps.promptIntro)
+	} else {
+		gui.focusComponent(gui.cmps.secrets)
+	}
 
 	// Fetch the data needed for the initial state of the app
 	go gui.load()

@@ -11,6 +11,7 @@ type Components struct {
 	status        *StatusComponent
 	promptSave    *PromptSaveComponent
 	promptHelp    *PromptHelpComponent
+	promptIntro   *PromptIntroComponent
 	secretsFilter *SecretsFilterComponent
 
 	focusable []Component
@@ -53,6 +54,9 @@ func (gui *Gui) createAllComponents() error {
 		return err
 	}
 	if gui.cmps.promptHelp, err = CreatePromptHelpComponent(gui); err != nil {
+		return err
+	}
+	if gui.cmps.promptIntro, err = CreatePromptIntroComponent(gui); err != nil {
 		return err
 	}
 	if gui.cmps.secretsFilter, err = CreateSecretsFilterComponent(gui); err != nil {

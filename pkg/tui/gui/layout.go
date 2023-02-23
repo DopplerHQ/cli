@@ -165,6 +165,12 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		return centerPrompt(gui.cmps.promptHelp.GetView().Name(), width, height)
 	}
 
+	setPromptIntroSize := func() error {
+		width := 80
+		height := gui.cmps.promptIntro.GetView().LinesHeight() + 1
+		return centerPrompt(gui.cmps.promptIntro.GetView().Name(), width, height)
+	}
+
 	if _, err := setViewFromDimensions("Configs"); err != nil {
 		return err
 	}
@@ -189,6 +195,9 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 		return err
 	}
 	if err := setPromptHelpSize(); err != nil {
+		return err
+	}
+	if err := setPromptIntroSize(); err != nil {
 		return err
 	}
 
