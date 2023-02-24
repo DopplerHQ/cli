@@ -78,6 +78,14 @@ config="$("$DOPPLER_BINARY" configure get config --configuration=./temp-config-d
 
 beforeEach
 
+# test configure w/ custom config-dir from environment
+mkdir ./temp-config-dir
+DOPPLER_CONFIG_DIR=./temp-config-dir "$DOPPLER_BINARY" configure set config 123 --scope=/ --silent
+config="$(DOPPLER_CONFIG_DIR=./temp-config-dir "$DOPPLER_BINARY" configure get config --scope=/ --plain)"
+[[ "$config" == "123" ]] || error "ERROR: config-dir not properly used"
+
+beforeEach
+
 # test configure w/ custom config-dir AND custom configuration
 mkdir ./temp-config-dir
 "$DOPPLER_BINARY" configure set config 123 --config-dir=./temp-config-dir --configuration ./temp-config --scope=/ --silent
