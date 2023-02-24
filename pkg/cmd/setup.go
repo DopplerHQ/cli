@@ -52,7 +52,7 @@ func setup(cmd *cobra.Command, args []string) {
 		case models.FlagSource.String():
 			saveToken = true
 		case models.EnvironmentSource.String():
-			utils.Print(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
+			utils.Log(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
 			saveToken = true
 		}
 	}
@@ -82,7 +82,7 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedProject = localConfig.EnclaveProject.Value
 	case models.EnvironmentSource.String():
-		utils.Print(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
 		selectedProject = localConfig.EnclaveProject.Value
 	default:
 		if useRepoConfig && repoConfig.Setup.Project != "" {
@@ -117,7 +117,7 @@ func setup(cmd *cobra.Command, args []string) {
 	case models.FlagSource.String():
 		selectedConfig = localConfig.EnclaveConfig.Value
 	case models.EnvironmentSource.String():
-		utils.Print(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
 		selectedConfig = localConfig.EnclaveConfig.Value
 	default:
 		if useRepoConfig && repoConfig.Setup.Config != "" {
