@@ -32,7 +32,7 @@ const repoConfigFileName = "doppler.yaml"
 const ymlRepoConfigFileName = "doppler.yml"
 
 // RepoConfig Reads the configuration file (doppler.yaml) if exists and returns the set configuration
-func RepoConfig() (models.RepoConfig, Error) {
+func RepoConfig() (models.MultiRepoConfig, Error) {
 
 	repoConfigFile := filepath.Join("./", repoConfigFileName)
 	ymlRepoConfigFile := filepath.Join("./", ymlRepoConfigFileName)
@@ -46,21 +46,28 @@ func RepoConfig() (models.RepoConfig, Error) {
 			var e Error
 			e.Err = err
 			e.Message = "Unable to read doppler repo config file"
-			return models.RepoConfig{}, e
+			return models.MultiRepoConfig{}, e
 		}
 
-		var repoConfig models.RepoConfig
+		var repoConfig models.MultiRepoConfig
 
 		if err := yaml.Unmarshal(yamlFile, &repoConfig); err != nil {
-			var e Error
-			e.Err = err
-			e.Message = "Unable to parse doppler repo config file"
-			return models.RepoConfig{}, e
+			// Try parsing old repoConfig format (i.e., no slice) for backwards compatibility
+			var oldRepoConfig models.RepoConfig
+			if err := yaml.Unmarshal(yamlFile, &oldRepoConfig); err != nil {
+				var e Error
+				e.Err = err
+				e.Message = "Unable to parse doppler repo config file"
+				return models.MultiRepoConfig{}, e
+			} else {
+				repoConfig.Setup = append(repoConfig.Setup, oldRepoConfig.Setup)
+				return repoConfig, Error{}
+			}
 		}
 
 		return repoConfig, Error{}
 	} else if utils.Exists(ymlRepoConfigFile) {
 		utils.LogWarning(fmt.Sprintf("Found %s file, please rename to %s for repo configuration", ymlRepoConfigFile, repoConfigFileName))
 	}
-	return models.RepoConfig{}, Error{}
+	return models.MultiRepoConfig{}, Error{}
 }
