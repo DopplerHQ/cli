@@ -87,13 +87,17 @@ var openDocsCmd = &cobra.Command{
 
 func init() {
 	openDashboardCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	openDashboardCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	openDashboardCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	openDashboardCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	openCmd.AddCommand(openDashboardCmd)
 	openCmd.AddCommand(openStatusCmd)
 	openCmd.AddCommand(openGithubCmd)
 	openCmd.AddCommand(openDocsCmd)
 
 	openCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	openCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	openCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	openCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	rootCmd.AddCommand(openCmd)
 }

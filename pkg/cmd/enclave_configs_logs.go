@@ -51,18 +51,26 @@ var enclaveConfigsLogsRollbackCmd = &cobra.Command{
 
 func init() {
 	enclaveConfigsLogsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsLogsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsLogsCmd.Flags().Int("page", 1, "log page to display")
 	enclaveConfigsLogsCmd.Flags().IntP("number", "n", 20, "max number of logs to display")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsLogsCmd)
 
 	enclaveConfigsLogsGetCmd.Flags().String("log", "", "audit log id")
+	enclaveConfigsLogsGetCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
 	enclaveConfigsLogsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsLogsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsLogsCmd.AddCommand(enclaveConfigsLogsGetCmd)
 
 	enclaveConfigsLogsRollbackCmd.Flags().String("log", "", "audit log id")
+	enclaveConfigsLogsRollbackCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
 	enclaveConfigsLogsRollbackCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLogsRollbackCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsLogsRollbackCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLogsRollbackCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsLogsCmd.AddCommand(enclaveConfigsLogsRollbackCmd)
 }

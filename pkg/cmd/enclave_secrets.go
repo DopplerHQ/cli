@@ -95,12 +95,16 @@ $ doppler enclave secrets download --format=env --no-file`,
 
 func init() {
 	enclaveSecretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveSecretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveSecretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	enclaveSecretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveSecretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveSecretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
@@ -108,19 +112,25 @@ func init() {
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveSecretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 
 	enclaveSecretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveSecretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveSecretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDeleteCmd)
 
 	enclaveSecretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveSecretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveSecretsDownloadCmd.Flags().String("format", models.JSON.String(), "output format. one of [json, env]")
 	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")

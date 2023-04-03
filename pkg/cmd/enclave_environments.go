@@ -41,9 +41,11 @@ var enclaveEnvironmentsGetCmd = &cobra.Command{
 
 func init() {
 	enclaveEnvironmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveEnvironmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveEnvironmentsCmd.AddCommand(enclaveEnvironmentsGetCmd)
 
 	enclaveEnvironmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveEnvironmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveEnvironmentsCmd.Flags().IntP("number", "n", 100, "max number of environments to display")
 	enclaveEnvironmentsCmd.Flags().Int("page", 1, "page to display")
 	enclaveCmd.AddCommand(enclaveEnvironmentsCmd)

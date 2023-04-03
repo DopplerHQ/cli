@@ -62,24 +62,34 @@ var enclaveConfigsTokensRevokeCmd = &cobra.Command{
 
 func init() {
 	enclaveConfigsTokensCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsTokensCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsCmd.AddCommand(enclaveConfigsTokensCmd)
 
 	enclaveConfigsTokensGetCmd.Flags().String("slug", "", "service token slug")
+	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
 	enclaveConfigsTokensGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsTokensGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensGetCmd)
 
 	enclaveConfigsTokensCreateCmd.Flags().String("name", "", "service token name")
 	enclaveConfigsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	enclaveConfigsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	enclaveConfigsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensCreateCmd)
 
 	enclaveConfigsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
+	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
 	enclaveConfigsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensRevokeCmd)
 }

@@ -189,25 +189,38 @@ func configTokenSlugsValidArgs(cmd *cobra.Command, args []string, toComplete str
 
 func init() {
 	configsTokensCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsTokensCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsCmd.AddCommand(configsTokensCmd)
 
 	configsTokensGetCmd.Flags().String("slug", "", "service token slug")
+	configsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
 	configsTokensGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsTokensGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsTokensCmd.AddCommand(configsTokensGetCmd)
 
 	configsTokensCreateCmd.Flags().String("name", "", "service token name")
 	configsTokensCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsTokensCreateCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCreateCmd.Flags().Duration("max-age", 0, "token will expire after specified duration, (e.g. '3h', '15m')")
 	configsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
+	configsTokensCreateCmd.RegisterFlagCompletionFunc("access", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "read/write"}, cobra.ShellCompDirectiveDefault
+	})
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
+	configsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
 	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 }

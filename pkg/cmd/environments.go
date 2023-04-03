@@ -199,22 +199,27 @@ func renameEnvironment(cmd *cobra.Command, args []string) {
 
 func init() {
 	environmentsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
 	environmentsCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	environmentsCmd.AddCommand(environmentsCreateCmd)
 
 	environmentsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	environmentsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	environmentsCmd.AddCommand(environmentsDeleteCmd)
 
 	environmentsRenameCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsRenameCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	environmentsRenameCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	environmentsRenameCmd.Flags().String("name", "", "new name")
 	environmentsRenameCmd.Flags().String("slug", "", "new slug")
 	environmentsCmd.AddCommand(environmentsRenameCmd)
 
 	environmentsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	environmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	environmentsCmd.Flags().IntP("number", "n", 100, "max number of environments to display")
 	environmentsCmd.Flags().Int("page", 1, "page to display")
 	rootCmd.AddCommand(environmentsCmd)

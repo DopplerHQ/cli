@@ -212,6 +212,7 @@ func init() {
 	projectsCmd.Flags().Int("page", 1, "page to display")
 
 	projectsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	projectsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	projectsCmd.AddCommand(projectsGetCmd)
 
 	projectsCreateCmd.Flags().String("name", "", "project name")
@@ -220,9 +221,11 @@ func init() {
 
 	projectsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	projectsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	projectsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	projectsCmd.AddCommand(projectsDeleteCmd)
 
 	projectsUpdateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	projectsUpdateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	projectsUpdateCmd.Flags().String("name", "", "project name")
 	projectsUpdateCmd.Flags().String("description", "", "project description")
 	if err := projectsUpdateCmd.MarkFlagRequired("name"); err != nil {
