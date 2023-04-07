@@ -412,6 +412,15 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
 	if !httpErr.IsNil() {
 		canUseFallback := statusCode != 401 && statusCode != 403 && statusCode != 404
+		if !canUseFallback {
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.path))
+			os.Remove(fallbackOpts.path)
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.legacyPath))
+			os.Remove(fallbackOpts.legacyPath)
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, metadataPath))
+			os.Remove(metadataPath)
+		}
+
 		if fallbackOpts.enable && canUseFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
