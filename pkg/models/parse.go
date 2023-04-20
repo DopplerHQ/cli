@@ -231,40 +231,30 @@ func ParseActivityLog(log map[string]interface{}) ActivityLog {
 	return parsedLog
 }
 
+func ConvertAPIToComputedSecrets(apiSecrets map[string]APISecret) map[string]ComputedSecret {
+	computed := map[string]ComputedSecret{}
+	for key, secret := range apiSecrets {
+		computed[key] = ComputedSecret{
+			Name:               key,
+			RawValue:           secret.RawValue,
+			ComputedValue:      secret.ComputedValue,
+			RawVisibility:      secret.RawVisibility,
+			ComputedVisibility: secret.ComputedVisibility,
+			Note:               secret.Note,
+		}
+	}
+	return computed
+}
+
 // ParseSecrets parse secrets
 func ParseSecrets(response []byte) (map[string]ComputedSecret, error) {
-	var result map[string]interface{}
+	var result APISecretResponse
 	err := json.Unmarshal(response, &result)
 	if err != nil {
 		return nil, err
 	}
 
-	computed := map[string]ComputedSecret{}
-	secrets, ok := result["secrets"].(map[string]interface{})
-	if !ok {
-		utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for Secrets, expected map[string]interface{}, got %T", result["secrets"]))
-		utils.HandleError(errors.New("Unable to parse API response"))
-	}
-	for key, secret := range secrets {
-		computedSecret := ComputedSecret{Name: key}
-		val, ok := secret.(map[string]interface{})
-		if !ok {
-			utils.LogDebug(fmt.Sprintf("Unexpected type mismatch for secret, expected map[string]interface{}, got %T", secret))
-			utils.HandleError(errors.New("Unable to parse API response"))
-		}
-		if val["raw"] != nil {
-			computedSecret.RawValue = val["raw"].(string)
-		}
-		if val["computed"] != nil {
-			computedSecret.ComputedValue = val["computed"].(string)
-		}
-		if val["note"] != nil {
-			computedSecret.Note = val["note"].(string)
-		}
-		computed[key] = computedSecret
-	}
-
-	return computed, nil
+	return ConvertAPIToComputedSecrets(result.Secrets), nil
 }
 
 // ParseConfigServiceToken parse config service token
