@@ -202,7 +202,7 @@ func ProjectInfo(info models.ProjectInfo, jsonFlag bool) {
 }
 
 // Secrets print secrets
-func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool, copy bool) {
+func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, jsonFlag bool, plain bool, raw bool, copy bool, visibility bool) {
 	if len(secretsToPrint) == 0 {
 		for name := range secrets {
 			secretsToPrint = append(secretsToPrint, name)
@@ -286,9 +286,16 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		return
 	}
 
-	headers := []string{"name", "value"}
+	headers := []string{"name"}
+	if visibility {
+		headers = append(headers, "visibility")
+	}
+	headers = append(headers, "value")
 	if raw {
-		headers = append(headers, "raw")
+		if visibility {
+			headers = append(headers, "raw visibility")
+		}
+		headers = append(headers, "raw value")
 	}
 	headers = append(headers, "note")
 
@@ -301,13 +308,20 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 			computedValue = "[RESTRICTED]"
 		}
 
-		row := []string{secret.Name, computedValue}
+		row := []string{secret.Name}
+		if visibility {
+			row = append(row, secret.ComputedVisibility)
+		}
+		row = append(row, computedValue)
 		if raw {
 			var rawValue string
 			if secret.RawValue != nil {
 				rawValue = *secret.RawValue
 			} else {
 				rawValue = "[RESTRICTED]"
+			}
+			if visibility {
+				row = append(row, secret.RawVisibility)
 			}
 			row = append(row, rawValue)
 		}
