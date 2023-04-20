@@ -551,7 +551,11 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 
 	secretsMap := map[string]string{}
 	for _, secret := range secrets {
-		secretsMap[secret.Name] = secret.ComputedValue
+		if secret.ComputedValue != nil {
+			// By not providing a default value when ComputedValue is nil (e.g. it's a restricted secret), we default
+			// to the same behavior the substituter provides if the template file contains a secret that doesn't exist.
+			secretsMap[secret.Name] = *secret.ComputedValue
+		}
 	}
 
 	templateBody := controllers.ReadTemplateFile(args[0])

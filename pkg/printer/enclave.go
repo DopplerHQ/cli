@@ -214,7 +214,11 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		vals := []string{}
 		for _, name := range secretsToPrint {
 			if secrets[name] != (models.ComputedSecret{}) {
-				vals = append(vals, secrets[name].ComputedValue)
+				if secrets[name].ComputedValue == nil {
+					utils.HandleError(fmt.Errorf("Unable to copy restricted value to clipboard"))
+				} else {
+					vals = append(vals, *secrets[name].ComputedValue)
+				}
 			}
 		}
 
@@ -224,14 +228,28 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 	}
 
 	if jsonFlag {
-		secretsMap := map[string]map[string]string{}
+		secretsMap := map[string]map[string]interface{}{}
 		for _, name := range secretsToPrint {
 			if secrets[name] != (models.ComputedSecret{}) {
-				secretsMap[name] = map[string]string{"computed": secrets[name].ComputedValue, "note": secrets[name].Note}
-				if raw {
-					secretsMap[name]["raw"] = secrets[name].RawValue
+				secretsMap[name] = map[string]interface{}{
+					"note":               secrets[name].Note,
+					"computedVisibility": secrets[name].ComputedVisibility,
 				}
-				secretsMap[name]["note"] = secrets[name].Note
+
+				if secrets[name].ComputedValue != nil {
+					secretsMap[name]["computed"] = *secrets[name].ComputedValue
+				} else {
+					secretsMap[name]["computed"] = nil
+				}
+
+				if raw {
+					secretsMap[name]["rawVisibility"] = secrets[name].RawVisibility
+					if secrets[name].RawValue != nil {
+						secretsMap[name]["raw"] = *secrets[name].RawValue
+					} else {
+						secretsMap[name]["raw"] = nil
+					}
+				}
 			}
 		}
 
@@ -250,9 +268,17 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		vals := []string{}
 		for _, secret := range matchedSecrets {
 			if raw {
-				vals = append(vals, secret.RawValue)
+				if secret.RawValue != nil {
+					vals = append(vals, *secret.RawValue)
+				} else {
+					vals = append(vals, "")
+				}
 			} else {
-				vals = append(vals, secret.ComputedValue)
+				if secret.ComputedValue != nil {
+					vals = append(vals, *secret.ComputedValue)
+				} else {
+					vals = append(vals, "")
+				}
 			}
 		}
 
@@ -268,10 +294,24 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 
 	var rows [][]string
 	for _, secret := range matchedSecrets {
-		row := []string{secret.Name, secret.ComputedValue}
-		if raw {
-			row = append(row, secret.RawValue)
+		var computedValue string
+		if secret.ComputedValue != nil {
+			computedValue = *secret.ComputedValue
+		} else {
+			computedValue = "[RESTRICTED]"
 		}
+
+		row := []string{secret.Name, computedValue}
+		if raw {
+			var rawValue string
+			if secret.RawValue != nil {
+				rawValue = *secret.RawValue
+			} else {
+				rawValue = "[RESTRICTED]"
+			}
+			row = append(row, rawValue)
+		}
+
 		row = append(row, secret.Note)
 
 		rows = append(rows, row)
