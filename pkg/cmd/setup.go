@@ -18,7 +18,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -64,118 +63,106 @@ func setup(cmd *cobra.Command, args []string) {
 		utils.LogDebugError(err.Unwrap())
 	}
 
-	// do an initial pass to see if there are errors we want to bail on before attempting to proceed
-	setupFileErrorCheck(repoConfig.Setup)
+	ignoreRepoConfig :=
+		// ignore when repo config is blank
+		(repoConfig.Setup.Project == "" && repoConfig.Setup.Config == "") ||
+			// ignore when project and config are already specified
+			(localConfig.EnclaveProject.Source == models.FlagSource.String() && localConfig.EnclaveConfig.Source == models.FlagSource.String())
 
-	for _, repo := range repoConfig.Setup {
-		expandedPath, _ := filepath.Abs(repo.Path)
-		scopedConfig = configuration.Get(expandedPath)
+	// default to true so repo config is used on --no-interactive
+	useRepoConfig := true
+	if !ignoreRepoConfig && canPromptUser {
+		useRepoConfig = utils.ConfirmationPrompt("Use settings from repo config file (doppler.yaml)?", true)
+	}
 
-		ignoreRepoConfig :=
-			// ignore when repo config is blank
-			(repo.Project == "" && repo.Config == "") ||
-				// ignore when project and config are already specified
-				(localConfig.EnclaveProject.Source == models.FlagSource.String() && localConfig.EnclaveConfig.Source == models.FlagSource.String())
+	currentProject := localConfig.EnclaveProject.Value
+	selectedProject := ""
 
-		// default to true so repo config is used on --no-interactive
-		useRepoConfig := true
-		if !ignoreRepoConfig && canPromptUser {
-			if len(repoConfig.Setup) > 1 && repo.Path != "" {
-				useRepoConfig = utils.ConfirmationPrompt(fmt.Sprintf("Use settings from repo config file (doppler.yaml) for %s?", expandedPath), true)
-			} else {
-				useRepoConfig = utils.ConfirmationPrompt("Use settings from repo config file (doppler.yaml)?", true)
-			}
+	switch localConfig.EnclaveProject.Source {
+	case models.FlagSource.String():
+		selectedProject = localConfig.EnclaveProject.Value
+	case models.EnvironmentSource.String():
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
+		selectedProject = localConfig.EnclaveProject.Value
+	default:
+		if useRepoConfig && repoConfig.Setup.Project != "" {
+			utils.Print("Auto-selecting project from repo config file")
+			selectedProject = repoConfig.Setup.Project
+			break
 		}
 
-		currentProject := localConfig.EnclaveProject.Value
-		selectedProject := ""
-
-		switch localConfig.EnclaveProject.Source {
-		case models.FlagSource.String():
-			selectedProject = localConfig.EnclaveProject.Value
-		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
-			selectedProject = localConfig.EnclaveProject.Value
-		default:
-			if useRepoConfig && repo.Project != "" {
-				utils.Print("Auto-selecting project from repo config file")
-				selectedProject = repo.Project
-				break
-			}
-
-			projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
-			if !httpErr.IsNil() {
-				utils.HandleError(httpErr.Unwrap(), httpErr.Message)
-			}
-			if len(projects) == 0 {
-				utils.HandleError(errors.New("you do not have access to any projects"))
-			}
-
-			defaultProject := scopedConfig.EnclaveProject.Value
-			if repo.Project != "" {
-				defaultProject = repo.Project
-			}
-
-			selectedProject = selectProject(projects, defaultProject, canPromptUser)
-			if selectedProject == "" {
-				utils.HandleError(errors.New("Invalid project"))
-			}
+		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
+		if !httpErr.IsNil() {
+			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+		}
+		if len(projects) == 0 {
+			utils.HandleError(errors.New("you do not have access to any projects"))
 		}
 
-		selectedConfiguredProject := selectedProject == currentProject
-		selectedConfig := ""
-
-		switch localConfig.EnclaveConfig.Source {
-		case models.FlagSource.String():
-			selectedConfig = localConfig.EnclaveConfig.Value
-		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
-			selectedConfig = localConfig.EnclaveConfig.Value
-		default:
-			if useRepoConfig && repo.Config != "" {
-				utils.Print("Auto-selecting config from repo config file")
-				selectedConfig = repo.Config
-				break
-			}
-
-			configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject, "", 1, 100)
-			if !apiError.IsNil() {
-				utils.HandleError(apiError.Unwrap(), apiError.Message)
-			}
-			if len(configs) == 0 {
-				utils.Print("You project does not have any configs")
-				break
-			}
-
-			defaultConfig := scopedConfig.EnclaveConfig.Value
-			if repo.Config != "" {
-				defaultConfig = repo.Config
-			}
-
-			selectedConfig = selectConfig(configs, selectedConfiguredProject, defaultConfig, canPromptUser)
-			if selectedConfig == "" {
-				utils.HandleError(errors.New("Invalid config"))
-			}
+		defaultProject := scopedConfig.EnclaveProject.Value
+		if repoConfig.Setup.Project != "" {
+			defaultProject = repoConfig.Setup.Project
 		}
 
-		configToSave := map[string]string{
-			models.ConfigEnclaveProject.String(): selectedProject,
-			models.ConfigEnclaveConfig.String():  selectedConfig,
+		selectedProject = selectProject(projects, defaultProject, canPromptUser)
+		if selectedProject == "" {
+			utils.HandleError(errors.New("Invalid project"))
 		}
+	}
+
+	selectedConfiguredProject := selectedProject == currentProject
+	selectedConfig := ""
+
+	switch localConfig.EnclaveConfig.Source {
+	case models.FlagSource.String():
+		selectedConfig = localConfig.EnclaveConfig.Value
+	case models.EnvironmentSource.String():
+		utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
+		selectedConfig = localConfig.EnclaveConfig.Value
+	default:
+		if useRepoConfig && repoConfig.Setup.Config != "" {
+			utils.Print("Auto-selecting config from repo config file")
+			selectedConfig = repoConfig.Setup.Config
+			break
+		}
+
+		configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject, "", 1, 100)
+		if !apiError.IsNil() {
+			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		}
+		if len(configs) == 0 {
+			utils.Print("You project does not have any configs")
+			break
+		}
+
+		defaultConfig := scopedConfig.EnclaveConfig.Value
+		if repoConfig.Setup.Config != "" {
+			defaultConfig = repoConfig.Setup.Config
+		}
+
+		selectedConfig = selectConfig(configs, selectedConfiguredProject, defaultConfig, canPromptUser)
+		if selectedConfig == "" {
+			utils.HandleError(errors.New("Invalid config"))
+		}
+	}
+
+	configToSave := map[string]string{
+		models.ConfigEnclaveProject.String(): selectedProject,
+		models.ConfigEnclaveConfig.String():  selectedConfig,
+	}
+	if saveToken {
+		configToSave[models.ConfigToken.String()] = localConfig.Token.Value
+	}
+	configuration.Set(configuration.Scope, configToSave)
+
+	if !utils.Silent {
+		// do not fetch the LocalConfig since we do not care about env variables or cmd flags
+		conf := configuration.Get(configuration.Scope)
+		valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
 		if saveToken {
-			configToSave[models.ConfigToken.String()] = localConfig.Token.Value
+			valuesToPrint = append(valuesToPrint, utils.RedactAuthToken(models.ConfigToken.String()))
 		}
-		configuration.Set(expandedPath, configToSave)
-
-		if !utils.Silent {
-			// do not fetch the LocalConfig since we do not care about env variables or cmd flags
-			conf := configuration.Get(expandedPath)
-			valuesToPrint := []string{models.ConfigEnclaveConfig.String(), models.ConfigEnclaveProject.String()}
-			if saveToken {
-				valuesToPrint = append(valuesToPrint, utils.RedactAuthToken(models.ConfigToken.String()))
-			}
-			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedOptionsMap(&conf), utils.OutputJSON, false, false)
-		}
+		printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedOptionsMap(&conf), utils.OutputJSON, false, false)
 	}
 }
 
@@ -248,33 +235,6 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 
 func valueFromEnvironmentNotice(name string) string {
 	return fmt.Sprintf("Using %s from the environment. To disable this, use --no-read-env.", name)
-}
-
-// we're looking for duplicate paths and more than one repo being defined without a path.
-func setupFileErrorCheck(repos []models.ProjectConfig) {
-	// check to see if a repo isn't specifying a path and more than one repo exists
-	pathCount := make(map[string]int)
-	for _, repo := range repos {
-		if len(repos) > 1 && repo.Path == "" {
-			utils.HandleError(errors.New("a path must be specified for all repos when more than one exists in the repo config file (doppler.yaml)"))
-		}
-		pathCount[repo.Path] += 1
-	}
-
-	// check to see if a path is being used more than once
-	var badPaths []string
-	for path, count := range pathCount {
-		if count > 1 {
-			badPaths = append(badPaths, path)
-		}
-	}
-	if len(badPaths) > 0 {
-		errorMessage := []string{"the following path(s) are being used more than once in the repo config file (doppler.yaml):"}
-		for _, path := range badPaths {
-			errorMessage = append(errorMessage, fmt.Sprintf("  - %s", path))
-		}
-		utils.HandleError(errors.New(strings.Join(errorMessage, "\n")))
-	}
 }
 
 func init() {
