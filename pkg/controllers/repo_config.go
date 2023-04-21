@@ -68,6 +68,12 @@ func RepoConfig() (models.MultiRepoConfig, Error) {
 		return repoConfig, Error{}
 	} else if utils.Exists(ymlRepoConfigFile) {
 		utils.LogWarning(fmt.Sprintf("Found %s file, please rename to %s for repo configuration", ymlRepoConfigFile, repoConfigFileName))
+	} else {
+		// If no config file exists, then this is for an interactive setup, so
+		// return a MultiRepoConfig object containing an empty ProjectConfig object
+		var repoConfig models.MultiRepoConfig
+		repoConfig.Setup = append(repoConfig.Setup, models.ProjectConfig{})
+		return repoConfig, Error{}
 	}
 	return models.MultiRepoConfig{}, Error{}
 }
