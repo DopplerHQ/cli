@@ -9,7 +9,16 @@ reports:
     format: txt
 
 # All scanners to execute, or the String value "all"/"none"
-active_scanners: "all"
+active_scanners:
+  - Gosec
+  - PatternSearch
+  - RepoNotEmpty
+  - Semgrep
+  - GoOSV
+  - GoVersionScanner
+  - GoPackageScanner
+  - ReportGoDep
+  - Trufflehog
 
 # All scanners that will exit non-zero if they fail, or the String value "all"/"none"
 enforced_scanners: "all"
