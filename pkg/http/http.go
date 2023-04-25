@@ -226,7 +226,11 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
 			if resp != nil {
-				defer resp.Body.Close()
+				defer func() {
+					if closeErr := resp.Body.Close(); closeErr != nil {
+						utils.LogDebug(closeErr.Error())
+					}
+				}()
 			}
 
 			utils.LogDebug(err.Error())
@@ -264,7 +268,11 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 	})
 
 	if response != nil {
-		defer response.Body.Close()
+		defer func() {
+			if closeErr := response.Body.Close(); closeErr != nil {
+				utils.LogDebug(closeErr.Error())
+			}
+		}()
 	}
 
 	if requestErr != nil && response == nil {
