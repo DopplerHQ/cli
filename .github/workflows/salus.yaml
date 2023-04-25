@@ -6,6 +6,18 @@ on:
 name: Salus security scan
 
 jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    name: Semgrep
+    steps:
+      - uses: actions/checkout@v2
+      - name: Scan
+        id: scan
+        run: |
+          set -eo pipefail;
+          python3 -m pip install semgrep;
+          semgrep scan --error --config https://semgrep.dev/p/trailofbits --config semgrep_configs
+
   salus_scan_job:
     runs-on: ubuntu-latest
     name: Salus Security Scan

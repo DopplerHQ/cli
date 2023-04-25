@@ -8,3 +8,7 @@ rules:
       - pattern-regex: fmt\.Print[a-z]*
       - pattern-regex: fmt\.Fprint[a-z]*
     severity: ERROR
+    paths:
+      exclude:
+        - /pkg/printer
+        - /pkg/utils/log.go
