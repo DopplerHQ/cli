@@ -21,20 +21,20 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
-func GetConfigs(config models.ScopedOptions) ([]models.ConfigInfo, Error) {
+func GetConfigs(config models.ScopedOptions) ([]models.ConfigInfo, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	configs, err := http.GetConfigs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, "", 1, 100)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
-	return configs, Error{}
+	return configs, nil
 }
 
-func GetConfigNames(config models.ScopedOptions) ([]string, Error) {
+func GetConfigNames(config models.ScopedOptions) ([]string, error) {
 	configs, err := GetConfigs(config)
-	if !err.IsNil() {
+	if err != nil {
 		return nil, err
 	}
 
@@ -42,50 +42,50 @@ func GetConfigNames(config models.ScopedOptions) ([]string, Error) {
 	for _, config := range configs {
 		names = append(names, config.Name)
 	}
-	return names, Error{}
+	return names, nil
 }
 
-func GetConfigLogIDs(config models.ScopedOptions) ([]string, Error) {
+func GetConfigLogIDs(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	logs, err := http.GetConfigLogs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, 0, 0)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	var names []string
 	for _, log := range logs {
 		names = append(names, log.ID)
 	}
-	return names, Error{}
+	return names, nil
 }
 
-func GetConfigTokenSlugs(config models.ScopedOptions) ([]string, Error) {
+func GetConfigTokenSlugs(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	tokens, err := http.GetConfigServiceTokens(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	var slugs []string
 	for _, token := range tokens {
 		slugs = append(slugs, token.Slug)
 	}
-	return slugs, Error{}
+	return slugs, nil
 }
 
-func GetEnvironmentIDs(config models.ScopedOptions) ([]string, Error) {
+func GetEnvironmentIDs(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	environments, err := http.GetEnvironments(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, 1, 100)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	var ids []string
 	for _, environment := range environments {
 		ids = append(ids, environment.ID)
 	}
-	return ids, Error{}
+	return ids, nil
 }

@@ -24,7 +24,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-func OpenDashboard(options models.ScopedOptions) Error {
+func OpenDashboard(options models.ScopedOptions) error {
 	url := options.DashboardHost.Value
 	if url == "" {
 		// the dashboard host is set during login (though it also has a default)
@@ -38,8 +38,8 @@ func OpenDashboard(options models.ScopedOptions) Error {
 	}
 	err := open.Run(url)
 	if err != nil {
-		return Error{Err: err, Message: "Unable to open dashboard url"}
+		return &CtrlError{Err: err, Message: "Unable to open dashboard url"}
 	}
 
-	return Error{}
+	return nil
 }

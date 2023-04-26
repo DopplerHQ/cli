@@ -21,17 +21,17 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
-func GetProjectIDs(config models.ScopedOptions) ([]string, Error) {
+func GetProjectIDs(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	info, err := http.GetProjects(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, 1, 100)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	var ids []string
 	for _, project := range info {
 		ids = append(ids, project.ID)
 	}
-	return ids, Error{}
+	return ids, nil
 }

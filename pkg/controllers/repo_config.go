@@ -32,7 +32,7 @@ const repoConfigFileName = "doppler.yaml"
 const ymlRepoConfigFileName = "doppler.yml"
 
 // RepoConfig Reads the configuration file (doppler.yaml) if exists and returns the set configuration
-func RepoConfig() (models.RepoConfig, Error) {
+func RepoConfig() (models.RepoConfig, error) {
 
 	repoConfigFile := filepath.Join("./", repoConfigFileName)
 	ymlRepoConfigFile := filepath.Join("./", ymlRepoConfigFileName)
@@ -43,24 +43,24 @@ func RepoConfig() (models.RepoConfig, Error) {
 		yamlFile, err := ioutil.ReadFile(repoConfigFile) // #nosec G304
 
 		if err != nil {
-			var e Error
+			var e CtrlError
 			e.Err = err
 			e.Message = "Unable to read doppler repo config file"
-			return models.RepoConfig{}, e
+			return models.RepoConfig{}, &e
 		}
 
 		var repoConfig models.RepoConfig
 
 		if err := yaml.Unmarshal(yamlFile, &repoConfig); err != nil {
-			var e Error
+			var e CtrlError
 			e.Err = err
 			e.Message = "Unable to parse doppler repo config file"
-			return models.RepoConfig{}, e
+			return models.RepoConfig{}, &e
 		}
 
-		return repoConfig, Error{}
+		return repoConfig, nil
 	} else if utils.Exists(ymlRepoConfigFile) {
 		utils.LogWarning(fmt.Sprintf("Found %s file, please rename to %s for repo configuration", ymlRepoConfigFile, repoConfigFileName))
 	}
-	return models.RepoConfig{}, Error{}
+	return models.RepoConfig{}, nil
 }

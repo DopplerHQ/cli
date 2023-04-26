@@ -22,47 +22,47 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
-func CaptureCommand(command string) ([]byte, Error) {
+func CaptureCommand(command string) ([]byte, error) {
 	postBody := map[string]interface{}{"command": command}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to marshal command"}
+		return nil, &APIError{Err: err, Message: "Unable to marshal command"}
 	}
 
 	utils.LogDebug(fmt.Sprintf("Sending anonymous analytics payload: '%s'", body))
 
 	url, err := generateURL(cliHostname, "/v1/analytics", nil)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to generate url"}
+		return nil, &APIError{Err: err, Message: "Unable to generate url"}
 	}
 
 	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
+		return nil, &APIError{Err: err, Message: "Unable to send anonymous analytics"}
 	}
-	return resp, Error{}
+	return resp, nil
 }
 
-func CaptureEvent(event string, metadata map[string]interface{}) ([]byte, Error) {
+func CaptureEvent(event string, metadata map[string]interface{}) ([]byte, error) {
 	postBody := map[string]interface{}{"event": event}
 	if metadata != nil {
 		postBody["metadata"] = metadata
 	}
 	body, err := json.Marshal(postBody)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to marshal event"}
+		return nil, &APIError{Err: err, Message: "Unable to marshal event"}
 	}
 
 	utils.LogDebug(fmt.Sprintf("Sending anonymous analytics payload: '%s'", body))
 
 	url, err := generateURL(cliHostname, "/v1/analytics", nil)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to generate url"}
+		return nil, &APIError{Err: err, Message: "Unable to generate url"}
 	}
 
 	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
+		return nil, &APIError{Err: err, Message: "Unable to send anonymous analytics"}
 	}
-	return resp, Error{}
+	return resp, nil
 }

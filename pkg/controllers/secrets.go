@@ -59,71 +59,71 @@ var dangerousSecretNames = [...]string{
 	"NODE_OPTIONS",
 }
 
-func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
+func GetSecretNames(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	secretsNames, err := http.GetSecretNames(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, false)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	sort.Strings(secretsNames)
 
-	return secretsNames, Error{}
+	return secretsNames, nil
 }
 
 // SecretsToBytes converts secrets to byte array
-func SecretsToBytes(secrets map[string]string, format string, templateBody string) ([]byte, Error) {
+func SecretsToBytes(secrets map[string]string, format string, templateBody string) ([]byte, error) {
 	if format == models.TemplateMountFormat {
-		return []byte(RenderSecretsTemplate(templateBody, secrets)), Error{}
+		return []byte(RenderSecretsTemplate(templateBody, secrets)), nil
 	}
 
 	if format == models.EnvMountFormat {
-		return []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n")), Error{}
+		return []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n")), nil
 	}
 
 	if format == models.JSONMountFormat {
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshal secrets to json"}
+			return nil, &CtrlError{Err: err, Message: "Unable to marshal secrets to json"}
 		}
-		return envStr, Error{}
+		return envStr, nil
 	}
 
 	if format == models.DotNETJSONMountFormat {
 		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
 		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshal .NET formatted secrets to json"}
+			return nil, &CtrlError{Err: err, Message: "Unable to marshal .NET formatted secrets to json"}
 		}
-		return envStr, Error{}
+		return envStr, nil
 	}
 
-	return nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
+	return nil, &CtrlError{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
 }
 
 // MountSecrets mounts
-func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(), Error) {
+func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(), error) {
 	if !utils.SupportsNamedPipes {
-		return "", nil, Error{Err: errors.New("This OS does not support mounting a secrets file")}
+		return "", nil, &CtrlError{Err: errors.New("This OS does not support mounting a secrets file")}
 	}
 
 	if mountPath == "" {
-		return "", nil, Error{Err: errors.New("Mount path cannot be blank")}
+		return "", nil, &CtrlError{Err: errors.New("Mount path cannot be blank")}
 	}
 
 	// convert mount path to absolute path
 	var err error
 	mountPath, err = filepath.Abs(mountPath)
 	if err != nil {
-		return "", nil, Error{Err: err, Message: "Unable to resolve mount path"}
+		return "", nil, &CtrlError{Err: err, Message: "Unable to resolve mount path"}
 	}
 
 	if utils.Exists(mountPath) {
-		return "", nil, Error{Err: errors.New("The mount path already exists")}
+		return "", nil, &CtrlError{Err: errors.New("The mount path already exists")}
 	}
 
 	if err := utils.CreateNamedPipe(mountPath, 0600); err != nil {
-		return "", nil, Error{Err: err, Message: "Unable to mount secrets file"}
+		return "", nil, &CtrlError{Err: err, Message: "Unable to mount secrets file"}
 	}
 
 	// cleanup named pipe on exit
@@ -177,7 +177,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 		cleanupFIFO()
 	}()
 
-	return mountPath, cleanupFIFO, Error{}
+	return mountPath, cleanupFIFO, nil
 }
 
 func ReadTemplateFile(filePath string) string {

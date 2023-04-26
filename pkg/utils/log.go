@@ -23,6 +23,10 @@ import (
 	"gopkg.in/gookit/color.v1"
 )
 
+type WrappedError interface {
+	InnerError() error
+}
+
 // Print output to stdout
 func Print(info string) {
 	fmt.Println(info)
@@ -76,7 +80,11 @@ func CanLogDebug() bool {
 
 // HandleError prints the error and exits with code 1
 func HandleError(e error, messages ...string) {
-	ErrExit(e, 1, messages...)
+	finalErr := e
+	if err, ok := e.(WrappedError); ok {
+		finalErr = err.InnerError()
+	}
+	ErrExit(finalErr, 1, messages...)
 }
 
 // ErrExit prints the error and exits with the specified code

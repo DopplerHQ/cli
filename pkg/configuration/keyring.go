@@ -25,16 +25,20 @@ import (
 const keyringService = "doppler-cli"
 const keyringSecretPrefix = "secret"
 
-type Error struct {
+type ConfigError struct {
 	Err     error
 	Message string
 }
 
-// Unwrap get the original error
-func (e *Error) Unwrap() error { return e.Err }
+// Error implements the native 'error' interface
+func (e *ConfigError) Error() string {
+	return e.Message
+}
 
-// IsNil whether the error is nil
-func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
+// InnerError implements the `WrappedError` interface used by http.HandleError
+func (e *ConfigError) InnerError() error {
+	return e.Err
+}
 
 // IsKeyringSecret checks whether the secret is stored in keyring
 func IsKeyringSecret(value string) bool {
@@ -47,39 +51,39 @@ func GenerateKeyringID(id string) string {
 }
 
 // GetKeyring fetches a secret from the keyring
-func GetKeyring(id string) (string, Error) {
+func GetKeyring(id string) (string, error) {
 	value, err := keyring.Get(keyringService, id)
 	if err != nil {
 		if err == keyring.ErrUnsupportedPlatform {
-			return "", Error{Err: err, Message: "Your OS does not support keyring"}
+			return "", &ConfigError{Err: err, Message: "Your OS does not support keyring"}
 		} else if err == keyring.ErrNotFound {
-			return "", Error{Err: err, Message: "Token not found in system keyring"}
+			return "", &ConfigError{Err: err, Message: "Token not found in system keyring"}
 		} else {
-			return "", Error{Err: err, Message: "Unable to retrieve value from system keyring"}
+			return "", &ConfigError{Err: err, Message: "Unable to retrieve value from system keyring"}
 		}
 	}
 
-	return value, Error{}
+	return value, nil
 }
 
 // SetKeyring saves a value to the keyring
-func SetKeyring(key string, value string) Error {
+func SetKeyring(key string, value string) error {
 	if err := keyring.Set(keyringService, key, value); err != nil {
 		if err == keyring.ErrUnsupportedPlatform {
-			return Error{Err: err, Message: "Your OS does not support keyring"}
+			return &ConfigError{Err: err, Message: "Your OS does not support keyring"}
 		} else {
-			return Error{Err: err, Message: "Unable to access system keyring for secure storage"}
+			return &ConfigError{Err: err, Message: "Unable to access system keyring for secure storage"}
 		}
 	}
 
-	return Error{}
+	return nil
 }
 
 // DeleteKeyring removes a value from the keyring
-func DeleteKeyring(key string) Error {
+func DeleteKeyring(key string) error {
 	if err := keyring.Delete(keyringService, key); err != nil {
-		return Error{Err: err, Message: "Unable to remove value from keyring"}
+		return &ConfigError{Err: err, Message: "Unable to remove value from keyring"}
 	}
 
-	return Error{}
+	return nil
 }

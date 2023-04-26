@@ -70,30 +70,30 @@ func GetLatestCLIVersion() (models.VersionCheck, error) {
 }
 
 // GetCLIInstallScript from cli.doppler.com
-func GetCLIInstallScript() ([]byte, Error) {
+func GetCLIInstallScript() ([]byte, error) {
 	url, err := generateURL(cliHostname, "/install.sh", nil)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to generate url"}
+		return nil, &APIError{Err: err, Message: "Unable to generate url"}
 	}
 
 	_, _, resp, err := GetRequest(url, true, nil)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to download CLI install script"}
+		return nil, &APIError{Err: err, Message: "Unable to download CLI install script"}
 	}
-	return resp, Error{}
+	return resp, nil
 }
 
 // GetChangelog of CLI releases
-func GetChangelog() ([]byte, Error) {
+func GetChangelog() ([]byte, error) {
 	url, err := generateURL(cliHostname, "/changes", nil)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to generate url"}
+		return nil, &APIError{Err: err, Message: "Unable to generate url"}
 	}
 
 	headers := map[string]string{"Accept": "application/json"}
 	_, _, resp, err := GetRequest(url, true, headers)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to fetch changelog"}
+		return nil, &APIError{Err: err, Message: "Unable to fetch changelog"}
 	}
-	return resp, Error{}
+	return resp, nil
 }

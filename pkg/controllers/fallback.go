@@ -71,36 +71,36 @@ func MetadataFilePath(token string, project string, config string, format models
 }
 
 // MetadataFile reads the contents of the metadata file
-func MetadataFile(path string) (models.SecretsFileMetadata, Error) {
+func MetadataFile(path string) (models.SecretsFileMetadata, error) {
 	utils.LogDebug(fmt.Sprintf("Using metadata file %s", path))
 
 	if _, err := os.Stat(path); err != nil {
-		var e Error
+		var e CtrlError
 		e.Err = err
 		if os.IsNotExist(err) {
 			e.Message = "Metadata file does not exist"
 		} else {
 			e.Message = "Unable to read metadata file"
 		}
-		return models.SecretsFileMetadata{}, e
+		return models.SecretsFileMetadata{}, &e
 	}
 
 	utils.LogDebug(fmt.Sprintf("Reading metadata file %s", path))
 	response, err := ioutil.ReadFile(path) // #nosec G304
 	if err != nil {
-		return models.SecretsFileMetadata{}, Error{Err: err, Message: "Unable to read metadata file"}
+		return models.SecretsFileMetadata{}, &CtrlError{Err: err, Message: "Unable to read metadata file"}
 	}
 
 	var metadata models.SecretsFileMetadata
 	if err := yaml.Unmarshal(response, &metadata); err != nil {
-		return models.SecretsFileMetadata{}, Error{Err: err, Message: "Unable to parse metadata file"}
+		return models.SecretsFileMetadata{}, &CtrlError{Err: err, Message: "Unable to parse metadata file"}
 	}
 
-	return metadata, Error{}
+	return metadata, nil
 }
 
 // WriteMetadataFile writes the contents of the metadata file
-func WriteMetadataFile(path string, etag string, hash string) Error {
+func WriteMetadataFile(path string, etag string, hash string) error {
 	utils.LogDebug(fmt.Sprintf("Writing ETag to metadata file %s", path))
 
 	metadata := models.SecretsFileMetadata{
@@ -111,40 +111,40 @@ func WriteMetadataFile(path string, etag string, hash string) Error {
 
 	metadataBytes, err := yaml.Marshal(metadata)
 	if err != nil {
-		return Error{Err: err, Message: "Unable to marshal metadata to YAML"}
+		return &CtrlError{Err: err, Message: "Unable to marshal metadata to YAML"}
 	}
 
 	if err := utils.WriteFile(path, []byte(metadataBytes), utils.RestrictedFilePerms()); err != nil {
-		return Error{Err: err, Message: "Unable to write metadata file"}
+		return &CtrlError{Err: err, Message: "Unable to write metadata file"}
 	}
 
-	return Error{}
+	return nil
 }
 
 // SecretsCacheFile reads the contents of the cache file
-func SecretsCacheFile(path string, passphrase string) (map[string]string, Error) {
+func SecretsCacheFile(path string, passphrase string) (map[string]string, error) {
 	utils.LogDebug(fmt.Sprintf("Using fallback file for cache %s", path))
 
 	if _, err := os.Stat(path); err != nil {
-		return nil, Error{Err: err, Message: "Unable to stat cache file"}
+		return nil, &CtrlError{Err: err, Message: "Unable to stat cache file"}
 	}
 
 	response, err := ioutil.ReadFile(path) // #nosec G304
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to read cache file"}
+		return nil, &CtrlError{Err: err, Message: "Unable to read cache file"}
 	}
 
 	utils.LogDebug("Decrypting cache file")
 	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to decrypt cache file"}
+		return nil, &CtrlError{Err: err, Message: "Unable to decrypt cache file"}
 	}
 
 	secrets := map[string]string{}
 	err = json.Unmarshal([]byte(decryptedSecrets), &secrets)
 	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to parse cache file"}
+		return nil, &CtrlError{Err: err, Message: "Unable to parse cache file"}
 	}
 
-	return secrets, Error{}
+	return secrets, nil
 }

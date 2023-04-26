@@ -30,25 +30,29 @@ import (
 	"github.com/DopplerHQ/cli/pkg/version"
 )
 
-// Error controller errors
-type Error struct {
+// CtrlError controller errors
+type CtrlError struct {
 	Err     error
 	Message string
 }
 
-// Unwrap get the original error
-func (e *Error) Unwrap() error { return e.Err }
+// Error implements the native 'error' interface
+func (e *CtrlError) Error() string {
+	return e.Message
+}
 
-// IsNil whether the error is nil
-func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
+// InnerError implements the `WrappedError` interface used by http.HandleError
+func (e *CtrlError) InnerError() error {
+	return e.Err
+}
 
 // RunInstallScript downloads and executes the CLI install scriptm, returning true if an update was installed
-func RunInstallScript() (bool, string, Error) {
+func RunInstallScript() (bool, string, error) {
 	startTime := time.Now()
 	// download script
-	script, apiErr := http.GetCLIInstallScript()
-	if !apiErr.IsNil() {
-		return false, "", Error{Err: apiErr.Unwrap(), Message: apiErr.Message}
+	script, err := http.GetCLIInstallScript()
+	if err != nil {
+		return false, "", &CtrlError{Err: err, Message: err.Error()}
 	}
 	fetchScriptDuration := time.Now().Sub(startTime).Milliseconds()
 
@@ -94,7 +98,7 @@ func RunInstallScript() (bool, string, Error) {
 			message = "Error: Unable to read ~/.gnupg directory\nYou can resolve this error by running 'sudo chown -R $(whoami) ~/.gnupg'"
 		}
 
-		return false, "", Error{Err: err, Message: message}
+		return false, "", &CtrlError{Err: err, Message: message}
 	}
 
 	// only capture when install is successful
@@ -105,12 +109,12 @@ func RunInstallScript() (bool, string, Error) {
 	re := regexp.MustCompile(`Installed Doppler CLI v(\d+\.\d+\.\d+)`)
 	matches := re.FindStringSubmatch(strOut)
 	if matches == nil || len(matches) != 2 {
-		return false, "", Error{Err: errors.New("Unable to determine new CLI version")}
+		return false, "", &CtrlError{Err: errors.New("Unable to determine new CLI version")}
 	}
 	// parse latest version string
 	newVersion, err := version.ParseVersion(matches[1])
 	if err != nil {
-		return false, "", Error{Err: err, Message: "Unable to parse new CLI version"}
+		return false, "", &CtrlError{Err: err, Message: "Unable to parse new CLI version"}
 	}
 
 	wasUpdated := false
@@ -127,17 +131,17 @@ func RunInstallScript() (bool, string, Error) {
 		wasUpdated = version.CompareVersions(currentVersion, newVersion) == 1
 	}
 
-	return wasUpdated, newVersion.String(), Error{}
+	return wasUpdated, newVersion.String(), nil
 }
 
 // CLIChangeLog fetches the latest changelog
-func CLIChangeLog() (map[string]models.ChangeLog, http.Error) {
-	response, apiError := http.GetChangelog()
-	if !apiError.IsNil() {
-		return nil, apiError
+func CLIChangeLog() (map[string]models.ChangeLog, error) {
+	response, err := http.GetChangelog()
+	if err != nil {
+		return nil, err
 
 	}
 
 	changes := models.ParseChangeLog(response)
-	return changes, http.Error{}
+	return changes, nil
 }

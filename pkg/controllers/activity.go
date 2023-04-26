@@ -21,17 +21,17 @@ import (
 	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
-func GetActivityLogIDs(config models.ScopedOptions) ([]string, Error) {
+func GetActivityLogIDs(config models.ScopedOptions) ([]string, error) {
 	utils.RequireValue("token", config.Token.Value)
 
 	logs, err := http.GetActivityLogs(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, 0, 0)
-	if !err.IsNil() {
-		return nil, Error{Err: err.Unwrap(), Message: err.Message}
+	if err != nil {
+		return nil, &CtrlError{Err: err, Message: err.Error()}
 	}
 
 	var ids []string
 	for _, log := range logs {
 		ids = append(ids, log.ID)
 	}
-	return ids, Error{}
+	return ids, nil
 }
