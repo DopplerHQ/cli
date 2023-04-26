@@ -61,9 +61,9 @@ func setSecretNote(cmd *cobra.Command, args []string) {
 		note = *noteString
 	}
 
-	response, httpErr := http.SetSecretNote(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secret, note)
-	if !httpErr.IsNil() {
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	response, err := http.SetSecretNote(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secret, note)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {

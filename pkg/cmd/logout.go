@@ -52,14 +52,13 @@ func revokeToken(cmd *cobra.Command, args []string) {
 	}
 
 	_, err := http.RevokeAuthToken(localConfig.APIHost.Value, verifyTLS, token)
-	if !err.IsNil() {
+	if err != nil {
 		// ignore error if token was invalid
-		invalidTokenError := err.Code >= 400 && err.Code < 500
-		if invalidTokenError {
+		if httpErr, ok := err.(*http.APIError); ok && httpErr.Code >= 400 && httpErr.Code < 500 {
 			utils.LogDebug("Failed to revoke token")
-			utils.Print(err.Unwrap().Error())
+			utils.Print(err.Error())
 		} else {
-			utils.HandleError(err.Unwrap(), err.Message)
+			utils.HandleError(err, err.Error())
 		}
 	} else {
 		utils.Print("Auth token has been revoked")

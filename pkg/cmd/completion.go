@@ -102,8 +102,7 @@ var completionInstallCmd = &cobra.Command{
 		// create directory if it doesn't exist
 		if !utils.Exists(path) {
 			// using 755 to mimic expected /etc/ perms
-			err := os.Mkdir(path, 0755) // #nosec G301
-			if err != nil {
+			if err := os.Mkdir(path, 0755); err != nil { // #nosec G301
 				utils.HandleError(err, "Unable to write completion file")
 			}
 		}

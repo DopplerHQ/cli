@@ -37,8 +37,8 @@ var settingsCmd = &cobra.Command{
 		utils.RequireValue("token", localConfig.Token.Value)
 
 		info, err := http.GetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.Settings(info, jsonFlag)
@@ -74,8 +74,8 @@ var settingsUpdateCmd = &cobra.Command{
 		settings := models.WorkplaceSettings{Name: name, BillingEmail: email}
 
 		info, err := http.SetWorkplaceSettings(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, settings)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {

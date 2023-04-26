@@ -43,9 +43,9 @@ var importCommand = &cobra.Command{
 		}
 		template := readTemplateFile(projectTemplateFile)
 
-		info, importErr := http.ImportTemplate(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, template)
-		if !importErr.IsNil() {
-			utils.HandleError(importErr.Unwrap(), importErr.Message)
+		info, err := http.ImportTemplate(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, template)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 		printer.ProjectsInfo(info, jsonFlag)
 	},

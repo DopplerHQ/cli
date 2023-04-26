@@ -58,9 +58,9 @@ func setup(cmd *cobra.Command, args []string) {
 	}
 
 	repoConfig, err := controllers.RepoConfig()
-	if !err.IsNil() {
-		utils.Log(err.Message)
-		utils.LogDebugError(err.Unwrap())
+	if err != nil {
+		utils.Log(err.Error())
+		utils.LogDebugError(err)
 	}
 
 	ignoreRepoConfig :=
@@ -91,9 +91,9 @@ func setup(cmd *cobra.Command, args []string) {
 			break
 		}
 
-		projects, httpErr := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
-		if !httpErr.IsNil() {
-			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+		projects, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 		if len(projects) == 0 {
 			utils.HandleError(errors.New("you do not have access to any projects"))
@@ -126,9 +126,9 @@ func setup(cmd *cobra.Command, args []string) {
 			break
 		}
 
-		configs, apiError := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject, "", 1, 100)
-		if !apiError.IsNil() {
-			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, selectedProject, "", 1, 100)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 		if len(configs) == 0 {
 			utils.Print("You project does not have any configs")

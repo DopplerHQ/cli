@@ -73,8 +73,8 @@ var loginCmd = &cobra.Command{
 		}
 
 		response, err := http.GenerateAuthCode(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), hostname, utils.HostOS(), utils.HostArch())
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 		code, ok := response["code"].(string)
 		if !ok {
@@ -127,12 +127,12 @@ var loginCmd = &cobra.Command{
 			}
 
 			resp, err := http.GetAuthToken(localConfig.APIHost.Value, verifyTLS, pollingCode)
-			if !err.IsNil() {
-				if err.Code == 409 {
+			if err != nil {
+				if httpErr, ok := err.(*http.APIError); ok && httpErr.Code == 409 {
 					time.Sleep(2 * time.Second)
 					continue
 				}
-				utils.HandleError(err.Unwrap(), err.Message)
+				utils.HandleError(err, err.Error())
 			}
 
 			response = resp
@@ -187,11 +187,11 @@ var loginCmd = &cobra.Command{
 			newScope, err2 := filepath.Abs(configuration.Scope)
 			if err1 == nil && err2 == nil && prevScope == newScope {
 				utils.LogDebug("Revoking previous token")
-				// this is best effort; if it fails, keep running
+				// this is the best effort; if it fails, keep running
 				_, err := http.RevokeAuthToken(prevConfig.APIHost.Value, utils.GetBool(prevConfig.VerifyTLS.Value, verifyTLS), prevConfig.Token.Value)
-				if !err.IsNil() {
+				if err != nil {
 					utils.LogDebug("Failed to revoke token")
-					utils.LogDebugError(err.Unwrap())
+					utils.LogDebugError(err)
 				} else {
 					utils.LogDebug("Token successfully revoked")
 				}
@@ -217,8 +217,8 @@ Your saved configuration will be updated.`,
 		oldToken := localConfig.Token.Value
 
 		response, err := http.RollAuthToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), oldToken)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		newToken, ok := response["token"].(string)

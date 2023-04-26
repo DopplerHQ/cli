@@ -37,8 +37,8 @@ var activityCmd = &cobra.Command{
 		utils.RequireValue("token", localConfig.Token.Value)
 
 		activity, err := http.GetActivityLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, page, number)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.ActivityLogs(activity, len(activity), jsonFlag)
@@ -63,8 +63,8 @@ var activityGetCmd = &cobra.Command{
 		utils.RequireValue("log", log)
 
 		activity, err := http.GetActivityLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, log)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.ActivityLog(activity, jsonFlag, false)
@@ -76,10 +76,10 @@ func activityLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete strin
 
 	localConfig := configuration.LocalConfig(cmd)
 	ids, err := controllers.GetActivityLogIDs(localConfig)
-	if err.IsNil() {
-		return ids, cobra.ShellCompDirectiveNoFileComp
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	return ids, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

@@ -243,12 +243,12 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 
 			secretsBytes, err := controllers.SecretsToBytes(secrets, mountFormat, templateBody)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 			absMountPath, handler, err := controllers.MountSecrets(secretsBytes, mountPath, maxReads)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 			mountPath = absMountPath
 			onExit = handler
@@ -409,25 +409,25 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		etag = getCacheFileETag(metadataPath, fallbackOpts.path)
 	}
 
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
-	if !httpErr.IsNil() {
+	statusCode, respHeaders, response, err := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
+	if err != nil {
 		if fallbackOpts.enable {
 			utils.Log("Unable to fetch secrets from the Doppler API")
-			utils.LogError(httpErr.Unwrap())
+			utils.LogError(err)
 			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 		}
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+		utils.HandleError(err, err.Error())
 	}
 
 	if enableCache && statusCode == 304 {
 		utils.LogDebug("Using cached secrets from fallback file")
 		cache, err := controllers.SecretsCacheFile(fallbackOpts.path, fallbackOpts.passphrase)
-		if !err.IsNil() {
-			utils.LogDebugError(err.Unwrap())
-			utils.LogDebug(err.Message)
+		if err != nil {
+			utils.LogDebugError(err)
+			utils.LogDebug(err.Error())
 
 			// we have to exit here as we don't have any secrets to parse
-			utils.HandleError(err.Unwrap(), err.Message)
+			utils.HandleError(err, err.Error())
 		}
 
 		return cache
@@ -440,7 +440,7 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 
 		if fallbackOpts.enable {
 			utils.Log("Unable to parse the Doppler API response")
-			utils.LogError(httpErr.Unwrap())
+			utils.LogError(err)
 			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
 		}
 		utils.HandleError(err, "Unable to parse API response")
@@ -468,9 +468,9 @@ func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 			if etag := respHeaders.Get("etag"); etag != "" {
 				hash := crypto.Hash(encryptedResponse)
 
-				if err := controllers.WriteMetadataFile(metadataPath, etag, hash); !err.IsNil() {
-					utils.LogDebugError(err.Unwrap())
-					utils.LogDebug(err.Message)
+				if err := controllers.WriteMetadataFile(metadataPath, etag, hash); err != nil {
+					utils.LogDebugError(err)
+					utils.LogDebug(err.Error())
 				}
 			} else {
 				utils.LogDebug("API response does not contain ETag")
@@ -640,10 +640,10 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 }
 
 func getCacheFileETag(metadataPath string, cachePath string) string {
-	metadata, Err := controllers.MetadataFile(metadataPath)
-	if !Err.IsNil() {
-		utils.LogDebugError(Err.Unwrap())
-		utils.LogDebug(Err.Message)
+	metadata, err := controllers.MetadataFile(metadataPath)
+	if err != nil {
+		utils.LogDebugError(err)
+		utils.LogDebug(err.Error())
 		return ""
 	}
 

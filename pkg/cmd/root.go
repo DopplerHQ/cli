@@ -70,8 +70,7 @@ var rootCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		err := cmd.Usage()
-		if err != nil {
+		if err := cmd.Usage(); err != nil {
 			utils.HandleError(err, "Unable to print command usage")
 		}
 	},
@@ -117,8 +116,8 @@ func checkVersion(command string) {
 
 		utils.Print(color.Green.Sprintf("An update is available."))
 
-		changes, apiError := controllers.CLIChangeLog()
-		if apiError.IsNil() {
+		changes, err := controllers.CLIChangeLog()
+		if err != nil {
 			printer.ChangeLog(changes, 1, false)
 			utils.Print("")
 		}
@@ -141,10 +140,10 @@ func persistentValidArgsFunction(cmd *cobra.Command) {
 }
 
 func loadFlags(cmd *cobra.Command) {
-	var err error
 	var normalizedScope string
 	scope := cmd.Flag("scope").Value.String()
-	if normalizedScope, err = configuration.NormalizeScope(scope); err != nil {
+	normalizedScope, err := configuration.NormalizeScope(scope)
+	if err != nil {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 	configuration.Scope = normalizedScope

@@ -129,9 +129,9 @@ doppler configure set key=123 otherkey=456`,
 
 		if !strings.Contains(args[0], "=") {
 			if len(args) == 1 {
-				hasData, e := utils.HasDataOnStdIn()
-				if e != nil {
-					utils.HandleError(e)
+				hasData, err := utils.HasDataOnStdIn()
+				if err != nil {
+					utils.HandleError(err)
 				}
 				if !hasData {
 					return errors.New("Value must be supplied on stdin or as an argument")

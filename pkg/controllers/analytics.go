@@ -39,8 +39,8 @@ func captureCommand(command string) {
 	}
 
 	command = strings.ReplaceAll(command, " ", ".")
-	if _, err := http.CaptureCommand(command); !err.IsNil() {
-		utils.LogDebugError(err.Unwrap())
+	if _, err := http.CaptureCommand(command); err != nil {
+		utils.LogDebugError(err)
 	}
 }
 
@@ -56,7 +56,7 @@ func captureEvent(event string, metadata map[string]interface{}) {
 		return
 	}
 
-	if _, err := http.CaptureEvent(event, metadata); !err.IsNil() {
-		utils.LogDebugError(err.Unwrap())
+	if _, err := http.CaptureEvent(event, metadata); err != nil {
+		utils.LogDebugError(err)
 	}
 }

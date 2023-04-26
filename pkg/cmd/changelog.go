@@ -30,9 +30,9 @@ var changelogCmd = &cobra.Command{
 		number := utils.GetIntFlag(cmd, "number", 16)
 		jsonFlag := utils.OutputJSON
 
-		changes, apiError := controllers.CLIChangeLog()
-		if !apiError.IsNil() {
-			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		changes, err := controllers.CLIChangeLog()
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.ChangeLog(changes, number, jsonFlag)

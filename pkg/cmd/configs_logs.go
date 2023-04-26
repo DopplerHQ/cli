@@ -56,8 +56,8 @@ func configsLogs(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	logs, err := http.GetConfigLogs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, page, number)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigLogs(logs, len(logs), jsonFlag)
@@ -76,8 +76,8 @@ func getConfigsLogs(cmd *cobra.Command, args []string) {
 	utils.RequireValue("log", log)
 
 	configLog, err := http.GetConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigLog(configLog, jsonFlag, true)
@@ -96,8 +96,8 @@ func rollbackConfigsLogs(cmd *cobra.Command, args []string) {
 	utils.RequireValue("log", log)
 
 	configLog, err := http.RollbackConfigLog(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, log)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -110,10 +110,10 @@ func configLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string)
 
 	localConfig := configuration.LocalConfig(cmd)
 	ids, err := controllers.GetConfigLogIDs(localConfig)
-	if err.IsNil() {
-		return ids, cobra.ShellCompDirectiveNoFileComp
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	return ids, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

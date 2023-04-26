@@ -74,8 +74,8 @@ func environments(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, page, number)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.EnvironmentsInfo(info, jsonFlag)
@@ -90,8 +90,8 @@ func getEnvironments(cmd *cobra.Command, args []string) {
 	utils.RequireValue("environment", environment)
 
 	info, err := http.GetEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.EnvironmentInfo(info, jsonFlag)
@@ -102,10 +102,10 @@ func configEnvironmentIDsValidArgs(cmd *cobra.Command, args []string, toComplete
 
 	localConfig := configuration.LocalConfig(cmd)
 	ids, err := controllers.GetEnvironmentIDs(localConfig)
-	if err.IsNil() {
-		return ids, cobra.ShellCompDirectiveNoFileComp
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	return ids, cobra.ShellCompDirectiveNoFileComp
 }
 
 func createEnvironment(cmd *cobra.Command, args []string) {
@@ -118,8 +118,8 @@ func createEnvironment(cmd *cobra.Command, args []string) {
 	slug := args[1]
 
 	info, err := http.CreateEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, slug)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -143,14 +143,14 @@ func deleteEnvironment(cmd *cobra.Command, args []string) {
 
 	if yes || utils.ConfirmationPrompt(prompt, false) {
 		err := http.DeleteEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, slug)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
 			info, err := http.GetEnvironments(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, 1, 100)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 
 			printer.EnvironmentsInfo(info, jsonFlag)
@@ -187,8 +187,8 @@ func renameEnvironment(cmd *cobra.Command, args []string) {
 
 	if yes {
 		info, err := http.RenameEnvironment(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, slug, newName, newSlug)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {

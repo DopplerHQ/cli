@@ -55,15 +55,15 @@ var updateCmd = &cobra.Command{
 
 func installCLIUpdate() {
 	utils.Print("Updating...")
-	wasUpdated, installedVersion, controllerErr := controllers.RunInstallScript()
-	if !controllerErr.IsNil() {
-		utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+	wasUpdated, installedVersion, err := controllers.RunInstallScript()
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if wasUpdated {
 		utils.Print(fmt.Sprintf("Installed CLI %s", installedVersion))
 
-		if changes, apiError := controllers.CLIChangeLog(); apiError.IsNil() {
+		if changes, err := controllers.CLIChangeLog(); err == nil {
 			utils.Print("\nWhat's new:")
 			printer.ChangeLog(changes, 1, false)
 			utils.Print("\nTip: run 'doppler changelog' to see all latest changes")

@@ -30,8 +30,8 @@ var openCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		err := controllers.OpenDashboard(localConfig)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 	},
 }
@@ -43,8 +43,8 @@ var openDashboardCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
 		err := controllers.OpenDashboard(localConfig)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 	},
 }

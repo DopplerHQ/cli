@@ -74,8 +74,8 @@ func projects(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, page, number)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ProjectsInfo(info, jsonFlag)
@@ -93,8 +93,8 @@ func getProjects(cmd *cobra.Command, args []string) {
 	}
 
 	info, err := http.GetProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ProjectInfo(info, jsonFlag)
@@ -114,8 +114,8 @@ func createProjects(cmd *cobra.Command, args []string) {
 	utils.RequireValue("name", name)
 
 	info, err := http.CreateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, name, description)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -142,14 +142,14 @@ func deleteProjects(cmd *cobra.Command, args []string) {
 
 	if yes || utils.ConfirmationPrompt(prompt, false) {
 		err := http.DeleteProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
 			info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 
 			printer.ProjectsInfo(info, jsonFlag)
@@ -181,14 +181,14 @@ func updateProjects(cmd *cobra.Command, args []string) {
 	}
 
 	var info models.ProjectInfo
-	var httpErr http.Error
+	var err error
 	if cmd.Flags().Changed("description") {
-		info, httpErr = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
+		info, err = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name, description)
 	} else {
-		info, httpErr = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name)
+		info, err = http.UpdateProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, project, name)
 	}
-	if !httpErr.IsNil() {
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -201,10 +201,10 @@ func projectIDsValidArgs(cmd *cobra.Command, args []string, toComplete string) (
 
 	localConfig := configuration.LocalConfig(cmd)
 	ids, err := controllers.GetProjectIDs(localConfig)
-	if err.IsNil() {
-		return ids, cobra.ShellCompDirectiveNoFileComp
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	return ids, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

@@ -100,8 +100,8 @@ func configs(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, environment, page, number)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigsInfo(configs, jsonFlag)
@@ -119,8 +119,8 @@ func getConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	configInfo, err := http.GetConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigInfo(configInfo, jsonFlag)
@@ -151,8 +151,8 @@ func createConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	info, err := http.CreateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, name, environment)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -178,15 +178,14 @@ func deleteConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	if yes || utils.ConfirmationPrompt(prompt, false) {
-		err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err := http.DeleteConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config); err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
 			configs, err := http.GetConfigs(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, "", 1, 100)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 
 			printer.ConfigsInfo(configs, jsonFlag)
@@ -217,8 +216,8 @@ func updateConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	info, err := http.UpdateConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -245,8 +244,8 @@ func lockConfigs(cmd *cobra.Command, args []string) {
 
 	if yes || utils.ConfirmationPrompt(prompt, false) {
 		configInfo, err := http.LockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
@@ -274,8 +273,8 @@ func unlockConfigs(cmd *cobra.Command, args []string) {
 
 	if yes || utils.ConfirmationPrompt(prompt, false) {
 		configInfo, err := http.UnlockConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
@@ -297,8 +296,8 @@ func cloneConfigs(cmd *cobra.Command, args []string) {
 	}
 
 	configInfo, err := http.CloneConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, config, name)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -311,7 +310,7 @@ func configNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) 
 
 	localConfig := configuration.LocalConfig(cmd)
 	names, err := controllers.GetConfigNames(localConfig)
-	if err.IsNil() {
+	if err != nil {
 		return names, cobra.ShellCompDirectiveNoFileComp
 	}
 	return nil, cobra.ShellCompDirectiveNoFileComp
@@ -322,7 +321,7 @@ func lockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete st
 
 	localConfig := configuration.LocalConfig(cmd)
 	configs, err := controllers.GetConfigs(localConfig)
-	if !err.IsNil() {
+	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
@@ -340,7 +339,7 @@ func unlockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete 
 
 	localConfig := configuration.LocalConfig(cmd)
 	configs, err := controllers.GetConfigs(localConfig)
-	if !err.IsNil() {
+	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 

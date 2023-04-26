@@ -26,8 +26,7 @@ var feedbackCmd = &cobra.Command{
 	Short: "Provide feedback about the Doppler CLI",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := open.Run("https://github.com/DopplerHQ/cli/issues/new/choose")
-		if err != nil {
+		if err := open.Run("https://github.com/DopplerHQ/cli/issues/new/choose"); err != nil {
 			utils.HandleError(err)
 		}
 	},

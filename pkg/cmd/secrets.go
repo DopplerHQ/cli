@@ -166,19 +166,19 @@ func secrets(cmd *cobra.Command, args []string) {
 
 	if onlyNames {
 		secretNames, err := http.GetSecretNames(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, false)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.SecretsNames(secretNames, jsonFlag)
 	} else {
 		response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, false, 0)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
-		secrets, parseErr := models.ParseSecrets(response)
-		if parseErr != nil {
-			utils.HandleError(parseErr, "Unable to parse API response")
+		secrets, err := models.ParseSecrets(response)
+		if err != nil {
+			utils.HandleError(err, "Unable to parse API response")
 		}
 
 		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false)
@@ -200,12 +200,12 @@ func getSecrets(cmd *cobra.Command, args []string) {
 		requestedSecrets = args
 	}
 	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, requestedSecrets, false, 0)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
-	secrets, parseErr := models.ParseSecrets(response)
-	if parseErr != nil {
-		utils.HandleError(parseErr, "Unable to parse API response")
+	secrets, err := models.ParseSecrets(response)
+	if err != nil {
+		utils.HandleError(err, "Unable to parse API response")
 	}
 
 	if exitOnMissingSecret && len(args) > 0 {
@@ -326,8 +326,8 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -357,9 +357,9 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(err, "Unable to read upload file")
 	}
 
-	response, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
-	if !httpErr.IsNil() {
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	response, err := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
@@ -382,8 +382,8 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		if !utils.Silent {
@@ -481,10 +481,10 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		var apiError http.Error
-		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, "", dynamicSecretsTTL, nil)
-		if !apiError.IsNil() {
-			utils.HandleError(apiError.Unwrap(), apiError.Message)
+		var err error
+		_, _, body, err = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, "", dynamicSecretsTTL, nil)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 	}
 
@@ -539,14 +539,14 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
-	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsTTL)
-	if !responseErr.IsNil() {
-		utils.HandleError(responseErr.Unwrap(), responseErr.Message)
+	response, err := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsTTL)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
-	secrets, parseErr := models.ParseSecrets(response)
-	if parseErr != nil {
-		utils.HandleError(parseErr, "Unable to parse API response")
+	secrets, err := models.ParseSecrets(response)
+	if err != nil {
+		utils.HandleError(err, "Unable to parse API response")
 	}
 
 	secretsMap := map[string]string{}
@@ -576,10 +576,10 @@ func secretNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) 
 
 	localConfig := configuration.LocalConfig(cmd)
 	names, err := controllers.GetSecretNames(localConfig)
-	if err.IsNil() {
-		return names, cobra.ShellCompDirectiveNoFileComp
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	return names, cobra.ShellCompDirectiveNoFileComp
 }
 
 func init() {

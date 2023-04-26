@@ -66,8 +66,8 @@ func configsTokens(cmd *cobra.Command, args []string) {
 	utils.RequireValue("token", localConfig.Token.Value)
 
 	tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
@@ -86,8 +86,8 @@ func getConfigsTokens(cmd *cobra.Command, args []string) {
 	utils.RequireValue("slug", slug)
 
 	tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	for _, token := range tokens {
@@ -97,7 +97,7 @@ func getConfigsTokens(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	utils.HandleError(errors.New("invalid service token slug"), err.Message)
+	utils.HandleError(errors.New("invalid service token slug"), err.Error())
 }
 
 func createConfigsTokens(cmd *cobra.Command, args []string) {
@@ -125,8 +125,8 @@ func createConfigsTokens(cmd *cobra.Command, args []string) {
 	}
 
 	configToken, err := http.CreateConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, name, expireAt, access)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	printer.ConfigServiceToken(configToken, jsonFlag, plain, copy)
@@ -161,15 +161,14 @@ func revokeConfigsTokens(cmd *cobra.Command, args []string) {
 
 	utils.RequireValue("slug or token", fmt.Sprintf("%s%s", slug, token))
 
-	err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug, token)
-	if !err.IsNil() {
-		utils.HandleError(err.Unwrap(), err.Message)
+	if err := http.DeleteConfigServiceToken(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, slug, token); err != nil {
+		utils.HandleError(err, err.Error())
 	}
 
 	if !utils.Silent {
 		tokens, err := http.GetConfigServiceTokens(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		printer.ConfigServiceTokensInfo(tokens, len(tokens), jsonFlag)
@@ -181,7 +180,7 @@ func configTokenSlugsValidArgs(cmd *cobra.Command, args []string, toComplete str
 
 	localConfig := configuration.LocalConfig(cmd)
 	slugs, err := controllers.GetConfigTokenSlugs(localConfig)
-	if err.IsNil() {
+	if err != nil {
 		return slugs, cobra.ShellCompDirectiveNoFileComp
 	}
 	return nil, cobra.ShellCompDirectiveNoFileComp

@@ -122,7 +122,8 @@ func SetVersionCheck(version models.VersionCheck) {
 func Get(scope string) models.ScopedOptions {
 	var normalizedScope string
 	var err error
-	if normalizedScope, err = NormalizeScope(scope); err != nil {
+	normalizedScope, err = NormalizeScope(scope)
+	if err != nil {
 		utils.HandleError(err, fmt.Sprintf("Invalid scope: %s", scope))
 	}
 	if !strings.HasSuffix(normalizedScope, string(filepath.Separator)) {
@@ -158,8 +159,8 @@ func Get(scope string) models.ScopedOptions {
 	if IsKeyringSecret(scopedConfig.Token.Value) {
 		utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
 		token, err := GetKeyring(scopedConfig.Token.Value)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		if err != nil {
+			utils.HandleError(err, err.Error())
 		}
 
 		scopedConfig.Token.Value = token
@@ -284,8 +285,8 @@ func AllConfigs() map[string]models.FileScopedOptions {
 		if IsKeyringSecret(options.Token) {
 			utils.LogDebug(fmt.Sprintf("Retrieving %s from system keyring", models.ConfigToken.String()))
 			token, err := GetKeyring(options.Token)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
+			if err != nil {
+				utils.HandleError(err, err.Error())
 			}
 
 			options.Token = token
@@ -320,18 +321,18 @@ func Set(scope string, options map[string]string) {
 			}
 			id := GenerateKeyringID(uuid)
 
-			if controllerError := SetKeyring(id, value); !controllerError.IsNil() {
-				utils.LogDebugError(controllerError.Unwrap())
-				utils.LogDebug(controllerError.Message)
+			if err := SetKeyring(id, value); err != nil {
+				utils.LogDebugError(err)
+				utils.LogDebug(err.Error())
 			} else {
 				value = id
 
 				// remove old token from keyring
 				if IsKeyringSecret(previousToken) {
 					utils.LogDebug("Removing previous token from system keyring")
-					if controllerError := DeleteKeyring(previousToken); !controllerError.IsNil() {
-						utils.LogDebugError(controllerError.Unwrap())
-						utils.LogDebug(controllerError.Message)
+					if err := DeleteKeyring(previousToken); err != nil {
+						utils.LogDebugError(err)
+						utils.LogDebug(err.Error())
 					}
 				}
 			}
@@ -367,9 +368,9 @@ func Unset(scope string, options []string) {
 			previousToken := config.Token
 			// remove old token from keyring
 			if IsKeyringSecret(previousToken) {
-				if controllerError := DeleteKeyring(previousToken); !controllerError.IsNil() {
-					utils.LogDebugError(controllerError.Unwrap())
-					utils.LogDebug(controllerError.Message)
+				if err := DeleteKeyring(previousToken); err != nil {
+					utils.LogDebugError(err)
+					utils.LogDebug(err.Error())
 				}
 			}
 		}
@@ -392,8 +393,8 @@ func ClearConfig() {
 		if IsKeyringSecret(scopedOptions.Token) {
 			utils.LogDebug(fmt.Sprintf("Removing %s from keychain", scopedOptions.Token))
 			err := DeleteKeyring(scopedOptions.Token)
-			if !err.IsNil() {
-				utils.LogDebugError(err.Unwrap())
+			if err != nil {
+				utils.LogDebugError(err)
 			}
 		}
 	}
