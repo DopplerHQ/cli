@@ -674,10 +674,15 @@ func init() {
 	forwardSignals := !isatty.IsTerminal(os.Stdout.Fd())
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	runCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	runCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
 	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validEnvCompatNameTransformersList))
+	runCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return models.SecretsEnvCompatNameTransformerTypes, cobra.ShellCompDirectiveDefault
+	})
 	runCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	// fallback flags
 	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
@@ -692,6 +697,9 @@ func init() {
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
 	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
+	runCmd.RegisterFlagCompletionFunc("mount-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{projectTemplateFileName}, cobra.ShellCompDirectiveDefault
+	})
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 	runCmd.Flags().StringSliceVar(&secretsToInclude, "only-secrets", []string{}, "only include the specified secrets")

@@ -239,7 +239,9 @@ func valueFromEnvironmentNotice(name string) string {
 
 func init() {
 	setupCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	setupCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	setupCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	setupCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	setupCmd.Flags().Bool("no-interactive", false, "do not prompt for information. if the project or config is not specified, an error will be thrown.")
 	setupCmd.Flags().Bool("no-save-token", false, "do not save the token to the config when passed via flag or environment variable.")
 

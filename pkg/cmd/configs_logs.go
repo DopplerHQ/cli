@@ -118,18 +118,26 @@ func configLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string)
 
 func init() {
 	configsLogsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsLogsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsLogsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsLogsCmd.Flags().Int("page", 1, "log page to display")
 	configsLogsCmd.Flags().IntP("number", "n", 20, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
+	configsLogsGetCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
 	configsLogsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsLogsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsLogsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsLogsCmd.AddCommand(configsLogsGetCmd)
 
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
+	configsLogsRollbackCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
 	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	configsLogsRollbackCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	configsLogsRollbackCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 }

@@ -92,21 +92,29 @@ var enclaveConfigsUnlockCmd = &cobra.Command{
 
 func init() {
 	enclaveConfigsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsCmd.Flags().StringP("environment", "e", "", "config environment")
+	enclaveConfigsCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs)
 	enclaveConfigsCmd.Flags().IntP("number", "n", 100, "max number of configs to display")
 	enclaveConfigsCmd.Flags().Int("page", 1, "page to display")
 
 	enclaveConfigsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsCmd.AddCommand(enclaveConfigsGetCmd)
 
 	enclaveConfigsCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsCreateCmd.Flags().String("name", "", "config name")
 	enclaveConfigsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
+	enclaveConfigsCreateCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs)
 	enclaveConfigsCmd.AddCommand(enclaveConfigsCreateCmd)
 
 	enclaveConfigsUpdateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsUpdateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsUpdateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsUpdateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsUpdateCmd.Flags().String("name", "", "config name")
 	if err := enclaveConfigsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
@@ -115,17 +123,23 @@ func init() {
 	enclaveConfigsCmd.AddCommand(enclaveConfigsUpdateCmd)
 
 	enclaveConfigsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	enclaveConfigsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsDeleteCmd)
 
 	enclaveConfigsLockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsLockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsLockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsLockCmd.RegisterFlagCompletionFunc("config", lockedConfigNamesValidArgs)
 	enclaveConfigsLockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsLockCmd)
 
 	enclaveConfigsUnlockCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
+	enclaveConfigsUnlockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
 	enclaveConfigsUnlockCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
+	enclaveConfigsUnlockCmd.RegisterFlagCompletionFunc("config", unlockedConfigNamesValidArgs)
 	enclaveConfigsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveConfigsCmd.AddCommand(enclaveConfigsUnlockCmd)
 
