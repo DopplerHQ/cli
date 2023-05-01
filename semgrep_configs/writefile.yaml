@@ -7,3 +7,6 @@ rules:
     pattern-either:
       - pattern: ioutil.WriteFile
     severity: ERROR
+    paths:
+      exclude:
+        - /pkg/utils/io.go

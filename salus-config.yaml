@@ -9,25 +9,20 @@ reports:
     format: txt
 
 # All scanners to execute, or the String value "all"/"none"
-active_scanners: "all"
+active_scanners:
+  - Gosec
+  - PatternSearch
+  - RepoNotEmpty
+  - GoOSV
+  - GoVersionScanner
+  - GoPackageScanner
+  - ReportGoDep
+  - Trufflehog
 
 # All scanners that will exit non-zero if they fail, or the String value "all"/"none"
 enforced_scanners: "all"
 
 scanner_configs:
-  Semgrep:
-    matches:
-      - config: https://semgrep.dev/p/trailofbits
-        forbidden: true
-      - config: semgrep_configs/print.yaml
-        forbidden: true
-        exclude:
-          - pkg/printer
-          - pkg/utils/log.go
-      - config: semgrep_configs/writefile.yaml
-        forbidden: true
-        exclude:
-          - pkg/utils/io.go
   GoVersionScanner:
     error:
       min_version: '1.18.0'
