@@ -247,22 +247,13 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 		return nil, Error{Err: err, Message: "Unable to set secrets", Code: statusCode}
 	}
 
-	var result map[string]interface{}
+	var result models.APISecretResponse
 	err = json.Unmarshal(response, &result)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	computed := map[string]models.ComputedSecret{}
-	for key, secret := range result["secrets"].(map[string]interface{}) {
-		val, ok := secret.(map[string]interface{})
-		if !ok {
-			return nil, Error{Err: fmt.Errorf("Unexpected type mismatch for secret, expected map[string]interface{}, got %T", secret), Message: "Unable to parse API response", Code: statusCode}
-		}
-		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
-	}
-
-	return computed, Error{}
+	return models.ConvertAPIToComputedSecrets(result.Secrets), Error{}
 }
 
 // SetSecretNote for specified project and config
@@ -346,22 +337,13 @@ func UploadSecrets(host string, verifyTLS bool, apiKey string, project string, c
 		return nil, Error{Err: err, Message: "Unable to upload secrets", Code: statusCode}
 	}
 
-	var result map[string]interface{}
+	var result models.APISecretResponse
 	err = json.Unmarshal(response, &result)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
 	}
 
-	computed := map[string]models.ComputedSecret{}
-	for key, secret := range result["secrets"].(map[string]interface{}) {
-		val, ok := secret.(map[string]interface{})
-		if !ok {
-			return nil, Error{Err: fmt.Errorf("Unexpected type for secret, expected map[string]interface{}, got %T", secret), Message: "Unable to parse API response", Code: statusCode}
-		}
-		computed[key] = models.ComputedSecret{Name: key, RawValue: val["raw"].(string), ComputedValue: val["computed"].(string)}
-	}
-
-	return computed, Error{}
+	return models.ConvertAPIToComputedSecrets(result.Secrets), Error{}
 }
 
 // GetWorkplaceSettings get specified workplace settings

@@ -17,10 +17,12 @@ package models
 
 // ComputedSecret holds all info about a secret
 type ComputedSecret struct {
-	Name          string `json:"name"`
-	RawValue      string `json:"raw"`
-	ComputedValue string `json:"computed"`
-	Note          string `json:"note"`
+	Name               string  `json:"name"`
+	RawValue           *string `json:"raw"`
+	ComputedValue      *string `json:"computed"`
+	RawVisibility      string  `json:"rawVisibility"`
+	ComputedVisibility string  `json:"computedVisibility"`
+	Note               string  `json:"note"`
 }
 
 // SecretNote contains a secret and its note
@@ -116,4 +118,19 @@ type ConfigServiceToken struct {
 	Environment string `json:"environment"`
 	Config      string `json:"config"`
 	Access      string `json:"access"`
+}
+
+// APISecretResponse is the response the secrets endpoint returns
+type APISecretResponse struct {
+	Success bool                 `json:"success"`
+	Secrets map[string]APISecret `json:"secrets"`
+}
+
+// APISecret is the object the API returns for a given secret
+type APISecret struct {
+	RawValue           *string `json:"raw"`
+	ComputedValue      *string `json:"computed"`
+	RawVisibility      string  `json:"rawVisibility"`
+	ComputedVisibility string  `json:"computedVisibility"`
+	Note               string  `json:"note"`
 }

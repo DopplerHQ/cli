@@ -159,6 +159,7 @@ JSON Secret: "{\"logging\": \"info\"}"`,
 func secrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	visibility := utils.GetBoolFlag(cmd, "visibility")
 	onlyNames := utils.GetBoolFlag(cmd, "only-names")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -181,7 +182,7 @@ func secrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
-		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false)
+		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false, visibility)
 	}
 }
 
@@ -190,6 +191,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 	plain := utils.GetBoolFlag(cmd, "plain")
 	copy := utils.GetBoolFlag(cmd, "copy")
 	raw := utils.GetBoolFlag(cmd, "raw")
+	visibility := utils.GetBoolFlag(cmd, "visibility")
 	exitOnMissingSecret := !utils.GetBoolFlag(cmd, "no-exit-on-missing-secret")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -226,7 +228,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy)
+	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy, visibility)
 }
 
 func setSecrets(cmd *cobra.Command, args []string) {
@@ -331,7 +333,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, false)
 	}
 }
 
@@ -363,7 +365,7 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, []string{}, jsonFlag, false, raw, false)
+		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false)
 	}
 }
 
@@ -387,7 +389,7 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			printer.Secrets(response, []string{}, jsonFlag, false, raw, false)
+			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false)
 		}
 	}
 }
@@ -551,7 +553,11 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 
 	secretsMap := map[string]string{}
 	for _, secret := range secrets {
-		secretsMap[secret.Name] = secret.ComputedValue
+		if secret.ComputedValue != nil {
+			// By not providing a default value when ComputedValue is nil (e.g. it's a restricted secret), we default
+			// to the same behavior the substituter provides if the template file contains a secret that doesn't exist.
+			secretsMap[secret.Name] = *secret.ComputedValue
+		}
 	}
 
 	templateBody := controllers.ReadTemplateFile(args[0])
@@ -588,6 +594,7 @@ func init() {
 	secretsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	secretsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -597,6 +604,7 @@ func init() {
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	secretsCmd.AddCommand(secretsGetCmd)
 
