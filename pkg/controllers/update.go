@@ -64,7 +64,15 @@ func RunInstallScript() (bool, string, Error) {
 	command := []string{tmpFile, "--debug"}
 
 	startTime = time.Now()
-	out, err := exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+	var out []byte
+	if utils.IsWindows() {
+		// executing in sh on Windows avoids errors like this:
+		// Doppler Error: fork/exec C:\...\.install.sh.1063970983: %1 is not a valid Win32 application.
+		out, err = exec.Command("sh", command...).CombinedOutput() // #nosec G204
+	} else {
+		out, err = exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+	}
+
 	executeDuration := time.Now().Sub(startTime).Milliseconds()
 
 	strOut := string(out)
