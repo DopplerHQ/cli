@@ -543,7 +543,7 @@ func DeleteProject(host string, verifyTLS bool, apiKey string, project string) E
 	var params []queryParam
 	params = append(params, queryParam{Key: "project", Value: project})
 
-	url, err := generateURL(host, "/v3/projects/project", nil)
+	url, err := generateURL(host, "/v3/projects/project", params)
 	if err != nil {
 		return Error{Err: err, Message: "Unable to generate url"}
 	}
