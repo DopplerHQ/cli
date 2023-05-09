@@ -30,7 +30,7 @@ beforeEach() {
   cat << EOF > doppler.yaml
 setup:
   - project: cli
-    config: dev
+    config: e2e
     path: .
   - project: example
     config: stg
@@ -71,6 +71,58 @@ beforeAll
 ######################################################################
 #
 
+name="interactive setup"
+
+beforeEach
+
+# remove doppler.yaml file dropped by beforeEach
+rm -f doppler.yaml
+
+# confirm that no projects or configs are set before loading the setup file
+actual="$("$DOPPLER_BINARY" configure get project --plain --config-dir=$TEST_CONFIG_DIR)"
+expected=""
+[[ "$actual" == "$expected" ]] || error "ERROR: unexpected project at scope. expected '$expected', actual '$actual'"
+
+actual="$("$DOPPLER_BINARY" configure get config --plain --config-dir=$TEST_CONFIG_DIR)"
+expected=""
+[[ "$actual" == "$expected" ]] || error "ERROR: unexpected config at scope. expected '$expected', actual '$actual'"
+
+cat << EOF > setup-test.exp
+#!/usr/bin/env expect --
+
+set timeout 2
+
+set has_failed "1"
+
+spawn $DOPPLER_BINARY setup --config-dir=$TEST_CONFIG_DIR
+
+expect "Selected only available project: cli"
+
+expect "Selected only available config: e2e"
+
+expect {
+  "NAME" { set has_failed "0" }
+}
+
+if { \$has_failed == "1" } {
+  puts "failed"
+} else {
+  puts "Setup completed successfully"
+}
+EOF
+
+actual="$(expect -f setup-test.exp)"
+expected="Setup completed successfully"
+[[ "$actual" == *"$expected"* ]] || {
+  echo "$actual"
+  error "ERROR: interactive setup failed"
+}
+
+afterEach
+
+######################################################################
+#
+
 name="test legacy doppler.yaml setup file"
 
 beforeEach
@@ -88,7 +140,7 @@ expected=""
 cat << EOF > doppler.yaml
 setup:
   project: cli
-  config: dev
+  config: e2e
 EOF
 actual="$("$DOPPLER_BINARY" setup --config-dir=$TEST_CONFIG_DIR --no-interactive)"
 [[ "$actual" != "Unable to parse doppler repo config file" ]] || error "ERROR: setup file not parseable"
@@ -99,7 +151,7 @@ expected="cli"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected project at scope. expected '$expected', actual '$actual'"
 
 actual="$("$DOPPLER_BINARY" configure get config --plain --config-dir=$TEST_CONFIG_DIR)"
-expected="dev"
+expected="e2e"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected config at scope. expected '$expected', actual '$actual'"
 
 actual="$("$DOPPLER_BINARY" configure get project --plain --scope=./example --config-dir=$TEST_CONFIG_DIR)"
@@ -107,7 +159,7 @@ expected="cli"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected project at scope. expected '$expected', actual '$actual'"
 
 actual="$("$DOPPLER_BINARY" configure get config --plain --scope=./example --config-dir=$TEST_CONFIG_DIR)"
-expected="dev"
+expected="e2e"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected config at scope. expected '$expected', actual '$actual'"
 
 afterEach
@@ -148,7 +200,7 @@ expected="cli"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected project at scope. expected '$expected', actual '$actual'"
 
 actual="$("$DOPPLER_BINARY" configure get config --plain --config-dir=$TEST_CONFIG_DIR)"
-expected="dev"
+expected="e2e"
 [[ "$actual" == "$expected" ]] || error "ERROR: unexpected config at scope. expected '$expected', actual '$actual'"
 
 actual="$("$DOPPLER_BINARY" configure get project --plain --scope=./example --config-dir=$TEST_CONFIG_DIR)"
@@ -171,7 +223,7 @@ beforeEach
 cat << EOF > doppler.yaml
 setup:
   - project: cli
-    config: dev
+    config: e2e
   - project: example
     config: dev
 EOF
@@ -192,7 +244,7 @@ beforeEach
 cat << EOF > doppler.yaml
 setup:
   - project: cli
-    config: dev
+    config: e2e
     path: .
   - project: example
     config: dev

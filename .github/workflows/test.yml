@@ -11,6 +11,8 @@ jobs:
       with:
         go-version: '1.19'
         check-latest: true
+    - name: Install expect
+      run: sudo DEBIAN_FRONTEND=noninteractive apt-get install -yq expect
     - name: Checkout
       uses: actions/checkout@v1
       with:
