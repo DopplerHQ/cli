@@ -145,7 +145,7 @@ func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body
 	return statusCode, respHeaders, body, nil
 }
 
-func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
+func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Response, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -162,7 +162,7 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 
 	client := &http.Client{}
 	// set http timeout
-	if UseTimeout {
+	if allowTimeout && UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
 
@@ -221,7 +221,7 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 	var response *http.Response
 	response = nil
 
-	requestErr := retry(RequestAttempts, 100*time.Millisecond, func() error {
+	err = retry(RequestAttempts, 100*time.Millisecond, func() error {
 		// disable semgrep rule b/c we properly check that resp isn't nil before using it within the err block
 		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
@@ -267,6 +267,11 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		return StopRetry{errors.New("Request failed")}
 	})
 
+	return response, err
+}
+
+func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
+	response, requestErr := request(req, verifyTLS, true)
 	if response != nil {
 		defer func() {
 			if closeErr := response.Body.Close(); closeErr != nil {
@@ -279,12 +284,12 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		return 0, nil, nil, requestErr
 	}
 
+	headers := response.Header.Clone()
+
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return response.StatusCode, nil, nil, err
 	}
-
-	headers := response.Header.Clone()
 
 	// success
 	if requestErr == nil {
