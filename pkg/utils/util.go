@@ -382,9 +382,26 @@ func HostArch() string {
 	return arch
 }
 
+// CanUpdate whether the host os supports updating via CLI
+func CanUpdate() bool {
+	if IsMINGW64() {
+		return true
+	} else if IsWindows() {
+		return false
+	} else {
+		return true
+	}
+}
+
 // IsWindows whether the host os is Windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+// IsMINGW64 whether the host os is running in a MINGW64-based
+// environment like Git Bash, Cygwin, etc.
+func IsMINGW64() bool {
+	return os.Getenv("MSYSTEM") == "MINGW64"
 }
 
 // IsMacOS whether the host os is macOS

@@ -30,7 +30,7 @@ var updateCmd = &cobra.Command{
 	Short: "update the Doppler CLI",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		if utils.IsWindows() {
+		if !utils.CanUpdate() {
 			utils.HandleError(fmt.Errorf("this command is not yet implemented for your operating system"))
 		}
 
