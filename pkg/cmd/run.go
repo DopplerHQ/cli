@@ -140,8 +140,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			exitOnWriteFailure: exitOnWriteFailure,
 			passphrase:         passphrase,
 		}
-		// retrieve secrets
-		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
 
 		mountPath := cmd.Flag("mount").Value.String()
 		mountFormatString := cmd.Flag("mount-format").Value.String()
@@ -151,28 +149,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
 		shouldMountFile := mountPath != ""
 		shouldMountTemplate := mountTemplate != ""
-
-		// The potentially dangerous secret names only are only dangerous when they are set
-		// as environment variables since they have the potential to change the default shell behavior.
-		// When mounting the secrets into a file these are not dangerous
-		if !shouldMountFile {
-			if err := controllers.CheckForDangerousSecretNames(dopplerSecrets); err != nil {
-				utils.LogWarning(err.Error())
-			}
-		}
-
-		if len(secretsToInclude) > 0 {
-			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
-			missingSecrets := controllers.MissingSecrets(dopplerSecrets, secretsToInclude)
-			if len(missingSecrets) > 0 {
-				err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
-				if noExitOnMissingIncludedSecrets {
-					utils.LogWarning(err.Error())
-				} else {
-					utils.HandleError(err)
-				}
-			}
-		}
 
 		var mountFormat string
 		if mountFormatVal, ok := models.SecretsMountFormatMap[mountFormatString]; ok {
@@ -203,13 +179,8 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			existingEnvKeys[key] = value
 		}
 
-		env := []string{}
-		secrets := map[string]string{}
-		var onExit func()
+		var templateBody string
 		if shouldMountFile {
-			secrets = dopplerSecrets
-			env = originalEnv
-
 			if shouldAutoDetectFormat {
 				if shouldMountTemplate {
 					mountFormat = models.TemplateMountFormat
@@ -232,7 +203,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			utils.LogDebug(fmt.Sprintf("Using %s format", mountFormat))
 
-			var templateBody string
 			if shouldMountTemplate {
 				if mountFormat != models.TemplateMountFormat {
 					utils.HandleError(errors.New("--mount-template can only be used with --mount-format=template"))
@@ -241,6 +211,39 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			} else if mountFormat == models.TemplateMountFormat {
 				utils.HandleError(errors.New("--mount-template must be specified when using --mount-format=template"))
 			}
+		}
+
+		// retrieve secrets
+		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
+
+		// The potentially dangerous secret names only are only dangerous when they are set
+		// as environment variables since they have the potential to change the default shell behavior.
+		// When mounting the secrets into a file these are not dangerous
+		if !shouldMountFile {
+			if err := controllers.CheckForDangerousSecretNames(dopplerSecrets); err != nil {
+				utils.LogWarning(err.Error())
+			}
+		}
+
+		if len(secretsToInclude) > 0 {
+			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
+			missingSecrets := controllers.MissingSecrets(dopplerSecrets, secretsToInclude)
+			if len(missingSecrets) > 0 {
+				err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
+				if noExitOnMissingIncludedSecrets {
+					utils.LogWarning(err.Error())
+				} else {
+					utils.HandleError(err)
+				}
+			}
+		}
+
+		env := []string{}
+		secrets := map[string]string{}
+		var onExit func()
+		if shouldMountFile {
+			secrets = dopplerSecrets
+			env = originalEnv
 
 			secretsBytes, err := controllers.SecretsToBytes(secrets, mountFormat, templateBody)
 			if !err.IsNil() {
