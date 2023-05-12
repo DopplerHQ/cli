@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"gopkg.in/yaml.v3"
@@ -72,7 +73,7 @@ func RepoConfig() (models.MultiRepoConfig, Error) {
 		// If no config file exists, then this is for an interactive setup, so
 		// return a MultiRepoConfig object containing an empty ProjectConfig object
 		var repoConfig models.MultiRepoConfig
-		repoConfig.Setup = append(repoConfig.Setup, models.ProjectConfig{})
+		repoConfig.Setup = append(repoConfig.Setup, models.ProjectConfig{Path: configuration.Scope})
 		return repoConfig, Error{}
 	}
 	return models.MultiRepoConfig{}, Error{}
