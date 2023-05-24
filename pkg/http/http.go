@@ -221,7 +221,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 	var response *http.Response
 	response = nil
 
-	err = retry(RequestAttempts, 100*time.Millisecond, func() error {
+	err = utils.Retry(RequestAttempts, 100*time.Millisecond, func() error {
 		// disable semgrep rule b/c we properly check that resp isn't nil before using it within the err block
 		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
@@ -240,7 +240,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 				return err
 			}
 
-			return StopRetry{err}
+			return utils.StopRetryError(err)
 		}
 
 		response = resp
@@ -264,7 +264,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 		}
 
 		// we cannot recover from this error code; accept defeat
-		return StopRetry{errors.New("Request failed")}
+		return utils.StopRetryError(errors.New("Request failed"))
 	})
 
 	return response, err

@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 Doppler <support@doppler.com>
+Copyright © 2023 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package http
+package utils
 
 import (
 	"math/rand"
@@ -24,7 +24,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func retry(attempts int, sleep time.Duration, f func() error) error {
+func Retry(attempts int, sleep time.Duration, f func() error) error {
 	if err := f(); err != nil {
 		if s, ok := err.(StopRetry); ok {
 			// Return the original error for later checking
@@ -37,12 +37,16 @@ func retry(attempts int, sleep time.Duration, f func() error) error {
 			sleep = sleep + jitter/2
 
 			time.Sleep(sleep)
-			return retry(attempts, 2*sleep, f)
+			return Retry(attempts, 2*sleep, f)
 		}
 		return err
 	}
 
 	return nil
+}
+
+func StopRetryError(err error) StopRetry {
+	return StopRetry{err}
 }
 
 // StopRetry indicates to stop attempting retries. wraps an error
