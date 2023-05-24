@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -154,12 +155,15 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 
 	// cleanup named pipe on exit
 	cleanupFIFO := func() {
-		if utils.Exists(mountPath) {
-			utils.LogDebug(fmt.Sprintf("Deleting secrets mount %s", mountPath))
-			if err := os.Remove(mountPath); err != nil {
-				utils.LogDebug("Unable to delete secrets mount")
-				utils.LogError(err)
+		utils.LogDebug(fmt.Sprintf("Deleting secrets mount %s", mountPath))
+		if err := os.Remove(mountPath); err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				// ignore
+				return
 			}
+
+			utils.LogDebug("Unable to delete secrets mount")
+			utils.LogError(err)
 		}
 	}
 
