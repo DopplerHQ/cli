@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -235,7 +236,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 
 			utils.LogDebug(err.Error())
 
-			if isTimeout(err) {
+			if isTimeout(err) || errors.Is(err, syscall.ECONNREFUSED) {
 				// retry request
 				return err
 			}
