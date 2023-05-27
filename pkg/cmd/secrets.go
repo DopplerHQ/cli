@@ -456,16 +456,16 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, nil)
 		}
 
-		fallbackOpts := fallbackOptions{
-			enable:             enableFallback,
-			path:               fallbackPath,
-			legacyPath:         legacyFallbackPath,
-			readonly:           fallbackReadonly,
-			exclusive:          fallbackOnly,
-			exitOnWriteFailure: exitOnWriteFailure,
-			passphrase:         fallbackPassphrase,
+		fallbackOpts := controllers.FallbackOptions{
+			Enable:             enableFallback,
+			Path:               fallbackPath,
+			LegacyPath:         legacyFallbackPath,
+			Readonly:           fallbackReadonly,
+			Exclusive:          fallbackOnly,
+			ExitOnWriteFailure: exitOnWriteFailure,
+			Passphrase:         fallbackPassphrase,
 		}
-		secrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
+		secrets := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
 
 		var err error
 		body, err = json.Marshal(secrets)

@@ -156,6 +156,39 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 	return result, Error{}
 }
 
+// WatchSecrets for any changes
+func WatchSecrets(host string, verifyTLS bool, apiKey string, project string, config string, handler func([]byte)) (int, http.Header, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	url, err := generateURL(host, "/v3/configs/config/secrets/watch", params)
+	if err != nil {
+		return 0, nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	headers := apiKeyHeader(apiKey)
+	headers["Cache-Control"] = "no-cache"
+	headers["Accept"] = "text/event-stream"
+	headers["Connection"] = "keep-alive"
+
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return 0, nil, Error{Err: err, Message: "Unable to submit request"}
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	statusCode, respHeaders, err := performSSERequest(req, verifyTLS, handler)
+	if err != nil {
+		return statusCode, respHeaders, Error{Err: err, Message: "Unable to perform request", Code: statusCode}
+	}
+
+	return statusCode, respHeaders, Error{}
+}
+
 // DownloadSecrets for specified project and config
 func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, etag string, dynamicSecretsTTL time.Duration, secrets []string) (int, http.Header, []byte, Error) {
 	var params []queryParam

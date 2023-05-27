@@ -16,39 +16,31 @@ limitations under the License.
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/crypto"
+	"github.com/DopplerHQ/cli/pkg/global"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
-	"gopkg.in/gookit/color.v1"
 )
 
 var defaultFallbackDir string
 
 const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
-
-type fallbackOptions struct {
-	enable             bool
-	path               string
-	legacyPath         string
-	readonly           bool
-	exclusive          bool
-	exitOnWriteFailure bool
-	passphrase         string
-}
 
 var secretsToInclude []string
 
@@ -90,6 +82,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
 		localConfig := configuration.LocalConfig(cmd)
 		dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
+		exitOnMissingIncludedSecrets := !cmd.Flags().Changed("no-exit-on-missing-only-secrets")
 
 		utils.RequireValue("token", localConfig.Token.Value)
 
@@ -131,14 +124,14 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
-		fallbackOpts := fallbackOptions{
-			enable:             enableFallback,
-			path:               fallbackPath,
-			legacyPath:         legacyFallbackPath,
-			readonly:           fallbackReadonly,
-			exclusive:          fallbackOnly,
-			exitOnWriteFailure: exitOnWriteFailure,
-			passphrase:         passphrase,
+		fallbackOpts := controllers.FallbackOptions{
+			Enable:             enableFallback,
+			Path:               fallbackPath,
+			LegacyPath:         legacyFallbackPath,
+			Readonly:           fallbackReadonly,
+			Exclusive:          fallbackOnly,
+			ExitOnWriteFailure: exitOnWriteFailure,
+			Passphrase:         passphrase,
 		}
 
 		mountPath := cmd.Flag("mount").Value.String()
@@ -213,113 +206,214 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
-		// retrieve secrets
-		dopplerSecrets := fetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
-
-		// The potentially dangerous secret names only are only dangerous when they are set
-		// as environment variables since they have the potential to change the default shell behavior.
-		// When mounting the secrets into a file these are not dangerous
-		if !shouldMountFile {
-			if err := controllers.CheckForDangerousSecretNames(dopplerSecrets); err != nil {
-				utils.LogWarning(err.Error())
-			}
+		mountOptions := controllers.MountOptions{
+			Enable:   shouldMountFile,
+			Format:   mountFormat,
+			Path:     mountPath,
+			Template: templateBody,
+			MaxReads: maxReads,
 		}
 
-		if len(secretsToInclude) > 0 {
-			noExitOnMissingIncludedSecrets := cmd.Flags().Changed("no-exit-on-missing-only-secrets")
-			missingSecrets := controllers.MissingSecrets(dopplerSecrets, secretsToInclude)
-			if len(missingSecrets) > 0 {
-				err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
-				if noExitOnMissingIncludedSecrets {
-					utils.LogWarning(err.Error())
-				} else {
-					utils.HandleError(err)
-				}
-			}
+		watch := cmd.Flags().Changed("watch")
+
+		if watch && fallbackOpts.Exclusive {
+			utils.LogWarning("--watch has no effect when used with --fallback-only")
+			watch = false
 		}
 
-		env := []string{}
-		secrets := map[string]string{}
-		var onExit func()
-		if shouldMountFile {
-			secrets = dopplerSecrets
-			env = originalEnv
-
-			secretsBytes, err := controllers.SecretsToBytes(secrets, mountFormat, templateBody)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-			absMountPath, handler, err := controllers.MountSecrets(secretsBytes, mountPath, maxReads)
-			if !err.IsNil() {
-				utils.HandleError(err.Unwrap(), err.Message)
-			}
-			mountPath = absMountPath
-			onExit = handler
-
-			// export path to mounted file
-			env = append(env, fmt.Sprintf("%s=%s", "DOPPLER_CLI_SECRETS_PATH", mountPath))
-		} else {
-			// remove any reserved keys from secrets
-			reservedKeys := []string{"PATH", "PS1", "HOME"}
-			for _, reservedKey := range reservedKeys {
-				if _, found := dopplerSecrets[reservedKey]; found {
-					utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
-					delete(dopplerSecrets, reservedKey)
-				}
-			}
-
-			if preserveEnv != "false" {
-				secretsToPreserve := strings.Split(preserveEnv, ",")
-
-				// use doppler secrets
-				for name, value := range dopplerSecrets {
-					secrets[name] = value
-				}
-				// then use existing env vars
-				for name, value := range existingEnvKeys {
-					if preserveEnv != "true" && !utils.Contains(secretsToPreserve, name) {
-						continue
-					}
-
-					if _, found := secrets[name]; found == true {
-						utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
-					}
-					secrets[name] = value
-				}
-			} else {
-				// use existing env vars
-				for name, value := range existingEnvKeys {
-					secrets[name] = value
-				}
-				// then use doppler secrets
-				for name, value := range dopplerSecrets {
-					secrets[name] = value
-				}
-			}
-
-			for _, envVar := range utils.MapToEnvFormat(secrets, false) {
-				env = append(env, envVar)
-			}
-		}
-
-		exitCode := 0
+		var c *exec.Cmd
+		var cleanupMount func()
 		var err error
+		var lastSecretsFetch time.Time
+		var lastUpdateEvent time.Time
+		// used to ensure we only run one process at a time
+		var processMutex sync.Mutex
+		// used to ensure we only process one event at a time
+		var watchMutex sync.Mutex
+		// this variable has the potential to be racey, but is made safe by our use of the mutex
+		terminatedByWatch := false
 
-		if cmd.Flags().Changed("command") {
-			command := cmd.Flag("command").Value.String()
-			exitCode, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
-		} else {
-			exitCode, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals, onExit)
-		}
-
-		if err != nil {
-			if strings.HasPrefix(err.Error(), "exec") || strings.HasPrefix(err.Error(), "fork/exec") {
-				utils.LogError(err)
+		startProcess := func() {
+			// ensure we can fetch the new secrets before restarting the process
+			secrets := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
+			secretsFetchedAt := time.Now()
+			if secretsFetchedAt.After(lastSecretsFetch) {
+				lastSecretsFetch = secretsFetchedAt
 			}
-			utils.LogDebugError(err)
+
+			controllers.ValidateSecrets(secrets, secretsToInclude, exitOnMissingIncludedSecrets, mountOptions)
+
+			isRestart := c != nil
+			// terminate the old process
+			if isRestart {
+				terminatedByWatch = true
+
+				// killing the process here will cause the cleanup goroutine below to run, thereby unlocking the mutex
+				utils.LogDebug(fmt.Sprintf("Sending SIGTERM to process %d", c.Process.Pid))
+				c.Process.Signal(syscall.SIGTERM)
+				// wait up to 10 sec for the process to exit
+				for i := 0; i < 10; i++ {
+					if !utils.IsProcessRunning(c.Process) {
+						// process has been killed
+						break
+					}
+					if i == 5 {
+						utils.LogDebug("Still waiting for process to exit...")
+					}
+					time.Sleep(time.Second)
+				}
+
+				// if the process still hasn't exited, forcefully kill it
+				if utils.IsProcessRunning(c.Process) {
+					utils.LogDebug("Process has not exited; sending SIGKILL to process")
+					if e := c.Process.Kill(); e != nil {
+						utils.LogDebugError(e)
+					}
+				}
+
+				c = nil
+			}
+
+			// this lock ensures the old process, if any, has exited before we start a new process
+			processMutex.Lock()
+
+			// we could have received a new update event while we were waiting for the previous process to terminate.
+			// if so, don't bother starting the process as it'll just be immediately restarted again after fetching the latest secrets
+			if lastUpdateEvent.After(secretsFetchedAt) {
+				utils.LogDebug("Not starting new process; more recent update event has been received")
+				processMutex.Unlock()
+				return
+			}
+
+			terminatedByWatch = false
+
+			var env []string
+			env, cleanupMount = controllers.PrepareSecrets(secrets, originalEnv, preserveEnv, existingEnvKeys, mountOptions)
+
+			global.WaitGroup.Add(1)
+
+			if isRestart {
+				utils.Log("Restarting process")
+			}
+
+			// start the process
+			c, err = controllers.Run(cmd, args, env, forwardSignals)
+			if err != nil {
+				defer global.WaitGroup.Done()
+				if cleanupMount != nil {
+					cleanupMount()
+				}
+				utils.HandleError(err)
+			}
+
+			go func() {
+				defer processMutex.Unlock()
+				defer global.WaitGroup.Done()
+
+				exitCode, err := utils.WaitCommand(c)
+
+				if cleanupMount != nil {
+					cleanupMount()
+
+					// add arbitrary delay before re-mounting secrets to avoid a race-related "broken pipe" when writing to the named pipe
+					time.Sleep(100 * time.Millisecond)
+				}
+
+				// ignore errors if we were responsible for killing the process
+				if !terminatedByWatch {
+					if err != nil {
+						if strings.HasPrefix(err.Error(), "exec") || strings.HasPrefix(err.Error(), "fork/exec") {
+							utils.LogError(err)
+						}
+						utils.LogDebugError(err)
+					}
+
+					os.Exit(exitCode)
+				}
+			}()
 		}
 
-		os.Exit(exitCode)
+		watchHandler := func(data []byte) {
+			event := controllers.ParseWatchEvent(data)
+			if event.Type == "" {
+				return
+			}
+
+			// don't capture analytics for the ping event; it's too noisy
+			if event.Type != "ping" {
+				controllers.CaptureEvent("WatchDataReceived", map[string]interface{}{"event": event.Type})
+			}
+
+			if event.Type == "secrets.update" {
+				eventReceived := time.Now()
+				if lastUpdateEvent.Before(eventReceived) {
+					lastUpdateEvent = eventReceived
+				}
+
+				watchMutex.Lock()
+				defer watchMutex.Unlock()
+
+				utils.LogDebug(fmt.Sprintf("Received %s event", event.Type))
+
+				// due to the lock, we only process one event at a time, so this event could have come in many seconds ago.
+				// it's possible we've already refetched secrets since then, in which case we don't need to re-fetch
+				if lastSecretsFetch.After(eventReceived) {
+					utils.LogDebug("Ignoring event; newer secrets have already been fetched")
+					return
+				}
+
+				startProcess()
+			} else if event.Type == "connected" {
+				utils.LogDebug("Connected to secrets stream")
+			} else if event.Type == "ping" {
+				// do nothing
+			} else {
+				utils.Log(fmt.Sprintf("Received unknown event: %s", event.Type))
+			}
+		}
+
+		startProcess()
+
+		// initiate watch logic after starting the process so that failing to watch just degrades to normal 'run' behavior
+		if watch {
+			maxAttempts := 10
+			attempt := 0
+			_ = utils.Retry(maxAttempts, time.Second, func() error {
+				attempt = attempt + 1
+
+				statusCode, headers, httpErr := http.WatchSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, watchHandler)
+				if !httpErr.IsNil() {
+					e := httpErr.Unwrap()
+
+					msg := "Unable to watch for secrets changes"
+					// a 200 is sent as soon as the connection is established, so if it dies after that the status code
+					// will still be 200. we should retry these requests
+					canRetry := http.IsRetry(statusCode, headers.Get("content-type")) || statusCode == 200
+					if canRetry && attempt < maxAttempts {
+						msg += ". Will retry"
+					}
+					if statusCode == 200 {
+						// this connection was likely killed due to a timeout, so we can log quietly
+						utils.LogDebugError(errors.New(msg))
+					} else {
+						utils.LogError(errors.New(msg))
+					}
+
+					controllers.CaptureEvent("WatchConnectionError", map[string]interface{}{"statusCode": statusCode, "canRetry": canRetry})
+
+					if statusCode != 0 {
+						e = fmt.Errorf("%s. Status code: %d", e, statusCode)
+					}
+					utils.LogDebugError(e)
+
+					if !canRetry {
+						return utils.StopRetryError(e)
+					}
+				}
+
+				return httpErr.Unwrap()
+			})
+		}
 	},
 }
 
@@ -402,192 +496,6 @@ var runCleanCmd = &cobra.Command{
 	},
 }
 
-// fetchSecrets from Doppler and handle fallback file
-func fetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts fallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) map[string]string {
-	if fallbackOpts.exclusive {
-		if !fallbackOpts.enable {
-			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
-		}
-		return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
-	}
-
-	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
-	enableCache = enableCache && metadataPath != ""
-	etag := ""
-	if enableCache {
-		etag = getCacheFileETag(metadataPath, fallbackOpts.path)
-	}
-
-	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
-	if !httpErr.IsNil() {
-		canUseFallback := statusCode != 401 && statusCode != 403 && statusCode != 404
-		if !canUseFallback {
-			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.path))
-			os.Remove(fallbackOpts.path)
-			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.legacyPath))
-			os.Remove(fallbackOpts.legacyPath)
-			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, metadataPath))
-			os.Remove(metadataPath)
-		}
-
-		if fallbackOpts.enable && canUseFallback {
-			utils.Log("Unable to fetch secrets from the Doppler API")
-			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
-		}
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
-	}
-
-	if enableCache && statusCode == 304 {
-		utils.LogDebug("Using cached secrets from fallback file")
-		cache, err := controllers.SecretsCacheFile(fallbackOpts.path, fallbackOpts.passphrase)
-		if !err.IsNil() {
-			utils.LogDebugError(err.Unwrap())
-			utils.LogDebug(err.Message)
-
-			// we have to exit here as we don't have any secrets to parse
-			utils.HandleError(err.Unwrap(), err.Message)
-		}
-
-		return cache
-	}
-
-	// ensure the response can be parsed before proceeding
-	secrets, err := parseSecrets(response)
-	if err != nil {
-		utils.LogDebugError(err)
-
-		if fallbackOpts.enable {
-			utils.Log("Unable to parse the Doppler API response")
-			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackOpts.path, fallbackOpts.legacyPath, fallbackOpts.passphrase, false)
-		}
-		utils.HandleError(err, "Unable to parse API response")
-	}
-
-	writeFallbackFile := fallbackOpts.enable && !fallbackOpts.readonly && nameTransformer == nil
-	if writeFallbackFile {
-		utils.LogDebug("Encrypting secrets")
-		encryptedResponse, err := crypto.Encrypt(fallbackOpts.passphrase, response, "base64")
-		if err != nil {
-			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
-		}
-
-		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackOpts.path))
-		if err := utils.WriteFile(fallbackOpts.path, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
-			utils.Log("Unable to write to fallback file")
-			if fallbackOpts.exitOnWriteFailure {
-				utils.HandleError(err, "", strings.Join(writeFailureMessage(), "\n"))
-			} else {
-				utils.LogDebugError(err)
-			}
-		}
-
-		if enableCache {
-			if etag := respHeaders.Get("etag"); etag != "" {
-				hash := crypto.Hash(encryptedResponse)
-
-				if err := controllers.WriteMetadataFile(metadataPath, etag, hash); !err.IsNil() {
-					utils.LogDebugError(err.Unwrap())
-					utils.LogDebug(err.Message)
-				}
-			} else {
-				utils.LogDebug("API response does not contain ETag")
-			}
-		}
-	}
-
-	return secrets
-}
-
-func writeFailureMessage() []string {
-	var msg []string
-
-	msg = append(msg, "")
-	msg = append(msg, "=== More Info ===")
-	msg = append(msg, "")
-	msg = append(msg, color.Green.Render("Why did doppler exit?"))
-	msg = append(msg, "Doppler failed to make a local backup of your secrets, known as a fallback file.")
-	msg = append(msg, "The most common cause for this is insufficient permissions, including trying to use a fallback file created by a different user.")
-	msg = append(msg, "")
-	msg = append(msg, color.Green.Render("Why does this matter?"))
-	msg = append(msg, "Without the fallback file, your secrets would be inaccessible in the event of a network outage or Doppler downtime.")
-	msg = append(msg, "This could mean your development is blocked, or it could mean that your production services can't start up.")
-	msg = append(msg, "")
-	msg = append(msg, color.Green.Render("What should I do now?"))
-	msg = append(msg, "1. You can change the location of the fallback file using the '--fallback' flag.")
-	msg = append(msg, "2. You can attempt to debug and fix the local error causing the write failure.")
-	msg = append(msg, "3. You can choose to ignore this error using the '--no-exit-on-write-failure' flag, but be forewarned that this is probably a really bad idea.")
-	msg = append(msg, "")
-	msg = append(msg, "Run 'doppler run --help' for more info.")
-	msg = append(msg, "")
-
-	return msg
-}
-
-func readFallbackFile(path string, legacyPath string, passphrase string, silent bool) map[string]string {
-	// avoid re-logging if re-running for legacy file
-	// TODO remove this when removing legacy path support
-	if !silent {
-		utils.Log("Reading secrets from fallback file")
-	}
-	utils.LogDebug(fmt.Sprintf("Using fallback file %s", path))
-
-	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			// attempt to read from the legacy path, in case the fallback file was created with an older version of the CLI
-			// TODO remove this when releasing CLI v4 (DPLR-435)
-			if legacyPath != "" {
-				return readFallbackFile(legacyPath, "", passphrase, true)
-			}
-
-			utils.HandleError(errors.New("The fallback file does not exist"))
-		}
-
-		utils.HandleError(err, "Unable to read fallback file")
-	}
-
-	response, err := ioutil.ReadFile(path) // #nosec G304
-	if err != nil {
-		utils.HandleError(err, "Unable to read fallback file")
-	}
-
-	utils.LogDebug("Decrypting fallback file")
-	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
-	if err != nil {
-		var msg []string
-		msg = append(msg, "")
-		msg = append(msg, "=== More Info ===")
-		msg = append(msg, "")
-		msg = append(msg, color.Green.Render("Why did decryption fail?"))
-		msg = append(msg, "The most common cause of decryption failure is using an incorrect passphrase.")
-		msg = append(msg, "The default passphrase is computed using your token, project, and config.")
-		msg = append(msg, "You must use the same token, project, and config that you used when saving the backup file.")
-		msg = append(msg, "")
-		msg = append(msg, color.Green.Render("What should I do now?"))
-		msg = append(msg, "Ensure you are using the same scope that you used when creating the fallback file.")
-		msg = append(msg, "Alternatively, manually specify your configuration using the appropriate flags (e.g. --project).")
-		msg = append(msg, "")
-		msg = append(msg, "Run 'doppler run --help' for more info.")
-		msg = append(msg, "")
-
-		utils.HandleError(err, "Unable to decrypt fallback file", strings.Join(msg, "\n"))
-	}
-
-	secrets, err := parseSecrets([]byte(decryptedSecrets))
-	if err != nil {
-		utils.HandleError(err, "Unable to parse fallback file")
-	}
-
-	return secrets
-}
-
-func parseSecrets(response []byte) (map[string]string, error) {
-	secrets := map[string]string{}
-	err := json.Unmarshal(response, &secrets)
-	return secrets, err
-}
-
 // legacyFallbackFile deprecated file path used by early versions of CLI v3
 func legacyFallbackFile(project string, config string) string {
 	name := fmt.Sprintf("%s:%s", project, config)
@@ -639,7 +547,7 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 			if err != nil {
 				utils.LogDebug("Unable to create directory for fallback file")
 				if exitOnWriteFailure {
-					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(writeFailureMessage(), "\n"))
+					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(controllers.WriteFailureMessage(), "\n"))
 				}
 			}
 		}
@@ -656,34 +564,6 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 	}
 
 	return fallbackPath, legacyFallbackPath
-}
-
-func getCacheFileETag(metadataPath string, cachePath string) string {
-	metadata, Err := controllers.MetadataFile(metadataPath)
-	if !Err.IsNil() {
-		utils.LogDebugError(Err.Unwrap())
-		utils.LogDebug(Err.Message)
-		return ""
-	}
-
-	if metadata.Hash == "" {
-		return metadata.ETag
-	}
-
-	// verify hash
-	cacheFileBytes, err := ioutil.ReadFile(cachePath) // #nosec G304
-	if err == nil {
-		cacheFileContents := string(cacheFileBytes)
-		hash := crypto.Hash(cacheFileContents)
-
-		if hash == metadata.Hash {
-			return metadata.ETag
-		}
-
-		utils.LogDebug("Fallback file failed hash check, ignoring cached secrets")
-	}
-
-	return ""
 }
 
 func init() {
@@ -727,6 +607,8 @@ func init() {
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 	runCmd.Flags().StringSliceVar(&secretsToInclude, "only-secrets", []string{}, "only include the specified secrets")
 	runCmd.Flags().Bool("no-exit-on-missing-only-secrets", false, "do not exit on missing secrets via --only-secrets")
+	// we only restart the process if it hasn't already exited
+	runCmd.Flags().Bool("watch", false, "(BETA) automatically restart the process when secrets change")
 
 	// deprecated
 	runCmd.Flags().Bool("silent-exit", false, "disable error output if the supplied command exits non-zero")

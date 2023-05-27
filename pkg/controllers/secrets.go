@@ -22,15 +22,19 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/spf13/cobra"
+	"gopkg.in/gookit/color.v1"
 )
 
 // Documentation about potentially dangerous secret names can be found here: https://docs.doppler.com/docs/accessing-secrets#injection
@@ -58,6 +62,24 @@ var dangerousSecretNames = [...]string{
 	// NodeJS
 	"NODE_VERSION",
 	"NODE_OPTIONS",
+}
+
+type FallbackOptions struct {
+	Enable             bool
+	Path               string
+	LegacyPath         string
+	Readonly           bool
+	Exclusive          bool
+	ExitOnWriteFailure bool
+	Passphrase         string
+}
+
+type MountOptions struct {
+	Enable   bool
+	Format   string
+	Path     string
+	Template string
+	MaxReads int
 }
 
 func GetSecrets(config models.ScopedOptions) (map[string]models.ComputedSecret, Error) {
@@ -302,4 +324,323 @@ func CheckForDangerousSecretNames(secrets map[string]string) error {
 	}
 
 	return nil
+}
+
+func ValidateSecrets(secrets map[string]string, secretsToInclude []string, exitOnMissingIncludedSecrets bool, mountOptions MountOptions) {
+	if len(secretsToInclude) > 0 {
+		missingSecrets := MissingSecrets(secrets, secretsToInclude)
+		if len(missingSecrets) > 0 {
+			err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
+			if exitOnMissingIncludedSecrets {
+				utils.HandleError(err)
+			} else {
+				utils.LogWarning(err.Error())
+			}
+		}
+	}
+
+	// The potentially dangerous secret names only are only dangerous when they are set
+	// as environment variables since they have the potential to change the default shell behavior.
+	// When mounting the secrets into a file these are not dangerous
+	if !mountOptions.Enable {
+		if err := CheckForDangerousSecretNames(secrets); err != nil {
+			utils.LogWarning(err.Error())
+		}
+	}
+}
+
+func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, preserveEnv string, existingEnvKeys map[string]string, mountOptions MountOptions) ([]string, func()) {
+	env := []string{}
+	secrets := map[string]string{}
+	var onExit func()
+	if mountOptions.Enable {
+		secrets = dopplerSecrets
+		env = originalEnv
+
+		secretsBytes, err := SecretsToBytes(secrets, mountOptions.Format, mountOptions.Template)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+		absMountPath, handler, err := MountSecrets(secretsBytes, mountOptions.Path, mountOptions.MaxReads)
+		if !err.IsNil() {
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+		mountPath := absMountPath
+		onExit = handler
+
+		// export path to mounted file
+		env = append(env, fmt.Sprintf("%s=%s", "DOPPLER_CLI_SECRETS_PATH", mountPath))
+	} else {
+		// remove any reserved keys from secrets
+		reservedKeys := []string{"PATH", "PS1", "HOME"}
+		for _, reservedKey := range reservedKeys {
+			if _, found := dopplerSecrets[reservedKey]; found {
+				utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
+				delete(dopplerSecrets, reservedKey)
+			}
+		}
+
+		if preserveEnv != "false" {
+			secretsToPreserve := strings.Split(preserveEnv, ",")
+
+			// use doppler secrets
+			for name, value := range dopplerSecrets {
+				secrets[name] = value
+			}
+			// then use existing env vars
+			for name, value := range existingEnvKeys {
+				if preserveEnv != "true" && !utils.Contains(secretsToPreserve, name) {
+					continue
+				}
+
+				if _, found := secrets[name]; found {
+					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
+				}
+				secrets[name] = value
+			}
+		} else {
+			// use existing env vars
+			for name, value := range existingEnvKeys {
+				secrets[name] = value
+			}
+			// then use doppler secrets
+			for name, value := range dopplerSecrets {
+				secrets[name] = value
+			}
+		}
+
+		for _, envVar := range utils.MapToEnvFormat(secrets, false) {
+			env = append(env, envVar)
+		}
+	}
+
+	return env, onExit
+}
+
+// fetchSecrets from Doppler and handle fallback file
+func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) map[string]string {
+	if fallbackOpts.Exclusive {
+		if !fallbackOpts.Enable {
+			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
+		}
+		return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+	}
+
+	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
+	enableCache = enableCache && metadataPath != ""
+	etag := ""
+	if enableCache {
+		etag = getCacheFileETag(metadataPath, fallbackOpts.Path)
+	}
+
+	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
+	if !httpErr.IsNil() {
+		canUseFallback := statusCode != 401 && statusCode != 403 && statusCode != 404
+		if !canUseFallback {
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.Path))
+			os.Remove(fallbackOpts.Path)
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.LegacyPath))
+			os.Remove(fallbackOpts.LegacyPath)
+			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, metadataPath))
+			os.Remove(metadataPath)
+		}
+
+		if fallbackOpts.Enable && canUseFallback {
+			utils.Log("Unable to fetch secrets from the Doppler API")
+			utils.LogError(httpErr.Unwrap())
+			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+		}
+		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+	}
+
+	if enableCache && statusCode == 304 {
+		utils.LogDebug("Using cached secrets from fallback file")
+		cache, err := SecretsCacheFile(fallbackOpts.Path, fallbackOpts.Passphrase)
+		if !err.IsNil() {
+			utils.LogDebugError(err.Unwrap())
+			utils.LogDebug(err.Message)
+
+			// we have to exit here as we don't have any secrets to parse
+			utils.HandleError(err.Unwrap(), err.Message)
+		}
+
+		return cache
+	}
+
+	// ensure the response can be parsed before proceeding
+	secrets, err := parseSecrets(response)
+	if err != nil {
+		utils.LogDebugError(err)
+
+		if fallbackOpts.Enable {
+			utils.Log("Unable to parse the Doppler API response")
+			utils.LogError(httpErr.Unwrap())
+			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+		}
+		utils.HandleError(err, "Unable to parse API response")
+	}
+
+	writeFallbackFile := fallbackOpts.Enable && !fallbackOpts.Readonly && nameTransformer == nil
+	if writeFallbackFile {
+		utils.LogDebug("Encrypting secrets")
+		encryptedResponse, err := crypto.Encrypt(fallbackOpts.Passphrase, response, "base64")
+		if err != nil {
+			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
+		}
+
+		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackOpts.Path))
+		if err := utils.WriteFile(fallbackOpts.Path, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
+			utils.Log("Unable to write to fallback file")
+			if fallbackOpts.ExitOnWriteFailure {
+				utils.HandleError(err, "", strings.Join(WriteFailureMessage(), "\n"))
+			} else {
+				utils.LogDebugError(err)
+			}
+		}
+
+		if enableCache {
+			if etag := respHeaders.Get("etag"); etag != "" {
+				hash := crypto.Hash(encryptedResponse)
+
+				if err := WriteMetadataFile(metadataPath, etag, hash); !err.IsNil() {
+					utils.LogDebugError(err.Unwrap())
+					utils.LogDebug(err.Message)
+				}
+			} else {
+				utils.LogDebug("API response does not contain ETag")
+			}
+		}
+	}
+
+	return secrets
+}
+
+func Run(cmd *cobra.Command, args []string, env []string, forwardSignals bool) (*exec.Cmd, error) {
+	var c *exec.Cmd
+	var err error
+
+	if cmd.Flags().Changed("command") {
+		command := cmd.Flag("command").Value.String()
+		c, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+	} else {
+		c, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+	}
+
+	return c, err
+}
+
+func readFallbackFile(path string, legacyPath string, passphrase string, silent bool) map[string]string {
+	// avoid re-logging if re-running for legacy file
+	// TODO remove this when removing legacy path support
+	if !silent {
+		utils.Log("Reading secrets from fallback file")
+	}
+	utils.LogDebug(fmt.Sprintf("Using fallback file %s", path))
+
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// attempt to read from the legacy path, in case the fallback file was created with an older version of the CLI
+			// TODO remove this when releasing CLI v4 (DPLR-435)
+			if legacyPath != "" {
+				return readFallbackFile(legacyPath, "", passphrase, true)
+			}
+
+			utils.HandleError(errors.New("The fallback file does not exist"))
+		}
+
+		utils.HandleError(err, "Unable to read fallback file")
+	}
+
+	response, err := ioutil.ReadFile(path) // #nosec G304
+	if err != nil {
+		utils.HandleError(err, "Unable to read fallback file")
+	}
+
+	utils.LogDebug("Decrypting fallback file")
+	decryptedSecrets, err := crypto.Decrypt(passphrase, response)
+	if err != nil {
+		var msg []string
+		msg = append(msg, "")
+		msg = append(msg, "=== More Info ===")
+		msg = append(msg, "")
+		msg = append(msg, color.Green.Render("Why did decryption fail?"))
+		msg = append(msg, "The most common cause of decryption failure is using an incorrect passphrase.")
+		msg = append(msg, "The default passphrase is computed using your token, project, and config.")
+		msg = append(msg, "You must use the same token, project, and config that you used when saving the backup file.")
+		msg = append(msg, "")
+		msg = append(msg, color.Green.Render("What should I do now?"))
+		msg = append(msg, "Ensure you are using the same scope that you used when creating the fallback file.")
+		msg = append(msg, "Alternatively, manually specify your configuration using the appropriate flags (e.g. --project).")
+		msg = append(msg, "")
+		msg = append(msg, "Run 'doppler run --help' for more info.")
+		msg = append(msg, "")
+
+		utils.HandleError(err, "Unable to decrypt fallback file", strings.Join(msg, "\n"))
+	}
+
+	secrets, err := parseSecrets([]byte(decryptedSecrets))
+	if err != nil {
+		utils.HandleError(err, "Unable to parse fallback file")
+	}
+
+	return secrets
+}
+
+func WriteFailureMessage() []string {
+	var msg []string
+
+	msg = append(msg, "")
+	msg = append(msg, "=== More Info ===")
+	msg = append(msg, "")
+	msg = append(msg, color.Green.Render("Why did doppler exit?"))
+	msg = append(msg, "Doppler failed to make a local backup of your secrets, known as a fallback file.")
+	msg = append(msg, "The most common cause for this is insufficient permissions, including trying to use a fallback file created by a different user.")
+	msg = append(msg, "")
+	msg = append(msg, color.Green.Render("Why does this matter?"))
+	msg = append(msg, "Without the fallback file, your secrets would be inaccessible in the event of a network outage or Doppler downtime.")
+	msg = append(msg, "This could mean your development is blocked, or it could mean that your production services can't start up.")
+	msg = append(msg, "")
+	msg = append(msg, color.Green.Render("What should I do now?"))
+	msg = append(msg, "1. You can change the location of the fallback file using the '--fallback' flag.")
+	msg = append(msg, "2. You can attempt to debug and fix the local error causing the write failure.")
+	msg = append(msg, "3. You can choose to ignore this error using the '--no-exit-on-write-failure' flag, but be forewarned that this is probably a really bad idea.")
+	msg = append(msg, "")
+	msg = append(msg, "Run 'doppler run --help' for more info.")
+	msg = append(msg, "")
+
+	return msg
+}
+
+func parseSecrets(response []byte) (map[string]string, error) {
+	secrets := map[string]string{}
+	err := json.Unmarshal(response, &secrets)
+	return secrets, err
+}
+
+func getCacheFileETag(metadataPath string, cachePath string) string {
+	metadata, Err := MetadataFile(metadataPath)
+	if !Err.IsNil() {
+		utils.LogDebugError(Err.Unwrap())
+		utils.LogDebug(Err.Message)
+		return ""
+	}
+
+	if metadata.Hash == "" {
+		return metadata.ETag
+	}
+
+	// verify hash
+	cacheFileBytes, err := ioutil.ReadFile(cachePath) // #nosec G304
+	if err == nil {
+		cacheFileContents := string(cacheFileBytes)
+		hash := crypto.Hash(cacheFileContents)
+
+		if hash == metadata.Hash {
+			return metadata.ETag
+		}
+
+		utils.LogDebug("Fallback file failed hash check, ignoring cached secrets")
+	}
+
+	return ""
 }
