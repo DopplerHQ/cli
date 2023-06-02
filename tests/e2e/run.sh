@@ -114,4 +114,29 @@ beforeEach
 value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env=true -- printenv TEST)"
 [[ "$value" == "foo" ]] || error "ERROR: existing env vars not honored when preserve-env flag passed value of \"true\""
 
+beforeEach
+
+# verify preserve-env flag honors secret name
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env="TEST" -- printenv TEST)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env var not honored when preserve-env flag passed secret name"
+
+beforeEach
+
+# verify preserve-env flag only overrides specified secrets
+# TEST should be read from env but FOO should be read from Doppler
+value="$(TEST="foo" FOO="123" "$DOPPLER_BINARY" run --preserve-env="TEST" --command "printenv TEST && printenv FOO")"
+[[ "$value" == "$(echo -e "foo\nbar")" ]] || error "ERROR: env vars not honored when preserve-env flag passed one secret name"
+
+beforeEach
+
+# verify preserve-env flag honors list of secret names
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env="INVALID,TEST" -- printenv TEST)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env var not honored when preserve-env flag passed list of secret names"
+
+beforeEach
+
+# verify preserve-env flag ignores nonexistent secrets
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env="INVALID" -- printenv TEST)"
+[[ "$value" == "abc" ]] || error "ERROR: existing env var not ignored when preserve-env flag passed list of nonexistent secret names"
+
 afterAll
