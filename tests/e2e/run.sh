@@ -88,4 +88,30 @@ beforeEach
 # verify flags specified after '--' are passed to subcommand
 "$DOPPLER_BINARY" run -- true --config invalidconfig || error "ERROR: flags specified after '--' are improperly handled"
 
+### --preserve-env flag
+
+beforeEach
+
+# verify not specifying preserve-env flag results in ignoring existing env vars
+value="$(TEST="foo" "$DOPPLER_BINARY" run -- printenv TEST)"
+[[ "$value" == "abc" ]] || error "ERROR: existing env vars not ignored when omitting preserve-env flag"
+
+beforeEach
+
+# verify preserve-env flag value of 'false' results in ignoring existing env vars
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env=false -- printenv TEST)"
+[[ "$value" == "abc" ]] || error "ERROR: existing env vars not ignored when preserve-env flag passed value of \"false\""
+
+beforeEach
+
+# verify preserve-env flag without value preserves all existing env vars
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env -- printenv TEST)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env vars not honored when preserve-env flag specified without value"
+
+beforeEach
+
+# verify preserve-env flag value of 'true' preserves all existing env vars
+value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env=true -- printenv TEST)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env vars not honored when preserve-env flag passed value of \"true\""
+
 afterAll
