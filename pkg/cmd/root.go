@@ -179,6 +179,13 @@ func loadFlags(cmd *cobra.Command) {
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
 
 	// version check
+	if configuration.CanReadEnv {
+		enable := os.Getenv("DOPPLER_ENABLE_VERSION_CHECK")
+		if enable == "false" {
+			utils.Log(valueFromEnvironmentNotice("DOPPLER_ENABLE_VERSION_CHECK"))
+			version.PerformVersionCheck = false
+		}
+	}
 	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 

@@ -84,7 +84,7 @@ jobs:
         CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE: ${{ secrets.CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE }}
     - name: Send Slack notification
       run: |
-        CHANGELOG="$(doppler changelog -n 1 --no-check-version | tail -n +2)";
+        CHANGELOG="$(doppler changelog -n 1 | tail -n +2)";
         # escape characters for slack https://api.slack.com/reference/surfaces/formatting#escaping
         CHANGELOG=${CHANGELOG//&/&amp;};
         CHANGELOG=${CHANGELOG//</&lt;};
@@ -100,6 +100,7 @@ jobs:
           --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}";
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        DOPPLER_ENABLE_VERSION_CHECK: false
     - name: Clean up
       if: always()
       run: |
