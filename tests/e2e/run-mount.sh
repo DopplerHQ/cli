@@ -36,7 +36,7 @@ beforeAll
 beforeEach
 
 # verify content of mounted secrets file
-EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","HOME":"123"}'
+EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [ "$actual" != "$EXPECTED_SECRETS" ]; then
  echo "ERROR: mounted secrets file has invalid contents"
@@ -65,7 +65,7 @@ fi
 beforeEach
 
 # verify format is auto detected
-EXPECTED_SECRETS='DOPPLER_CONFIG="e2e"\nDOPPLER_ENVIRONMENT="e2e"\nDOPPLER_PROJECT="cli"\nHOME="123"'
+EXPECTED_SECRETS='DOPPLER_CONFIG="e2e"\nDOPPLER_ENVIRONMENT="e2e"\nDOPPLER_PROJECT="cli"\nFOO="bar"\nHOME="123"\nTEST="abc"'
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
  echo "ERROR: mounted secrets file with auto-detected env format has invalid contents"
@@ -75,7 +75,7 @@ fi
 beforeEach
 
 # verify specified format is used
-EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","HOME":"123"}'
+EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
  echo "ERROR: mounted secrets file with json format has invalid contents"
@@ -85,7 +85,7 @@ fi
 beforeEach
 
 # verify specified name transformer is used
-EXPECTED_SECRETS='{"TF_VAR_doppler_config":"e2e","TF_VAR_doppler_environment":"e2e","TF_VAR_doppler_project":"cli","TF_VAR_home":"123"}'
+EXPECTED_SECRETS='{"TF_VAR_doppler_config":"e2e","TF_VAR_doppler_environment":"e2e","TF_VAR_doppler_project":"cli","TF_VAR_foo":"bar","TF_VAR_home":"123","TF_VAR_test":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.json --name-transformer tf-var --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
  echo "ERROR: mounted secrets file with name transformer has invalid contents"
@@ -127,7 +127,7 @@ beforeEach
 beforeEach
 
 # verify existing env value is ignored even when --preserve-env is specified
-EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","HOME":"123"}'
+EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$(DOPPLER_CONFIG="test" "$DOPPLER_BINARY" run --preserve-env --config e2e --mount secrets.json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [ "$actual" != "$EXPECTED_SECRETS" ]; then
  echo "ERROR: mounted secrets file with --preserve-env has invalid contents"
