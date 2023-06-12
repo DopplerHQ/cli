@@ -31,6 +31,11 @@ var CamelTransformer = &SecretsNameTransformer{
 	Type:      "camel",
 	EnvCompat: true,
 }
+var LowerKebabTransformer = &SecretsNameTransformer{
+	Name:      "Lower Kebab",
+	Type:      "lower-kebab",
+	EnvCompat: true,
+}
 var LowerSnakeTransformer = &SecretsNameTransformer{
 	Name:      "Lower Snake",
 	Type:      "lower-snake",
@@ -55,6 +60,7 @@ var DotNETEnvTransformer = &SecretsNameTransformer{
 var SecretsNameTransformersList = []*SecretsNameTransformer{
 	UpperCamelTransformer,
 	CamelTransformer,
+	LowerKebabTransformer,
 	LowerSnakeTransformer,
 	TFVarTransformer,
 	DotNETTransformer,
