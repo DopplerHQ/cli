@@ -86,7 +86,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
-		preserveEnv := utils.GetBoolFlag(cmd, "preserve-env")
+		preserveEnv := cmd.Flag("preserve-env").Value.String()
 		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
 		localConfig := configuration.LocalConfig(cmd)
 		dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
@@ -181,7 +181,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			utils.HandleError(fmt.Errorf("Invalid mount format. Valid formats are %s", models.SecretsMountFormats))
 		}
 
-		if preserveEnv {
+		if preserveEnv != "false" {
 			if shouldMountFile {
 				utils.LogWarning("--preserve-env has no effect when used with --mount")
 			} else {
@@ -265,13 +265,19 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 			}
 
-			if preserveEnv {
+			if preserveEnv != "false" {
+				secretsToPreserve := strings.Split(preserveEnv, ",")
+
 				// use doppler secrets
 				for name, value := range dopplerSecrets {
 					secrets[name] = value
 				}
 				// then use existing env vars
 				for name, value := range existingEnvKeys {
+					if preserveEnv != "true" && !utils.Contains(secretsToPreserve, name) {
+						continue
+					}
+
 					if _, found := secrets[name]; found == true {
 						utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
 					}
@@ -688,7 +694,11 @@ func init() {
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	runCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
-	runCmd.Flags().Bool("preserve-env", false, "ignore any Doppler secrets that are already defined in the environment. this has potential security implications, use at your own risk.")
+	// note: requires using "--preserve-env=VALUE", doesn't work with "--preserve-env VALUE"
+	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence of the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk.")
+	// we must specify a default when no value is passed as this flag used to be a boolean
+	// https://github.com/spf13/pflag#setting-no-option-default-values-for-flags
+	runCmd.Flags().Lookup("preserve-env").NoOptDefVal = "true"
 	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validEnvCompatNameTransformersList))
 	runCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsEnvCompatNameTransformerTypes, cobra.ShellCompDirectiveDefault
