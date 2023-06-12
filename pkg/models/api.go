@@ -134,3 +134,11 @@ type APISecret struct {
 	ComputedVisibility string  `json:"computedVisibility"`
 	Note               string  `json:"note"`
 }
+
+type ActorInfo struct {
+	Workplace ActorWorkplaceInfo `json:"workplace"`
+}
+type ActorWorkplaceInfo struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}

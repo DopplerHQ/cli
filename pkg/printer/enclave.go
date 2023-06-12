@@ -428,3 +428,13 @@ func ConfigServiceToken(token models.ConfigServiceToken, jsonFlag bool, plain bo
 	rows := [][]string{{token.Name, token.Token, token.Slug, token.Project, token.Environment, token.Config, token.CreatedAt, token.ExpiresAt, token.Access}}
 	Table([]string{"name", "token", "slug", "project", "environment", "config", "created at", "expires at", "access"}, rows, TableOptions())
 }
+
+func ActorInfo(info models.ActorInfo, jsonFlag bool) {
+	if jsonFlag {
+		JSON(info)
+		return
+	}
+
+	rows := [][]string{{fmt.Sprintf("%s (%s)", info.Workplace.Name, info.Workplace.Slug)}}
+	Table([]string{"workplace"}, rows, TableOptions())
+}

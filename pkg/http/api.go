@@ -1299,3 +1299,23 @@ func ImportTemplate(host string, verifyTLS bool, apiKey string, template []byte)
 	}
 	return info, Error{}
 }
+
+func GetActorInfo(host string, verifyTLS bool, apiKey string) (models.ActorInfo, Error) {
+	url, err := generateURL(host, "/v3/me", nil)
+	if err != nil {
+		return models.ActorInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := GetRequest(url, verifyTLS, apiKeyHeader(apiKey))
+	if err != nil {
+		return models.ActorInfo{}, Error{Err: err, Message: "Unable to fetch actor", Code: statusCode}
+	}
+
+	var info models.ActorInfo
+	err = json.Unmarshal(response, &info)
+	if err != nil {
+		return models.ActorInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return info, Error{}
+}

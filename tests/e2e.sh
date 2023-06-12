@@ -21,6 +21,7 @@ export DOPPLER_CONFIG="e2e"
 "$DIR/e2e/legacy-commands.sh"
 "$DIR/e2e/analytics.sh"
 "$DIR/e2e/setup.sh"
+"$DIR/e2e/me.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0
