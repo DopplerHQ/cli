@@ -57,8 +57,8 @@ and your config file. Flags have the highest priority; config file has the least
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonFlag := utils.OutputJSON
 
-		utils.Print(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
-		utils.Print(fmt.Sprintf("%s %s", color.Green.Render("Configuration directory:"), configuration.UserConfigDir))
+		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration file:"), configuration.UserConfigFile))
+		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration directory:"), configuration.UserConfigDir))
 
 		config := configuration.LocalConfig(cmd)
 		printer.ScopedConfigSource(config, jsonFlag, true, false)
