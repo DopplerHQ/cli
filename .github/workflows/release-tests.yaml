@@ -33,7 +33,7 @@ jobs:
     - uses: actions/upload-artifact@master
       with:
         name: macOS build (amd64)
-        path: ./dist/doppler_darwin_amd64/doppler
+        path: ./dist/doppler_darwin_amd64_v1/doppler
     - uses: actions/upload-artifact@master
       with:
         name: Linux build (amd64)
