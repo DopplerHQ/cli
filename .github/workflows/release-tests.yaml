@@ -36,9 +36,9 @@ jobs:
         path: ./dist/doppler_darwin_amd64_v1/doppler
     - uses: actions/upload-artifact@master
       with:
-        name: Linux build (amd64)
-        path: ./dist/doppler_linux_amd64/doppler
+        name: macOS build (arm64)
+        path: ./dist/doppler_darwin_arm64/doppler
     - uses: actions/upload-artifact@master
       with:
-        name: Windows build (amd64)
-        path: ./dist/doppler_windows_amd64/doppler.exe
+        name: Linux build (amd64)
+        path: ./dist/doppler_linux_amd64_v1/doppler
