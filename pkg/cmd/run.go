@@ -702,7 +702,7 @@ func init() {
 	// we must specify a default when no value is passed as this flag used to be a boolean
 	// https://github.com/spf13/pflag#setting-no-option-default-values-for-flags
 	runCmd.Flags().Lookup("preserve-env").NoOptDefVal = "true"
-	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validEnvCompatNameTransformersList))
+	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("output name transformer. one of %v", validEnvCompatNameTransformersList))
 	runCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsEnvCompatNameTransformerTypes, cobra.ShellCompDirectiveDefault
 	})

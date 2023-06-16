@@ -636,7 +636,7 @@ func init() {
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	secretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	secretsDownloadCmd.Flags().String("format", models.JSON.String(), fmt.Sprintf("output format. one of %s", validFormatList))
-	secretsDownloadCmd.Flags().String("name-transformer", "", fmt.Sprintf("(BETA) output name transformer. one of %v", validNameTransformersList))
+	secretsDownloadCmd.Flags().String("name-transformer", "", fmt.Sprintf("output name transformer. one of %v", validNameTransformersList))
 	secretsDownloadCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsNameTransformerTypes, cobra.ShellCompDirectiveDefault
 	})
