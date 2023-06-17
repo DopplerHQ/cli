@@ -157,6 +157,28 @@ scoop:
   description: "The official Doppler CLI for managing your secrets"
   license: Apache-2.0
 
+winget:
+  - name: doppler
+    publisher: Doppler
+    short_description: "The official Doppler CLI for managing your secrets"
+    license: Apache-2.0
+    publisher_url: https://doppler.com
+    commit_author:
+      name: "Doppler Bot"
+      email: bot@doppler.com
+    homepage: "https://doppler.com"
+    skip_upload: auto
+    repository:
+      owner: DopplerHQ
+      name: winget-pkgs
+      branch: "cli-{{.Version}}"
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+
 nfpms:
   - id: doppler
     file_name_template: >-
