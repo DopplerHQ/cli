@@ -136,7 +136,13 @@ type APISecret struct {
 }
 
 type ActorInfo struct {
-	Workplace ActorWorkplaceInfo `json:"workplace"`
+	Workplace    ActorWorkplaceInfo `json:"workplace"`
+	Type         string             `json:"type"`
+	TokenPreview string             `json:"token_preview"`
+	Slug         string             `json:"slug"`
+	CreatedAt    string             `json:"created_at"`
+	Name         string             `json:"name"`
+	LastSeenAt   string             `json:"last_seen_at"`
 }
 type ActorWorkplaceInfo struct {
 	Name string `json:"name"`
