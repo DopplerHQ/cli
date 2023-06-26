@@ -435,6 +435,6 @@ func ActorInfo(info models.ActorInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{fmt.Sprintf("%s (%s)", info.Workplace.Name, info.Workplace.Slug)}}
-	Table([]string{"workplace"}, rows, TableOptions())
+	rows := [][]string{{info.Name, info.Type, fmt.Sprintf("%s (%s)", info.Workplace.Name, info.Workplace.Slug), info.TokenPreview, info.Slug, info.CreatedAt, info.LastSeenAt}}
+	Table([]string{"name", "type", "workplace", "token preview", "slug", "created at", "last seen at"}, rows, TableOptions())
 }
