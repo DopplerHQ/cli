@@ -28,7 +28,7 @@ type ComputedSecret struct {
 // ChangeRequest can be used to smartly update secrets
 type ChangeRequest struct {
 	OriginalName  interface{} `json:"originalName"`
-	OriginalValue interface{} `json:"originalValue"`
+	OriginalValue interface{} `json:"originalValue,omitempty"`
 	Name          string      `json:"name"`
 	Value         string      `json:"value"`
 	ShouldDelete  bool        `json:"shouldDelete"`

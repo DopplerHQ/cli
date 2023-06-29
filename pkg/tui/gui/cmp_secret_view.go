@@ -25,12 +25,14 @@ import (
 )
 
 type SecretViewModel struct {
-	originalName  interface{}
-	originalValue interface{}
-	nameView      *gocui.View
-	valueView     *gocui.View
-	isDirty       bool
-	shouldDelete  bool
+	originalName       interface{}
+	originalValue      interface{}
+	originalVisibility string
+	nameView           *gocui.View
+	valueView          *gocui.View
+	isTouched          bool
+	isDirty            bool
+	shouldDelete       bool
 }
 
 var generateId func() string
@@ -44,13 +46,18 @@ func init() {
 }
 
 func (svm *SecretViewModel) ToChangeRequest() models.ChangeRequest {
-	return models.ChangeRequest{
-		OriginalName:  svm.originalName,
-		OriginalValue: svm.originalValue,
-		Name:          svm.nameView.TextArea.GetContent(),
-		Value:         svm.valueView.TextArea.GetContent(),
-		ShouldDelete:  svm.shouldDelete,
+	cr := models.ChangeRequest{
+		OriginalName: svm.originalName,
+		Name:         svm.nameView.TextArea.GetContent(),
+		Value:        svm.valueView.TextArea.GetContent(),
+		ShouldDelete: svm.shouldDelete,
 	}
+
+	if svm.originalVisibility != "restricted" {
+		cr.OriginalValue = svm.originalValue
+	}
+
+	return cr
 }
 
 func (svm *SecretViewModel) ShouldSubmit() bool {
@@ -82,15 +89,20 @@ func CreateSecretViewModel(gui *Gui, secret *state.Secret) (*SecretViewModel, er
 
 	valueView.Editor = gocui.EditorFunc(gui.SecretValueEditor)
 	valueView.TextArea.Clear()
-	valueView.TextArea.TypeString(secret.Value)
+	if secret.Visibility == "restricted" {
+		valueView.TextArea.TypeString("[RESTRICTED]")
+	} else {
+		valueView.TextArea.TypeString(secret.Value)
+	}
 	valueView.TextArea.SetCursor2D(0, 0)
 	valueView.RenderTextArea()
 
 	svm := &SecretViewModel{
-		originalName:  secret.Name,
-		originalValue: secret.Value,
-		nameView:      nameView,
-		valueView:     valueView,
+		originalName:       secret.Name,
+		originalValue:      secret.Value,
+		originalVisibility: secret.Visibility,
+		nameView:           nameView,
+		valueView:          valueView,
 	}
 
 	svm.UpdateViewState()
@@ -137,7 +149,7 @@ func (gui *Gui) SecretValueEditor(v *gocui.View, key gocui.Key, ch rune, mod goc
 
 func (self *SecretViewModel) UpdateViewState() {
 	nameChanged := self.nameView.TextArea.GetContent() != self.originalName
-	valueChanged := self.valueView.TextArea.GetContent() != self.originalValue
+	valueChanged := (self.originalVisibility != "restricted" && self.valueView.TextArea.GetContent() != self.originalValue) || (self.originalVisibility == "restricted" && self.isTouched)
 
 	self.isDirty = self.originalName == "" || nameChanged || valueChanged || self.shouldDelete
 

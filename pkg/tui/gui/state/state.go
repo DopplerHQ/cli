@@ -32,8 +32,9 @@ type Config struct {
 }
 
 type Secret struct {
-	Name  string
-	Value string
+	Name       string
+	Value      string
+	Visibility string
 }
 
 type ByName []Secret

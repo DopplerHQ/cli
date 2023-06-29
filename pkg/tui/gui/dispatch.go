@@ -56,9 +56,16 @@ func createSecrets(computedSecrets map[string]models.ComputedSecret) []state.Sec
 		if cs.Name == "DOPPLER_CONFIG" || cs.Name == "DOPPLER_ENVIRONMENT" || cs.Name == "DOPPLER_PROJECT" {
 			continue
 		}
+		var value string
+		if cs.RawValue == nil {
+			value = ""
+		} else {
+			value = *cs.RawValue
+		}
 		secrets = append(secrets, state.Secret{
-			Name:  cs.Name,
-			Value: cs.RawValue,
+			Name:       cs.Name,
+			Value:      value,
+			Visibility: cs.RawVisibility,
 		})
 	}
 

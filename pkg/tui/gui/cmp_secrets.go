@@ -250,6 +250,7 @@ func (self *SecretsComponent) AppendSVM() error {
 	if err != nil {
 		return err
 	}
+	newSVM.originalName = nil
 
 	self.gui.mutexes.SecretViewsMutex.Lock()
 	self.secretVMs = append(self.secretVMs, newSVM)
@@ -272,7 +273,7 @@ func (self *SecretsComponent) DeleteSVM() error {
 		return nil
 	}
 
-	if self.activeSVM.originalName == "" {
+	if self.activeSVM.originalName == nil {
 		self.gui.mutexes.SecretViewsMutex.Lock()
 
 		curIdx := -1
@@ -322,6 +323,7 @@ func (self *SecretsComponent) UndoChanges() {
 	}
 
 	self.activeSVM.shouldDelete = false
+	self.activeSVM.isTouched = false
 
 	self.activeSVM.nameView.TextArea.Clear()
 	self.activeSVM.nameView.TextArea.TypeString(fmt.Sprint(self.activeSVM.originalName))
@@ -329,7 +331,11 @@ func (self *SecretsComponent) UndoChanges() {
 	self.activeSVM.nameView.RenderTextArea()
 
 	self.activeSVM.valueView.TextArea.Clear()
-	self.activeSVM.valueView.TextArea.TypeString(fmt.Sprint(self.activeSVM.originalValue))
+	if self.activeSVM.originalVisibility == "restricted" {
+		self.activeSVM.valueView.TextArea.TypeString("[RESTRICTED]")
+	} else {
+		self.activeSVM.valueView.TextArea.TypeString(fmt.Sprint(self.activeSVM.originalValue))
+	}
 	self.activeSVM.valueView.TextArea.SetCursor2D(0, 0)
 	self.activeSVM.valueView.RenderTextArea()
 
@@ -343,6 +349,14 @@ func (self *SecretsComponent) OnCurrentSVMChanged() {
 func (self *SecretsComponent) EditCurrentField() {
 	if self.activeSVM == nil {
 		return
+	}
+
+	self.activeSVM.isTouched = true
+
+	isValueFocused := strings.Index(self.gui.g.CurrentView().Name(), "SVM:Value:") == 0
+	if isValueFocused && self.activeSVM.originalVisibility == "restricted" {
+		self.gui.g.CurrentView().TextArea.Clear()
+		self.gui.cmps.secrets.OnCurrentSVMChanged()
 	}
 
 	self.gui.g.Cursor = true
