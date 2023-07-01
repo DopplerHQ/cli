@@ -25,7 +25,7 @@ import (
 
 var openCmd = &cobra.Command{
 	Use:   "open",
-	Short: "open the Doppler dashboard",
+	Short: "Open the Doppler dashboard",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)
@@ -38,7 +38,7 @@ var openCmd = &cobra.Command{
 
 var openDashboardCmd = &cobra.Command{
 	Use:   "dashboard",
-	Short: "open the Doppler dashboard",
+	Short: "Open the Doppler dashboard",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		localConfig := configuration.LocalConfig(cmd)

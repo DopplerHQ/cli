@@ -24,7 +24,7 @@ import (
 
 var changelogCmd = &cobra.Command{
 	Use:   "changelog",
-	Short: "view the CLI's changelog",
+	Short: "View the CLI's changelog",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		number := utils.GetIntFlag(cmd, "number", 16)
