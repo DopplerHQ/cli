@@ -69,7 +69,7 @@ jobs:
         GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
     - name: Build and publish binaries
       run:
-        GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --rm-dist
+        GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --clean
       env:
         GOPATH: ${{ runner.workspace }}
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}

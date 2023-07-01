@@ -38,7 +38,6 @@ builds:
 
 archives:
 -
-  rlcp: true
   name_template: >-
     {{ .ProjectName }}_
     {{- .Version }}_
@@ -74,7 +73,6 @@ checksum:
   algorithm: sha256
 
 source:
-  rlcp: true
   enabled: true
   name_template: '{{ .ProjectName }}_{{ .Version }}_src'
   format: 'tar.gz'
@@ -129,7 +127,7 @@ dockers:
 
 brews:
   - name: doppler
-    tap:
+    repository:
       owner: DopplerHQ
       name: homebrew-doppler
     commit_author:
@@ -146,16 +144,16 @@ brews:
     test: |
       system "#{bin}/doppler --version"
 
-scoop:
-  bucket:
-    owner: DopplerHQ
-    name: scoop-doppler
-  commit_author:
-    name: "Doppler Bot"
-    email: bot@doppler.com
-  homepage: "https://doppler.com"
-  description: "The official Doppler CLI for managing your secrets"
-  license: Apache-2.0
+scoops:
+  - repository:
+      owner: DopplerHQ
+      name: scoop-doppler
+    commit_author:
+      name: "Doppler Bot"
+      email: bot@doppler.com
+    homepage: "https://doppler.com"
+    description: "The official Doppler CLI for managing your secrets"
+    license: Apache-2.0
 
 winget:
   - name: doppler
