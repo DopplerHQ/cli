@@ -349,7 +349,7 @@ func ValidateSecrets(secrets map[string]string, secretsToInclude []string, exitO
 	}
 }
 
-func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, preserveEnv string, existingEnvKeys map[string]string, mountOptions MountOptions) ([]string, func()) {
+func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, preserveEnv string, mountOptions MountOptions) ([]string, func()) {
 	env := []string{}
 	secrets := map[string]string{}
 	var onExit func()
@@ -378,6 +378,15 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 				utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
 				delete(dopplerSecrets, reservedKey)
 			}
+		}
+
+		existingEnvKeys := map[string]string{}
+		for _, envVar := range originalEnv {
+			// key=value format
+			parts := strings.SplitN(envVar, "=", 2)
+			key := parts[0]
+			value := parts[1]
+			existingEnvKeys[key] = value
 		}
 
 		if preserveEnv != "false" {
