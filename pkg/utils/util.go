@@ -18,6 +18,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -105,7 +106,7 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (*exec.Cmd, error) {
+func RunCommand(command []string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer, forwardSignals bool) (*exec.Cmd, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204 nosemgrep: semgrep_configs.prohibit-exec-command
 	cmd.Env = env
 	cmd.Stdin = inFile
@@ -117,7 +118,7 @@ func RunCommand(command []string, env []string, inFile *os.File, outFile *os.Fil
 }
 
 // RunCommandString runs the specified command string
-func RunCommandString(command string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (*exec.Cmd, error) {
+func RunCommandString(command string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer, forwardSignals bool) (*exec.Cmd, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -386,17 +387,6 @@ func HostArch() string {
 	}
 
 	return arch
-}
-
-// CanUpdate whether the host os supports updating via CLI
-func CanUpdate() bool {
-	if IsMINGW64() {
-		return true
-	} else if IsWindows() {
-		return false
-	} else {
-		return true
-	}
 }
 
 // IsWindows whether the host os is Windows

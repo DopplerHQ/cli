@@ -16,8 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -29,26 +27,22 @@ var updateCmd = &cobra.Command{
 	Short: "Update the Doppler CLI",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		if !utils.CanUpdate() {
-			utils.HandleError(fmt.Errorf("this command is not yet implemented for your operating system"))
-		}
-
 		force := utils.GetBoolFlag(cmd, "force")
-		available, _, err := controllers.NewVersionAvailable(models.VersionCheck{})
+		available, version, err := controllers.NewVersionAvailable(models.VersionCheck{})
 		if err != nil {
 			utils.HandleError(err, "Unable to check for CLI updates")
 		}
 
 		if !available {
 			if force {
-				utils.Log(fmt.Sprintf("Already running the latest version but proceeding anyway due to --force flag"))
+				utils.Log("Already running the latest version but proceeding anyway due to --force flag")
 			} else {
-				utils.Print(fmt.Sprintf("You are already running the latest version"))
+				utils.Print("You are already running the latest version")
 				return
 			}
 		}
 
-		controllers.InstallUpdate()
+		controllers.InstallUpdate(version.LatestVersion)
 	},
 }
 
