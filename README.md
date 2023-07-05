@@ -33,18 +33,17 @@ For installation without brew, see the [Install](INSTALL.md#macos) page.
 
 ### Windows
 
-Using [scoop](https://scoop.sh/) is recommended:
+Using winget is recommended:
 
 ```sh
-$ scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
-$ scoop install doppler
+$ winget install doppler
 $ doppler --version
 ```
 
 To update:
 
 ```sh
-$ scoop update doppler
+$ winget upgrade doppler
 ```
 
 For additional options, see the [Install](INSTALL.md#windows) page.

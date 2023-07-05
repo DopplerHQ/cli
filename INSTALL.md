@@ -20,9 +20,24 @@ Alternatively, you can install the CLI via [shell script](#linuxmacosbsd-shell-s
 
 ## Windows
 
+### Winget
+
+Using winget is recommended:
+
+```sh
+$ winget install doppler
+$ doppler --version
+```
+
+To update:
+
+```sh
+$ winget upgrade doppler
+```
+
 ### Scoop
 
-Using [scoop](https://scoop.sh/) is recommended:
+Using [scoop](https://scoop.sh/) is supported:
 
 ```sh
 $ scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
