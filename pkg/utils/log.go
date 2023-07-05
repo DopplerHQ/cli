@@ -92,7 +92,9 @@ func ErrExit(e error, exitCode int, messages ...string) {
 			fmt.Fprintln(os.Stderr, messages[0])
 		}
 
-		printError(e)
+		if e != nil {
+			printError(e)
+		}
 
 		if len(messages) > 0 {
 			for _, message := range messages[1:] {
