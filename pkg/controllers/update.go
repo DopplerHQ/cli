@@ -111,7 +111,7 @@ func RunInstallScript() (bool, string, Error) {
 	if !apiErr.IsNil() {
 		return false, "", Error{Err: apiErr.Unwrap(), Message: apiErr.Message}
 	}
-	fetchScriptDuration := time.Now().Sub(startTime).Milliseconds()
+	fetchScriptDuration := time.Since(startTime).Milliseconds()
 
 	CaptureEvent("InstallScriptDownloaded", map[string]interface{}{"durationMs": fetchScriptDuration})
 
@@ -139,7 +139,7 @@ func RunInstallScript() (bool, string, Error) {
 		out, err = exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
 	}
 
-	executeDuration := time.Now().Sub(startTime).Milliseconds()
+	executeDuration := time.Since(startTime).Milliseconds()
 
 	strOut := string(out)
 	// log output before checking error
