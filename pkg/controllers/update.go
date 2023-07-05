@@ -24,10 +24,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
+	"gopkg.in/gookit/color.v1"
 )
 
 // Error controller errors
@@ -41,6 +44,64 @@ func (e *Error) Unwrap() error { return e.Err }
 
 // IsNil whether the error is nil
 func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
+
+func CheckUpdate(command string) {
+	// disable version checking on commands commonly used in production workflows
+	// also disable when explicitly calling 'update' command to avoid checking twice
+	disabledCommands := []string{"run", "secrets download", "update"}
+	for _, disabledCommand := range disabledCommands {
+		if command == fmt.Sprintf("doppler %s", disabledCommand) {
+			utils.LogDebug("Skipping CLI upgrade check due to disallowed command")
+			return
+		}
+	}
+
+	if !version.PerformVersionCheck || version.IsDevelopment() {
+		return
+	}
+
+	prevVersionCheck := configuration.VersionCheck()
+	// don't check more often than every 24 hours
+	if !time.Now().After(prevVersionCheck.CheckedAt.Add(24 * time.Hour)) {
+		return
+	}
+
+	CaptureEvent("VersionCheck", nil)
+
+	available, versionCheck, err := NewVersionAvailable(prevVersionCheck)
+	if err != nil {
+		// retry on next run
+		return
+	}
+
+	if !available {
+		utils.LogDebug("No CLI updates available")
+		// re-use existing version
+		versionCheck.LatestVersion = prevVersionCheck.LatestVersion
+	} else if utils.IsWindows() {
+		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
+	} else {
+		CaptureEvent("UpgradeAvailable", nil)
+
+		utils.Print(color.Green.Sprintf("An update is available."))
+
+		changes, apiError := CLIChangeLog()
+		if apiError.IsNil() {
+			printer.ChangeLog(changes, 1, false)
+			utils.Print("")
+		}
+
+		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
+		if utils.ConfirmationPrompt(prompt, true) {
+			CaptureEvent("UpgradeFromPrompt", nil)
+
+			InstallUpdate()
+		}
+	}
+
+	configuration.SetVersionCheck(versionCheck)
+
+}
 
 // RunInstallScript downloads and executes the CLI install scriptm, returning true if an update was installed
 func RunInstallScript() (bool, string, Error) {
@@ -148,4 +209,26 @@ func CLIChangeLog() (map[string]models.ChangeLog, http.Error) {
 
 	changes := models.ParseChangeLog(response)
 	return changes, http.Error{}
+}
+
+func InstallUpdate() {
+	utils.Print("Updating...")
+	wasUpdated, installedVersion, controllerErr := RunInstallScript()
+	if !controllerErr.IsNil() {
+		utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+	}
+
+	if wasUpdated {
+		utils.Print(fmt.Sprintf("Installed CLI %s", installedVersion))
+
+		if changes, apiError := CLIChangeLog(); apiError.IsNil() {
+			utils.Print("\nWhat's new:")
+			printer.ChangeLog(changes, 1, false)
+			utils.Print("\nTip: run 'doppler changelog' to see all latest changes")
+		}
+
+		utils.Print("")
+	} else {
+		utils.Print(fmt.Sprintf("You are already running the latest version"))
+	}
 }
