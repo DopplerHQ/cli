@@ -81,7 +81,7 @@ func CheckUpdate(command string) (bool, models.VersionCheck) {
 		return false, models.VersionCheck{}
 	}
 
-	if utils.IsWindows() {
+	if utils.IsWindows() && !utils.IsMINGW64() {
 		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
 		configuration.SetVersionCheck(versionCheck)
 		return false, models.VersionCheck{}
