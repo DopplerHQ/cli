@@ -65,7 +65,9 @@ var rootCmd = &cobra.Command{
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
 		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
-			controllers.CheckUpdate(cmd.CommandPath())
+			if available, latestVersion := controllers.CheckUpdate(cmd.CommandPath()); available {
+				controllers.PromptToUpdate(latestVersion)
+			}
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
