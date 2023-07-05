@@ -117,8 +117,13 @@ func RunInstallScript() (bool, string, Error) {
 
 	// write script to temp file
 	tmpFile, err := utils.WriteTempFile("install.sh", script, 0555)
-	// clean up temp file once we're done with it
-	defer os.Remove(tmpFile)
+	if tmpFile != "" {
+		// clean up temp file once we're done with it
+		defer os.Remove(tmpFile)
+	}
+	if err != nil {
+		return false, "", Error{Err: err, Message: "Unable to save install script"}
+	}
 
 	// execute script
 	utils.LogDebug("Executing install script")
