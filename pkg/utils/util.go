@@ -407,7 +407,7 @@ func IsWindows() bool {
 // IsMINGW64 whether the host os is running in a MINGW64-based
 // environment like Git Bash, Cygwin, etc.
 func IsMINGW64() bool {
-	return os.Getenv("MSYSTEM") == "MINGW64"
+	return IsWindows() && os.Getenv("MSYSTEM") == "MINGW64"
 }
 
 // IsMacOS whether the host os is macOS
