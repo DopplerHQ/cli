@@ -1,0 +1,9 @@
+rules:
+  - id: prohibit-exec-command
+    languages:
+      - go
+    message: >
+      Use utils.RunCommand or utils.RunCommandString to ensure exec is os agnostic.
+    pattern-either:
+      - pattern: exec.Command
+    severity: ERROR

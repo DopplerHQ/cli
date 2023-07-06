@@ -106,7 +106,7 @@ func Cwd() string {
 
 // RunCommand runs the specified command
 func RunCommand(command []string, env []string, inFile *os.File, outFile *os.File, errFile *os.File, forwardSignals bool) (*exec.Cmd, error) {
-	cmd := exec.Command(command[0], command[1:]...) // #nosec G204
+	cmd := exec.Command(command[0], command[1:]...) // #nosec G204 nosemgrep: semgrep_configs.prohibit-exec-command
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
@@ -132,7 +132,7 @@ func RunCommandString(command string, env []string, inFile *os.File, outFile *os
 			}
 		}
 	}
-	cmd := exec.Command(shell[0], shell[1], command) // #nosec G204
+	cmd := exec.Command(shell[0], shell[1], command) // #nosec G204 nosemgrep: semgrep_configs.prohibit-exec-command
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
