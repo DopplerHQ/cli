@@ -31,10 +31,11 @@ var _ Component = &ProjectsComponent{}
 func CreateProjectsComponent(gui *Gui) (*ProjectsComponent, error) {
 	cmp := &ProjectsComponent{}
 
-	var err error
-	if cmp.BaseComponent, err = CreateBaseComponent(gui, cmp); err != nil {
+	baseCmp, err := CreateBaseComponent(gui, cmp)
+	if err != nil {
 		return nil, err
 	}
+	cmp.BaseComponent = baseCmp
 
 	cmp.view.Highlight = true
 	cmp.view.SelFgColor = gocui.ColorMagenta
@@ -56,9 +57,12 @@ func CreateProjectsComponent(gui *Gui) (*ProjectsComponent, error) {
 
 func (self *ProjectsComponent) SelectIdx(idx int) error {
 	maxIdx := len(state.Projects()) - 1
-	var err error
-	self.selectedIdx, err = SelectIdx(self, idx, maxIdx)
-	return err
+	newIdx, err := SelectIdx(self, idx, maxIdx)
+	if err != nil {
+		return err
+	}
+	self.selectedIdx = newIdx
+	return nil
 }
 
 func (self *ProjectsComponent) GetViewName() string { return "Projects" }

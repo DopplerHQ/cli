@@ -29,10 +29,11 @@ var _ Component = &PromptSaveComponent{}
 func CreatePromptSaveComponent(gui *Gui) (*PromptSaveComponent, error) {
 	cmp := &PromptSaveComponent{}
 
-	var err error
-	if cmp.BaseComponent, err = CreateBaseComponent(gui, cmp); err != nil {
+	baseCmp, err := CreateBaseComponent(gui, cmp)
+	if err != nil {
 		return nil, err
 	}
+	cmp.BaseComponent = baseCmp
 
 	gui.bindKey("PromptSave", gocui.KeyEnter, gocui.ModNone, func(v *gocui.View) error {
 		return gui.cmps.promptSave.ConfirmSave()

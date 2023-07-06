@@ -40,10 +40,11 @@ func CreateBaseComponent(gui *Gui, cmp Component) (*BaseComponent, error) {
 
 	baseCmp := &BaseComponent{gui: gui}
 
-	baseCmp.view, err = gui.createView(cmp)
+	view, err := gui.createView(cmp)
 	if err != nil {
 		return nil, err
 	}
+	baseCmp.view = view
 
 	return baseCmp, nil
 }

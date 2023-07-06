@@ -17,10 +17,10 @@ package gui
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/tui/common"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/gocui"
 	"github.com/sasha-s/go-deadlock"
 )
@@ -163,7 +163,7 @@ func (gui *Gui) RunAndHandleError() error {
 			case gocui.ErrQuit:
 				return nil
 			default:
-				fmt.Println(err.Error())
+				utils.Print(err.Error())
 				return err
 			}
 		}

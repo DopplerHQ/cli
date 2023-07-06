@@ -40,10 +40,11 @@ var _ Component = &SecretsComponent{}
 func CreateSecretsComponent(gui *Gui) (*SecretsComponent, error) {
 	cmp := &SecretsComponent{}
 
-	var err error
-	if cmp.BaseComponent, err = CreateBaseComponent(gui, cmp); err != nil {
+	baseCmp, err := CreateBaseComponent(gui, cmp)
+	if err != nil {
 		return nil, err
 	}
+	cmp.BaseComponent = baseCmp
 
 	gui.bindKey("Secrets", 'j', gocui.ModNone, func(v *gocui.View) error {
 		return cmp.SelectDelta(1)
@@ -289,6 +290,7 @@ func (self *SecretsComponent) DeleteSVM() error {
 
 	if self.activeSVM.originalName == nil {
 		self.gui.mutexes.SecretViewsMutex.Lock()
+		defer self.gui.mutexes.SecretViewsMutex.Unlock()
 
 		curIdx := -1
 		for idx, svm := range self.secretVMs {
@@ -317,7 +319,6 @@ func (self *SecretsComponent) DeleteSVM() error {
 		if err := self.gui.g.DeleteView(self.activeSVM.valueView.Name()); err != nil {
 			return err
 		}
-		self.gui.mutexes.SecretViewsMutex.Unlock()
 
 		idxToFocus := utils.Max(curVisibleIdx-1, 0)
 		if err := self.SelectSVM(idxToFocus, true); err != nil {

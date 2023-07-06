@@ -26,10 +26,11 @@ var _ Component = &StatusComponent{}
 func CreateStatusComponent(gui *Gui) (*StatusComponent, error) {
 	cmp := &StatusComponent{}
 
-	var err error
-	if cmp.BaseComponent, err = CreateBaseComponent(gui, cmp); err != nil {
+	baseCmp, err := CreateBaseComponent(gui, cmp)
+	if err != nil {
 		return nil, err
 	}
+	cmp.BaseComponent = baseCmp
 
 	return cmp, nil
 }

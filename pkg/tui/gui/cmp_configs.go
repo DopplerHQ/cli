@@ -31,10 +31,11 @@ var _ Component = &ConfigsComponent{}
 func CreateConfigsComponent(gui *Gui) (*ConfigsComponent, error) {
 	cmp := &ConfigsComponent{}
 
-	var err error
-	if cmp.BaseComponent, err = CreateBaseComponent(gui, cmp); err != nil {
+	baseCmp, err := CreateBaseComponent(gui, cmp)
+	if err != nil {
 		return nil, err
 	}
+	cmp.BaseComponent = baseCmp
 
 	cmp.view.Highlight = true
 	cmp.view.SelFgColor = gocui.ColorMagenta
@@ -56,9 +57,12 @@ func CreateConfigsComponent(gui *Gui) (*ConfigsComponent, error) {
 
 func (self *ConfigsComponent) SelectIdx(idx int) error {
 	maxIdx := len(state.Configs()) - 1
-	var err error
-	self.selectedIdx, err = SelectIdx(self, idx, maxIdx)
-	return err
+	newIdx, err := SelectIdx(self, idx, maxIdx)
+	if err != nil {
+		return err
+	}
+	self.selectedIdx = newIdx
+	return nil
 }
 
 func (self *ConfigsComponent) GetViewName() string { return "Configs" }

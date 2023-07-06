@@ -51,30 +51,51 @@ func (gui *Gui) createView(cmp Component) (*gocui.View, error) {
 }
 
 func (gui *Gui) createAllComponents() error {
-	var err error
+	if configsCmp, err := CreateConfigsComponent(gui); err == nil {
+		gui.cmps.configs = configsCmp
+	} else {
+		return err
+	}
 
-	if gui.cmps.configs, err = CreateConfigsComponent(gui); err != nil {
+	if cmp, err := CreateProjectsComponent(gui); err == nil {
+		gui.cmps.projects = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.projects, err = CreateProjectsComponent(gui); err != nil {
+
+	if cmp, err := CreateSecretsComponent(gui); err == nil {
+		gui.cmps.secrets = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.secrets, err = CreateSecretsComponent(gui); err != nil {
+
+	if cmp, err := CreateStatusComponent(gui); err == nil {
+		gui.cmps.status = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.status, err = CreateStatusComponent(gui); err != nil {
+
+	if cmp, err := CreatePromptSaveComponent(gui); err == nil {
+		gui.cmps.promptSave = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.promptSave, err = CreatePromptSaveComponent(gui); err != nil {
+
+	if cmp, err := CreatePromptHelpComponent(gui); err == nil {
+		gui.cmps.promptHelp = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.promptHelp, err = CreatePromptHelpComponent(gui); err != nil {
+
+	if cmp, err := CreatePromptIntroComponent(gui); err == nil {
+		gui.cmps.promptIntro = cmp
+	} else {
 		return err
 	}
-	if gui.cmps.promptIntro, err = CreatePromptIntroComponent(gui); err != nil {
-		return err
-	}
-	if gui.cmps.secretsFilter, err = CreateSecretsFilterComponent(gui); err != nil {
+
+	if cmp, err := CreateSecretsFilterComponent(gui); err == nil {
+		gui.cmps.secretsFilter = cmp
+	} else {
 		return err
 	}
 
