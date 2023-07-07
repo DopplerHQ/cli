@@ -25,6 +25,15 @@ type ComputedSecret struct {
 	Note               string  `json:"note"`
 }
 
+// ChangeRequest can be used to smartly update secrets
+type ChangeRequest struct {
+	OriginalName  interface{} `json:"originalName"`
+	OriginalValue interface{} `json:"originalValue,omitempty"`
+	Name          string      `json:"name"`
+	Value         string      `json:"value"`
+	ShouldDelete  bool        `json:"shouldDelete"`
+}
+
 // SecretNote contains a secret and its note
 type SecretNote struct {
 	Secret string `json:"secret"`

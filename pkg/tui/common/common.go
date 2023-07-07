@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 Doppler <support@doppler.com>
+Copyright © 2023 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,16 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package utils
+package common
 
-// Debug whether we're running in debug mode
-var Debug = false
+import (
+	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/sirupsen/logrus"
+)
 
-// DebugTUI whether to log TUI debug messages to $config_dir/tui.log
-var DebugTUI = false
+// Commonly used things wrapped into one struct for convenience when passing it around
+type Common struct {
+	Log  *logrus.Entry
+	Opts models.ScopedOptions
+}
 
-// Silent whether we should display Info messages
-var Silent = false
-
-// OutputJSON whether to print OutputJSON
-var OutputJSON = false
+func NewCommon(opts models.ScopedOptions) (*Common, error) {
+	return &Common{
+		Log:  newLogger(),
+		Opts: opts,
+	}, nil
+}

@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 Doppler <support@doppler.com>
+Copyright © 2023 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,14 +15,25 @@ limitations under the License.
 */
 package utils
 
-// Debug whether we're running in debug mode
-var Debug = false
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
 
-// DebugTUI whether to log TUI debug messages to $config_dir/tui.log
-var DebugTUI = false
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
 
-// Silent whether we should display Info messages
-var Silent = false
-
-// OutputJSON whether to print OutputJSON
-var OutputJSON = false
+func Clamp(x int, min int, max int) int {
+	if x < min {
+		return min
+	} else if x > max {
+		return max
+	}
+	return x
+}

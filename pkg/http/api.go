@@ -225,9 +225,13 @@ func GetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 }
 
 // SetSecrets for specified project and config
-func SetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets map[string]interface{}) (map[string]models.ComputedSecret, Error) {
+func SetSecrets(host string, verifyTLS bool, apiKey string, project string, config string, secrets map[string]interface{}, changeRequests []models.ChangeRequest) (map[string]models.ComputedSecret, Error) {
 	reqBody := map[string]interface{}{}
-	reqBody["secrets"] = secrets
+	if changeRequests != nil {
+		reqBody["change_requests"] = changeRequests
+	} else {
+		reqBody["secrets"] = secrets
+	}
 	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Invalid secrets"}
