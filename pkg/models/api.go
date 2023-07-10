@@ -157,3 +157,7 @@ type ActorWorkplaceInfo struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
 }
+
+type WatchSecrets struct {
+	Type string `json:"type"`
+}

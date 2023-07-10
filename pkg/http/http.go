@@ -28,6 +28,7 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -145,7 +146,7 @@ func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body
 	return statusCode, respHeaders, body, nil
 }
 
-func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
+func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Response, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -162,7 +163,7 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 
 	client := &http.Client{}
 	// set http timeout
-	if UseTimeout {
+	if allowTimeout && UseTimeout {
 		client.Timeout = TimeoutDuration
 	}
 
@@ -221,7 +222,7 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 	var response *http.Response
 	response = nil
 
-	requestErr := retry(RequestAttempts, 100*time.Millisecond, func() error {
+	err = utils.Retry(RequestAttempts, 500*time.Millisecond, func() error {
 		// disable semgrep rule b/c we properly check that resp isn't nil before using it within the err block
 		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
@@ -235,12 +236,12 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 
 			utils.LogDebug(err.Error())
 
-			if isTimeout(err) {
+			if isTimeout(err) || errors.Is(err, syscall.ECONNREFUSED) {
 				// retry request
 				return err
 			}
 
-			return StopRetry{err}
+			return utils.StopRetryError(err)
 		}
 
 		response = resp
@@ -254,7 +255,7 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		}
 
 		contentType := resp.Header.Get("content-type")
-		if isRetry(resp.StatusCode, contentType) {
+		if IsRetry(resp.StatusCode, contentType) {
 			// start logging retries after 10 seconds so it doesn't feel like we've frozen
 			// we subtract 1 millisecond so that we always win the race against a request that exhausts its full 10 second time out
 			if time.Now().After(startTime.Add(10 * time.Second).Add(-1 * time.Millisecond)) {
@@ -264,9 +265,53 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		}
 
 		// we cannot recover from this error code; accept defeat
-		return StopRetry{errors.New("Request failed")}
+		return utils.StopRetryError(errors.New("Request failed"))
 	})
 
+	return response, err
+}
+
+func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) (int, http.Header, error) {
+	response, requestErr := request(req, verifyTLS, false)
+	if requestErr != nil {
+		statusCode := 0
+		if response != nil {
+			statusCode = response.StatusCode
+		}
+		return statusCode, nil, requestErr
+	}
+
+	if response != nil {
+		defer func() {
+			if closeErr := response.Body.Close(); closeErr != nil {
+				utils.LogDebug(closeErr.Error())
+			}
+		}()
+	}
+
+	headers := response.Header.Clone()
+
+	for {
+		s := 1024
+		data := make([]byte, s)
+		n, err := response.Body.Read(data)
+		// this shouldn't occur, but log anyway to aid with debugging
+		if n == s {
+			utils.LogDebug(fmt.Sprintf("Response reached max buffer size of %d bytes", s))
+		}
+		// From Go docs for Reader.Read:
+		// "Callers should always process the n > 0 bytes returned before considering the error err."
+		if n > 0 {
+			go handler(data[:n])
+		}
+		if err != nil {
+			return response.StatusCode, headers, err
+		}
+	}
+}
+
+func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
+	response, requestErr := request(req, verifyTLS, true)
 	if response != nil {
 		defer func() {
 			if closeErr := response.Body.Close(); closeErr != nil {
@@ -279,12 +324,12 @@ func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte
 		return 0, nil, nil, requestErr
 	}
 
+	headers := response.Header.Clone()
+
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return response.StatusCode, nil, nil, err
 	}
-
-	headers := response.Header.Clone()
 
 	// success
 	if requestErr == nil {
@@ -310,7 +355,7 @@ func isSuccess(statusCode int) bool {
 	return (statusCode >= 200 && statusCode <= 299) || (statusCode >= 300 && statusCode <= 399)
 }
 
-func isRetry(statusCode int, contentType string) bool {
+func IsRetry(statusCode int, contentType string) bool {
 	return (statusCode == 429) ||
 		(statusCode >= 100 && statusCode <= 199) ||
 		// don't retry 5xx errors w/ a JSON body
