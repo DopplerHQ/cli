@@ -63,18 +63,18 @@ func WriteTempFile(name string, data []byte, perm os.FileMode) (string, error) {
 		return "", err
 	}
 
-	LogDebug(fmt.Sprintf("Writing to temp file %s", tmpFile.Name()))
+	tmpFileName := tmpFile.Name()
+	LogDebug(fmt.Sprintf("Writing to temp file %s", tmpFileName))
 	if _, err := tmpFile.Write(data); err != nil {
-		return "", err
+		return tmpFileName, err
 	}
 
-	tmpFileName := tmpFile.Name()
 	if err := tmpFile.Close(); err != nil {
-		return "", err
+		return tmpFileName, err
 	}
 
 	if err := os.Chmod(tmpFileName, perm); err != nil {
-		return "", err
+		return tmpFileName, err
 	}
 
 	return tmpFileName, nil
