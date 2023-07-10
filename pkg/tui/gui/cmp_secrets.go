@@ -58,20 +58,6 @@ func CreateSecretsComponent(gui *Gui) (*SecretsComponent, error) {
 	gui.bindKey("Secrets", 'l', gocui.ModNone, func(v *gocui.View) error {
 		return cmp.ToggleNameValue()
 	})
-
-	gui.bindKey("Secrets", gocui.KeyArrowDown, gocui.ModNone, func(v *gocui.View) error {
-		return cmp.SelectDelta(1)
-	})
-	gui.bindKey("Secrets", gocui.KeyArrowUp, gocui.ModNone, func(v *gocui.View) error {
-		return cmp.SelectDelta(-1)
-	})
-	gui.bindKey("Secrets", gocui.KeyArrowLeft, gocui.ModNone, func(v *gocui.View) error {
-		return cmp.ToggleNameValue()
-	})
-	gui.bindKey("Secrets", gocui.KeyArrowRight, gocui.ModNone, func(v *gocui.View) error {
-		return cmp.ToggleNameValue()
-	})
-
 	gui.bindKey("Secrets", gocui.KeyTab, gocui.ModNone, func(v *gocui.View) error {
 		return cmp.ToggleNameValue()
 	})
