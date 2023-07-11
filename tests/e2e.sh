@@ -23,6 +23,7 @@ export DOPPLER_CONFIG="e2e"
 "$DIR/e2e/setup.sh"
 "$DIR/e2e/me.sh"
 "$DIR/e2e/global-flags.sh"
+"$DIR/e2e/update.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0

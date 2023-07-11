@@ -54,7 +54,7 @@ func CanLogInfo() bool {
 	return Debug || !silent
 }
 
-// LogDebug prints a debug message to stdout
+// LogDebug prints a debug message to stderr
 func LogDebug(s string) {
 	if CanLogDebug() {
 		// log debug messages to stderr
@@ -69,7 +69,7 @@ func LogDebugError(e error) {
 	}
 }
 
-// CanLogDebug messages to stdout
+// CanLogDebug messages to stderr
 func CanLogDebug() bool {
 	return Debug
 }
@@ -92,7 +92,9 @@ func ErrExit(e error, exitCode int, messages ...string) {
 			fmt.Fprintln(os.Stderr, messages[0])
 		}
 
-		printError(e)
+		if e != nil {
+			printError(e)
+		}
 
 		if len(messages) > 0 {
 			for _, message := range messages[1:] {

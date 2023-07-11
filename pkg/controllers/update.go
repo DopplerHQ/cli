@@ -16,19 +16,26 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/http"
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
+	"gopkg.in/gookit/color.v1"
 )
+
+const wingetPackageId = "Doppler.doppler"
 
 // Error controller errors
 type Error struct {
@@ -42,6 +49,81 @@ func (e *Error) Unwrap() error { return e.Err }
 // IsNil whether the error is nil
 func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
 
+// CheckUpdate checks whether an update is available
+func CheckUpdate(command string) (bool, models.VersionCheck) {
+	// disable version checking on commands commonly used in production workflows
+	// also disable when explicitly calling 'update' command to avoid checking twice
+	disabledCommands := []string{"run", "secrets download", "update"}
+	for _, disabledCommand := range disabledCommands {
+		if command == fmt.Sprintf("doppler %s", disabledCommand) {
+			utils.LogDebug("Skipping CLI upgrade check due to disallowed command")
+			return false, models.VersionCheck{}
+		}
+	}
+
+	if !version.PerformVersionCheck || version.IsDevelopment() {
+		return false, models.VersionCheck{}
+	}
+
+	prevVersionCheck := configuration.VersionCheck()
+	// don't check more often than every 24 hours
+	if !time.Now().After(prevVersionCheck.CheckedAt.Add(24 * time.Hour)) {
+		return false, models.VersionCheck{}
+	}
+
+	CaptureEvent("VersionCheck", nil)
+
+	available, versionCheck, err := NewVersionAvailable(prevVersionCheck)
+	if err != nil {
+		return false, models.VersionCheck{}
+	}
+
+	if !available {
+		utils.LogDebug("No CLI updates available")
+		prevVersionCheck.CheckedAt = time.Now()
+		configuration.SetVersionCheck(prevVersionCheck)
+		return false, models.VersionCheck{}
+	}
+
+	if utils.IsWindows() && !utils.IsMINGW64() {
+		if !InstalledViaWinget() {
+			utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\nWe recommend installing the Doppler CLI via winget for easier updates", versionCheck.LatestVersion))
+			configuration.SetVersionCheck(versionCheck)
+			return false, models.VersionCheck{}
+		}
+
+		if !IsUpdateAvailableViaWinget(versionCheck.LatestVersion) {
+			CaptureEvent("UpgradeNotAvailableViaWinget", map[string]interface{}{"version": versionCheck.LatestVersion})
+			utils.LogDebug(fmt.Sprintf("Doppler CLI version %s is not yet available via winget", versionCheck.LatestVersion))
+			// reuse old version so we prompt the user again
+			prevVersionCheck.CheckedAt = time.Now()
+			configuration.SetVersionCheck(prevVersionCheck)
+			return false, models.VersionCheck{}
+		}
+	}
+
+	CaptureEvent("UpgradeAvailable", nil)
+	return true, versionCheck
+}
+
+func PromptToUpdate(latestVersion models.VersionCheck) {
+	utils.Print(color.Green.Sprintf("An update is available."))
+
+	changes, apiError := CLIChangeLog()
+	if apiError.IsNil() {
+		printer.ChangeLog(changes, 1, false)
+		utils.Print("")
+	}
+
+	prompt := fmt.Sprintf("Install Doppler CLI %s", latestVersion.LatestVersion)
+	if utils.ConfirmationPrompt(prompt, true) {
+		CaptureEvent("UpgradeFromPrompt", nil)
+		InstallUpdate(latestVersion.LatestVersion)
+	} else {
+		configuration.SetVersionCheck(latestVersion)
+	}
+}
+
 // RunInstallScript downloads and executes the CLI install scriptm, returning true if an update was installed
 func RunInstallScript() (bool, string, Error) {
 	startTime := time.Now()
@@ -50,42 +132,54 @@ func RunInstallScript() (bool, string, Error) {
 	if !apiErr.IsNil() {
 		return false, "", Error{Err: apiErr.Unwrap(), Message: apiErr.Message}
 	}
-	fetchScriptDuration := time.Now().Sub(startTime).Milliseconds()
+	fetchScriptDuration := time.Since(startTime).Milliseconds()
 
 	CaptureEvent("InstallScriptDownloaded", map[string]interface{}{"durationMs": fetchScriptDuration})
 
 	// write script to temp file
 	tmpFile, err := utils.WriteTempFile("install.sh", script, 0555)
-	// clean up temp file once we're done with it
-	defer os.Remove(tmpFile)
+	if tmpFile != "" {
+		// clean up temp file once we're done with it
+		defer os.Remove(tmpFile)
+	}
+	if err != nil {
+		return false, "", Error{Err: err, Message: "Unable to save install script"}
+	}
 
 	// execute script
 	utils.LogDebug("Executing install script")
 	command := []string{tmpFile, "--debug"}
+	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
 
 	startTime = time.Now()
-	var out []byte
+
+	var out bytes.Buffer
+	var cmd *exec.Cmd
 	if utils.IsWindows() {
-		// executing in sh on Windows avoids errors like this:
-		// Doppler Error: fork/exec C:\...\.install.sh.1063970983: %1 is not a valid Win32 application.
-		out, err = exec.Command("sh", command...).CombinedOutput() // #nosec G204
+		// must execute in sh on MINGW64 Windows to avoid "command not found" error
+		c := []string{"sh"}
+		c = append(c, command...)
+		cmd, err = utils.RunCommand(c, os.Environ(), nil, &out, &out, true)
 	} else {
-		out, err = exec.Command(command[0], command[1:]...).CombinedOutput() // #nosec G204
+		cmd, err = utils.RunCommand(command, os.Environ(), nil, &out, &out, true)
 	}
+	waitExitCode, waitErr := utils.WaitCommand(cmd)
 
-	executeDuration := time.Now().Sub(startTime).Milliseconds()
+	executeDuration := time.Since(startTime).Milliseconds()
+	strOut := out.String()
 
-	strOut := string(out)
 	// log output before checking error
-	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", strings.Join(command, " ")))
 	if utils.Debug {
 		// use Fprintln rather than LogDebug so that we don't display a duplicate "DEBUG" prefix
 		fmt.Fprintln(os.Stderr, strOut) // nosemgrep: semgrep_configs.prohibit-print
 	}
-	if err != nil {
+	if err != nil || waitErr != nil {
+		if waitErr != nil {
+			err = waitErr
+		}
 		exitCode := 1
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode = exitError.ExitCode()
+		if waitExitCode != 0 {
+			exitCode = waitExitCode
 		}
 
 		CaptureEvent("InstallScriptFailed", map[string]interface{}{"durationMs": executeDuration, "exitCode": exitCode})
@@ -148,4 +242,129 @@ func CLIChangeLog() (map[string]models.ChangeLog, http.Error) {
 
 	changes := models.ParseChangeLog(response)
 	return changes, http.Error{}
+}
+
+func InstallUpdate(version string) {
+	utils.Print("Updating...")
+
+	var wasUpdated bool
+	var installedVersion string
+	var controllerErr Error
+	if utils.IsWindows() && !utils.IsMINGW64() {
+		if InstalledViaWinget() {
+			wasUpdated, installedVersion, controllerErr = UpdateViaWinget(version)
+		} else {
+			utils.HandleError(fmt.Errorf("updates are not supported when installed via scoop. Please install the Doppler CLI via winget or update manually via `scoop update doppler`"))
+		}
+	} else {
+		wasUpdated, installedVersion, controllerErr = RunInstallScript()
+	}
+	if !controllerErr.IsNil() {
+		utils.HandleError(controllerErr.Unwrap(), controllerErr.Message)
+	}
+
+	if wasUpdated {
+		utils.Print(fmt.Sprintf("Installed CLI %s", installedVersion))
+
+		if changes, apiError := CLIChangeLog(); apiError.IsNil() {
+			utils.Print("\nWhat's new:")
+			printer.ChangeLog(changes, 1, false)
+			utils.Print("\nTip: run 'doppler changelog' to see all latest changes")
+		}
+
+		utils.Print("")
+	} else {
+		utils.Print("You are already running the latest version")
+	}
+
+	versionCheck := models.VersionCheck{LatestVersion: installedVersion, CheckedAt: time.Now()}
+	configuration.SetVersionCheck(versionCheck)
+}
+
+func InstalledViaWinget() bool {
+	utils.LogDebug("Checking if CLI is installed via winget")
+	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
+	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
+
+	var out io.Writer = nil
+	if utils.CanLogDebug() {
+		out = os.Stderr
+	}
+	cmd, err := utils.RunCommandString(command, os.Environ(), nil, out, out, true)
+	if err != nil {
+		utils.LogDebugError(err)
+		return false
+	}
+	_, err = utils.WaitCommand(cmd)
+	if err != nil {
+		utils.LogDebugError(err)
+	}
+	return err == nil
+}
+
+func IsUpdateAvailableViaWinget(updateVersion string) bool {
+	utils.LogDebug("Checking if CLI update is available via winget")
+	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
+	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
+
+	var out bytes.Buffer
+	cmd, err := utils.RunCommandString(command, os.Environ(), nil, &out, &out, true)
+	if err != nil {
+		utils.LogDebugError(err)
+		return false
+	}
+
+	_, err = utils.WaitCommand(cmd)
+	if err != nil {
+		utils.LogDebugError(err)
+		// not installed via winget
+		return false
+	}
+	strOut := out.String()
+	utils.LogDebug(strOut)
+
+	// Ex: `Doppler.doppler 3.63.1 3.64.0 winget`
+	re := regexp.MustCompile(fmt.Sprintf(`%s\s+%s\s+%s\s+winget`, wingetPackageId, strings.TrimPrefix(version.ProgramVersion, "v"), strings.TrimPrefix(updateVersion, "v")))
+
+	matches := re.FindStringSubmatch(strOut)
+	return len(matches) > 0
+}
+
+func UpdateViaWinget(version string) (bool, string, Error) {
+	command := fmt.Sprintf("winget upgrade --id %s --exact --disable-interactivity --version %s", wingetPackageId, strings.TrimPrefix(version, "v"))
+	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
+
+	startTime := time.Now()
+
+	var out bytes.Buffer
+	cmd, err := utils.RunCommandString(command, os.Environ(), nil, &out, &out, true)
+	if err != nil {
+		utils.LogDebugError(err)
+		CaptureEvent("WingetUpgradeFailed", map[string]interface{}{"durationMs": 0})
+		return false, "", Error{Message: "Unable to execute winget"}
+	}
+
+	exitCode, err := utils.WaitCommand(cmd)
+
+	strOut := out.String()
+	utils.LogDebug(strOut)
+
+	executeDuration := time.Since(startTime).Milliseconds()
+
+	if err != nil || exitCode != 0 {
+		var e Error
+		if strings.Contains(strOut, "No installed package found matching input criteria.") {
+			e = Error{Message: "The Doppler CLI is not installed via winget"}
+		} else if strings.Contains(strOut, "No applicable upgrade found.") || strings.Contains(strOut, "No available upgrade found.") {
+			e = Error{Message: "You are already running the latest version available via winget"}
+		} else {
+			e = Error{Err: err, Message: "Unable to upgrade via winget"}
+		}
+
+		CaptureEvent("WingetUpgradeFailed", map[string]interface{}{"durationMs": executeDuration})
+		return false, "", e
+	}
+
+	CaptureEvent("WingetUpgradeCompleted", map[string]interface{}{"durationMs": executeDuration})
+	return true, version, Error{}
 }

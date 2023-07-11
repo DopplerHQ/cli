@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/controllers"
@@ -66,7 +65,9 @@ var rootCmd = &cobra.Command{
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
 		if isTTY && utils.CanLogInfo() && !plain && canPrompt {
-			checkVersion(cmd.CommandPath())
+			if available, latestVersion := controllers.CheckUpdate(cmd.CommandPath()); available {
+				controllers.PromptToUpdate(latestVersion)
+			}
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -75,63 +76,6 @@ var rootCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to print command usage")
 		}
 	},
-}
-
-func checkVersion(command string) {
-	// disable version checking on commands commonly used in production workflows
-	// also disable when explicitly calling 'update' command to avoid checking twice
-	disabledCommands := []string{"run", "secrets download", "update"}
-	for _, disabledCommand := range disabledCommands {
-		if command == fmt.Sprintf("doppler %s", disabledCommand) {
-			utils.LogDebug("Skipping CLI upgrade check due to disallowed command")
-			return
-		}
-	}
-
-	if !version.PerformVersionCheck || version.IsDevelopment() {
-		return
-	}
-
-	prevVersionCheck := configuration.VersionCheck()
-	// don't check more often than every 24 hours
-	if !time.Now().After(prevVersionCheck.CheckedAt.Add(24 * time.Hour)) {
-		return
-	}
-
-	controllers.CaptureEvent("VersionCheck", nil)
-
-	available, versionCheck, err := controllers.NewVersionAvailable(prevVersionCheck)
-	if err != nil {
-		// retry on next run
-		return
-	}
-
-	if !available {
-		utils.LogDebug("No CLI updates available")
-		// re-use existing version
-		versionCheck.LatestVersion = prevVersionCheck.LatestVersion
-	} else if utils.IsWindows() {
-		utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\n", versionCheck.LatestVersion))
-	} else {
-		controllers.CaptureEvent("UpgradeAvailable", nil)
-
-		utils.Print(color.Green.Sprintf("An update is available."))
-
-		changes, apiError := controllers.CLIChangeLog()
-		if apiError.IsNil() {
-			printer.ChangeLog(changes, 1, false)
-			utils.Print("")
-		}
-
-		prompt := fmt.Sprintf("Install Doppler CLI %s", versionCheck.LatestVersion)
-		if utils.ConfirmationPrompt(prompt, true) {
-			controllers.CaptureEvent("UpgradeFromPrompt", nil)
-
-			installCLIUpdate()
-		}
-	}
-
-	configuration.SetVersionCheck(versionCheck)
 }
 
 // persistentValidArgsFunction Cobra parses flags after executing ValidArgsFunction, so we must manually initialize flags
