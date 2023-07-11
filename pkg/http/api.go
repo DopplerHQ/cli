@@ -16,7 +16,6 @@ limitations under the License.
 package http
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -42,8 +41,7 @@ func (e *Error) Unwrap() error { return e.Err }
 func (e *Error) IsNil() bool { return e.Err == nil && e.Message == "" }
 
 func apiKeyHeader(apiKey string) map[string]string {
-	encoded := base64.StdEncoding.EncodeToString([]byte(apiKey + ":"))
-	return map[string]string{"Authorization": fmt.Sprintf("Basic %s", encoded)}
+	return map[string]string{"Authorization": fmt.Sprintf("Bearer %s", apiKey)}
 }
 
 // GenerateAuthCode generate an auth code
