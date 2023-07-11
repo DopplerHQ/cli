@@ -54,7 +54,7 @@ func CanLogInfo() bool {
 	return Debug || !silent
 }
 
-// LogDebug prints a debug message to stdout
+// LogDebug prints a debug message to stderr
 func LogDebug(s string) {
 	if CanLogDebug() {
 		// log debug messages to stderr
@@ -69,7 +69,7 @@ func LogDebugError(e error) {
 	}
 }
 
-// CanLogDebug messages to stdout
+// CanLogDebug messages to stderr
 func CanLogDebug() bool {
 	return Debug
 }
