@@ -329,7 +329,7 @@ func isUpdateAvailableViaWinget(updateVersion string) bool {
 	utils.LogDebug(strOut)
 
 	// Ex: `Doppler.doppler 3.63.1 3.64.0 winget`
-	re := regexp.MustCompile(fmt.Sprintf(`%s\s+%s\s+%s\s+winget`, wingetPackageId, strings.TrimPrefix(version.ProgramVersion, "v"), strings.TrimPrefix(updateVersion, "v")))
+	re := regexp.MustCompile(fmt.Sprintf(`%s\s+\d+\.\d+\.\d+\s+%s\s+winget`, wingetPackageId, strings.TrimPrefix(updateVersion, "v")))
 
 	matches := re.FindStringSubmatch(strOut)
 	return len(matches) > 0
