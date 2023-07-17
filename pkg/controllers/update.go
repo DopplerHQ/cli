@@ -86,13 +86,13 @@ func CheckUpdate(command string) (bool, models.VersionCheck) {
 	}
 
 	if utils.IsWindows() && !utils.IsMINGW64() {
-		if !InstalledViaWinget() {
+		if !installedViaWinget() {
 			utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\nWe recommend installing the Doppler CLI via winget for easier updates", versionCheck.LatestVersion))
 			configuration.SetVersionCheck(versionCheck)
 			return false, models.VersionCheck{}
 		}
 
-		if !IsUpdateAvailableViaWinget(versionCheck.LatestVersion) {
+		if !isUpdateAvailableViaWinget(versionCheck.LatestVersion) {
 			CaptureEvent("UpgradeNotAvailableViaWinget", map[string]interface{}{"version": versionCheck.LatestVersion})
 			utils.LogDebug(fmt.Sprintf("Doppler CLI version %s is not yet available via winget", versionCheck.LatestVersion))
 			// reuse old version so we prompt the user again
@@ -251,8 +251,8 @@ func InstallUpdate(version string) {
 	var installedVersion string
 	var controllerErr Error
 	if utils.IsWindows() && !utils.IsMINGW64() {
-		if InstalledViaWinget() {
-			wasUpdated, installedVersion, controllerErr = UpdateViaWinget(version)
+		if installedViaWinget() {
+			wasUpdated, installedVersion, controllerErr = updateViaWinget(version)
 		} else {
 			utils.HandleError(fmt.Errorf("updates are not supported when installed via scoop. Please install the Doppler CLI via winget or update manually via `scoop update doppler`"))
 		}
@@ -281,7 +281,7 @@ func InstallUpdate(version string) {
 	configuration.SetVersionCheck(versionCheck)
 }
 
-func InstalledViaWinget() bool {
+func installedViaWinget() bool {
 	utils.LogDebug("Checking if CLI is installed via winget")
 	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
@@ -302,7 +302,7 @@ func InstalledViaWinget() bool {
 	return err == nil
 }
 
-func IsUpdateAvailableViaWinget(updateVersion string) bool {
+func isUpdateAvailableViaWinget(updateVersion string) bool {
 	utils.LogDebug("Checking if CLI update is available via winget")
 	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
@@ -330,7 +330,7 @@ func IsUpdateAvailableViaWinget(updateVersion string) bool {
 	return len(matches) > 0
 }
 
-func UpdateViaWinget(version string) (bool, string, Error) {
+func updateViaWinget(version string) (bool, string, Error) {
 	command := fmt.Sprintf("winget upgrade --id %s --exact --disable-interactivity --version %s", wingetPackageId, strings.TrimPrefix(version, "v"))
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
 
