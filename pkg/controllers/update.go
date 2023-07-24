@@ -86,13 +86,13 @@ func CheckUpdate(command string) (bool, models.VersionCheck) {
 	}
 
 	if utils.IsWindows() && !utils.IsMINGW64() {
-		if !InstalledViaWinget() {
+		if !installedViaWinget() {
 			utils.Log(fmt.Sprintf("Update: Doppler CLI %s is available\n\nYou can update via 'scoop update doppler'\nWe recommend installing the Doppler CLI via winget for easier updates", versionCheck.LatestVersion))
 			configuration.SetVersionCheck(versionCheck)
 			return false, models.VersionCheck{}
 		}
 
-		if !IsUpdateAvailableViaWinget(versionCheck.LatestVersion) {
+		if !isUpdateAvailableViaWinget(versionCheck.LatestVersion) {
 			CaptureEvent("UpgradeNotAvailableViaWinget", map[string]interface{}{"version": versionCheck.LatestVersion})
 			utils.LogDebug(fmt.Sprintf("Doppler CLI version %s is not yet available via winget", versionCheck.LatestVersion))
 			// reuse old version so we prompt the user again
@@ -251,8 +251,13 @@ func InstallUpdate(version string) {
 	var installedVersion string
 	var controllerErr Error
 	if utils.IsWindows() && !utils.IsMINGW64() {
-		if InstalledViaWinget() {
-			wasUpdated, installedVersion, controllerErr = UpdateViaWinget(version)
+		if installedViaWinget() {
+			if err := updateViaWinget(version); err != nil {
+				utils.HandleError(err, "Unable to execute winget")
+			}
+
+			utils.LogDebug("Executing winget in background, CLI is now exiting")
+			os.Exit(0)
 		} else {
 			utils.HandleError(fmt.Errorf("updates are not supported when installed via scoop. Please install the Doppler CLI via winget or update manually via `scoop update doppler`"))
 		}
@@ -281,7 +286,7 @@ func InstallUpdate(version string) {
 	configuration.SetVersionCheck(versionCheck)
 }
 
-func InstalledViaWinget() bool {
+func installedViaWinget() bool {
 	utils.LogDebug("Checking if CLI is installed via winget")
 	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
@@ -302,7 +307,7 @@ func InstalledViaWinget() bool {
 	return err == nil
 }
 
-func IsUpdateAvailableViaWinget(updateVersion string) bool {
+func isUpdateAvailableViaWinget(updateVersion string) bool {
 	utils.LogDebug("Checking if CLI update is available via winget")
 	command := fmt.Sprintf("winget list --id %s -n 1 --exact --disable-interactivity", wingetPackageId)
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
@@ -324,47 +329,23 @@ func IsUpdateAvailableViaWinget(updateVersion string) bool {
 	utils.LogDebug(strOut)
 
 	// Ex: `Doppler.doppler 3.63.1 3.64.0 winget`
-	re := regexp.MustCompile(fmt.Sprintf(`%s\s+%s\s+%s\s+winget`, wingetPackageId, strings.TrimPrefix(version.ProgramVersion, "v"), strings.TrimPrefix(updateVersion, "v")))
+	re := regexp.MustCompile(fmt.Sprintf(`%s\s+\d+\.\d+\.\d+\s+%s\s+winget`, wingetPackageId, strings.TrimPrefix(updateVersion, "v")))
 
 	matches := re.FindStringSubmatch(strOut)
 	return len(matches) > 0
 }
 
-func UpdateViaWinget(version string) (bool, string, Error) {
+func updateViaWinget(version string) error {
+	CaptureEvent("WingetUpgradeInitiated", nil)
+
 	command := fmt.Sprintf("winget upgrade --id %s --exact --disable-interactivity --version %s", wingetPackageId, strings.TrimPrefix(version, "v"))
+
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
-
-	startTime := time.Now()
-
-	var out bytes.Buffer
-	cmd, err := utils.RunCommandString(command, os.Environ(), nil, &out, &out, true)
+	_, err := utils.RunCommandString(command, os.Environ(), nil, os.Stdout, os.Stderr, true)
 	if err != nil {
-		utils.LogDebugError(err)
-		CaptureEvent("WingetUpgradeFailed", map[string]interface{}{"durationMs": 0})
-		return false, "", Error{Message: "Unable to execute winget"}
+		CaptureEvent("WingetUpgradeFailed", nil)
+		return err
 	}
 
-	exitCode, err := utils.WaitCommand(cmd)
-
-	strOut := out.String()
-	utils.LogDebug(strOut)
-
-	executeDuration := time.Since(startTime).Milliseconds()
-
-	if err != nil || exitCode != 0 {
-		var e Error
-		if strings.Contains(strOut, "No installed package found matching input criteria.") {
-			e = Error{Message: "The Doppler CLI is not installed via winget"}
-		} else if strings.Contains(strOut, "No applicable upgrade found.") || strings.Contains(strOut, "No available upgrade found.") {
-			e = Error{Message: "You are already running the latest version available via winget"}
-		} else {
-			e = Error{Err: err, Message: "Unable to upgrade via winget"}
-		}
-
-		CaptureEvent("WingetUpgradeFailed", map[string]interface{}{"durationMs": executeDuration})
-		return false, "", e
-	}
-
-	CaptureEvent("WingetUpgradeCompleted", map[string]interface{}{"durationMs": executeDuration})
-	return true, version, Error{}
+	return nil
 }
