@@ -204,8 +204,9 @@ func (self *SecretsComponent) createSVMs() error {
 		}
 	}
 
-	if len(self.secretVMs) > 0 {
-		self.activeSVM = self.secretVMs[0]
+	visibleSVMs := self.visibleSVMs()
+	if len(visibleSVMs) > 0 {
+		self.activeSVM = visibleSVMs[0]
 	}
 
 	curViewName := self.gui.g.CurrentView().Name()
