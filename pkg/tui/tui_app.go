@@ -17,10 +17,12 @@ package tui
 
 import (
 	"log"
+	"os"
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/tui/common"
 	"github.com/DopplerHQ/cli/pkg/tui/gui"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 type App struct {
@@ -32,6 +34,11 @@ func Start(opts models.ScopedOptions) {
 	cmn, err := common.NewCommon(opts)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if cmn.Opts.EnclaveProject.Value == "" {
+		utils.Log("You must run `doppler setup` prior to launching the TUI")
+		os.Exit(1)
 	}
 
 	gui, err := gui.NewGui(cmn)
