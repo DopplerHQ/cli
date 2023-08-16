@@ -219,6 +219,10 @@ func (self *SecretsComponent) createSVMs() error {
 }
 
 func (self *SecretsComponent) ToggleNameValue() error {
+	if len(self.visibleSVMs()) == 0 {
+		return nil
+	}
+
 	isNameFocused := strings.Index(self.gui.g.CurrentView().Name(), "SVM:Name:") == 0
 	isEditing := self.gui.g.CurrentView().Editable
 
