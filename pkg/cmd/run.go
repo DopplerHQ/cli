@@ -568,7 +568,7 @@ func init() {
 	runCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	// note: requires using "--preserve-env=VALUE", doesn't work with "--preserve-env VALUE"
-	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence of the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk.")
+	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence over the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk.")
 	// we must specify a default when no value is passed as this flag used to be a boolean
 	// https://github.com/spf13/pflag#setting-no-option-default-values-for-flags
 	runCmd.Flags().Lookup("preserve-env").NoOptDefVal = "true"
