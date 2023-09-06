@@ -398,11 +398,13 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 			}
 			// then use existing env vars
 			for name, value := range existingEnvKeys {
-				if preserveEnv != "true" && !utils.Contains(secretsToPreserve, name) {
+				_, isDopplerSecret := secrets[name]
+				preserveEnvVar := preserveEnv == "true" || utils.Contains(secretsToPreserve, name)
+				if isDopplerSecret && !preserveEnvVar {
 					continue
 				}
 
-				if _, found := secrets[name]; found {
+				if isDopplerSecret {
 					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
 				}
 				secrets[name] = value

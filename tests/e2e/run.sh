@@ -140,4 +140,16 @@ beforeEach
 value="$(TEST="foo" "$DOPPLER_BINARY" run --preserve-env="INVALID" -- printenv TEST)"
 [[ "$value" == "abc" ]] || error "ERROR: existing env var not ignored when preserve-env flag passed list of nonexistent secret names"
 
+beforeEach
+
+# verify preserve-env flag preserves env vars that aren't Doppler secrets
+value="$(NOT_DOPPLER_SECRET="foo" "$DOPPLER_BINARY" run --preserve-env="TEST" -- printenv NOT_DOPPLER_SECRET || true)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env var not preserved when preserve-env flag passed unrelated secret name"
+
+beforeEach
+
+# verify preserve-env flag preserves env vars that aren't Doppler secrets when passing false
+value="$(NOT_DOPPLER_SECRET="foo" "$DOPPLER_BINARY" run --preserve-env=false -- printenv NOT_DOPPLER_SECRET || true)"
+[[ "$value" == "foo" ]] || error "ERROR: existing env var not preserved when preserve-env flag passed false"
+
 afterAll
