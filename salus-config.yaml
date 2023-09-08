@@ -25,4 +25,4 @@ enforced_scanners: "all"
 scanner_configs:
   GoVersionScanner:
     error:
-      min_version: '1.18.0'
+      min_version: '1.21.0'
