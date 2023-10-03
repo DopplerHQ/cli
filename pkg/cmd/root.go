@@ -99,7 +99,7 @@ func loadFlags(cmd *cobra.Command) {
 	if configuration.CanReadEnv {
 		userConfigDir := os.Getenv("DOPPLER_CONFIG_DIR")
 		if userConfigDir != "" {
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG_DIR"))
+			logValueFromEnvironmentNotice("DOPPLER_CONFIG_DIR")
 			configuration.SetConfigDir(userConfigDir)
 		}
 	}
@@ -126,7 +126,7 @@ func loadFlags(cmd *cobra.Command) {
 	if configuration.CanReadEnv {
 		enable := os.Getenv("DOPPLER_ENABLE_VERSION_CHECK")
 		if enable == "false" {
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_ENABLE_VERSION_CHECK"))
+			logValueFromEnvironmentNotice("DOPPLER_ENABLE_VERSION_CHECK")
 			version.PerformVersionCheck = false
 		}
 	}
