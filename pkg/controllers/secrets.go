@@ -172,7 +172,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 	}
 
 	if err := utils.CreateNamedPipe(mountPath, 0600); err != nil {
-		return "", nil, Error{Err: err, Message: "Unable to mount secrets file"}
+		return "", nil, Error{Err: err, Message: "Unable to mount secrets file. This may be due to another running instance of the Doppler CLI, or due to an improper shutdown. If this is unexpected, delete the file and try again."}
 	}
 
 	fifoCleanupStarted := false
