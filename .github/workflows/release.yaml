@@ -44,14 +44,14 @@ jobs:
     - name: Configure Docker
       run: |
         echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_REGISTRY";
-        echo "$GOOGLE_CREDS" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGISTRY";
+        echo "$GCP_KEY" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGISTRY";
       env:
         DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
         DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
         GCR_REGISTRY: ${{ secrets.GCR_REGISTRY }}
-        GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+        GCP_KEY: ${{ secrets.GCP_KEY }}
         GCR_USER: ${{ secrets.GCR_USER }}
     - name: Install goreleaser
       run:
@@ -69,12 +69,12 @@ jobs:
         GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
     - name: Build and publish binaries
       run:
-        GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GOOGLE_CREDS") goreleaser release --clean
+        GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GCP_KEY") goreleaser release --clean
       env:
         GOPATH: ${{ runner.workspace }}
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
-        GOOGLE_CREDS: ${{ secrets.GOOGLE_CREDS }}
+        GCP_KEY: ${{ secrets.GCP_KEY }}
         GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
     - name: Publish to Cloudsmith
       run: ./scripts/release/cloudsmith.sh
