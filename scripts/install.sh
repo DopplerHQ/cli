@@ -164,6 +164,10 @@ curl_download() {
     if [ "$exit_code" -eq 60 ]; then
       log ""
       log "Ensure the ca-certificates package is installed for your distribution"
+    elif [ "$exit_code" -eq 35 ]; then
+      # A TLS/SSL connect error. The SSL handshake failed. The SSL handshake can fail due to numerous different reasons so the error message may offer some additional clues. Maybe the parties could not agree to a SSL/TLS version, an agreeable cipher suite or similar.
+      log ""
+      log "Failed to complete TLS handshake. Please ensure your system's TLS library is up-to-date (OpenSSL, GnuTLS, libressl, etc.)"
     fi
     clean_exit 1
   fi
