@@ -168,11 +168,11 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 	}
 
 	if utils.Exists(mountPath) {
-		return "", nil, Error{Err: errors.New("The mount path already exists")}
+		return "", nil, Error{Err: errors.New("The mount path already exists. This may be due to another running instance of the Doppler CLI, or due to an improper shutdown. If this is unexpected, delete the file and try again.")}
 	}
 
 	if err := utils.CreateNamedPipe(mountPath, 0600); err != nil {
-		return "", nil, Error{Err: err, Message: "Unable to mount secrets file. This may be due to another running instance of the Doppler CLI, or due to an improper shutdown. If this is unexpected, delete the file and try again."}
+		return "", nil, Error{Err: err, Message: "Unable to mount secrets file"}
 	}
 
 	fifoCleanupStarted := false
