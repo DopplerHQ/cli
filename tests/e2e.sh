@@ -9,6 +9,8 @@ export DOPPLER_SCRIPTS_DIR="$DIR/../scripts"
 export DOPPLER_PROJECT="cli"
 export DOPPLER_CONFIG="e2e"
 
+export DOPPLER_ENABLE_VERSION_CHECK=false
+
 # Run tests
 "$DIR/e2e/secrets-download-fallback.sh"
 "$DIR/e2e/secrets-substitute.sh"
