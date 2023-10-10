@@ -15,10 +15,17 @@ limitations under the License.
 */
 package models
 
+const (
+	FlagAnalytics   string = "analytics"
+)
+
 type Flags struct {
+	Analytics   *bool `yaml:"analytics,omitempty"`
 }
 
-var flags = []string{}
+var flags = []string{
+	FlagAnalytics,
+}
 
 func GetFlags() []string {
 	return flags

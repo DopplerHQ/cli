@@ -22,14 +22,32 @@ import (
 )
 
 func GetFlag(flag string) bool {
+	flags := configContents.Flags
+	switch flag {
+	case models.FlagAnalytics:
+		if flags.Analytics != nil {
+			return *flags.Analytics
+		}
+		return GetFlagDefault(models.FlagAnalytics)
+	}
+
 	return false
 }
 
 func SetFlag(flag string, enable bool) {
+	switch flag {
+	case models.FlagAnalytics:
+		configContents.Flags.Analytics = &enable
+	}
 	writeConfig(configContents)
 }
 
 func GetFlagDefault(flag string) bool {
+	switch flag {
+	case models.FlagAnalytics:
+		return true
+	}
+
 	return false
 }
 

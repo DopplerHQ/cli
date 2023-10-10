@@ -403,6 +403,11 @@ func ClearConfig() {
 
 // Write config to filesystem
 func writeConfig(config models.ConfigFile) {
+	// keep both analytics properties up-to-date
+	if config.Flags.Analytics != nil {
+		config.Analytics.Disable = !*config.Flags.Analytics
+	}
+
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		utils.HandleError(err)
@@ -481,6 +486,13 @@ func readConfig() (models.ConfigFile, int, int) {
 	}
 
 	config.Scoped = normalizedOptions
+
+	// support legacy analytics property when new property isn't set
+	if config.Flags.Analytics == nil && config.Analytics.Disable {
+		b := false
+		config.Flags.Analytics = &b
+	}
+
 	return config, uid, gid
 }
 
