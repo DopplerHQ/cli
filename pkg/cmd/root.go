@@ -99,6 +99,7 @@ func loadFlags(cmd *cobra.Command) {
 	if configuration.CanReadEnv {
 		userConfigDir := os.Getenv("DOPPLER_CONFIG_DIR")
 		if userConfigDir != "" {
+			// this warning will always be printed since the config file's flags haven't been loaded yet
 			logValueFromEnvironmentNotice("DOPPLER_CONFIG_DIR")
 			configuration.SetConfigDir(userConfigDir)
 		}

@@ -247,7 +247,9 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 }
 
 func logValueFromEnvironmentNotice(name string) {
-	utils.Log(fmt.Sprintf("Using %s from the environment. To disable this, use --no-read-env.", name))
+	if configuration.GetFlag(models.FlagEnvWarning) {
+		utils.Log(fmt.Sprintf("Using %s from the environment. To disable this, use --no-read-env.", name))
+	}
 }
 
 // we're looking for duplicate paths and more than one repo being defined without a path.
