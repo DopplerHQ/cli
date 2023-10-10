@@ -18,6 +18,7 @@ package printer
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -180,4 +181,39 @@ func ConfigOptionNames(options []string, jsonFlag bool) {
 		rows = append(rows, []string{option})
 	}
 	Table([]string{"name"}, rows, TableOptions())
+}
+
+func Flags(flags map[string]bool, jsonFlag bool) {
+	if jsonFlag {
+		JSON(flags)
+		return
+	}
+
+	var rows [][]string
+	for flag, value := range flags {
+		rows = append(rows, []string{flag, strconv.FormatBool(value)})
+	}
+	Table([]string{"flag", "value"}, rows, TableOptions())
+}
+
+func Flag(flag string, value bool, jsonFlag bool, plain bool, copy bool) {
+	if plain || copy {
+		if copy {
+			if err := utils.CopyToClipboard(strconv.FormatBool(value)); err != nil {
+				utils.HandleError(err, "Unable to copy to clipboard")
+			}
+		}
+
+		if plain {
+			fmt.Println(strconv.FormatBool(value))
+			return
+		}
+	}
+
+	if jsonFlag {
+		JSON(map[string]bool{flag: value})
+		return
+	}
+
+	Table([]string{"flag", "value"}, [][]string{{flag, strconv.FormatBool(value)}}, TableOptions())
 }

@@ -25,6 +25,7 @@ type ConfigFile struct {
 	VersionCheck VersionCheck                 `yaml:"version-check"`
 	Analytics    AnalyticsOptions             `yaml:"analytics"`
 	TUI          TUIOptions                   `yaml:"tui"`
+	Flags        Flags                        `yaml:"flags,omitempty"`
 }
 
 // FileScopedOptions config options
