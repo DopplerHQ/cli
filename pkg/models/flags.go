@@ -18,16 +18,19 @@ package models
 const (
 	FlagAnalytics   string = "analytics"
 	FlagEnvWarning  string = "env-warning"
+	FlagUpdateCheck string = "update-check"
 )
 
 type Flags struct {
 	Analytics   *bool `yaml:"analytics,omitempty"`
 	EnvWarning  *bool `yaml:"env-warning,omitempty"`
+	UpdateCheck *bool `yaml:"update-check,omitempty"`
 }
 
 var flags = []string{
 	FlagAnalytics,
 	FlagEnvWarning,
+	FlagUpdateCheck,
 }
 
 func GetFlags() []string {

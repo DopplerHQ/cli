@@ -34,6 +34,11 @@ func GetFlag(flag string) bool {
 			return *flags.EnvWarning
 		}
 		return GetFlagDefault(models.FlagEnvWarning)
+	case models.FlagUpdateCheck:
+		if flags.UpdateCheck != nil {
+			return *flags.UpdateCheck
+		}
+		return GetFlagDefault(models.FlagUpdateCheck)
 	}
 
 	return false
@@ -45,6 +50,8 @@ func SetFlag(flag string, enable bool) {
 		configContents.Flags.Analytics = &enable
 	case models.FlagEnvWarning:
 		configContents.Flags.EnvWarning = &enable
+	case models.FlagUpdateCheck:
+		configContents.Flags.UpdateCheck = &enable
 	}
 	writeConfig(configContents)
 }
@@ -54,6 +61,8 @@ func GetFlagDefault(flag string) bool {
 	case models.FlagAnalytics:
 		return true
 	case models.FlagEnvWarning:
+		return true
+	case models.FlagUpdateCheck:
 		return true
 	}
 
