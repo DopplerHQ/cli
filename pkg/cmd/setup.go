@@ -177,6 +177,46 @@ func setup(cmd *cobra.Command, args []string) {
 			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedOptionsMap(&conf), utils.OutputJSON, false, false)
 		}
 	}
+
+	if repoConfig.Flags.Analytics != nil {
+		flag := models.FlagAnalytics
+		value := *repoConfig.Flags.Analytics
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
+	}
+	if repoConfig.Flags.EnvWarning != nil {
+		flag := models.FlagEnvWarning
+		value := *repoConfig.Flags.EnvWarning
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
+	}
+	if repoConfig.Flags.UpdateCheck != nil {
+		flag := models.FlagUpdateCheck
+		value := *repoConfig.Flags.UpdateCheck
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
+	}
 }
 
 func selectProject(projects []models.ProjectInfo, prevConfiguredProject string, canPromptUser bool) string {
