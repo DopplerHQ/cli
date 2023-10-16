@@ -272,6 +272,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 }
 
 func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) (int, http.Header, error) {
+	// nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 	response, requestErr := request(req, verifyTLS, false)
 	if requestErr != nil {
 		statusCode := 0
