@@ -1,4 +1,8 @@
 FROM alpine
 RUN apk add --no-cache tini
+
+# Update OpenSSL to address CVE because `alpine` isn't updated yet
+RUN apk update && apk upgrade --no-cache libcrypto3 libssl3
+
 COPY doppler /bin/doppler
 ENTRYPOINT ["/sbin/tini", "--", "/bin/doppler"]
