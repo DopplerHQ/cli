@@ -34,7 +34,7 @@ builds:
     - goos: freebsd
       goarch: "386"
     ldflags:
-      - -s -w -X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=v{{.Version}}
+      - -extldflags "-static" -s -w -X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=v{{.Version}}
 
 archives:
 -
@@ -105,7 +105,7 @@ changelog:
     - Merge branch
 
 dockers:
-  - dockerfile: docker/alpine
+  - dockerfile: docker/Dockerfile
     goos: linux
     goarch: amd64
     ids:
