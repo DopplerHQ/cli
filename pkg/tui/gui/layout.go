@@ -141,7 +141,7 @@ func (gui *Gui) layout(g *gocui.Gui) error {
 				// If possible, we want to pin the Y origin at the top (which improves the behavior of the
 				// textarea as it's resizing). gocui is smart enough to adjust the origin down if the cursor
 				// is out of bounds of the view size.
-				svm.valueView.SetOriginY(0)
+				_ = svm.valueView.SetOriginY(0)
 				svm.valueView.RenderTextArea()
 			}
 

@@ -118,26 +118,42 @@ func configLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete string)
 
 func init() {
 	configsLogsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsLogsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsLogsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsLogsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsLogsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsCmd.Flags().Int("page", 1, "log page to display")
 	configsLogsCmd.Flags().IntP("number", "n", 20, "max number of logs to display")
 	configsCmd.AddCommand(configsLogsCmd)
 
 	configsLogsGetCmd.Flags().String("log", "", "audit log id")
-	configsLogsGetCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
+	if err := configsLogsGetCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsLogsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsLogsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsLogsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsLogsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsCmd.AddCommand(configsLogsGetCmd)
 
 	configsLogsRollbackCmd.Flags().String("log", "", "audit log id")
-	configsLogsRollbackCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs)
+	if err := configsLogsRollbackCmd.RegisterFlagCompletionFunc("log", configLogIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsRollbackCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsLogsRollbackCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsLogsRollbackCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsRollbackCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsLogsRollbackCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsLogsRollbackCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLogsCmd.AddCommand(configsLogsRollbackCmd)
 }

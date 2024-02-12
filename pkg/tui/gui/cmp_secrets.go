@@ -79,7 +79,7 @@ func CreateSecretsComponent(gui *Gui) (*SecretsComponent, error) {
 		return nil
 	})
 	gui.bindKey("Secrets", 'y', gocui.ModNone, func(v *gocui.View) error {
-		cmp.YankCurrentField()
+		_ = cmp.YankCurrentField()
 		return nil
 	})
 	gui.bindKey("Secrets", 'a', gocui.ModNone, func(v *gocui.View) error {
@@ -173,7 +173,7 @@ func (self *SecretsComponent) OnFocus() {
 
 	if self.activeSVM != nil {
 		toFocus := self.activeSVM.nameView
-		self.gui.g.SetCurrentView(toFocus.Name())
+		_, _ = self.gui.g.SetCurrentView(toFocus.Name())
 	}
 }
 
@@ -188,8 +188,8 @@ func (self *SecretsComponent) createSVMs() error {
 	self.svmsForSecretsSetAt = state.SecretsSetAt()
 
 	for _, oldView := range self.secretVMs {
-		self.gui.g.DeleteView(oldView.nameView.Name())
-		self.gui.g.DeleteView(oldView.valueView.Name())
+		_ = self.gui.g.DeleteView(oldView.nameView.Name())
+		_ = self.gui.g.DeleteView(oldView.valueView.Name())
 	}
 
 	self.scrollDelta = 0
@@ -263,7 +263,7 @@ func (self *SecretsComponent) AppendSVM() error {
 	self.gui.mutexes.SecretViewsMutex.Unlock()
 
 	// We need to position the new SVM before we can select it
-	self.gui.layout(self.gui.g)
+	_ = self.gui.layout(self.gui.g)
 
 	visibleSVMs := self.visibleSVMs()
 	if err = self.SelectSVM(len(visibleSVMs)-1, true); err != nil {
@@ -388,7 +388,7 @@ func (self *SecretsComponent) FinishEditingCurrentField() error {
 	self.gui.g.Cursor = false
 	self.gui.g.CurrentView().Editable = false
 	self.gui.g.CurrentView().ParentView.Editable = false
-	self.gui.g.CurrentView().SetCursor(0, 0)
+	_ = self.gui.g.CurrentView().SetCursor(0, 0)
 
 	return nil
 }

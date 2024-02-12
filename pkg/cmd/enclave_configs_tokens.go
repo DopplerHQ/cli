@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -62,34 +63,54 @@ var enclaveConfigsTokensRevokeCmd = &cobra.Command{
 
 func init() {
 	enclaveConfigsTokensCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveConfigsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsCmd.AddCommand(enclaveConfigsTokensCmd)
 
 	enclaveConfigsTokensGetCmd.Flags().String("slug", "", "service token slug")
-	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
+	if err := enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveConfigsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensGetCmd)
 
 	enclaveConfigsTokensCreateCmd.Flags().String("name", "", "service token name")
 	enclaveConfigsTokensCreateCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensCreateCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveConfigsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	enclaveConfigsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	enclaveConfigsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensCreateCmd)
 
 	enclaveConfigsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
-	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
+	if err := enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensRevokeCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensRevokeCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveConfigsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveConfigsTokensCmd.AddCommand(enclaveConfigsTokensRevokeCmd)
 }

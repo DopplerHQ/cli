@@ -355,29 +355,45 @@ func unlockedConfigNamesValidArgs(cmd *cobra.Command, args []string, toComplete 
 
 func init() {
 	configsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs)
+	if err := configsCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.Flags().IntP("number", "n", 100, "max number of configs to display")
 	configsCmd.Flags().Int("page", 1, "page to display")
 
 	configsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.AddCommand(configsGetCmd)
 
 	configsCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCreateCmd.Flags().String("name", "", "config name")
 	configsCreateCmd.Flags().StringP("environment", "e", "", "config environment")
-	configsCreateCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs)
+	if err := configsCreateCmd.RegisterFlagCompletionFunc("environment", configEnvironmentIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.AddCommand(configsCreateCmd)
 
 	configsUpdateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsUpdateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsUpdateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsUpdateCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsUpdateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsUpdateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsUpdateCmd.Flags().String("name", "", "config name")
 	if err := configsUpdateCmd.MarkFlagRequired("name"); err != nil {
 		utils.HandleError(err)
@@ -386,30 +402,46 @@ func init() {
 	configsCmd.AddCommand(configsUpdateCmd)
 
 	configsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsDeleteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsDeleteCmd)
 
 	configsLockCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsLockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsLockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLockCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsLockCmd.RegisterFlagCompletionFunc("config", lockedConfigNamesValidArgs)
+	if err := configsLockCmd.RegisterFlagCompletionFunc("config", lockedConfigNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsLockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsLockCmd)
 
 	configsUnlockCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsUnlockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsUnlockCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsUnlockCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsUnlockCmd.RegisterFlagCompletionFunc("config", unlockedConfigNamesValidArgs)
+	if err := configsUnlockCmd.RegisterFlagCompletionFunc("config", unlockedConfigNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsUnlockCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	configsCmd.AddCommand(configsUnlockCmd)
 
 	configsCloneCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsCloneCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsCloneCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCloneCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsCloneCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsCloneCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCloneCmd.Flags().String("name", "", "new config name")
 	configsCmd.AddCommand(configsCloneCmd)
 

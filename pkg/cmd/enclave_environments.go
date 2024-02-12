@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -41,11 +42,15 @@ var enclaveEnvironmentsGetCmd = &cobra.Command{
 
 func init() {
 	enclaveEnvironmentsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveEnvironmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveEnvironmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveEnvironmentsCmd.AddCommand(enclaveEnvironmentsGetCmd)
 
 	enclaveEnvironmentsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveEnvironmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveEnvironmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveEnvironmentsCmd.Flags().IntP("number", "n", 100, "max number of environments to display")
 	enclaveEnvironmentsCmd.Flags().Int("page", 1, "page to display")
 	enclaveCmd.AddCommand(enclaveEnvironmentsCmd)

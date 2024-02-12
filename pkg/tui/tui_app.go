@@ -51,5 +51,5 @@ func Start(opts models.ScopedOptions) {
 		gui:    gui,
 	}
 
-	app.gui.RunAndHandleError()
+	_ = app.gui.RunAndHandleError()
 }

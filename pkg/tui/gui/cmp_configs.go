@@ -70,7 +70,7 @@ func (self *ConfigsComponent) GetTitle() string    { return "Configs (1)" }
 
 func (self *ConfigsComponent) OnFocus() {
 	if self.selectedIdx >= len(state.Configs()) {
-		self.SelectIdx(0)
+		_ = self.SelectIdx(0)
 	}
 }
 
