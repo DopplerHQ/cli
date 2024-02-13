@@ -84,7 +84,9 @@ func activityLogIDsValidArgs(cmd *cobra.Command, args []string, toComplete strin
 
 func init() {
 	activityGetCmd.Flags().String("log", "", "activity log id")
-	activityGetCmd.RegisterFlagCompletionFunc("log", activityLogIDsValidArgs)
+	if err := activityGetCmd.RegisterFlagCompletionFunc("log", activityLogIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	activityCmd.AddCommand(activityGetCmd)
 
 	activityCmd.Flags().IntP("number", "n", 20, "max number of logs to display")

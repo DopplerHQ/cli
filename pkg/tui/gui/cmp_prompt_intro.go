@@ -55,8 +55,8 @@ func (self *PromptIntroComponent) GetTitle() string    { return "Welcome" }
 func (self *PromptIntroComponent) GetFocusable() bool  { return true }
 
 func (self *PromptIntroComponent) OnFocus() {
-	self.Render()
-	self.gui.g.SetViewOnTop(self.GetViewName())
+	_ = self.Render()
+	_, _ = self.gui.g.SetViewOnTop(self.GetViewName())
 	self.GetView().Visible = true
 }
 

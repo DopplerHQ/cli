@@ -449,11 +449,11 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		canUseFallback := statusCode != 401 && statusCode != 403 && statusCode != 404
 		if !canUseFallback {
 			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.Path))
-			os.Remove(fallbackOpts.Path)
+			_ = os.Remove(fallbackOpts.Path)
 			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, fallbackOpts.LegacyPath))
-			os.Remove(fallbackOpts.LegacyPath)
+			_ = os.Remove(fallbackOpts.LegacyPath)
 			utils.LogDebug(fmt.Sprintf("Received %v. Deleting (if exists) %v", statusCode, metadataPath))
-			os.Remove(metadataPath)
+			_ = os.Remove(metadataPath)
 		}
 
 		if fallbackOpts.Enable && canUseFallback {

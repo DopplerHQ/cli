@@ -590,17 +590,25 @@ func secretNamesValidArgs(cmd *cobra.Command, args []string, toComplete string) 
 
 func init() {
 	secretsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	secretsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
@@ -609,37 +617,56 @@ func init() {
 	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsSetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsUploadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsUploadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsUploadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsUploadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsUploadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsDeleteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsDownloadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsDownloadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsDownloadCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsDownloadCmd.Flags().String("format", models.JSON.String(), fmt.Sprintf("output format. one of %s", validFormatList))
 	secretsDownloadCmd.Flags().String("name-transformer", "", fmt.Sprintf("output name transformer. one of %v", validNameTransformersList))
-	secretsDownloadCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err := secretsDownloadCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsNameTransformerTypes, cobra.ShellCompDirectiveDefault
 	})
+	if err != nil {
+		utils.HandleError(err)
+	}
 	secretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")
 	secretsDownloadCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
@@ -654,9 +681,13 @@ func init() {
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
 	secretsSubstituteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsSubstituteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsSubstituteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsSubstituteCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsSubstituteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsSubstituteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
 	secretsSubstituteCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	secretsCmd.AddCommand(secretsSubstituteCmd)

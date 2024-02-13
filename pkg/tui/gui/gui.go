@@ -95,9 +95,9 @@ func (gui *Gui) run() error {
 
 	// Set the default component focus
 	if configuration.TUIShouldShowIntro() {
-		gui.focusComponent(gui.cmps.promptIntro)
+		_ = gui.focusComponent(gui.cmps.promptIntro)
 	} else {
-		gui.focusComponent(gui.cmps.secrets)
+		_ = gui.focusComponent(gui.cmps.secrets)
 	}
 
 	// Fetch the data needed for the initial state of the app

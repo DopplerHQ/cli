@@ -72,7 +72,7 @@ func (gui *Gui) SecretsFilterEditor(v *gocui.View, key gocui.Key, ch rune, mod g
 
 		// As we filter, we want to make sure that we're pinning to the top of the secrets view
 		gui.cmps.secrets.scrollDelta = math.MaxInt
-		gui.layout(gui.g)
+		_ = gui.layout(gui.g)
 		gui.cmps.secrets.SetActiveSVM(0)
 	}
 	return rendered

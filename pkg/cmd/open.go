@@ -87,17 +87,25 @@ var openDocsCmd = &cobra.Command{
 
 func init() {
 	openDashboardCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	openDashboardCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := openDashboardCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	openDashboardCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	openDashboardCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := openDashboardCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	openCmd.AddCommand(openDashboardCmd)
 	openCmd.AddCommand(openStatusCmd)
 	openCmd.AddCommand(openGithubCmd)
 	openCmd.AddCommand(openDocsCmd)
 
 	openCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	openCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := openCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	openCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	openCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := openCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	rootCmd.AddCommand(openCmd)
 }

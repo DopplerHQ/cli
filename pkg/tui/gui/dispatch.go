@@ -138,8 +138,8 @@ func (gui *Gui) load() {
 	state.SetConfigs(configs)
 	state.SetSecrets(secrets, gui.Opts.EnclaveProject.Value, gui.Opts.EnclaveConfig.Value)
 
-	gui.cmps.projects.SelectIdx(selectedProjectIdx)
-	gui.cmps.configs.SelectIdx(selectedConfigIdx)
+	_ = gui.cmps.projects.SelectIdx(selectedProjectIdx)
+	_ = gui.cmps.configs.SelectIdx(selectedConfigIdx)
 
 	gui.setIsFetching(false)
 }
@@ -171,7 +171,7 @@ func (gui *Gui) selectProject(projectIdx int) {
 	state.SetSecrets(make([]state.Secret, 0), "", "")
 
 	gui.setIsFetching(false)
-	gui.focusComponent(gui.cmps.configs)
+	_ = gui.focusComponent(gui.cmps.configs)
 }
 
 func (gui *Gui) selectConfig(configIdx int) {
@@ -199,7 +199,7 @@ func (gui *Gui) selectConfig(configIdx int) {
 	state.SetSecrets(secrets, curProj, curConf)
 
 	gui.setIsFetching(false)
-	gui.focusComponent(gui.cmps.secrets)
+	_ = gui.focusComponent(gui.cmps.secrets)
 }
 
 func (gui *Gui) saveSecrets(changeRequests []models.ChangeRequest) {
@@ -220,7 +220,7 @@ func (gui *Gui) saveSecrets(changeRequests []models.ChangeRequest) {
 	})
 	if err := g.Wait(); err != nil {
 		gui.handleError(err)
-		gui.focusComponent(gui.cmps.secrets)
+		_ = gui.focusComponent(gui.cmps.secrets)
 		return
 	}
 
@@ -228,5 +228,5 @@ func (gui *Gui) saveSecrets(changeRequests []models.ChangeRequest) {
 	state.SetSecrets(secrets, curProj, curConf)
 
 	gui.setIsFetching(false)
-	gui.focusComponent(gui.cmps.secrets)
+	_ = gui.focusComponent(gui.cmps.secrets)
 }

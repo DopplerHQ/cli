@@ -114,7 +114,7 @@ func CreateSecretViewModel(gui *Gui, secret *state.Secret) (*SecretViewModel, er
 func (gui *Gui) SecretNameEditor(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) bool {
 	switch {
 	case key == gocui.KeyEnter:
-		gui.cmps.secrets.FinishEditingCurrentField()
+		_ = gui.cmps.secrets.FinishEditingCurrentField()
 		return false
 	case key == gocui.KeySpace:
 		key = '_'

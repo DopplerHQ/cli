@@ -73,9 +73,13 @@ func setSecretNote(cmd *cobra.Command, args []string) {
 
 func init() {
 	secretsNotesSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	secretsNotesSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := secretsNotesSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsNotesSetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	secretsNotesSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := secretsNotesSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	secretsNotesCmd.AddCommand(secretsNotesSetCmd)
 
 	secretsCmd.AddCommand(secretsNotesCmd)

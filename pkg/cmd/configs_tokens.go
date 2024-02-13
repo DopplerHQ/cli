@@ -189,38 +189,61 @@ func configTokenSlugsValidArgs(cmd *cobra.Command, args []string, toComplete str
 
 func init() {
 	configsTokensCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsTokensCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsTokensCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsCmd.AddCommand(configsTokensCmd)
 
 	configsTokensGetCmd.Flags().String("slug", "", "service token slug")
-	configsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
+	if err := configsTokensGetCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsTokensGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensGetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsTokensGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCmd.AddCommand(configsTokensGetCmd)
 
 	configsTokensCreateCmd.Flags().String("name", "", "service token name")
 	configsTokensCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsTokensCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCreateCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsTokensCreateCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCreateCmd.Flags().Bool("plain", false, "print only the token, without formatting")
 	configsTokensCreateCmd.Flags().Bool("copy", false, "copy the token to your clipboard")
 	configsTokensCreateCmd.Flags().Duration("max-age", 0, "token will expire after specified duration, (e.g. '3h', '15m')")
 	configsTokensCreateCmd.Flags().String("access", "read", "the token's access. one of [\"read\", \"read/write\"]")
-	configsTokensCreateCmd.RegisterFlagCompletionFunc("access", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err := configsTokensCreateCmd.RegisterFlagCompletionFunc("access", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"read", "read/write"}, cobra.ShellCompDirectiveDefault
 	})
+	if err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCmd.AddCommand(configsTokensCreateCmd)
 
 	configsTokensRevokeCmd.Flags().String("slug", "", "service token slug")
-	configsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs)
+	if err := configsTokensRevokeCmd.RegisterFlagCompletionFunc("slug", configTokenSlugsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensRevokeCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	configsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := configsTokensRevokeCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensRevokeCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	configsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := configsTokensRevokeCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	configsTokensCmd.AddCommand(configsTokensRevokeCmd)
 }

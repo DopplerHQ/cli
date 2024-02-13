@@ -240,7 +240,9 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 				// killing the process here will cause the cleanup goroutine below to run, thereby unlocking the mutex
 				utils.LogDebug(fmt.Sprintf("Sending SIGTERM to process %d", c.Process.Pid))
-				c.Process.Signal(syscall.SIGTERM)
+				if e := c.Process.Signal(syscall.SIGTERM); e != nil {
+					utils.LogDebugError(e)
+				}
 				// wait up to 10 sec for the process to exit
 				for i := 0; i < 10; i++ {
 					if !utils.IsProcessRunning(c.Process) {
@@ -563,9 +565,13 @@ func init() {
 	forwardSignals := !isatty.IsTerminal(os.Stdout.Fd())
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	runCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := runCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	runCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
-	runCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := runCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	// note: requires using "--preserve-env=VALUE", doesn't work with "--preserve-env VALUE"
 	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence over the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk.")
@@ -573,9 +579,12 @@ func init() {
 	// https://github.com/spf13/pflag#setting-no-option-default-values-for-flags
 	runCmd.Flags().Lookup("preserve-env").NoOptDefVal = "true"
 	runCmd.Flags().String("name-transformer", "", fmt.Sprintf("output name transformer. one of %v", validEnvCompatNameTransformersList))
-	runCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err := runCmd.RegisterFlagCompletionFunc("name-transformer", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsEnvCompatNameTransformerTypes, cobra.ShellCompDirectiveDefault
 	})
+	if err != nil {
+		utils.HandleError(err)
+	}
 	runCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	// fallback flags
 	runCmd.Flags().String("fallback", "", "path to the fallback file. encrypted secrets are written to this file after each successful fetch. secrets will be read from this file if subsequent connections are unsuccessful.")
@@ -590,9 +599,12 @@ func init() {
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
 	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
-	runCmd.RegisterFlagCompletionFunc("mount-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err = runCmd.RegisterFlagCompletionFunc("mount-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{projectTemplateFileName}, cobra.ShellCompDirectiveDefault
 	})
+	if err != nil {
+		utils.HandleError(err)
+	}
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")
 	runCmd.Flags().Int("mount-max-reads", 0, "maximum number of times the mounted secrets file can be read (0 for unlimited)")
 	runCmd.Flags().StringSliceVar(&secretsToInclude, "only-secrets", []string{}, "only include the specified secrets")

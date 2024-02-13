@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -95,17 +96,25 @@ $ doppler enclave secrets download --format=env --no-file`,
 
 func init() {
 	enclaveSecretsCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveSecretsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveSecretsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSecretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveSecretsCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	enclaveSecretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	enclaveSecretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveSecretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveSecretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsGetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSecretsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveSecretsGetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsGetCmd.Flags().Bool("plain", false, "print values without formatting")
 	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
@@ -114,25 +123,37 @@ func init() {
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveSecretsSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveSecretsSetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsSetCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSecretsSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveSecretsSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 
 	enclaveSecretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsDeleteCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveSecretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDeleteCmd)
 
 	enclaveSecretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
-	enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsDownloadCmd.Flags().StringP("config", "c", "", "enclave config (e.g. dev)")
-	enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs)
+	if err := enclaveSecretsDownloadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsDownloadCmd.Flags().String("format", models.JSON.String(), "output format. one of [json, env]")
 	enclaveSecretsDownloadCmd.Flags().String("passphrase", "", "passphrase to use for encrypting the secrets file. the default passphrase is computed using your current configuration.")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-file", false, "print the response to stdout")

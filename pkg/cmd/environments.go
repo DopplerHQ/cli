@@ -199,27 +199,37 @@ func renameEnvironment(cmd *cobra.Command, args []string) {
 
 func init() {
 	environmentsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	environmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := environmentsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	environmentsCmd.AddCommand(environmentsGetCmd)
 
 	environmentsCreateCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	environmentsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := environmentsCreateCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	environmentsCmd.AddCommand(environmentsCreateCmd)
 
 	environmentsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	environmentsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := environmentsDeleteCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	environmentsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	environmentsCmd.AddCommand(environmentsDeleteCmd)
 
 	environmentsRenameCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	environmentsRenameCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := environmentsRenameCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	environmentsRenameCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	environmentsRenameCmd.Flags().String("name", "", "new name")
 	environmentsRenameCmd.Flags().String("slug", "", "new slug")
 	environmentsCmd.AddCommand(environmentsRenameCmd)
 
 	environmentsCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
-	environmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs)
+	if err := environmentsCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
 	environmentsCmd.Flags().IntP("number", "n", 100, "max number of environments to display")
 	environmentsCmd.Flags().Int("page", 1, "page to display")
 	rootCmd.AddCommand(environmentsCmd)
