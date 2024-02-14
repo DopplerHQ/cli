@@ -25,7 +25,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Salus Scan
       id: salus_scan
-      uses: federacy/scan-action@0.1.4
+      uses: federacy/scan-action@0.1.5
       env:
         SALUS_CONFIGURATION: "file://salus-config.yaml"
       with:
