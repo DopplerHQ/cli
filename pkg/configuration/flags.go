@@ -16,9 +16,8 @@ limitations under the License.
 package configuration
 
 import (
-	"slices"
-
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 )
 
 func GetFlag(flag string) bool {
@@ -71,7 +70,7 @@ func GetFlagDefault(flag string) bool {
 
 func IsValidFlag(flag string) bool {
 	flags := models.GetFlags()
-	return slices.Contains(flags, flag)
+	return utils.Contains(flags, flag)
 }
 
 func IsAnalyticsEnabled() bool {
