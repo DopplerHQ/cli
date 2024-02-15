@@ -53,7 +53,7 @@ func setup(cmd *cobra.Command, args []string) {
 		case models.FlagSource.String():
 			saveToken = true
 		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_TOKEN"))
+			logValueFromEnvironmentNotice("DOPPLER_TOKEN")
 			saveToken = true
 		}
 	}
@@ -94,7 +94,7 @@ func setup(cmd *cobra.Command, args []string) {
 		case models.FlagSource.String():
 			selectedProject = localConfig.EnclaveProject.Value
 		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_PROJECT"))
+			logValueFromEnvironmentNotice("DOPPLER_PROJECT")
 			selectedProject = localConfig.EnclaveProject.Value
 		default:
 			if useRepoConfig && repo.Project != "" {
@@ -129,7 +129,7 @@ func setup(cmd *cobra.Command, args []string) {
 		case models.FlagSource.String():
 			selectedConfig = localConfig.EnclaveConfig.Value
 		case models.EnvironmentSource.String():
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG"))
+			logValueFromEnvironmentNotice("DOPPLER_CONFIG")
 			selectedConfig = localConfig.EnclaveConfig.Value
 		default:
 			if useRepoConfig && repo.Config != "" {
@@ -176,6 +176,46 @@ func setup(cmd *cobra.Command, args []string) {
 			}
 			printer.ScopedConfigValues(conf, valuesToPrint, models.ScopedOptionsMap(&conf), utils.OutputJSON, false, false)
 		}
+	}
+
+	if repoConfig.Flags.Analytics != nil {
+		flag := models.FlagAnalytics
+		value := *repoConfig.Flags.Analytics
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
+	}
+	if repoConfig.Flags.EnvWarning != nil {
+		flag := models.FlagEnvWarning
+		value := *repoConfig.Flags.EnvWarning
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
+	}
+	if repoConfig.Flags.UpdateCheck != nil {
+		flag := models.FlagUpdateCheck
+		value := *repoConfig.Flags.UpdateCheck
+
+		if utils.CanLogInfo() {
+			verb := "Enabling"
+			if !value {
+				verb = "Disabling"
+			}
+			utils.Log(fmt.Sprintf("%s %s", verb, flag))
+		}
+		configuration.SetFlag(flag, value)
 	}
 }
 
@@ -246,8 +286,10 @@ func selectConfig(configs []models.ConfigInfo, selectedConfiguredProject bool, p
 	return selectedConfig
 }
 
-func valueFromEnvironmentNotice(name string) string {
-	return fmt.Sprintf("Using %s from the environment. To disable this, use --no-read-env.", name)
+func logValueFromEnvironmentNotice(name string) {
+	if configuration.GetFlag(models.FlagEnvWarning) {
+		utils.Log(fmt.Sprintf("Using %s from the environment. To disable this, use --no-read-env.", name))
+	}
 }
 
 // we're looking for duplicate paths and more than one repo being defined without a path.

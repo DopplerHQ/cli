@@ -23,8 +23,9 @@ import (
 type ConfigFile struct {
 	Scoped       map[string]FileScopedOptions `yaml:"scoped"`
 	VersionCheck VersionCheck                 `yaml:"version-check"`
-	Analytics    AnalyticsOptions             `yaml:"analytics"`
+	Analytics    AnalyticsOptions             `yaml:"analytics,omitempty"`
 	TUI          TUIOptions                   `yaml:"tui"`
+	Flags        Flags                        `yaml:"flags,omitempty"`
 }
 
 // FileScopedOptions config options

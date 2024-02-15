@@ -59,8 +59,8 @@ afterAll() {
   fi
 }
 
-md5hash() {
-  md5 -rq $1 || md5sum $1 | awk '{print $1}'
+filehash() {
+  sha256sum "$1" | awk '{print $1}'
 }
 
 ######################################################################
@@ -132,12 +132,12 @@ set +e
 mkdir "$TEMP_INSTALL_DIR"
 touch "$TEMP_INSTALL_DIR/doppler" && chmod +x "$TEMP_INSTALL_DIR/doppler"
 
-empty_hash="$(md5hash "$TEMP_INSTALL_DIR/doppler")"
+empty_hash="$(filehash "$TEMP_INSTALL_DIR/doppler")"
 output="$("$DOPPLER_SCRIPTS_DIR/install.sh" --no-package-manager 2>&1)"
 exit_code=$?
 set -e
 
-updated_hash="$(md5hash "$TEMP_INSTALL_DIR/doppler")"
+updated_hash="$(filehash "$TEMP_INSTALL_DIR/doppler")"
 installed_at="$(command -v doppler || true)"
 
 actual_dir="$(dirname "$installed_at")"

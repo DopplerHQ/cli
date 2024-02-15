@@ -9,6 +9,8 @@ export DOPPLER_SCRIPTS_DIR="$DIR/../scripts"
 export DOPPLER_PROJECT="cli"
 export DOPPLER_CONFIG="e2e"
 
+export DOPPLER_ENABLE_VERSION_CHECK=false
+
 # Run tests
 "$DIR/e2e/secrets-download-fallback.sh"
 "$DIR/e2e/secrets-substitute.sh"
@@ -24,6 +26,7 @@ export DOPPLER_CONFIG="e2e"
 "$DIR/e2e/me.sh"
 "$DIR/e2e/global-flags.sh"
 "$DIR/e2e/update.sh"
+"$DIR/e2e/flags.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0

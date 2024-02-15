@@ -4,8 +4,8 @@ set -euo pipefail
 
 TEST_NAME="setup file"
 TEST_CONFIG_DIR="./temp-config-dir"
-DOPPLER_PROJECT=""
-DOPPLER_CONFIG=""
+unset DOPPLER_PROJECT
+unset DOPPLER_CONFIG
 
 cleanup() {
   exit_code=$?
@@ -255,6 +255,25 @@ EOF
 actual="$(set +o pipefail; "$DOPPLER_BINARY" setup --config-dir=$TEST_CONFIG_DIR --no-interactive 2>&1 || true)"
 expected="Doppler Error: the following path(s) are being used more than once in the repo config file (doppler.yaml):"
 [[ "$actual" == *"$expected"* ]] || error "ERROR: setup not erroring when a path is used multiple times. expected '$expected', actual '$actual'"
+
+afterEach
+
+######################################################################
+
+name="test doppler.yaml setup file with flags"
+
+beforeEach
+
+cat << EOF > doppler.yaml
+flags:
+  analytics: false
+  env-warning: false
+  update-check: false
+EOF
+"$DOPPLER_BINARY" setup --config-dir=$TEST_CONFIG_DIR --no-interactive
+[[ "$("$DOPPLER_BINARY" configure flags get analytics --config-dir=$TEST_CONFIG_DIR --plain)" == 'false' ]] || error "ERROR: setup not setting disabled value for analytics"
+[[ "$("$DOPPLER_BINARY" configure flags get env-warning --config-dir=$TEST_CONFIG_DIR --plain)" == 'false' ]] || error "ERROR: setup not setting disabled value for env-warning"
+[[ "$("$DOPPLER_BINARY" configure flags get update-check --config-dir=$TEST_CONFIG_DIR --plain)" == 'false' ]] || error "ERROR: setup not setting disabled value for update-check"
 
 afterEach
 

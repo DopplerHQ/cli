@@ -504,7 +504,7 @@ func getPassphrase(cmd *cobra.Command, flag string, config models.ScopedOptions)
 	if configuration.CanReadEnv {
 		passphrase := os.Getenv("DOPPLER_PASSPHRASE")
 		if passphrase != "" {
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_PASSPHRASE"))
+			logValueFromEnvironmentNotice("DOPPLER_PASSPHRASE")
 			return passphrase
 		}
 	}

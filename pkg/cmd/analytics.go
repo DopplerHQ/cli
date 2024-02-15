@@ -19,15 +19,17 @@ import (
 	"fmt"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 var analyticsCmd = &cobra.Command{
-	Use:   "analytics",
-	Short: "Manage anonymous analytics",
-	Args:  cobra.NoArgs,
+	Use:    "analytics",
+	Short:  "Manage anonymous analytics",
+	Hidden: true,
+	Args:   cobra.NoArgs,
 }
 
 var analyticsStatusCmd = &cobra.Command{
@@ -35,6 +37,8 @@ var analyticsStatusCmd = &cobra.Command{
 	Short: "Check whether anonymous analytics are enabled",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
+		deprecatedCommand("configure flags get analytics")
+
 		if utils.OutputJSON {
 			printer.JSON(map[string]bool{"enabled": configuration.IsAnalyticsEnabled()})
 		} else {
@@ -52,7 +56,9 @@ var analyticsEnableCmd = &cobra.Command{
 	Short: "Enable anonymous analytics",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		configuration.EnableAnalytics()
+		deprecatedCommand("configure flags enable analytics")
+
+		configuration.SetFlag(models.FlagAnalytics, true)
 
 		if utils.OutputJSON {
 			printer.JSON(map[string]bool{"enabled": true})
@@ -67,7 +73,9 @@ var analyticsDisableCmd = &cobra.Command{
 	Short: "Disable anonymous analytics",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		configuration.DisableAnalytics()
+		deprecatedCommand("configure flags disable analytics")
+
+		configuration.SetFlag(models.FlagAnalytics, false)
 
 		if utils.OutputJSON {
 			printer.JSON(map[string]bool{"enabled": false})

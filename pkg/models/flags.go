@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Doppler <support@doppler.com>
+Copyright © 2023 Doppler <support@doppler.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,18 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package configuration
+package models
 
-func IsAnalyticsEnabled() bool {
-	return !configContents.Analytics.Disable
+const (
+	FlagAnalytics   string = "analytics"
+	FlagEnvWarning  string = "env-warning"
+	FlagUpdateCheck string = "update-check"
+)
+
+type Flags struct {
+	Analytics   *bool `yaml:"analytics,omitempty"`
+	EnvWarning  *bool `yaml:"env-warning,omitempty"`
+	UpdateCheck *bool `yaml:"update-check,omitempty"`
 }
 
-func EnableAnalytics() {
-	configContents.Analytics.Disable = false
-	writeConfig(configContents)
+var flags = []string{
+	FlagAnalytics,
+	FlagEnvWarning,
+	FlagUpdateCheck,
 }
 
-func DisableAnalytics() {
-	configContents.Analytics.Disable = true
-	writeConfig(configContents)
+func GetFlags() []string {
+	return flags
 }

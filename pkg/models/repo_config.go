@@ -27,10 +27,12 @@ type ProjectConfig struct {
 // that only supported a single project and config
 type RepoConfig struct {
 	Setup ProjectConfig `yaml:"setup"`
+	Flags Flags         `yaml:"flags"`
 }
 
 // MultiRepoConfig struct supports doppler.yaml files containing multiple
 // project and config combos
 type MultiRepoConfig struct {
 	Setup []ProjectConfig `yaml:"setup"`
+	Flags Flags           `yaml:"flags"`
 }

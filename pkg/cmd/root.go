@@ -24,6 +24,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/global"
 	"github.com/DopplerHQ/cli/pkg/http"
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/printer"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
@@ -61,6 +62,21 @@ var rootCmd = &cobra.Command{
 		// tty is required to accept user input, otherwise the update can't be accepted/declined
 		isTTY := isatty.IsTerminal(os.Stdout.Fd())
 
+		// version check
+		if !configuration.GetFlag(models.FlagUpdateCheck) {
+			version.PerformVersionCheck = false
+		}
+		if version.PerformVersionCheck && configuration.CanReadEnv {
+			enable := os.Getenv("DOPPLER_ENABLE_VERSION_CHECK")
+			if enable == "false" {
+				logValueFromEnvironmentNotice("DOPPLER_ENABLE_VERSION_CHECK")
+				version.PerformVersionCheck = false
+			}
+		}
+		if version.PerformVersionCheck {
+			version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
+		}
+
 		// only run version check if we can print the results
 		// --plain doesn't normally affect logging output, but due to legacy reasons it does here
 		// also don't want to display updates if user doesn't want to be prompted (--no-prompt/--no-interactive)
@@ -84,6 +100,7 @@ func persistentValidArgsFunction(cmd *cobra.Command) {
 	loadFlags(cmd)
 }
 
+// this function runs before the config file has been loaded, so flags will not be honored
 func loadFlags(cmd *cobra.Command) {
 	var err error
 	var normalizedScope string
@@ -99,7 +116,8 @@ func loadFlags(cmd *cobra.Command) {
 	if configuration.CanReadEnv {
 		userConfigDir := os.Getenv("DOPPLER_CONFIG_DIR")
 		if userConfigDir != "" {
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_CONFIG_DIR"))
+			// this warning will always be printed since the config file's flags haven't been loaded yet
+			logValueFromEnvironmentNotice("DOPPLER_CONFIG_DIR")
 			configuration.SetConfigDir(userConfigDir)
 		}
 	}
@@ -121,16 +139,6 @@ func loadFlags(cmd *cobra.Command) {
 
 	// no-file is used by the 'secrets download' command to output secrets to stdout
 	utils.Silent = utils.GetBoolFlagIfChanged(cmd, "no-file", utils.Silent)
-
-	// version check
-	if configuration.CanReadEnv {
-		enable := os.Getenv("DOPPLER_ENABLE_VERSION_CHECK")
-		if enable == "false" {
-			utils.Log(valueFromEnvironmentNotice("DOPPLER_ENABLE_VERSION_CHECK"))
-			version.PerformVersionCheck = false
-		}
-	}
-	version.PerformVersionCheck = !utils.GetBoolFlagIfChanged(cmd, "no-check-version", !version.PerformVersionCheck)
 }
 
 func deprecatedCommand(newCommand string) {
