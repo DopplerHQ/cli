@@ -391,9 +391,9 @@ fi
 
 log_debug "Detected format '$format'"
 
-gpg_binary="$(command -v gpg || true)";
-if [ -x "$gpg_binary" ]; then
-  log_debug "Using $gpg_binary for signature verification"
+gpgv_binary="$(command -v gpgv || true)";
+if [ -x "$gpgv_binary" ]; then
+  log_debug "Using $gpgv_binary for signature verification"
 else
   log "ERROR: Unable to find gpg binary for signature verification"
   log "You can resolve this error by installing your system's gnupg package"
@@ -474,7 +474,7 @@ if [ -d ~/.gnupg ]; then
   # Run sudo chown -r $(whoami) ~/.gnupg to fix this
   ls -l ~/.gnupg > /dev/null 2>&1 || (log "Failed to read ~/.gnupg. Please verify the directory's ownership, or run 'sudo chown -R $(whoami) ~/.gnupg' to fix this." && clean_exit 4)
 fi
-gpg --no-default-keyring --keyring "$key_filename" --verify "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
+gpgv --keyring "$key_filename" "$sig_filename" "$filename" > /dev/null 2>&1 || (log "Failed to verify binary signature" && clean_exit 1)
 log_debug "Signature successfully verified!"
 
 if [ "$format" = "deb" ]; then
