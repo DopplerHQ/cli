@@ -291,8 +291,9 @@ func SetSecrets(host string, verifyTLS bool, apiKey string, project string, conf
 	return models.ConvertAPIToComputedSecrets(result.Secrets), Error{}
 }
 
-// SetSecretNote for specified project and config
-func SetSecretNote(host string, verifyTLS bool, apiKey string, project string, config string, secret string, note string) (models.SecretNote, Error) {
+// Set Secret Note for specified project and config
+// This is deprecated in favor of SetSecretNoteViaProject
+func SetSecretNoteViaConfig(host string, verifyTLS bool, apiKey string, project string, config string, secret string, note string) (models.SecretNote, Error) {
 	body, err := json.Marshal(models.SecretNote{Secret: secret, Note: note})
 	if err != nil {
 		return models.SecretNote{}, Error{Err: err, Message: "Invalid secret note"}
@@ -303,6 +304,35 @@ func SetSecretNote(host string, verifyTLS bool, apiKey string, project string, c
 	params = append(params, queryParam{Key: "config", Value: config})
 
 	url, err := generateURL(host, "/v3/configs/config/secrets/note", params)
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PostRequest(url, verifyTLS, apiKeyHeader(apiKey), body)
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Unable to set secret note", Code: statusCode}
+	}
+
+	var secretNote models.SecretNote
+	err = json.Unmarshal(response, &secretNote)
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	return secretNote, Error{}
+}
+
+// Set Secret Note for specified project
+func SetSecretNoteViaProject(host string, verifyTLS bool, apiKey string, project string, secret string, note string) (models.SecretNote, Error) {
+	body, err := json.Marshal(models.SecretNote{Secret: secret, Note: note})
+	if err != nil {
+		return models.SecretNote{}, Error{Err: err, Message: "Invalid secret note"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+
+	url, err := generateURL(host, "/v3/projects/project/note", params)
 	if err != nil {
 		return models.SecretNote{}, Error{Err: err, Message: "Unable to generate url"}
 	}
