@@ -61,13 +61,25 @@ func setSecretNote(cmd *cobra.Command, args []string) {
 		note = *noteString
 	}
 
-	response, httpErr := http.SetSecretNote(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secret, note)
-	if !httpErr.IsNil() {
-		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
-	}
+	if !cmd.Flags().Changed("config") {
+		response, httpErr := http.SetSecretNoteViaProject(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, secret, note)
+		if !httpErr.IsNil() {
+			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+		}
 
-	if !utils.Silent {
-		printer.SecretNote(response, jsonFlag)
+		if !utils.Silent {
+			printer.SecretNote(response, jsonFlag)
+		}
+	} else {
+		// deprecated method of using config
+		response, httpErr := http.SetSecretNoteViaConfig(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secret, note)
+		if !httpErr.IsNil() {
+			utils.HandleError(httpErr.Unwrap(), httpErr.Message)
+		}
+
+		if !utils.Silent {
+			printer.SecretNote(response, jsonFlag)
+		}
 	}
 }
 
@@ -78,6 +90,9 @@ func init() {
 	}
 	secretsNotesSetCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
 	if err := secretsNotesSetCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
+	if err := secretsNotesSetCmd.Flags().MarkDeprecated("config", "config is no longer required as notes have always been set at the project level"); err != nil {
 		utils.HandleError(err)
 	}
 	secretsNotesCmd.AddCommand(secretsNotesSetCmd)
