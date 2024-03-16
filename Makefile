@@ -1,7 +1,7 @@
 .PHONY: build release test
 
 build:
-	go build -o doppler -ldflags="-X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=dev-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)" main.go
+	GGO_ENABLED=0 go build -o doppler -ldflags="-extldflags "-static" -X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=dev-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)" main.go
 
 test:
 	go test ./pkg/... -v
