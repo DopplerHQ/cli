@@ -50,7 +50,7 @@ func (svm *SecretViewModel) ToChangeRequest() models.ChangeRequest {
 		OriginalName: svm.originalName,
 		Name:         svm.nameView.TextArea.GetContent(),
 		Value:        svm.valueView.TextArea.GetContent(),
-		ShouldDelete: svm.shouldDelete,
+		ShouldDelete: &svm.shouldDelete,
 	}
 
 	if svm.originalVisibility != "restricted" {
