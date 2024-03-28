@@ -8,7 +8,6 @@ The Doppler CLI is the official tool for interacting with your Doppler secrets a
 - Execute applications with your secrets injected into the environment
 - View activity and audit logs
 
-
 ## Install
 
 The Doppler CLI is available in several popular package managers. It can also be installed via [shell script](https://github.com/DopplerHQ/cli/blob/master/INSTALL.md#shell-script), [GitHub Action](https://github.com/DopplerHQ/cli-action), or downloaded as a [standalone binary](https://github.com/DopplerHQ/cli/releases/latest).
@@ -25,6 +24,7 @@ $ doppler --version
 ```
 
 To update:
+
 ```sh
 $ brew upgrade doppler
 ```
