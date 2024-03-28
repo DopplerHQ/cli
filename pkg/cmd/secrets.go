@@ -237,6 +237,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	canPromptUser := !utils.GetBoolFlag(cmd, "no-interactive")
 	localConfig := configuration.LocalConfig(cmd)
 	visibility := cmd.Flag("visibility").Value.String()
+	visibilityModified := visibility != ""
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
@@ -314,7 +315,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 			Name:  key,
 			Value: &value,
 		}
-		if visibility != "" {
+		if visibilityModified {
 			changeRequest.Visibility = &visibility
 		}
 		changeRequests = append(changeRequests, changeRequest)
@@ -327,7 +328,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 			Name:  key,
 			Value: &value,
 		}
-		if visibility != "" {
+		if visibilityModified {
 			changeRequest.Visibility = &visibility
 		}
 		changeRequests = append(changeRequests, changeRequest)
@@ -343,11 +344,11 @@ func setSecrets(cmd *cobra.Command, args []string) {
 			}
 
 			if len(secretArr) < 2 {
-				changeRequest.Value = nil
+				changeRequest.Value = nil // don't change existing value
 			} else {
 				changeRequest.Value = &secretArr[1]
 			}
-			if visibility != "" {
+			if visibilityModified {
 				changeRequest.Visibility = &visibility
 			}
 			changeRequests = append(changeRequests, changeRequest)
@@ -360,7 +361,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, false)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified)
 	}
 }
 
