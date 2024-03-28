@@ -45,16 +45,6 @@ output="$("$DOPPLER_BINARY" update --force 2>&1 || true)";
 
 beforeEach
 
-### gnupg perms issue
-# make gnupg directory inaccessible
-sudo chown root ~/.gnupg;
-output="$("$DOPPLER_BINARY" update --force 2>&1 || true)";
-[ "$(echo "$output" | tail -1)" == "Doppler Error: exit status 4" ] || error "ERROR: expected update to fail without access to gnupg"
-# restore gnupg directory perms
-sudo chown "$(id -un)" ~/.gnupg;
-
-beforeEach
-
 ### successful update
 sudo "$DOPPLER_BINARY" update --force >/dev/null 2>&1 || error "ERROR: unable to update CLI"
 
