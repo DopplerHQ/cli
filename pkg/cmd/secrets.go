@@ -236,10 +236,14 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	raw := utils.GetBoolFlag(cmd, "raw")
 	canPromptUser := !utils.GetBoolFlag(cmd, "no-interactive")
 	localConfig := configuration.LocalConfig(cmd)
+	visibility := cmd.Flag("visibility").Value.String()
+	visibilityModified := visibility != ""
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
-	secrets := map[string]interface{}{}
+	var changeRequests []models.ChangeRequest
+	changeRequests = make([]models.ChangeRequest, 0)
+
 	var keys []string
 
 	// if only one arg, read from stdin
@@ -307,33 +311,57 @@ func setSecrets(cmd *cobra.Command, args []string) {
 		value := strings.Join(input, "\n")
 
 		keys = append(keys, key)
-		secrets[key] = value
+		changeRequest := models.ChangeRequest{
+			Name:  key,
+			Value: &value,
+		}
+		if visibilityModified {
+			changeRequest.Visibility = &visibility
+		}
+		changeRequests = append(changeRequests, changeRequest)
 	} else if len(args) == 2 && !strings.Contains(args[0], "=") {
 		// format: 'doppler secrets set KEY value'
 		key := args[0]
 		value := args[1]
 		keys = append(keys, key)
-		secrets[key] = value
+		changeRequest := models.ChangeRequest{
+			Name:  key,
+			Value: &value,
+		}
+		if visibilityModified {
+			changeRequest.Visibility = &visibility
+		}
+		changeRequests = append(changeRequests, changeRequest)
 	} else {
 		// format: 'doppler secrets set KEY=value'
 		for _, arg := range args {
 			secretArr := strings.SplitN(arg, "=", 2)
-			keys = append(keys, secretArr[0])
-			if len(secretArr) < 2 {
-				secrets[secretArr[0]] = ""
-			} else {
-				secrets[secretArr[0]] = secretArr[1]
+			key := secretArr[0]
+			keys = append(keys, key)
+
+			changeRequest := models.ChangeRequest{
+				Name: key,
 			}
+
+			if len(secretArr) < 2 {
+				changeRequest.Value = nil // don't change existing value
+			} else {
+				changeRequest.Value = &secretArr[1]
+			}
+			if visibilityModified {
+				changeRequest.Visibility = &visibility
+			}
+			changeRequests = append(changeRequests, changeRequest)
 		}
 	}
 
-	response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets, nil)
+	response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, changeRequests)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, false)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified)
 	}
 }
 
@@ -626,6 +654,7 @@ func init() {
 	}
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
+	secretsSetCmd.Flags().StringP("visibility", "", "", "visibility (e.g. masked, unmasked, or restricted)")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
