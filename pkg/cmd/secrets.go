@@ -658,7 +658,7 @@ func init() {
 	}
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
-	secretsSetCmd.Flags().StringP("visibility", "", "", "visibility (e.g. masked, unmasked, or restricted)")
+	secretsSetCmd.Flags().String("visibility", "", "visibility (e.g. masked, unmasked, or restricted)")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
