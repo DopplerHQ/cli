@@ -240,6 +240,8 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 	visibility := cmd.Flag("visibility").Value.String()
 	visibilityModified := visibility != ""
+	valueType := cmd.Flag("type").Value.String()
+	valueTypeModified := valueType != ""
 
 	utils.RequireValue("token", localConfig.Token.Value)
 
@@ -320,6 +322,11 @@ func setSecrets(cmd *cobra.Command, args []string) {
 		if visibilityModified {
 			changeRequest.Visibility = &visibility
 		}
+		if valueTypeModified {
+			changeRequest.ValueType = &models.SecretValueType{
+				Type: valueType,
+			}
+		}
 		changeRequests = append(changeRequests, changeRequest)
 	} else if len(args) == 2 && !strings.Contains(args[0], "=") {
 		// format: 'doppler secrets set KEY value'
@@ -332,6 +339,11 @@ func setSecrets(cmd *cobra.Command, args []string) {
 		}
 		if visibilityModified {
 			changeRequest.Visibility = &visibility
+		}
+		if valueTypeModified {
+			changeRequest.ValueType = &models.SecretValueType{
+				Type: valueType,
+			}
 		}
 		changeRequests = append(changeRequests, changeRequest)
 	} else {
@@ -353,6 +365,11 @@ func setSecrets(cmd *cobra.Command, args []string) {
 			if visibilityModified {
 				changeRequest.Visibility = &visibility
 			}
+			if valueTypeModified {
+				changeRequest.ValueType = &models.SecretValueType{
+					Type: valueType,
+				}
+			}
 			changeRequests = append(changeRequests, changeRequest)
 		}
 	}
@@ -363,7 +380,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, false)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, valueTypeModified)
 	}
 }
 
@@ -659,6 +676,7 @@ func init() {
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsSetCmd.Flags().String("visibility", "", "visibility (e.g. masked, unmasked, or restricted)")
+	secretsSetCmd.Flags().String("type", "", "value type (e.g. string, decimal, etc)")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

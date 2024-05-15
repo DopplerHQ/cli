@@ -33,15 +33,17 @@ type ComputedSecret struct {
 
 // ChangeRequest can be used to smartly update secrets
 type ChangeRequest struct {
-	Name               string      `json:"name"`
-	OriginalName       interface{} `json:"originalName"`
-	Value              interface{} `json:"value"`
-	OriginalValue      interface{} `json:"originalValue,omitempty"`
-	Visibility         *string     `json:"visibility,omitempty"`
-	OriginalVisibility *string     `json:"originalVisibility,omitempty"`
-	ShouldPromote      *bool       `json:"shouldPromote,omitempty"`
-	ShouldDelete       *bool       `json:"shouldDelete,omitempty"`
-	ShouldConverge     *bool       `json:"shouldConverge,omitempty"`
+	Name               string           `json:"name"`
+	OriginalName       interface{}      `json:"originalName"`
+	Value              interface{}      `json:"value"`
+	OriginalValue      interface{}      `json:"originalValue,omitempty"`
+	Visibility         *string          `json:"visibility,omitempty"`
+	OriginalVisibility *string          `json:"originalVisibility,omitempty"`
+	ValueType          *SecretValueType `json:"valueType,omitempty"`
+	OriginalValueType  *SecretValueType `json:"originalValueType,omitempty"`
+	ShouldPromote      *bool            `json:"shouldPromote,omitempty"`
+	ShouldDelete       *bool            `json:"shouldDelete,omitempty"`
+	ShouldConverge     *bool            `json:"shouldConverge,omitempty"`
 }
 
 // SecretNote contains a secret and its note
