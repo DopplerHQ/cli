@@ -105,6 +105,7 @@ func init() {
 	}
 	enclaveSecretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
+	enclaveSecretsCmd.Flags().Bool("type", false, "include secret type in table output")
 	enclaveSecretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	enclaveSecretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
@@ -119,6 +120,7 @@ func init() {
 	enclaveSecretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	enclaveSecretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
+	enclaveSecretsGetCmd.Flags().Bool("type", false, "include secret type in table output")
 	enclaveSecretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 

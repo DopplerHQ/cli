@@ -240,6 +240,8 @@ func ConvertAPIToComputedSecrets(apiSecrets map[string]APISecret) map[string]Com
 			ComputedValue:      secret.ComputedValue,
 			RawVisibility:      secret.RawVisibility,
 			ComputedVisibility: secret.ComputedVisibility,
+			RawValueType:       secret.RawValueType,
+			ComputedValueType:  secret.ComputedValueType,
 			Note:               secret.Note,
 		}
 	}

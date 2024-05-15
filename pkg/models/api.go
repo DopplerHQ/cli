@@ -15,14 +15,20 @@ limitations under the License.
 */
 package models
 
+type SecretValueType struct {
+	Type string `json:"type"`
+}
+
 // ComputedSecret holds all info about a secret
 type ComputedSecret struct {
-	Name               string  `json:"name"`
-	RawValue           *string `json:"raw"`
-	ComputedValue      *string `json:"computed"`
-	RawVisibility      string  `json:"rawVisibility"`
-	ComputedVisibility string  `json:"computedVisibility"`
-	Note               string  `json:"note"`
+	Name               string          `json:"name"`
+	RawValue           *string         `json:"raw"`
+	ComputedValue      *string         `json:"computed"`
+	RawVisibility      string          `json:"rawVisibility"`
+	ComputedVisibility string          `json:"computedVisibility"`
+	RawValueType       SecretValueType `json:"rawValueType"`
+	ComputedValueType  SecretValueType `json:"computedValueType"`
+	Note               string          `json:"note"`
 }
 
 // ChangeRequest can be used to smartly update secrets
@@ -141,11 +147,13 @@ type APISecretResponse struct {
 
 // APISecret is the object the API returns for a given secret
 type APISecret struct {
-	RawValue           *string `json:"raw"`
-	ComputedValue      *string `json:"computed"`
-	RawVisibility      string  `json:"rawVisibility"`
-	ComputedVisibility string  `json:"computedVisibility"`
-	Note               string  `json:"note"`
+	RawValue           *string         `json:"raw"`
+	ComputedValue      *string         `json:"computed"`
+	RawVisibility      string          `json:"rawVisibility"`
+	ComputedVisibility string          `json:"computedVisibility"`
+	RawValueType       SecretValueType `json:"rawValueType"`
+	ComputedValueType  SecretValueType `json:"computedValueType"`
+	Note               string          `json:"note"`
 }
 
 type ActorInfo struct {

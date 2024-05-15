@@ -160,6 +160,7 @@ func secrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
 	visibility := utils.GetBoolFlag(cmd, "visibility")
+	valueType := utils.GetBoolFlag(cmd, "type")
 	onlyNames := utils.GetBoolFlag(cmd, "only-names")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -182,7 +183,7 @@ func secrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
-		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false, visibility)
+		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false, visibility, valueType)
 	}
 }
 
@@ -192,6 +193,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 	copy := utils.GetBoolFlag(cmd, "copy")
 	raw := utils.GetBoolFlag(cmd, "raw")
 	visibility := utils.GetBoolFlag(cmd, "visibility")
+	valueType := utils.GetBoolFlag(cmd, "type")
 	exitOnMissingSecret := !utils.GetBoolFlag(cmd, "no-exit-on-missing-secret")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -228,7 +230,7 @@ func getSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy, visibility)
+	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy, visibility, valueType)
 }
 
 func setSecrets(cmd *cobra.Command, args []string) {
@@ -361,7 +363,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, false)
 	}
 }
 
@@ -393,7 +395,7 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false)
+		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false)
 	}
 }
 
@@ -417,7 +419,7 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false)
+			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false)
 		}
 	}
 }
@@ -627,6 +629,7 @@ func init() {
 	}
 	secretsCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
+	secretsCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
 
 	secretsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -641,6 +644,7 @@ func init() {
 	secretsGetCmd.Flags().Bool("copy", false, "copy the value(s) to your clipboard")
 	secretsGetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
+	secretsGetCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
 	secretsCmd.AddCommand(secretsGetCmd)
 
