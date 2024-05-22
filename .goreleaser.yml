@@ -133,7 +133,7 @@ brews:
     commit_author:
       name: "Doppler Bot"
       email: bot@doppler.com
-    folder: Formula
+    directory: Formula
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets"
     install: |-
@@ -216,4 +216,4 @@ blobs:
   -
     provider: gs
     bucket: dopplerhq_cli_releases
-    folder: "{{ .Tag }}"
+    directory: "{{ .Tag }}"
