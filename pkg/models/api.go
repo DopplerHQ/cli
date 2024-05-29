@@ -15,27 +15,35 @@ limitations under the License.
 */
 package models
 
+type SecretValueType struct {
+	Type string `json:"type"`
+}
+
 // ComputedSecret holds all info about a secret
 type ComputedSecret struct {
-	Name               string  `json:"name"`
-	RawValue           *string `json:"raw"`
-	ComputedValue      *string `json:"computed"`
-	RawVisibility      string  `json:"rawVisibility"`
-	ComputedVisibility string  `json:"computedVisibility"`
-	Note               string  `json:"note"`
+	Name               string          `json:"name"`
+	RawValue           *string         `json:"raw"`
+	ComputedValue      *string         `json:"computed"`
+	RawVisibility      string          `json:"rawVisibility"`
+	ComputedVisibility string          `json:"computedVisibility"`
+	RawValueType       SecretValueType `json:"rawValueType"`
+	ComputedValueType  SecretValueType `json:"computedValueType"`
+	Note               string          `json:"note"`
 }
 
 // ChangeRequest can be used to smartly update secrets
 type ChangeRequest struct {
-	Name               string      `json:"name"`
-	OriginalName       interface{} `json:"originalName"`
-	Value              interface{} `json:"value"`
-	OriginalValue      interface{} `json:"originalValue,omitempty"`
-	Visibility         *string     `json:"visibility,omitempty"`
-	OriginalVisibility *string     `json:"originalVisibility,omitempty"`
-	ShouldPromote      *bool       `json:"shouldPromote,omitempty"`
-	ShouldDelete       *bool       `json:"shouldDelete,omitempty"`
-	ShouldConverge     *bool       `json:"shouldConverge,omitempty"`
+	Name               string           `json:"name"`
+	OriginalName       interface{}      `json:"originalName"`
+	Value              interface{}      `json:"value"`
+	OriginalValue      interface{}      `json:"originalValue,omitempty"`
+	Visibility         *string          `json:"visibility,omitempty"`
+	OriginalVisibility *string          `json:"originalVisibility,omitempty"`
+	ValueType          *SecretValueType `json:"valueType,omitempty"`
+	OriginalValueType  *SecretValueType `json:"originalValueType,omitempty"`
+	ShouldPromote      *bool            `json:"shouldPromote,omitempty"`
+	ShouldDelete       *bool            `json:"shouldDelete,omitempty"`
+	ShouldConverge     *bool            `json:"shouldConverge,omitempty"`
 }
 
 // SecretNote contains a secret and its note
@@ -141,11 +149,13 @@ type APISecretResponse struct {
 
 // APISecret is the object the API returns for a given secret
 type APISecret struct {
-	RawValue           *string `json:"raw"`
-	ComputedValue      *string `json:"computed"`
-	RawVisibility      string  `json:"rawVisibility"`
-	ComputedVisibility string  `json:"computedVisibility"`
-	Note               string  `json:"note"`
+	RawValue           *string         `json:"raw"`
+	ComputedValue      *string         `json:"computed"`
+	RawVisibility      string          `json:"rawVisibility"`
+	ComputedVisibility string          `json:"computedVisibility"`
+	RawValueType       SecretValueType `json:"rawValueType"`
+	ComputedValueType  SecretValueType `json:"computedValueType"`
+	Note               string          `json:"note"`
 }
 
 type ActorInfo struct {
