@@ -27,7 +27,7 @@ jobs:
       uses: goreleaser/goreleaser-action@v1
       with:
         version: latest
-        args: release --snapshot --skip-publish --skip-sign
+        args: release --snapshot --skip=publish,sign
       env:
         GOPATH: ${{ runner.workspace }}
     - uses: actions/upload-artifact@master

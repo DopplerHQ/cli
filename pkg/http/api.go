@@ -1384,3 +1384,17 @@ func GetActorInfo(host string, verifyTLS bool, apiKey string) (models.ActorInfo,
 
 	return info, Error{}
 }
+
+func InitiateMfaRecovery(host string, verifyTLS bool, apiKey string) Error {
+	url, err := generateURL(host, "/v3/me/mfa_recovery", nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, _, err := PostRequest(url, verifyTLS, apiKeyHeader(apiKey), nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to initiate MFA recovery", Code: statusCode}
+	}
+
+	return Error{}
+}
