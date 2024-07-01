@@ -24,7 +24,7 @@ import (
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
-	Short: "Launch TUI (BETA)",
+	Short: "Launch TUI",
 	Args:  cobra.NoArgs,
 	Run:   tui,
 }
