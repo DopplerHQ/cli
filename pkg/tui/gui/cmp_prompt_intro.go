@@ -72,7 +72,7 @@ func (self *PromptIntroComponent) Close() error {
 }
 
 func (self *PromptIntroComponent) Render() error {
-	text := `Welcome to the beta version of the Doppler TUI!
+	text := `Welcome to the Doppler TUI!
 
 To get started, close this window with Escape and then
 press ? to view a list of keybindings and supported operations.
