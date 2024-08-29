@@ -108,6 +108,11 @@ func Cwd() string {
 // RunCommand runs the specified command
 func RunCommand(command []string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer, forwardSignals bool) (*exec.Cmd, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204 nosemgrep: semgrep_configs.prohibit-exec-command
+	// Resolves https://github.com/DopplerHQ/cli/issues/415
+	if errors.Is(cmd.Err, exec.ErrDot) {
+		cmd.Err = nil
+	}
+
 	cmd.Env = env
 	cmd.Stdin = inFile
 	cmd.Stdout = outFile
