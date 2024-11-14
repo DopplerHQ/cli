@@ -147,7 +147,7 @@ func deleteProjects(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 100)
+			info, err := http.GetProjects(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, 1, 1000)
 			if !err.IsNil() {
 				utils.HandleError(err.Unwrap(), err.Message)
 			}
