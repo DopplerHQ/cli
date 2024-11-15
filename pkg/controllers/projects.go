@@ -24,7 +24,7 @@ import (
 func GetProjectIDs(config models.ScopedOptions) ([]string, Error) {
 	utils.RequireValue("token", config.Token.Value)
 
-	info, err := http.GetProjects(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, 1, 100)
+	info, err := http.GetProjects(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, 1, 1000)
 	if !err.IsNil() {
 		return nil, Error{Err: err.Unwrap(), Message: err.Message}
 	}
