@@ -380,14 +380,7 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 			}
 		}
 
-		existingEnvKeys := map[string]string{}
-		for _, envVar := range originalEnv {
-			// key=value format
-			parts := strings.SplitN(envVar, "=", 2)
-			key := parts[0]
-			value := parts[1]
-			existingEnvKeys[key] = value
-		}
+		existingEnvKeys := utils.ParseEnvStrings(originalEnv)
 
 		if preserveEnv != "false" {
 			secretsToPreserve := strings.Split(preserveEnv, ",")
