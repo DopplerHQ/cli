@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -131,8 +132,38 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 		return
 	}
 
-	rows := [][]string{{info.Name, info.InitialFetchAt, info.LastFetchAt, info.CreatedAt, info.Environment, info.Project}}
-	Table([]string{"name", "initial fetch", "last fetch", "created at", "environment", "project"}, rows, TableOptions())
+	var inheritsStrings []string
+	var inheritsHeader string
+	if info.Inheritable {
+		inheritsHeader = "inherited by"
+		for _, inheritedBy := range info.InheritedBy {
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inheritedBy.ProjectSlug, inheritedBy.ConfigName))
+		}
+	} else {
+		inheritsHeader = "inherits"
+		for _, inherits := range info.Inherits {
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.ProjectSlug, inherits.ConfigName))
+		}
+	}
+
+	var inheritsString string
+	if len(inheritsStrings) > 0 {
+		inheritsString = strings.Join(inheritsStrings, ", ")
+	} else {
+		inheritsString = "<NONE>"
+	}
+
+	rows := [][]string{{
+		info.Name,
+		info.InitialFetchAt,
+		info.LastFetchAt,
+		info.CreatedAt,
+		info.Environment,
+		info.Project,
+		strings.ToUpper(strconv.FormatBool(info.Inheritable)),
+		inheritsString,
+	}}
+	Table([]string{"name", "initial fetch", "last fetch", "created at", "environment", "project", "inheritable", inheritsHeader}, rows, TableOptions())
 }
 
 // ConfigsInfo print configs
@@ -142,12 +173,33 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 		return
 	}
 
+	header := []string{"name", "initial fetch", "last fetch", "created at", "environment", "project", "inheritable", "inherits"}
 	var rows [][]string
 	for _, configInfo := range info {
-		rows = append(rows, []string{configInfo.Name, configInfo.InitialFetchAt, configInfo.LastFetchAt, configInfo.CreatedAt,
-			configInfo.Environment, configInfo.Project})
+		var inheritsStrings []string
+		for _, inherits := range configInfo.Inherits {
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.ProjectSlug, inherits.ConfigName))
+		}
+
+		var inheritsString string
+		if len(inheritsStrings) > 0 {
+			inheritsString = strings.Join(inheritsStrings, ", ")
+		} else {
+			inheritsString = "<NONE>"
+		}
+
+		rows = append(rows, []string{
+			configInfo.Name,
+			configInfo.InitialFetchAt,
+			configInfo.LastFetchAt,
+			configInfo.CreatedAt,
+			configInfo.Environment,
+			configInfo.Project,
+			strings.ToUpper(strconv.FormatBool(configInfo.Inheritable)),
+			inheritsString,
+		})
 	}
-	Table([]string{"name", "initial fetch", "last fetch", "created at", "environment", "project"}, rows, TableOptions())
+	Table(header, rows, TableOptions())
 }
 
 // EnvironmentsInfo print environments
