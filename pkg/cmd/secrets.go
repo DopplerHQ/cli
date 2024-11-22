@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -130,6 +131,8 @@ $ doppler secrets download --format=env --no-file`,
 	Run:  downloadSecrets,
 }
 
+var validUseEnvSettings = []string{"false", "true", "override", "only"}
+var validUseEnvSettingsList = strings.Join(validUseEnvSettings, ", ")
 var secretsSubstituteCmd = &cobra.Command{
 	Use:   "substitute <filepath>",
 	Short: "Substitute secrets into a template file",
@@ -151,7 +154,15 @@ $ doppler secrets substitute template.yaml
 host: 127.0.0.1
 port: 8080
 Multiline: "Line one\r\nLine two"
-JSON Secret: "{\"logging\": \"info\"}"`,
+JSON Secret: "{\"logging\": \"info\"}"
+----------------------------------
+
+The '--use-env' flag can be used to expose environment variables to templates:
+  - 'false' (default) will not expose environment variables to templates
+  - 'true' will expose both environment variables and Doppler secrets to templates. If there is a collision, the Doppler secret will take precedence.
+  - 'override' will expose both environment variables and Doppler secrets to templates. If there is a collision, the environment variable will take precedence.
+  - 'only' will only expose environment variables to templates (and will not fetch Doppler secrets)
+`,
 	Args: cobra.ExactArgs(1),
 	Run:  substituteSecrets,
 }
@@ -575,7 +586,15 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 func substituteSecrets(cmd *cobra.Command, args []string) {
 	localConfig := configuration.LocalConfig(cmd)
 
-	utils.RequireValue("token", localConfig.Token.Value)
+	useEnv := cmd.Flag("use-env").Value.String()
+	if !slices.Contains(validUseEnvSettings, useEnv) {
+		utils.HandleError(fmt.Errorf("invalid use-env option. Valid options are %s", validUseEnvSettingsList))
+	}
+
+	if useEnv != "only" {
+		// No need to require a token for env-only substitution
+		utils.RequireValue("token", localConfig.Token.Value)
+	}
 
 	var outputFilePath string
 	var err error
@@ -586,23 +605,38 @@ func substituteSecrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(err, "Unable to parse output file path")
 		}
 	}
-
-	dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
-	response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsTTL)
-	if !responseErr.IsNil() {
-		utils.HandleError(responseErr.Unwrap(), responseErr.Message)
-	}
-
-	secrets, parseErr := models.ParseSecrets(response)
-	if parseErr != nil {
-		utils.HandleError(parseErr, "Unable to parse API response")
-	}
-
 	secretsMap := map[string]string{}
-	for _, secret := range secrets {
-		if secret.ComputedValue != nil {
-			// By not providing a default value when ComputedValue is nil (e.g. it's a restricted secret), we default
-			// to the same behavior the substituter provides if the template file contains a secret that doesn't exist.
+	env := utils.ParseEnvStrings(os.Environ())
+
+	if useEnv != "false" {
+		// If use-env is not disabled entirely, include them from the beginning
+		for k, v := range env {
+			secretsMap[k] = v
+		}
+	}
+
+	if useEnv != "only" {
+		dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
+		response, responseErr := http.GetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, true, dynamicSecretsTTL)
+		if !responseErr.IsNil() {
+			utils.HandleError(responseErr.Unwrap(), responseErr.Message)
+		}
+
+		secrets, parseErr := models.ParseSecrets(response)
+		if parseErr != nil {
+			utils.HandleError(parseErr, "Unable to parse API response")
+		}
+
+		for _, secret := range secrets {
+			if _, ok := env[secret.Name]; useEnv == "override" && ok {
+				// This secret collides with an environment variable and the env var is supposed to take precedence
+				continue
+			}
+			if secret.ComputedValue == nil {
+				// By not providing a default value when ComputedValue is nil (e.g. it's a restricted secret), we default
+				// to the same behavior the substituter provides if the template file contains a secret that doesn't exist.
+				continue
+			}
 			secretsMap[secret.Name] = *secret.ComputedValue
 		}
 	}
@@ -739,6 +773,7 @@ func init() {
 	if err := secretsSubstituteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
 		utils.HandleError(err)
 	}
+	secretsSubstituteCmd.Flags().String("use-env", "false", fmt.Sprintf("setting for how to use environment variables passed to 'doppler secrets substitute'. One of: %s (see help ext for details)", validUseEnvSettingsList))
 	secretsSubstituteCmd.Flags().String("output", "", "path to the output file. by default the rendered text will be written to stdout.")
 	secretsSubstituteCmd.Flags().Duration("dynamic-ttl", 0, "(BETA) dynamic secrets will expire after specified duration, (e.g. '3h', '15m')")
 	secretsCmd.AddCommand(secretsSubstituteCmd)
