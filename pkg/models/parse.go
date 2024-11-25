@@ -111,6 +111,25 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 	if info["last_fetch_at"] != nil {
 		configInfo.LastFetchAt = info["last_fetch_at"].(string)
 	}
+	if info["inheritable"] != nil {
+		configInfo.Inheritable = info["inheritable"].(bool)
+	}
+	if info["inherits"] != nil {
+		configInfo.Inherits = []ConfigDescriptor{}
+		inherits := info["inherits"].([]interface{})
+		for _, i := range inherits {
+			descriptorMap := i.(map[string]interface{})
+			configInfo.Inherits = append(configInfo.Inherits, ConfigDescriptor{ProjectSlug: descriptorMap["projectSlug"].(string), ConfigName: descriptorMap["configName"].(string)})
+		}
+	}
+	if info["inheritedBy"] != nil {
+		configInfo.InheritedBy = []ConfigDescriptor{}
+		inheritedBy := info["inheritedBy"].([]interface{})
+		for _, i := range inheritedBy {
+			descriptorMap := i.(map[string]interface{})
+			configInfo.InheritedBy = append(configInfo.InheritedBy, ConfigDescriptor{ProjectSlug: descriptorMap["projectSlug"].(string), ConfigName: descriptorMap["configName"].(string)})
+		}
+	}
 
 	return configInfo
 }
