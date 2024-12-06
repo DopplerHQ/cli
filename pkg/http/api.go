@@ -154,6 +154,59 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 	return result, Error{}
 }
 
+
+// GetOIDCAuthToken get a short lived service account identity auth token from an OIDC token
+func GetOIDCAuthToken(host string, verifyTLS bool, identityId string, oidcJWT string) (map[string]interface{}, Error) {
+	reqBody := map[string]interface{}{}
+	reqBody["identity"] = identityId 
+	reqBody["token"] = oidcJWT 
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Invalid OIDC auth token"}
+	}
+
+	url, err := generateURL(host, "/v3/auth/oidc", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PostRequest(url, verifyTLS, nil, body)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate auth token", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse auth token", Code: statusCode}
+	}
+
+	return result, Error{}
+}
+
+
+// RevokeIdentityAuthToken revoke a short lived service account identity auth token
+func RevokeIdentityAuthToken(host string, verifyTLS bool, token string) (Error) {
+	reqBody := map[string]interface{}{}
+	reqBody["token"] = token
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return Error{Err: err, Message: "Invalid identity auth token"}
+	}
+
+	url, err := generateURL(host, "/v3/auth/revoke", nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, _, err := PostRequest(url, verifyTLS, nil, body)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to revoke auth token", Code: statusCode}
+	}
+
+	return Error{}
+}
+
 // WatchSecrets for any changes
 func WatchSecrets(host string, verifyTLS bool, apiKey string, project string, config string, handler func([]byte)) (int, http.Header, Error) {
 	var params []queryParam
