@@ -1050,6 +1050,90 @@ func UpdateConfig(host string, verifyTLS bool, apiKey string, project string, co
 	return info, Error{}
 }
 
+func UpdateConfigInheritable(host string, verifyTLS bool, apiKey string, project string, config string, inheritable bool) (models.ConfigInfo, Error) {
+	postBody := map[string]interface{}{"inheritable": inheritable}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	url, err := generateURL(host, "/v3/configs/config/inheritable", params)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PostRequest(url, verifyTLS, apiKeyHeader(apiKey), body)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
+	return info, Error{}
+}
+
+func UpdateConfigInherits(host string, verifyTLS bool, apiKey string, project string, config string, inherits string) (models.ConfigInfo, Error) {
+	inheritsObj := []models.ConfigDescriptor{}
+
+	if len(inherits) > 0 {
+		configDescriptors := strings.Split(inherits, ",")
+		for _, cd := range configDescriptors {
+			parts := strings.Split(cd, ".")
+			if len(parts) != 2 {
+				return models.ConfigInfo{}, Error{Message: "Config descriptors must match the format \"projectSlug.configName\""}
+			}
+			inheritsObj = append(inheritsObj, models.ConfigDescriptor{ProjectSlug: parts[0], ConfigName: parts[1]})
+		}
+	}
+
+	postBody := map[string]interface{}{"inherits": inheritsObj}
+	body, err := json.Marshal(postBody)
+
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Invalid config info"}
+	}
+
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	url, err := generateURL(host, "/v3/configs/config/inherits", params)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PostRequest(url, verifyTLS, apiKeyHeader(apiKey), body)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to update config", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.ConfigInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	configInfo, ok := result["config"].(map[string]interface{})
+	if !ok {
+		return models.ConfigInfo{}, Error{Err: fmt.Errorf("Unexpected type parsing config info, expected map[string]interface{}, got %T", result["config"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	info := models.ParseConfigInfo(configInfo)
+	return info, Error{}
+}
+
 // GetActivityLogs get activity logs
 func GetActivityLogs(host string, verifyTLS bool, apiKey string, page int, number int) ([]models.ActivityLog, Error) {
 	var params []queryParam

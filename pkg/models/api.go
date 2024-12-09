@@ -78,14 +78,17 @@ type EnvironmentInfo struct {
 
 // ConfigInfo project info
 type ConfigInfo struct {
-	Name           string `json:"name"`
-	Root           bool   `json:"root"`
-	Locked         bool   `json:"locked"`
-	Environment    string `json:"environment"`
-	Project        string `json:"project"`
-	CreatedAt      string `json:"created_at"`
-	InitialFetchAt string `json:"initial_fetch_at"`
-	LastFetchAt    string `json:"last_fetch_at"`
+	Name           string             `json:"name"`
+	Root           bool               `json:"root"`
+	Locked         bool               `json:"locked"`
+	Environment    string             `json:"environment"`
+	Project        string             `json:"project"`
+	CreatedAt      string             `json:"created_at"`
+	InitialFetchAt string             `json:"initial_fetch_at"`
+	LastFetchAt    string             `json:"last_fetch_at"`
+	Inheritable    bool               `json:"inheritable"`
+	Inherits       []ConfigDescriptor `json:"inherits"`
+	InheritedBy    []ConfigDescriptor `json:"inheritedBy"`
 }
 
 // ConfigLog a log
@@ -174,4 +177,9 @@ type ActorWorkplaceInfo struct {
 
 type WatchSecrets struct {
 	Type string `json:"type"`
+}
+
+type ConfigDescriptor struct {
+	ProjectSlug string `json:"projectSlug"`
+	ConfigName  string `json:"configName"`
 }
