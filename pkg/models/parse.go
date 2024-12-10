@@ -119,7 +119,7 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 		inherits := info["inherits"].([]interface{})
 		for _, i := range inherits {
 			descriptorMap := i.(map[string]interface{})
-			configInfo.Inherits = append(configInfo.Inherits, ConfigDescriptor{ProjectSlug: descriptorMap["projectSlug"].(string), ConfigName: descriptorMap["configName"].(string)})
+			configInfo.Inherits = append(configInfo.Inherits, ConfigDescriptor{Project: descriptorMap["project"].(string), Config: descriptorMap["config"].(string)})
 		}
 	}
 	if info["inheritedBy"] != nil {
@@ -127,7 +127,7 @@ func ParseConfigInfo(info map[string]interface{}) ConfigInfo {
 		inheritedBy := info["inheritedBy"].([]interface{})
 		for _, i := range inheritedBy {
 			descriptorMap := i.(map[string]interface{})
-			configInfo.InheritedBy = append(configInfo.InheritedBy, ConfigDescriptor{ProjectSlug: descriptorMap["projectSlug"].(string), ConfigName: descriptorMap["configName"].(string)})
+			configInfo.InheritedBy = append(configInfo.InheritedBy, ConfigDescriptor{Project: descriptorMap["project"].(string), Config: descriptorMap["config"].(string)})
 		}
 	}
 

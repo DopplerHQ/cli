@@ -1093,9 +1093,9 @@ func UpdateConfigInherits(host string, verifyTLS bool, apiKey string, project st
 		for _, cd := range configDescriptors {
 			parts := strings.Split(cd, ".")
 			if len(parts) != 2 {
-				return models.ConfigInfo{}, Error{Message: "Config descriptors must match the format \"projectSlug.configName\""}
+				return models.ConfigInfo{}, Error{Message: "Config descriptors must match the format \"project.config\""}
 			}
-			inheritsObj = append(inheritsObj, models.ConfigDescriptor{ProjectSlug: parts[0], ConfigName: parts[1]})
+			inheritsObj = append(inheritsObj, models.ConfigDescriptor{Project: parts[0], Config: parts[1]})
 		}
 	}
 

@@ -180,6 +180,6 @@ type WatchSecrets struct {
 }
 
 type ConfigDescriptor struct {
-	ProjectSlug string `json:"projectSlug"`
-	ConfigName  string `json:"configName"`
+	Project string `json:"project"`
+	Config  string `json:"config"`
 }
