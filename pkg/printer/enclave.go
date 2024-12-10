@@ -137,12 +137,12 @@ func ConfigInfo(info models.ConfigInfo, jsonFlag bool) {
 	if info.Inheritable {
 		inheritsHeader = "inherited by"
 		for _, inheritedBy := range info.InheritedBy {
-			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inheritedBy.ProjectSlug, inheritedBy.ConfigName))
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inheritedBy.Project, inheritedBy.Config))
 		}
 	} else {
 		inheritsHeader = "inherits"
 		for _, inherits := range info.Inherits {
-			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.ProjectSlug, inherits.ConfigName))
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.Project, inherits.Config))
 		}
 	}
 
@@ -178,7 +178,7 @@ func ConfigsInfo(info []models.ConfigInfo, jsonFlag bool) {
 	for _, configInfo := range info {
 		var inheritsStrings []string
 		for _, inherits := range configInfo.Inherits {
-			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.ProjectSlug, inherits.ConfigName))
+			inheritsStrings = append(inheritsStrings, fmt.Sprintf("%s.%s", inherits.Project, inherits.Config))
 		}
 
 		var inheritsString string
