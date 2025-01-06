@@ -15,8 +15,8 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.8.1
-	github.com/zalando/go-keyring v0.2.1
+	github.com/stretchr/testify v1.9.0
+	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/crypto v0.17.0
 	golang.org/x/sync v0.1.0
 	gopkg.in/gookit/color.v1 v1.1.6
@@ -24,9 +24,9 @@ require (
 )
 
 require (
-	github.com/alessio/shellescape v1.4.1 // indirect
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.4.0 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.mongodb.org/mongo-driver v1.10.3 // indirect
 	golang.org/x/exp v0.0.0-20220317015231-48e79f11773a // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
