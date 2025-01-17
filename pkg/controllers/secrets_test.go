@@ -82,6 +82,18 @@ func TestSecretsToBytes(t *testing.T) {
 		t.Errorf("Unable to convert secrets to byte array in %s format", format)
 	}
 
+	format = "env"
+	bytes, err = SecretsToBytes(secrets, format, "")
+	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1="foo"`, `SECRET2="bar"`}, "\n") {
+		t.Errorf("Unable to convert secrets to byte array in %s format", format)
+	}
+
+	format = "env"
+	bytes, err = SecretsToBytes(secrets, format, "")
+	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1="foo"`, `SECRET2="bar"`}, "\n") {
+		t.Errorf("Unable to convert secrets to byte array in %s format", format)
+	}
+
 	format = "json"
 	bytes, err = SecretsToBytes(secrets, format, "")
 	if !err.IsNil() || string(bytes) != `{"S1":"foo","SECRET2":"bar"}` {
