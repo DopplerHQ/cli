@@ -19,12 +19,16 @@ const JSONMountFormat = "json"
 const EnvMountFormat = "env"
 const TemplateMountFormat = "template"
 const DotNETJSONMountFormat = "dotnet-json"
+const EnvNoQuotesFormat = "env-no-quotes"
+const DockerFormat = "docker"
 
 var SecretsMountFormats = []string{
 	EnvMountFormat,
 	JSONMountFormat,
 	DotNETJSONMountFormat,
 	TemplateMountFormat,
+	EnvNoQuotesFormat,
+	DockerFormat,
 }
 
 var SecretsMountFormatMap = map[string]string{
@@ -32,4 +36,6 @@ var SecretsMountFormatMap = map[string]string{
 	JSONMountFormat:       JSONMountFormat,
 	DotNETJSONMountFormat: DotNETJSONMountFormat,
 	TemplateMountFormat:   TemplateMountFormat,
+	EnvNoQuotesFormat:     EnvNoQuotesFormat,
+	DockerFormat:          DockerFormat,
 }
