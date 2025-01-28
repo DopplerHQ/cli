@@ -168,6 +168,7 @@ func init() {
 	enclaveSecretsDownloadCmd.Flags().String("fallback-passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	enclaveSecretsDownloadCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	enclaveSecretsDownloadCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
+	enclaveSecretsDownloadCmd.Flags().Bool("offline", false, "alias for --fallback-only. read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	enclaveSecretsDownloadCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDownloadCmd)
 

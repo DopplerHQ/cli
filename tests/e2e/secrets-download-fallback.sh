@@ -40,6 +40,9 @@ beforeEach
 
 # test fallback-only fails when no fallback files exist
 "$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --fallback-only flag is not respected" && exit 1)
+# test offline fails when no fallback files exist
+"$DOPPLER_BINARY" secrets download --no-file --offline > /dev/null 2>&1 && (echo "ERROR: --offline flag is not respected" && exit 1)
+
 
 beforeEach
 
