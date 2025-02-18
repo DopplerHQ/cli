@@ -20,96 +20,94 @@ jobs:
     permissions:
       contents: write
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: '1.21'
-        check-latest: true
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ref: "master"
-        # include tags so we can determine new version
-        fetch-depth: 0
-    - name: Update alpine image
-      run: docker pull alpine
-    - name: Install Doppler CLI
-      uses: dopplerhq/cli-action@v2
-    - name: Install Cloudsmith CLI
-      run: pip install --upgrade cloudsmith-cli
-    - name: Configure git
-      run: git config --global user.name "Doppler Bot" && git config --global user.email "bot@doppler.com"
-    - name: Pre-release checks
-      run: ./scripts/release/pre-release.sh "${{ github.event.inputs.type }}"
-    - name: Configure Docker
-      run: |
-        echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_REGISTRY";
-        echo "$GCP_KEY" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGISTRY";
-      env:
-        DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
-        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-        DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
-        DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
-        GCR_REGISTRY: ${{ secrets.GCR_REGISTRY }}
-        GCP_KEY: ${{ secrets.GCP_KEY }}
-        GCR_USER: ${{ secrets.GCR_USER }}
-    - name: Install goreleaser
-      run:
-        sudo apt update;
-        sudo apt install -y ca-certificates;
-        echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list;
-        sudo apt update;
-        sudo apt install -y goreleaser;
-    - name: Import GPG keys
-      run: |
-        gpg --import <(echo "$GPG_KEY");
-        gpg --batch --import <(echo "$GPG_SECRET_KEY");
-      env:
-        GPG_KEY: ${{ secrets.GPG_KEY }}
-        GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
-    - name: Build and publish binaries
-      run:
-        GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GCP_KEY") goreleaser release --clean
-      env:
-        GOPATH: ${{ runner.workspace }}
-        GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
-        DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
-        GCP_KEY: ${{ secrets.GCP_KEY }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-    - name: Publish to Cloudsmith
-      run: ./scripts/release/cloudsmith.sh
-      env:
-        CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        CLOUDSMITH_RSA_PRIVATE_KEY: ${{ secrets.CLOUDSMITH_RSA_PRIVATE_KEY }}
-        CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE: ${{ secrets.CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE }}
-    - name: Send Slack notification
-      run: |
-        CHANGELOG="$(doppler changelog -n 1 | tail -n +2)";
-        # escape characters for slack https://api.slack.com/reference/surfaces/formatting#escaping
-        CHANGELOG=${CHANGELOG//&/&amp;};
-        CHANGELOG=${CHANGELOG//</&lt;};
-        CHANGELOG=${CHANGELOG//>/&gt;};
-        # escape double quotes
-        CHANGELOG=${CHANGELOG//\"/\\\"};
-        # replace newlines with newline character
-        CHANGELOG=${CHANGELOG/$'\n'/'\\n'};
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.24"
+          check-latest: true
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: "master"
+          # include tags so we can determine new version
+          fetch-depth: 0
+      - name: Update alpine image
+        run: docker pull alpine
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v2
+      - name: Install Cloudsmith CLI
+        run: pip install --upgrade cloudsmith-cli
+      - name: Configure git
+        run: git config --global user.name "Doppler Bot" && git config --global user.email "bot@doppler.com"
+      - name: Pre-release checks
+        run: ./scripts/release/pre-release.sh "${{ github.event.inputs.type }}"
+      - name: Configure Docker
+        run: |
+          echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin "$DOCKER_REGISTRY";
+          echo "$GCP_KEY" | docker login -u "$GCR_USER" --password-stdin "$GCR_REGISTRY";
+        env:
+          DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+          DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
+          GCR_REGISTRY: ${{ secrets.GCR_REGISTRY }}
+          GCP_KEY: ${{ secrets.GCP_KEY }}
+          GCR_USER: ${{ secrets.GCR_USER }}
+      - name: Install goreleaser
+        run: sudo apt update;
+          sudo apt install -y ca-certificates;
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list;
+          sudo apt update;
+          sudo apt install -y goreleaser;
+      - name: Import GPG keys
+        run: |
+          gpg --import <(echo "$GPG_KEY");
+          gpg --batch --import <(echo "$GPG_SECRET_KEY");
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
+          GPG_SECRET_KEY: ${{ secrets.GPG_SECRET_KEY }}
+      - name: Build and publish binaries
+        run: GOOGLE_APPLICATION_CREDENTIALS=<(echo "$GCP_KEY") goreleaser release --clean
+        env:
+          GOPATH: ${{ runner.workspace }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
+          GCP_KEY: ${{ secrets.GCP_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Publish to Cloudsmith
+        run: ./scripts/release/cloudsmith.sh
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          CLOUDSMITH_RSA_PRIVATE_KEY: ${{ secrets.CLOUDSMITH_RSA_PRIVATE_KEY }}
+          CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE: ${{ secrets.CLOUDSMITH_RSA_PRIVATE_KEY_PASSPHRASE }}
+      - name: Send Slack notification
+        run: |
+          CHANGELOG="$(doppler changelog -n 1 | tail -n +2)";
+          # escape characters for slack https://api.slack.com/reference/surfaces/formatting#escaping
+          CHANGELOG=${CHANGELOG//&/&amp;};
+          CHANGELOG=${CHANGELOG//</&lt;};
+          CHANGELOG=${CHANGELOG//>/&gt;};
+          # escape double quotes
+          CHANGELOG=${CHANGELOG//\"/\\\"};
+          # replace newlines with newline character
+          CHANGELOG=${CHANGELOG/$'\n'/'\\n'};
 
-        VERSION=$(git describe --abbrev=0);
-        MESSAGE="Doppler CLI <https://github.com/DopplerHQ/cli/releases/tag/$VERSION|v$VERSION> has been released. Changelog:\n$CHANGELOG";
-        curl --tlsv1.2 --proto "=https" -s -X "POST" "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/x-www-form-urlencoded; charset=utf-8' \
-          --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}";
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        DOPPLER_ENABLE_VERSION_CHECK: false
-    - name: Clean up
-      if: always()
-      run: |
-        set +e;
-        docker logout "$DOCKER_REGISTRY";
-        docker logout "$GCR_REGISTRY";
-        set -e;
-        rm -rf "$DOCKER_CONFIG";
-      env:
-        DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
-        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-        GCR_REGISTRY: ${{ secrets.GCR_REGISTRY }}
+          VERSION=$(git describe --abbrev=0);
+          MESSAGE="Doppler CLI <https://github.com/DopplerHQ/cli/releases/tag/$VERSION|v$VERSION> has been released. Changelog:\n$CHANGELOG";
+          curl --tlsv1.2 --proto "=https" -s -X "POST" "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/x-www-form-urlencoded; charset=utf-8' \
+            --data-urlencode "payload={\"username\": \"CLI Release Bot\", \"text\": \"$MESSAGE\"}";
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DOPPLER_ENABLE_VERSION_CHECK: false
+      - name: Clean up
+        if: always()
+        run: |
+          set +e;
+          docker logout "$DOCKER_REGISTRY";
+          docker logout "$GCR_REGISTRY";
+          set -e;
+          rm -rf "$DOCKER_CONFIG";
+        env:
+          DOCKER_CONFIG: ${{ secrets.DOCKER_CONFIG }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          GCR_REGISTRY: ${{ secrets.GCR_REGISTRY }}

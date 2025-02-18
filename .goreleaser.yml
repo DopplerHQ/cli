@@ -51,7 +51,7 @@ archives:
     {{- if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
   format_overrides:
     - goos: windows
-      format: zip
+      formats: zip
   files:
     - README.md
     - LICENSE
