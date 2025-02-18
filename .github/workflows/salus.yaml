@@ -6,6 +6,16 @@ on:
 name: Salus security scan
 
 jobs:
+  go_stable_version:
+    runs-on: ubuntu-latest
+    name: Go Stable Version
+    steps:
+      - uses: actions/checkout@v2
+      - id: go-supported-version
+        uses: dopplerhq/go-supported-version@v1
+        with:
+          go-version-input: '1.21' # GO_VERSION_DEF
+
   semgrep:
     runs-on: ubuntu-latest
     name: Semgrep

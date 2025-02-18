@@ -84,3 +84,7 @@ $ doppler configure --all           # view local configuration
 By default, `doppler login` scopes the auth token to the root directory (`--scope=/`). This means that the token will be accessible to projects using the Doppler CLI in any subdirectory. To limit this, specify the `scope` flag during login: `doppler login --scope=./` or `doppler login --scope ~/projects/backend`.
 
 Setup (i.e. `doppler setup`) scopes the selected project and config to the current directory (`--scope=./`). You can also modify this scope with the `scope` flag. Run `doppler help` for more information.
+
+## Development
+
+If upgrading the Go version, check for all instances of `GO_VERSION_DEF`.
