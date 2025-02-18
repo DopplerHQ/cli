@@ -33,7 +33,7 @@ jobs:
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: GoReleaser Check
-      uses: goreleaser/goreleaser-action@v1
+      uses: goreleaser/goreleaser-action@v6
       with:
         version: latest
         args: check
