@@ -1,5 +1,6 @@
 module github.com/DopplerHQ/cli
 
+// GO_VERSION_DEF
 go 1.24
 
 require (
