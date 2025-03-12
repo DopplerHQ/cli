@@ -131,6 +131,10 @@ func SecretsToBytes(secrets map[string]string, format string, templateBody strin
 		return []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n")), Error{}
 	}
 
+	if format == models.EnvNoQuotesFormat || format == models.DockerFormat {
+		return []byte(strings.Join(utils.MapToEnvFormat(secrets, false), "\n")), Error{}
+	}
+
 	if format == models.JSONMountFormat {
 		envStr, err := json.Marshal(secrets)
 		if err != nil {
