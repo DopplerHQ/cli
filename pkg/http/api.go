@@ -911,6 +911,24 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 	return info, Error{}
 }
 
+func LivenessPing(host string, verifyTLS bool, apiKey string, project string, config string) (bool, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	url, err := generateURL(host, "/v3/configs/config/ping", params)
+	if err != nil {
+		return false, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, _, err := GetRequest(url, verifyTLS, apiKeyHeader(apiKey))
+	if err != nil {
+		return false, Error{Err: err, Message: "Unable to liveness ping", Code: statusCode}
+	}
+
+	return true, Error{}
+}
+
 // CreateConfig create a config
 func CreateConfig(host string, verifyTLS bool, apiKey string, project string, name string, environment string) (models.ConfigInfo, Error) {
 	postBody := map[string]interface{}{"name": name, "environment": environment}
