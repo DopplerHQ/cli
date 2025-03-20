@@ -89,3 +89,14 @@ func GetEnvironmentIDs(config models.ScopedOptions) ([]string, Error) {
 	}
 	return ids, Error{}
 }
+
+func LivenessPing(config models.ScopedOptions) (bool, Error) {
+	utils.RequireValue("token", config.Token.Value)
+
+	_, err := http.LivenessPing(config.APIHost.Value, utils.GetBool(config.VerifyTLS.Value, true), config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value)
+	if !err.IsNil() {
+		return false, Error{Err: err.Unwrap(), Message: err.Message}
+	}
+
+	return true, Error{}
+}

@@ -41,6 +41,7 @@ import (
 var defaultFallbackDir string
 
 const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
+const defaultLivenessPingIntervalSeconds = 60 * 5 * time.Second
 
 var secretsToInclude []string
 
@@ -80,6 +81,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 		preserveEnv := cmd.Flag("preserve-env").Value.String()
 		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
+		enableLivenessPing := !utils.GetBoolFlag(cmd, "no-liveness-ping")
 		localConfig := configuration.LocalConfig(cmd)
 		dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
 		exitOnMissingIncludedSecrets := !cmd.Flags().Changed("no-exit-on-missing-only-secrets")
@@ -223,6 +225,25 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		// this variable has the potential to be racey, but is made safe by our use of the mutex
 		terminatedByWatch := false
 
+		startLivenessPing := func() {
+			ticker := time.NewTicker(defaultLivenessPingIntervalSeconds)
+
+			go func() {
+				for {
+					select {
+					case <-ticker.C:
+						_, err := controllers.LivenessPing(localConfig)
+						if !err.IsNil() {
+							// If we fail the liveness ping, we'll just log it for debugging, but it's likely an intermittent
+							// connectivity error. We'll allow the ticker to continue.
+							utils.LogDebug(fmt.Sprintf("Error pinging for liveness \"%s\"", err))
+						}
+					}
+				}
+			}()
+
+		}
+
 		startProcess := func() {
 			// ensure we can fetch the new secrets before restarting the process
 			secrets := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
@@ -365,6 +386,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		startProcess()
+
+		if enableLivenessPing {
+			startLivenessPing()
+		}
 
 		// initiate watch logic after starting the process so that failing to watch just degrades to normal 'run' behavior
 		if watch {
@@ -596,6 +621,7 @@ func init() {
 	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
+	runCmd.Flags().Bool("no-liveness-ping", false, "disable the periodic liveness ping")
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
 	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
