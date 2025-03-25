@@ -13,7 +13,7 @@ require (
 	github.com/jesseduffield/lazycore v0.0.0-20221012050358-03d2e40243c5
 	github.com/mattn/go-isatty v0.0.16
 	github.com/sasha-s/go-deadlock v0.3.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.9.0
