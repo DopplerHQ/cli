@@ -460,7 +460,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 	enableFallback := !utils.GetBoolFlag(cmd, "no-fallback")
 	enableCache := enableFallback && !utils.GetBoolFlag(cmd, "no-cache")
 	fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
-	fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
+	fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only") || utils.GetBoolFlag(cmd, "offline")
 	exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 	dynamicSecretsTTL := utils.GetDurationFlag(cmd, "dynamic-ttl")
 
@@ -534,7 +534,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		// fallback file is not supported when fetching env/yaml format
 		enableFallback = false
 		enableCache = false
-		flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure"}
+		flags := []string{"fallback", "fallback-only", "offline", "fallback-readonly", "no-exit-on-write-failure"}
 		for _, flag := range flags {
 			if cmd.Flags().Changed(flag) {
 				utils.LogWarning(fmt.Sprintf("--%s has no effect when format is %s", flag, format))
@@ -762,6 +762,7 @@ func init() {
 	secretsDownloadCmd.Flags().String("fallback-passphrase", "", "passphrase to use for encrypting the fallback file. by default the passphrase is computed using your current configuration.")
 	secretsDownloadCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
 	secretsDownloadCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
+	secretsDownloadCmd.Flags().Bool("offline", false, "alias for --fallback-only. read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly)")
 	secretsDownloadCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	secretsCmd.AddCommand(secretsDownloadCmd)
 
