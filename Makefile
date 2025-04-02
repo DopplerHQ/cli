@@ -3,6 +3,10 @@
 build:
 	go build -o doppler -ldflags="-X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=dev-$(shell git rev-parse --abbrev-ref HEAD)-$(shell git rev-parse --short HEAD)" main.go
 
+watch-build:
+	make build
+	fswatch -o -e 'doppler' . | xargs -n1 -I{} make build
+
 test:
 	go test ./pkg/... -v
 
