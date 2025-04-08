@@ -154,12 +154,11 @@ func RevokeAuthToken(host string, verifyTLS bool, token string) (map[string]inte
 	return result, Error{}
 }
 
-
 // GetOIDCAuthToken get a short lived service account identity auth token from an OIDC token
 func GetOIDCAuthToken(host string, verifyTLS bool, identityId string, oidcJWT string) (map[string]interface{}, Error) {
 	reqBody := map[string]interface{}{}
-	reqBody["identity"] = identityId 
-	reqBody["token"] = oidcJWT 
+	reqBody["identity"] = identityId
+	reqBody["token"] = oidcJWT
 	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Invalid OIDC auth token"}
@@ -184,9 +183,8 @@ func GetOIDCAuthToken(host string, verifyTLS bool, identityId string, oidcJWT st
 	return result, Error{}
 }
 
-
 // RevokeIdentityAuthToken revoke a short lived service account identity auth token
-func RevokeIdentityAuthToken(host string, verifyTLS bool, token string) (Error) {
+func RevokeIdentityAuthToken(host string, verifyTLS bool, token string) Error {
 	reqBody := map[string]interface{}{}
 	reqBody["token"] = token
 	body, err := json.Marshal(reqBody)
@@ -909,6 +907,24 @@ func GetConfig(host string, verifyTLS bool, apiKey string, project string, confi
 	}
 	info := models.ParseConfigInfo(configInfo)
 	return info, Error{}
+}
+
+func LivenessPing(host string, verifyTLS bool, apiKey string, project string, config string) (bool, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+
+	url, err := generateURL(host, "/v3/configs/config/ping", params)
+	if err != nil {
+		return false, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, _, err := GetRequest(url, verifyTLS, apiKeyHeader(apiKey))
+	if err != nil {
+		return false, Error{Err: err, Message: "Unable to liveness ping", Code: statusCode}
+	}
+
+	return true, Error{}
 }
 
 // CreateConfig create a config
