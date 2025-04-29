@@ -37,6 +37,12 @@ var UserConfigDir string
 // UserConfigFile (e.g. /home/user/doppler/.doppler.yaml)
 var UserConfigFile string
 
+// UserFallbackDir (e.g. /home/user/doppler/.doppler.yaml)
+var UserFallbackDir string
+
+// UserMetadataDir the directory containing metadata files
+var UserMetadataDir string
+
 // Scope to use for config file
 var Scope = "."
 
@@ -54,6 +60,8 @@ func init() {
 
 func SetConfigDir(dir string) {
 	UserConfigDir = dir
+	UserFallbackDir = filepath.Join(dir, "fallback")
+	UserMetadataDir = UserFallbackDir
 	UserConfigFile = filepath.Join(UserConfigDir, configFileName)
 }
 

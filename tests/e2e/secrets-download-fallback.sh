@@ -43,6 +43,20 @@ beforeEach
 
 beforeEach
 
+# test fallback file and metadata file respect DOPPLER_CONFIG_DIR
+test_config_dir='/tmp/doppler-fallback-config-test'
+test_fallback_dir="$test_config_dir/fallback"
+mkdir -p "$test_fallback_dir"
+DOPPLER_CONFIG_DIR="$test_config_dir" "$DOPPLER_BINARY" secrets download --no-file > /dev/null
+
+fallback_file_count="$(find "$test_fallback_dir" -name '.secrets-*' | wc -l)"
+[[ "$fallback_file_count" == "1" ]] || (echo "ERROR: 'run' did not create fallback file in DOPPLER_CONFIG_DIR/fallback" && exit 1)
+
+metadata_file_count="$(find "$test_fallback_dir" -name '.metadata-*' | wc -l)"
+[[ "$metadata_file_count" == "1" ]] || (echo "ERROR: 'run' did not create metadata file in DOPPLER_CONFIG_DIR/fallback" && exit 1)
+
+beforeEach
+
 # test fallback-readonly doesn't write a fallback file
 "$DOPPLER_BINARY" secrets download --no-file --fallback-readonly > /dev/null
 "$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: --fallback-readonly flag is not respected" && exit 1)

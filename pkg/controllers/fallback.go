@@ -24,14 +24,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
-
-// DefaultMetadataDir the directory containing metadata files
-var DefaultMetadataDir string
 
 func GenerateFallbackFileHash(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
 	parts := []string{token}
@@ -63,7 +61,7 @@ func GenerateFallbackFileHash(token string, project string, config string, forma
 // MetadataFilePath calculates the name of the metadata file
 func MetadataFilePath(token string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, secretNames []string) string {
 	fileName := fmt.Sprintf(".metadata-%s.json", GenerateFallbackFileHash(token, project, config, format, nameTransformer, secretNames))
-	path := filepath.Join(DefaultMetadataDir, fileName)
+	path := filepath.Join(configuration.UserMetadataDir, fileName)
 	if absPath, err := filepath.Abs(path); err == nil {
 		return absPath
 	}
