@@ -38,8 +38,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var defaultFallbackDir string
-
 const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
 const defaultLivenessPingIntervalSeconds = 60 * 5 * time.Second
 
@@ -445,9 +443,9 @@ var runCleanCmd = &cobra.Command{
 		dryRun := utils.GetBoolFlag(cmd, "dry-run")
 		all := utils.GetBoolFlag(cmd, "all")
 
-		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", defaultFallbackDir))
+		utils.LogDebug(fmt.Sprintf("Using fallback directory %s", configuration.UserFallbackDir))
 
-		if _, err := os.Stat(defaultFallbackDir); err != nil {
+		if _, err := os.Stat(configuration.UserFallbackDir); err != nil {
 			if os.IsNotExist(err) {
 				utils.LogDebug("Fallback directory does not exist")
 				utils.Print("Nothing to clean")
@@ -457,7 +455,7 @@ var runCleanCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
 
-		entries, err := ioutil.ReadDir(defaultFallbackDir)
+		entries, err := ioutil.ReadDir(configuration.UserFallbackDir)
 		if err != nil {
 			utils.HandleError(err, "Unable to read fallback directory")
 		}
@@ -486,7 +484,7 @@ var runCleanCmd = &cobra.Command{
 			}
 
 			if delete {
-				file := filepath.Join(defaultFallbackDir, entry.Name())
+				file := filepath.Join(configuration.UserFallbackDir, entry.Name())
 				utils.LogDebug(fmt.Sprintf("%s %s", action, file))
 
 				if dryRun {
@@ -517,7 +515,7 @@ var runCleanCmd = &cobra.Command{
 func legacyFallbackFile(project string, config string) string {
 	name := fmt.Sprintf("%s:%s", project, config)
 	fileName := fmt.Sprintf(".run-%s.json", crypto.Hash(name))
-	return filepath.Join(defaultFallbackDir, fileName)
+	return filepath.Join(configuration.UserFallbackDir, fileName)
 }
 
 // generate the passphrase used for encrypting a secrets file
@@ -552,15 +550,15 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 		}
 	} else {
 		fallbackFileName := fmt.Sprintf(".secrets-%s.json", controllers.GenerateFallbackFileHash(config.Token.Value, config.EnclaveProject.Value, config.EnclaveConfig.Value, format, nameTransformer, secretNames))
-		fallbackPath = filepath.Join(defaultFallbackDir, fallbackFileName)
+		fallbackPath = filepath.Join(configuration.UserFallbackDir, fallbackFileName)
 		// TODO remove this when releasing CLI v4 (DPLR-435)
 		if config.EnclaveProject.Value != "" && config.EnclaveConfig.Value != "" {
 			// save to old path to maintain backwards compatibility
 			legacyFallbackPath = legacyFallbackFile(config.EnclaveProject.Value, config.EnclaveConfig.Value)
 		}
 
-		if !utils.Exists(defaultFallbackDir) {
-			err := os.Mkdir(defaultFallbackDir, 0700)
+		if !utils.Exists(configuration.UserFallbackDir) {
+			err := os.Mkdir(configuration.UserFallbackDir, 0700)
 			if err != nil {
 				utils.LogDebug("Unable to create directory for fallback file")
 				if exitOnWriteFailure {
@@ -584,9 +582,6 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 }
 
 func init() {
-	defaultFallbackDir = filepath.Join(configuration.UserConfigDir, "fallback")
-	controllers.DefaultMetadataDir = defaultFallbackDir
-
 	forwardSignals := !isatty.IsTerminal(os.Stdout.Fd())
 
 	runCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
