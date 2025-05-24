@@ -1,5 +1,6 @@
 # Doppler CLI
 
+
 The Doppler CLI is the official tool for interacting with your Doppler secrets and configuration.
 
 **You can:**
