@@ -78,6 +78,12 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		enableCache := enableFallback && !utils.GetBoolFlag(cmd, "no-cache")
 		fallbackReadonly := utils.GetBoolFlag(cmd, "fallback-readonly")
 		fallbackOnly := utils.GetBoolFlag(cmd, "fallback-only")
+		var fallbackFlag string
+		if cmd.Flags().Changed("offline") {
+			fallbackFlag = "--offline"
+		} else {
+			fallbackFlag = "--fallback-only"
+		}
 		exitOnWriteFailure := !utils.GetBoolFlag(cmd, "no-exit-on-write-failure")
 		preserveEnv := cmd.Flag("preserve-env").Value.String()
 		forwardSignals := utils.GetBoolFlag(cmd, "forward-signals")
@@ -118,7 +124,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		if !enableFallback {
-			flags := []string{"fallback", "fallback-only", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
+			flags := []string{"fallback", "fallback-only", "offline", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
 			for _, flag := range flags {
 				if cmd.Flags().Changed(flag) {
 					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
@@ -132,6 +138,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			LegacyPath:         legacyFallbackPath,
 			Readonly:           fallbackReadonly,
 			Exclusive:          fallbackOnly,
+			ExclusiveFlag:      fallbackFlag,
 			ExitOnWriteFailure: exitOnWriteFailure,
 			Passphrase:         passphrase,
 		}
@@ -209,7 +216,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		watch := cmd.Flags().Changed("watch")
 
 		if watch && fallbackOpts.Exclusive {
-			utils.LogWarning("--watch has no effect when used with --fallback-only")
+			utils.LogWarning("--watch has no effect when used with " + fallbackOpts.ExclusiveFlag)
 			watch = false
 		}
 
@@ -618,7 +625,8 @@ func init() {
 	runCmd.Flags().Bool("no-cache", false, "disable using the fallback file to speed up fetches. the fallback file is only used when the API indicates that it's still current.")
 	runCmd.Flags().Bool("no-fallback", false, "disable reading and writing the fallback file (implies --no-cache)")
 	runCmd.Flags().Bool("fallback-readonly", false, "disable modifying the fallback file. secrets can still be read from the file.")
-	runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly and --no-liveness-ping)")
+	runCmdFallbackOnly := runCmd.Flags().Bool("fallback-only", false, "read all secrets directly from the fallback file, without contacting Doppler. secrets will not be updated. (implies --fallback-readonly and --no-liveness-ping)")
+	runCmd.Flags().BoolVar(runCmdFallbackOnly, "offline", false, "alias for --fallback-only")
 	runCmd.Flags().Bool("no-exit-on-write-failure", false, "do not exit if unable to write the fallback file")
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
 	runCmd.Flags().Bool("no-liveness-ping", false, "disable the periodic liveness ping")

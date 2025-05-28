@@ -70,6 +70,7 @@ type FallbackOptions struct {
 	LegacyPath         string
 	Readonly           bool
 	Exclusive          bool
+	ExclusiveFlag      string
 	ExitOnWriteFailure bool
 	Passphrase         string
 }
@@ -429,7 +430,7 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) map[string]string {
 	if fallbackOpts.Exclusive {
 		if !fallbackOpts.Enable {
-			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with --fallback-only"))
+			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with " + fallbackOpts.ExclusiveFlag))
 		}
 		return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
 	}
