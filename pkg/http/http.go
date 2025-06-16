@@ -146,7 +146,7 @@ func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body
 	return statusCode, respHeaders, body, nil
 }
 
-func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Response, error) {
+func request(req *http.Request, verifyTLS bool, allowTimeout bool, allowRetry bool) (*http.Response, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
 	req.Header.Set("client-version", version.ProgramVersion)
@@ -236,7 +236,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 
 			utils.LogDebug(err.Error())
 
-			if isTimeout(err) || errors.Is(err, syscall.ECONNREFUSED) {
+			if allowRetry && (isTimeout(err) || errors.Is(err, syscall.ECONNREFUSED)) {
 				// retry request
 				return err
 			}
@@ -273,7 +273,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool) (*http.Respon
 
 func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) (int, http.Header, error) {
 	// nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
-	response, requestErr := request(req, verifyTLS, false)
+	response, requestErr := request(req, verifyTLS, false, false)
 	if requestErr != nil {
 		statusCode := 0
 		if response != nil {
@@ -312,7 +312,7 @@ func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) 
 }
 
 func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
-	response, requestErr := request(req, verifyTLS, true)
+	response, requestErr := request(req, verifyTLS, true, true)
 	if response != nil {
 		defer func() {
 			if closeErr := response.Body.Close(); closeErr != nil {
