@@ -530,7 +530,7 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 			ExitOnWriteFailure: exitOnWriteFailure,
 			Passphrase:         fallbackPassphrase,
 		}
-		secrets := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
+		secrets, _ := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
 
 		var err error
 		body, err = json.Marshal(secrets)
