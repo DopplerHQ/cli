@@ -15,7 +15,16 @@ limitations under the License.
 */
 package utils
 
+import "time"
+
 func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func MinDuration(x, y time.Duration) time.Duration {
 	if x < y {
 		return x
 	}
