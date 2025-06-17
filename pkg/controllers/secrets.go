@@ -426,13 +426,14 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 	return env, onExit
 }
 
-// fetchSecrets from Doppler and handle fallback file
-func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) map[string]string {
+// FetchSecrets from Doppler and handle fallback file.
+// It returns a tuple of the secrets and a boolean of whether the result was from a cache/fallback file
+func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) (map[string]string, bool) {
 	if fallbackOpts.Exclusive {
 		if !fallbackOpts.Enable {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with " + fallbackOpts.ExclusiveFlag))
 		}
-		return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+		return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false), true
 	}
 
 	// this scenario likely isn't possible, but just to be safe, disable using cache when there's no metadata file
@@ -457,7 +458,7 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		if fallbackOpts.Enable && canUseFallback {
 			utils.Log("Unable to fetch secrets from the Doppler API")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false), true
 		}
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
@@ -473,7 +474,7 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		return cache
+		return cache, true
 	}
 
 	// ensure the response can be parsed before proceeding
@@ -484,7 +485,7 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		if fallbackOpts.Enable {
 			utils.Log("Unable to parse the Doppler API response")
 			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false)
+			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false), true
 		}
 		utils.HandleError(err, "Unable to parse API response")
 	}
@@ -521,7 +522,7 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		}
 	}
 
-	return secrets
+	return secrets, false
 }
 
 func Run(cmd *cobra.Command, args []string, env []string, forwardSignals bool) (*exec.Cmd, error) {
