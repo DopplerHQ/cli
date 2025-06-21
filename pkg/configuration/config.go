@@ -70,12 +70,9 @@ func Setup() {
 	utils.LogDebug(fmt.Sprintf("Using config dir %s", UserConfigDir))
 	utils.LogDebug(fmt.Sprintf("Using config file %s", UserConfigFile))
 
-	if !utils.Exists(UserConfigDir) {
-		utils.LogDebug(fmt.Sprintf("Creating the config directory %s", UserConfigDir))
-		err := os.Mkdir(UserConfigDir, 0700)
-		if err != nil {
-			utils.HandleError(err, fmt.Sprintf("Unable to create config directory %s", UserConfigDir))
-		}
+	err := os.Mkdir(UserConfigDir, 0700)
+	if err != nil && !os.IsExist(err) {
+		utils.HandleError(err, fmt.Sprintf("Unable to create config directory %s", UserConfigDir))
 	}
 
 	// This may be different from `UserConfigDir` if `--configuration` was provided
