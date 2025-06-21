@@ -564,13 +564,11 @@ func initFallbackDir(cmd *cobra.Command, config models.ScopedOptions, format mod
 			legacyFallbackPath = legacyFallbackFile(config.EnclaveProject.Value, config.EnclaveConfig.Value)
 		}
 
-		if !utils.Exists(configuration.UserFallbackDir) {
-			err := os.Mkdir(configuration.UserFallbackDir, 0700)
-			if err != nil {
-				utils.LogDebug("Unable to create directory for fallback file")
-				if exitOnWriteFailure {
-					utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(controllers.WriteFailureMessage(), "\n"))
-				}
+		err := os.Mkdir(configuration.UserFallbackDir, 0700)
+		if err != nil && !os.IsExist(err) {
+			utils.LogDebug("Unable to create directory for fallback file")
+			if exitOnWriteFailure {
+				utils.HandleError(err, "Unable to create directory for fallback file", strings.Join(controllers.WriteFailureMessage(), "\n"))
 			}
 		}
 	}
