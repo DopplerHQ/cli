@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -40,6 +41,7 @@ import (
 
 const defaultFallbackFileMaxAge = 14 * 24 * time.Hour // 14 days
 const defaultLivenessPingIntervalSeconds = 60 * 5 * time.Second
+const defaultMaxRetrySleep = 60 * time.Second
 
 var secretsToInclude []string
 
@@ -227,8 +229,9 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		var processMutex sync.Mutex
 		// used to ensure we only process one event at a time
 		var watchMutex sync.Mutex
-		// this variable has the potential to be racey, but is made safe by our use of the mutex
+		// these variables have the potential to be racey, but are made safe by our use of the mutex
 		terminatedByWatch := false
+		watchedValuesMayBeStale := false
 
 		startLivenessPing := func() {
 			ticker := time.NewTicker(defaultLivenessPingIntervalSeconds)
@@ -246,15 +249,17 @@ doppler run --mount secrets.json -- cat secrets.json`,
 					}
 				}
 			}()
-
 		}
 
 		startProcess := func() {
 			// ensure we can fetch the new secrets before restarting the process
-			secrets := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
+			secrets, fromCache := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
 			secretsFetchedAt := time.Now()
 			if secretsFetchedAt.After(lastSecretsFetch) {
 				lastSecretsFetch = secretsFetchedAt
+			}
+			if !fromCache {
+				watchedValuesMayBeStale = false
 			}
 
 			controllers.ValidateSecrets(secrets, secretsToInclude, exitOnMissingIncludedSecrets, mountOptions)
@@ -262,6 +267,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			isRestart := c != nil
 			// terminate the old process
 			if isRestart {
+				// if the watched values might be stale and we didn't read a brand new copy from the network, we shouldn't restart the process
+				if fromCache && watchedValuesMayBeStale {
+					return
+				}
+
 				terminatedByWatch = true
 
 				// killing the process here will cause the cleanup goroutine below to run, thereby unlocking the mutex
@@ -351,11 +361,15 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}()
 		}
 
+		watchRetrySleep := 1 * time.Second
 		watchHandler := func(data []byte) {
 			event := controllers.ParseWatchEvent(data)
 			if event.Type == "" {
 				return
 			}
+
+			// when we've received a successful event, we know we're connected, and we can reset the retry sleep time
+			watchRetrySleep = 1 * time.Second
 
 			// don't capture analytics for the ping event; it's too noisy
 			if event.Type != "ping" {
@@ -383,6 +397,14 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				startProcess()
 			} else if event.Type == "connected" {
 				utils.LogDebug("Connected to secrets stream")
+
+				// if we're recovering the connection after a network failure, it's possible that we missed a secrets.update event.
+				// we'll call startProcess() to check the latest values against our cache and restart as necessary
+				if watchedValuesMayBeStale {
+					watchMutex.Lock()
+					defer watchMutex.Unlock()
+					startProcess()
+				}
 			} else if event.Type == "ping" {
 				// do nothing
 			} else {
@@ -398,43 +420,52 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 		// initiate watch logic after starting the process so that failing to watch just degrades to normal 'run' behavior
 		if watch {
-			maxAttempts := 10
-			attempt := 0
-			_ = utils.Retry(maxAttempts, time.Second, func() error {
-				attempt = attempt + 1
+			var watchConnectionHandler func()
 
+			watchConnectionHandler = func() {
 				statusCode, headers, httpErr := http.WatchSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, watchHandler)
+
 				if !httpErr.IsNil() {
 					e := httpErr.Unwrap()
+					watchRetrySleep = 2 * watchRetrySleep
+
+					utils.LogDebug(fmt.Sprintf("Status Code %v", statusCode))
 
 					msg := "Unable to watch for secrets changes"
 					// a 200 is sent as soon as the connection is established, so if it dies after that the status code
 					// will still be 200. we should retry these requests
-					canRetry := http.IsRetry(statusCode, headers.Get("content-type")) || statusCode == 200
-					if canRetry && attempt < maxAttempts {
+					// if connection could not be established to the server (statusCode 0), we'll also retry
+					canRetry := http.IsRetry(statusCode, headers.Get("content-type")) || statusCode == 200 || statusCode == 0
+					if canRetry {
 						msg += ". Will retry"
 					}
-					if statusCode == 200 {
-						// this connection was likely killed due to a timeout, so we can log quietly
+					if statusCode == 200 || statusCode == 0 {
+						// this connection was likely killed due to a timeout / lost connectivity, so we can log quietly
 						utils.LogDebugError(errors.New(msg))
 					} else {
 						utils.LogError(errors.New(msg))
 					}
 
 					controllers.CaptureEvent("WatchConnectionError", map[string]interface{}{"statusCode": statusCode, "canRetry": canRetry})
+					watchedValuesMayBeStale = true
 
 					if statusCode != 0 {
 						e = fmt.Errorf("%s. Status code: %d", e, statusCode)
 					}
 					utils.LogDebugError(e)
 
-					if !canRetry {
-						return utils.StopRetryError(e)
+					if canRetry {
+						jitter := time.Duration(rand.Int63n(int64(watchRetrySleep))) // #nosec G404
+						sleep := utils.MinDuration(watchRetrySleep, defaultMaxRetrySleep) + jitter/2
+						utils.LogDebug(fmt.Sprintf("restarting after %v", sleep))
+						time.Sleep(sleep)
+
+						watchConnectionHandler()
 					}
 				}
+			}
 
-				return httpErr.Unwrap()
-			})
+			watchConnectionHandler()
 		}
 	},
 }
