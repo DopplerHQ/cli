@@ -19,19 +19,8 @@ $ make test-release
 
 ### Release
 
-To release a new version, run this command with `$NEW_VERSION` set to one of `major`, `minor`, `patch`, or `vX.Y.Z` (where `vX.Y.Z` is a valid semantic version).
-
-```
-$ make release V=$NEW_VERSION
-```
-
-This command will push local changes to origin, create a new tag, and push the tag to origin. It will then build and release the doppler binaries.
-
-Note: The release will automatically fail if the tag and HEAD have diverged:
-
-`   ⨯ release failed after 0.13s error=git tag v0.0.2 was not made against commit c9c6950d18790c17db11fedae331a226f8f12c6b`
-
-Note: In the goreleaser output, it will state that artifact signing is disabled. This is due to the custom args we pass goreleaser (so that we can specify our GPG key). You can verify that signing works by the presence of a `checksums.txt.sig` file.
+To release a new version, run the [release](https://github.com/DopplerHQ/cli/actions/workflows/release.yaml) GitHub Action manually and specify whether you want to bump the major, minor, or patch version.
+Note that this will require approval from a CLI admin before the action will be allowed to run.
 
 ### Help
 
@@ -44,7 +33,6 @@ Note: In the goreleaser output, it will state that artifact signing is disabled.
 - **Fix**: Log in again with this registry manually specified: `docker login https://docker.io`
 
 - **Why**: The release script explicitly scopes the `dopplerbot` docker login to `https://index.docker.io/v1/`. By explicitly scoping your personal login, you ensure these two logins do not conflict (and thus your personal login does not get removed on script cleanup). If not specified, `docker` treats these two registries as aliases.
-
 
 #### Generate a GPG key
 
