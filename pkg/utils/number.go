@@ -15,21 +15,25 @@ limitations under the License.
 */
 package utils
 
-func Min(x, y int) int {
+import (
+	"golang.org/x/exp/constraints"
+)
+
+func Min[T constraints.Ordered](x, y T) T {
 	if x < y {
 		return x
 	}
 	return y
 }
 
-func Max(x, y int) int {
+func Max[T constraints.Ordered](x, y T) T {
 	if x > y {
 		return x
 	}
 	return y
 }
 
-func Clamp(x int, min int, max int) int {
+func Clamp[T constraints.Ordered](x, min, max T) T {
 	if x < min {
 		return min
 	} else if x > max {
