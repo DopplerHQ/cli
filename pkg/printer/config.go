@@ -133,7 +133,7 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 }
 
 // Configs print configs
-func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
+func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool, obfuscateToken bool) {
 	if jsonFlag {
 		JSON(configs)
 		return
@@ -145,6 +145,10 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 
 		for name, value := range pairs {
 			if value != "" {
+				if obfuscateToken && name == models.ConfigToken.String() {
+					value = utils.RedactAuthToken(value)
+				}
+
 				translatedName := configuration.TranslateConfigOption(name)
 				rows = append(rows, []string{translatedName, value, scope})
 			}
