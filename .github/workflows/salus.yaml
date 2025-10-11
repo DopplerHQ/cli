@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Semgrep
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - name: Scan
         id: scan
         run: |
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Salus Security Scan
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
     - name: Salus Scan
       id: salus_scan
       uses: federacy/scan-action@0.1.5

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Uninstall bash
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Uninstall curl
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Uninstall gnupg
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Download CLI
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Download CLI
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Make temp directory
@@ -131,7 +131,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
@@ -142,7 +142,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Install CLI
@@ -153,7 +153,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: Create user bin directory

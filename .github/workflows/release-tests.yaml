@@ -15,12 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v6
       with:
         go-version: '1.24' # GO_VERSION_DEF
         check-latest: true
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v5
       with:
         path: ./src/github.com/${{ github.repository }}
     - name: GoReleaser Action
@@ -30,15 +30,15 @@ jobs:
         args: release --snapshot --skip=publish,sign
       env:
         GOPATH: ${{ runner.workspace }}
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
         name: macOS build (amd64)
         path: ./dist/doppler_darwin_amd64_v1/doppler
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
         name: macOS build (arm64)
         path: ./dist/doppler_darwin_arm64/doppler
-    - uses: actions/upload-artifact@master
+    - uses: actions/upload-artifact@v4
       with:
         name: Linux build (amd64)
         path: ./dist/doppler_linux_amd64_v1/doppler
