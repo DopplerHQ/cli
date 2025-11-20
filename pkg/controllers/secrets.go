@@ -225,6 +225,9 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 				utils.HandleError(err, message)
 			}
 
+			if enableReadsLimit {
+				numReads++
+			}
 			utils.LogDebug("Secrets mount opened by reader")
 
 			if _, err := f.Write(secrets); err != nil {
@@ -259,9 +262,6 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 				cleanupFIFO()
 				utils.HandleError(err, message)
 			}
-
-			// only increment read count after successfully writing and closing
-			numReads++
 
 			// delay before re-opening file so reader can detect an EOF.
 			// if we immediately re-open the file, the original reader will keep reading
