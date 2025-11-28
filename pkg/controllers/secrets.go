@@ -236,8 +236,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 					break
 				}
 				// broken pipe occurs when reader closes pipe before writing completes (eg. with vite dev server)
-				var errno syscall.Errno
-				if errors.As(err, &errno) && errno == syscall.EPIPE {
+				if errors.Is(err, syscall.EPIPE) {
 					utils.LogDebug("Reader closed pipe before write completed")
 					_ = f.Close()
 					continue
@@ -253,8 +252,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 					break
 				}
 				// broken pipe on close is safe to ignore - the reader has already disconnected
-				var errno syscall.Errno
-				if errors.As(err, &errno) && errno == syscall.EPIPE {
+				if errors.Is(err, syscall.EPIPE) {
 					utils.LogDebug("Pipe closed by reader")
 					continue
 				}
