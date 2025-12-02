@@ -6,7 +6,7 @@ set -eu -o pipefail -o functrace
 docker ps > /dev/null 2>&1 || (echo "Docker daemon must be running" && exit 1)
 
 if [ ! -z "$(git status --porcelain)" ]; then
-  echo "The git workspace must be clean"
+  echo "The git workspace must be clean test "
   exit 1
 fi
 
