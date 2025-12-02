@@ -6,7 +6,7 @@ The Doppler CLI is the official tool for interacting with your Doppler secrets a
 
 - Manage your secrets, projects, and environments
 - Execute applications with your secrets injected into the environment
-- View activity and audit logs
+- View activity and audit logs 
 
 ## Install
 
