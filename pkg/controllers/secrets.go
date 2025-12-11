@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 	"text/template"
 	"time"
 
@@ -176,7 +177,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 		return "", nil, Error{Err: errors.New("The mount path already exists. This may be due to another running instance of the Doppler CLI, or due to an improper shutdown. If this is unexpected, delete the file and try again.")}
 	}
 
-	if err := utils.CreateNamedPipe(mountPath, 0600); err != nil {
+	if err := utils.CreateNamedPipe(mountPath, 0o600); err != nil {
 		return "", nil, Error{Err: err, Message: "Unable to mount secrets file"}
 	}
 
@@ -224,7 +225,9 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 				utils.HandleError(err, message)
 			}
 
-			numReads++
+			if enableReadsLimit {
+				numReads++
+			}
 			utils.LogDebug("Secrets mount opened by reader")
 
 			if _, err := f.Write(secrets); err != nil {
@@ -232,6 +235,13 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted {
 					break
 				}
+				// broken pipe occurs when reader closes pipe before writing completes (eg. with vite dev server)
+				if errors.Is(err, syscall.EPIPE) {
+					utils.LogDebug("Reader closed pipe before write completed")
+					_ = f.Close()
+					continue
+				}
+
 				cleanupFIFO()
 				utils.HandleError(err, message)
 			}
@@ -241,6 +251,12 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted {
 					break
 				}
+				// broken pipe on close is safe to ignore - the reader has already disconnected
+				if errors.Is(err, syscall.EPIPE) {
+					utils.LogDebug("Pipe closed by reader")
+					continue
+				}
+
 				cleanupFIFO()
 				utils.HandleError(err, message)
 			}
