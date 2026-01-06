@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/DopplerHQ/cli/pkg/utils"
@@ -73,6 +74,8 @@ var completionInstallCmd = &cobra.Command{
 		var buf bytes.Buffer
 		var path string
 		var name string
+		// Track if using fallback path (requires manual fpath configuration)
+		var usingFallbackPath bool
 
 		if utils.IsWindows() {
 			utils.HandleError(errors.New("Completion files are not supported on Windows. You can use completion files with Windows Subsystem for Linux (WSL)."))
@@ -94,15 +97,31 @@ var completionInstallCmd = &cobra.Command{
 			}
 			// zsh completions file start with an underscore
 			name = "_doppler"
-			path = "/usr/local/share/zsh/site-functions"
+			// Try standard path first, fall back to user directory if not writable
+			standardPath := "/usr/local/share/zsh/site-functions"
+			if isDirectoryWritable(standardPath) {
+				path = standardPath
+			} else {
+				// Fall back to XDG_DATA_HOME/doppler or ~/.local/share/doppler
+				dataHome := os.Getenv("XDG_DATA_HOME")
+				if dataHome == "" {
+					homeDir, err := os.UserHomeDir()
+					if err != nil {
+						utils.HandleError(err, "Unable to determine home directory")
+					}
+					dataHome = fmt.Sprintf("%s/.local/share", homeDir)
+				}
+				path = fmt.Sprintf("%s/doppler/zsh/completions", dataHome)
+				usingFallbackPath = true
+			}
 		} else {
 			utils.HandleError(errors.New("Your shell is not supported"))
 		}
 
-		// create directory if it doesn't exist
+		// create directory and intermediate directories if they don't exist
 		if !utils.Exists(path) {
 			// using 755 to mimic expected /etc/ perms
-			err := os.Mkdir(path, 0755) // #nosec G301
+			err := os.MkdirAll(path, 0755) // #nosec G301
 			if err != nil {
 				utils.HandleError(err, "Unable to write completion file")
 			}
@@ -114,12 +133,18 @@ var completionInstallCmd = &cobra.Command{
 			utils.HandleError(err, "Unable to write completion file")
 		}
 
-		utils.Print("Your shell has been configured for Doppler CLI completions! Restart your shell to apply.")
+		utils.Print("Completions have been installed. Restart your shell to apply.")
 		utils.Print("")
-		if utils.IsMacOS() {
-			utils.Print("Note: The homebrew 'bash-completion' package is required for completions to work. See https://docs.brew.sh/Shell-Completion for more info.")
-		} else {
-			utils.Print("Note: The 'bash-completion' package is required for completions to work. See https://github.com/scop/bash-completion for more info.")
+		if strings.HasSuffix(shell, "/zsh") && usingFallbackPath {
+			utils.Print("To enable completions, add the following to your ~/.zshrc:")
+			utils.Print("")
+			utils.Print(fmt.Sprintf("  fpath=(%s $fpath)", path))
+		} else if strings.HasSuffix(shell, "/bash") {
+			if utils.IsMacOS() {
+				utils.Print("Note: The homebrew 'bash-completion' package is required for completions to work. See https://docs.brew.sh/Shell-Completion for more info.")
+			} else {
+				utils.Print("Note: The 'bash-completion' package is required for completions to work. See https://github.com/scop/bash-completion for more info.")
+			}
 		}
 	},
 }
@@ -139,6 +164,35 @@ func getShell(args []string) string {
 	}
 
 	return shell
+}
+
+func isDirectoryWritable(path string) bool {
+	// If directory exists, check if it's writable
+	if info, err := os.Stat(path); err == nil {
+		if !info.IsDir() {
+			return false
+		}
+		// Try to create a temp file to test write access
+		testFile := fmt.Sprintf("%s/.doppler_write_test", path)
+		if f, err := os.Create(testFile); err == nil {
+			f.Close()
+			os.Remove(testFile)
+			return true
+		}
+		return false
+	}
+
+	// Directory doesn't exist, check if parent is writable
+	parent := filepath.Dir(path)
+	if info, err := os.Stat(parent); err == nil && info.IsDir() {
+		testFile := fmt.Sprintf("%s/.doppler_write_test", parent)
+		if f, err := os.Create(testFile); err == nil {
+			f.Close()
+			os.Remove(testFile)
+			return true
+		}
+	}
+	return false
 }
 
 func init() {

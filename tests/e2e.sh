@@ -27,6 +27,7 @@ export DOPPLER_ENABLE_VERSION_CHECK=false
 "$DIR/e2e/global-flags.sh"
 "$DIR/e2e/update.sh"
 "$DIR/e2e/flags.sh"
+"$DIR/e2e/completion-install.sh"
 
 echo -e "\nAll tests completed successfully!"
 exit 0
