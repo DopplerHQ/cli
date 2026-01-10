@@ -17,9 +17,13 @@ limitations under the License.
 package controllers
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -105,4 +109,60 @@ func TestSecretsToBytes(t *testing.T) {
 	if !err.IsNil() || string(bytes) != `{"S1":"foo","Secret2":"bar"}` {
 		t.Errorf("Unable to convert secrets to byte array in %s format", format)
 	}
+}
+
+func TestMountSecrets(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	secrets := []byte(`{"SECRET_KEY":"secret_value"}`)
+	mountPath := filepath.Join(t.TempDir(), "secrets_mount")
+
+	path, cleanup, err := MountSecrets(secrets, mountPath, 1)
+	if !err.IsNil() {
+		t.Fatalf("MountSecrets failed: %v", err.Err)
+	}
+	defer cleanup()
+
+	time.Sleep(50 * time.Millisecond)
+
+	content, readErr := os.ReadFile(path)
+	assert.NoError(t, readErr)
+	assert.Equal(t, string(secrets), string(content))
+}
+
+func TestMountSecretsBrokenPipe(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	// large data to exceed pipe buffer and trigger EPIPE when reader closes early
+	secrets := make([]byte, 256*1024)
+	for i := range secrets {
+		secrets[i] = byte('A' + (i % 26))
+	}
+	mountPath := filepath.Join(t.TempDir(), "secrets_mount_epipe")
+
+	path, cleanup, err := MountSecrets(secrets, mountPath, 11)
+	if !err.IsNil() {
+		t.Fatalf("MountSecrets failed: %v", err.Err)
+	}
+	defer cleanup()
+
+	time.Sleep(50 * time.Millisecond)
+
+	for i := 0; i < 10; i++ {
+		f, openErr := os.OpenFile(path, os.O_RDONLY, 0)
+		if openErr != nil {
+			continue
+		}
+		f.Read(make([]byte, 1))
+		f.Close()
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	content, readErr := os.ReadFile(path)
+	assert.NoError(t, readErr, "mount should survive broken pipe")
+	assert.Equal(t, secrets, content)
 }
