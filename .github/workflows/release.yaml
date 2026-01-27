@@ -16,7 +16,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest-16-core
     environment: "production"
-    if: github.actor == 'apazzolini' || github.actor == 'nmanoogian'
+    if: github.actor == 'emily-curry' || github.actor == 'seslattery'
     permissions:
       contents: write
     steps:
