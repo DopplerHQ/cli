@@ -14,5 +14,5 @@ jobs:
       - name: Go Supported Version
         uses: dopplerhq/go-supported-version-check-action@v1
         with:
-          go-version: "1.24" # GO_VERSION_DEF
+          go-version: "1.25" # GO_VERSION_DEF
           version-requirement: any-supported
