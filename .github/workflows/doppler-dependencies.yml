@@ -1,0 +1,12 @@
+name: Dependencies
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    uses: DopplerHQ/.github/.github/workflows/dependencies.yaml@main
