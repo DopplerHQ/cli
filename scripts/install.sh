@@ -146,7 +146,7 @@ curl_download() {
 
   # allow curl to fail w/o exiting
   set +e
-  headers=$(curl --tlsv1.2 --proto "=https" -w "%{http_code}" --silent --retry 5 -o "$output_file" -LN -D - "$url" 2>&1)
+  headers=$(curl --tlsv1.2 --proto "=https" -w "%{http_code}" --silent --connect-timeout 10 --max-time 60 --retry 5 --retry-all-errors -o "$output_file" -LN -D - "$url" 2>&1)
   exit_code=$?
   set -e
 
