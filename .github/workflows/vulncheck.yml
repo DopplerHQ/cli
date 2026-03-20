@@ -3,21 +3,19 @@ name: Vulncheck
 on:
   pull_request:
   push:
-  schedule:
-    - cron: '28 1 * * *'
 
 permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
   vulncheck:
-    name: Analysis
+    name: Run govulncheck
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v6
         with:
           go-version: '1.25' # GO_VERSION_DEF
           check-latest: true
@@ -27,3 +25,12 @@ jobs:
       - name: Run govulncheck
         run: govulncheck ./...
         shell: bash
+  versioncheck:
+    name: Run go-supported-version-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Go Supported Version
+        uses: dopplerhq/go-supported-version-check-action@v1
+        with:
+          go-version: "1.25" # GO_VERSION_DEF
+          version-requirement: any-supported
