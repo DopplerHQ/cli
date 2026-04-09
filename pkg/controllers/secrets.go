@@ -77,11 +77,12 @@ type FallbackOptions struct {
 }
 
 type MountOptions struct {
-	Enable   bool
-	Format   string
-	Path     string
-	Template string
-	MaxReads int
+	Enable         bool
+	Format         string
+	Path           string
+	Template       string
+	MaxReads       int
+	FormattedBytes []byte // Pre-formatted bytes from the backend (for non-JSON formats)
 }
 
 func GetSecrets(config models.ScopedOptions) (map[string]models.ComputedSecret, Error) {
@@ -378,9 +379,16 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 		secrets = dopplerSecrets
 		env = originalEnv
 
-		secretsBytes, err := SecretsToBytes(secrets, mountOptions.Format, mountOptions.Template)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		var secretsBytes []byte
+		// Use pre-formatted bytes from the backend if available (for non-JSON formats)
+		if mountOptions.FormattedBytes != nil {
+			secretsBytes = mountOptions.FormattedBytes
+		} else {
+			var err Error
+			secretsBytes, err = SecretsToBytes(secrets, mountOptions.Format, mountOptions.Template)
+			if !err.IsNil() {
+				utils.HandleError(err.Unwrap(), err.Message)
+			}
 		}
 		absMountPath, handler, err := MountSecrets(secretsBytes, mountOptions.Path, mountOptions.MaxReads)
 		if !err.IsNil() {

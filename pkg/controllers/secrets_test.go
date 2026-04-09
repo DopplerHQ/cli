@@ -166,3 +166,45 @@ func TestMountSecretsBrokenPipe(t *testing.T) {
 	assert.NoError(t, readErr, "mount should survive broken pipe")
 	assert.Equal(t, secrets, content)
 }
+
+func TestPrepareSecretsUsesFormattedBytes(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	// Pre-formatted bytes from the backend (simulating what http.DownloadSecrets returns)
+	// This tests that PrepareSecrets uses FormattedBytes directly instead of calling SecretsToBytes
+	formattedBytes := []byte("SECRET=value\\nwith_escaped_newline")
+
+	mountPath := filepath.Join(t.TempDir(), "formatted_secrets")
+	mountOptions := MountOptions{
+		Enable:         true,
+		Format:         "docker",
+		Path:           mountPath,
+		FormattedBytes: formattedBytes,
+		MaxReads:       1,
+	}
+
+	// Pass empty secrets map since FormattedBytes should be used instead
+	env, cleanup := PrepareSecrets(map[string]string{}, []string{}, "false", mountOptions)
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	// Verify DOPPLER_CLI_SECRETS_PATH is set
+	var secretsPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "DOPPLER_CLI_SECRETS_PATH=") {
+			secretsPath = strings.TrimPrefix(e, "DOPPLER_CLI_SECRETS_PATH=")
+			break
+		}
+	}
+	assert.NotEmpty(t, secretsPath, "DOPPLER_CLI_SECRETS_PATH should be set")
+
+	time.Sleep(50 * time.Millisecond)
+
+	// Read the mounted file and verify it contains the pre-formatted bytes
+	content, readErr := os.ReadFile(secretsPath)
+	assert.NoError(t, readErr)
+	assert.Equal(t, formattedBytes, content, "mounted file should contain pre-formatted bytes from backend")
+}
