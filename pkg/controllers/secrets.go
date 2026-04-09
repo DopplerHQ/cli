@@ -123,39 +123,6 @@ func GetSecretNames(config models.ScopedOptions) ([]string, Error) {
 	return secretsNames, Error{}
 }
 
-// SecretsToBytes converts secrets to byte array
-func SecretsToBytes(secrets map[string]string, format string, templateBody string) ([]byte, Error) {
-	if format == models.TemplateMountFormat {
-		return []byte(RenderSecretsTemplate(templateBody, secrets)), Error{}
-	}
-
-	if format == models.EnvMountFormat {
-		return []byte(strings.Join(utils.MapToEnvFormat(secrets, true), "\n")), Error{}
-	}
-
-	if format == models.EnvNoQuotesFormat || format == models.DockerFormat {
-		return []byte(strings.Join(utils.MapToEnvFormat(secrets, false), "\n")), Error{}
-	}
-
-	if format == models.JSONMountFormat {
-		envStr, err := json.Marshal(secrets)
-		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshal secrets to json"}
-		}
-		return envStr, Error{}
-	}
-
-	if format == models.DotNETJSONMountFormat {
-		envStr, err := json.Marshal(utils.MapToDotNETJSONFormat(secrets))
-		if err != nil {
-			return nil, Error{Err: err, Message: "Unable to marshal .NET formatted secrets to json"}
-		}
-		return envStr, Error{}
-	}
-
-	return nil, Error{Err: fmt.Errorf("invalid mount format. Valid formats are %s", models.SecretsMountFormats)}
-}
-
 // MountSecrets mounts
 func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(), Error) {
 	if !utils.SupportsNamedPipes {
@@ -370,7 +337,7 @@ func ValidateSecrets(secrets map[string]string, secretsToInclude []string, exitO
 	}
 }
 
-func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, preserveEnv string, mountOptions MountOptions) ([]string, func()) {
+func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, originalEnv []string, preserveEnv string, mountOptions MountOptions) ([]string, func()) {
 	env := []string{}
 	secrets := map[string]string{}
 	var onExit func()
@@ -378,9 +345,9 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 		secrets = dopplerSecrets
 		env = originalEnv
 
-		secretsBytes, err := SecretsToBytes(secrets, mountOptions.Format, mountOptions.Template)
-		if !err.IsNil() {
-			utils.HandleError(err.Unwrap(), err.Message)
+		// For template format, render the template using the parsed secrets
+		if mountOptions.Format == models.TemplateMountFormat {
+			secretsBytes = []byte(RenderSecretsTemplate(mountOptions.Template, secrets))
 		}
 		absMountPath, handler, err := MountSecrets(secretsBytes, mountOptions.Path, mountOptions.MaxReads)
 		if !err.IsNil() {
@@ -443,8 +410,9 @@ func PrepareSecrets(dopplerSecrets map[string]string, originalEnv []string, pres
 }
 
 // FetchSecrets from Doppler and handle fallback file.
-// It returns a tuple of the secrets and a boolean of whether the result was from a cache/fallback file
-func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) (map[string]string, bool) {
+// It returns a tuple of the raw response bytes and a boolean of whether the result was from a cache/fallback file.
+// The caller is responsible for parsing the bytes if needed (e.g., JSON to map for env injection).
+func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string) ([]byte, bool) {
 	if fallbackOpts.Exclusive {
 		if !fallbackOpts.Enable {
 			utils.HandleError(errors.New("Conflict: unable to specify --no-fallback with " + fallbackOpts.ExclusiveFlag))
@@ -481,29 +449,16 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 
 	if enableCache && statusCode == 304 {
 		utils.LogDebug("Using cached secrets from fallback file")
-		cache, err := SecretsCacheFile(fallbackOpts.Path, fallbackOpts.Passphrase)
+		cache, err := SecretsCacheFileBytes(fallbackOpts.Path, fallbackOpts.Passphrase)
 		if !err.IsNil() {
 			utils.LogDebugError(err.Unwrap())
 			utils.LogDebug(err.Message)
 
-			// we have to exit here as we don't have any secrets to parse
+			// we have to exit here as we don't have any secrets
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		return cache, true
-	}
-
-	// ensure the response can be parsed before proceeding
-	secrets, err := parseSecrets(response)
-	if err != nil {
-		utils.LogDebugError(err)
-
-		if fallbackOpts.Enable {
-			utils.Log("Unable to parse the Doppler API response")
-			utils.LogError(httpErr.Unwrap())
-			return readFallbackFile(fallbackOpts.Path, fallbackOpts.LegacyPath, fallbackOpts.Passphrase, false), true
-		}
-		utils.HandleError(err, "Unable to parse API response")
 	}
 
 	writeFallbackFile := fallbackOpts.Enable && !fallbackOpts.Readonly && nameTransformer == nil
@@ -538,7 +493,7 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		}
 	}
 
-	return secrets, false
+	return response, false
 }
 
 func Run(cmd *cobra.Command, args []string, env []string, forwardSignals bool) (*exec.Cmd, error) {
@@ -555,7 +510,7 @@ func Run(cmd *cobra.Command, args []string, env []string, forwardSignals bool) (
 	return c, err
 }
 
-func readFallbackFile(path string, legacyPath string, passphrase string, silent bool) map[string]string {
+func readFallbackFile(path string, legacyPath string, passphrase string, silent bool) []byte {
 	// avoid re-logging if re-running for legacy file
 	// TODO remove this when removing legacy path support
 	if !silent {
@@ -604,12 +559,7 @@ func readFallbackFile(path string, legacyPath string, passphrase string, silent 
 		utils.HandleError(err, "Unable to decrypt fallback file", strings.Join(msg, "\n"))
 	}
 
-	secrets, err := parseSecrets([]byte(decryptedSecrets))
-	if err != nil {
-		utils.HandleError(err, "Unable to parse fallback file")
-	}
-
-	return secrets
+	return []byte(decryptedSecrets)
 }
 
 func WriteFailureMessage() []string {
@@ -637,7 +587,8 @@ func WriteFailureMessage() []string {
 	return msg
 }
 
-func parseSecrets(response []byte) (map[string]string, error) {
+// ParseSecrets parses JSON-formatted secrets bytes into a map
+func ParseSecrets(response []byte) (map[string]string, error) {
 	secrets := map[string]string{}
 	err := json.Unmarshal(response, &secrets)
 	return secrets, err

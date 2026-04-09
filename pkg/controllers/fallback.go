@@ -16,7 +16,6 @@ limitations under the License.
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -119,8 +118,8 @@ func WriteMetadataFile(path string, etag string, hash string) Error {
 	return Error{}
 }
 
-// SecretsCacheFile reads the contents of the cache file
-func SecretsCacheFile(path string, passphrase string) (map[string]string, Error) {
+// SecretsCacheFileBytes reads the raw contents of the cache file
+func SecretsCacheFileBytes(path string, passphrase string) ([]byte, Error) {
 	utils.LogDebug(fmt.Sprintf("Using fallback file for cache %s", path))
 
 	if _, err := os.Stat(path); err != nil {
@@ -138,11 +137,5 @@ func SecretsCacheFile(path string, passphrase string) (map[string]string, Error)
 		return nil, Error{Err: err, Message: "Unable to decrypt cache file"}
 	}
 
-	secrets := map[string]string{}
-	err = json.Unmarshal([]byte(decryptedSecrets), &secrets)
-	if err != nil {
-		return nil, Error{Err: err, Message: "Unable to parse cache file"}
-	}
-
-	return secrets, Error{}
+	return []byte(decryptedSecrets), Error{}
 }

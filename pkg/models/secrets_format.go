@@ -50,3 +50,43 @@ func init() {
 	SecretsFormatList = append(SecretsFormatList, DOCKER)
 	SecretsFormatList = append(SecretsFormatList, ENV_NO_QUOTES)
 }
+
+// TemplateMountFormat is a special mount format that uses JSON from the backend
+// piped through a user-defined local template file. It is not a "real" backend format.
+const TemplateMountFormat = "template"
+
+// SecretsMountFormats lists valid formats for mounting secrets.
+// This includes backend formats (excluding yaml) plus the special template format.
+var SecretsMountFormats = []string{
+	ENV.String(),
+	JSON.String(),
+	DOTNET_JSON.String(),
+	TemplateMountFormat,
+	ENV_NO_QUOTES.String(),
+	DOCKER.String(),
+}
+
+// IsValidMountFormat checks if a format string is valid for mounting
+func IsValidMountFormat(format string) bool {
+	for _, f := range SecretsMountFormats {
+		if f == format {
+			return true
+		}
+	}
+	return false
+}
+
+// GetMountSecretsFormat returns the SecretsFormat for a mount format string.
+// Returns JSON for template format (since template uses JSON from the backend).
+// Returns false if the format is not valid.
+func GetMountSecretsFormat(format string) (SecretsFormat, bool) {
+	if format == TemplateMountFormat {
+		return JSON, true
+	}
+	for _, f := range SecretsFormatList {
+		if f.String() == format {
+			return f, true
+		}
+	}
+	return JSON, false
+}

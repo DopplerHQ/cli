@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -508,52 +507,33 @@ func downloadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(errors.New("invalid fallback file passphrase"))
 	}
 
-	var body []byte
-	if format == models.JSON {
-		fallbackPath := ""
-		legacyFallbackPath := ""
-		metadataPath := ""
-		if enableFallback {
-			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, nil, exitOnWriteFailure)
-		}
-		if enableCache {
-			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, nil)
-		}
-
-		fallbackOpts := controllers.FallbackOptions{
-			Enable:             enableFallback,
-			Path:               fallbackPath,
-			LegacyPath:         legacyFallbackPath,
-			Readonly:           fallbackReadonly,
-			Exclusive:          fallbackOnly,
-			ExclusiveFlag:      fallbackFlag,
-			ExitOnWriteFailure: exitOnWriteFailure,
-			Passphrase:         fallbackPassphrase,
-		}
-		secrets, _ := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
-
-		var err error
-		body, err = json.Marshal(secrets)
-		if err != nil {
-			utils.HandleError(err, "Unable to parse JSON secrets")
-		}
-	} else {
-		// fallback file is not supported when fetching env/yaml format
-		enableFallback = false
-		enableCache = false
-		flags := []string{"fallback", "fallback-only", "offline", "fallback-readonly", "no-exit-on-write-failure"}
-		for _, flag := range flags {
-			if cmd.Flags().Changed(flag) {
-				utils.LogWarning(fmt.Sprintf("--%s has no effect when format is %s", flag, format))
-			}
-		}
-
-		var apiError http.Error
-		_, _, body, apiError = http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, "", dynamicSecretsTTL, nil)
-		if !apiError.IsNil() {
-			utils.HandleError(apiError.Unwrap(), apiError.Message)
-		}
+	if fallbackOnly && cmd.Flags().Changed("format") {
+		utils.LogWarning(fmt.Sprintf("--format is ignored when %s is provided", fallbackFlag))
 	}
+
+	fallbackPath := ""
+	legacyFallbackPath := ""
+	metadataPath := ""
+	if enableFallback {
+		fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, nil, exitOnWriteFailure)
+	}
+	if enableCache {
+		metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, nil)
+	}
+
+	fallbackOpts := controllers.FallbackOptions{
+		Enable:             enableFallback,
+		Path:               fallbackPath,
+		LegacyPath:         legacyFallbackPath,
+		Readonly:           fallbackReadonly,
+		Exclusive:          fallbackOnly,
+		ExclusiveFlag:      fallbackFlag,
+		ExitOnWriteFailure: exitOnWriteFailure,
+		Passphrase:         fallbackPassphrase,
+	}
+
+	// FetchSecrets returns raw bytes and supports caching/fallback for all formats
+	body, _ := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, nil)
 
 	if !saveFile {
 		utils.Print(string(body))

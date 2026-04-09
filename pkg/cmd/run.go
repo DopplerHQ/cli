@@ -107,54 +107,28 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 		}
 
-		const format = models.JSON
-		fallbackPath := ""
-		legacyFallbackPath := ""
-		metadataPath := ""
-		if enableFallback {
-			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, secretsToInclude, exitOnWriteFailure)
-		}
-		if enableCache {
-			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, secretsToInclude)
-		}
-
 		passphrase := getPassphrase(cmd, "passphrase", localConfig)
 		if passphrase == "" {
 			utils.HandleError(errors.New("invalid passphrase"))
 		}
 
-		if !enableFallback {
-			flags := []string{"fallback", "fallback-only", "offline", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
-			for _, flag := range flags {
-				if cmd.Flags().Changed(flag) {
-					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
-				}
-			}
-		}
-
-		fallbackOpts := controllers.FallbackOptions{
-			Enable:             enableFallback,
-			Path:               fallbackPath,
-			LegacyPath:         legacyFallbackPath,
-			Readonly:           fallbackReadonly,
-			Exclusive:          fallbackOnly,
-			ExclusiveFlag:      fallbackFlag,
-			ExitOnWriteFailure: exitOnWriteFailure,
-			Passphrase:         passphrase,
-		}
-
 		mountPath := cmd.Flag("mount").Value.String()
-		mountFormatString := cmd.Flag("mount-format").Value.String()
+		// --format is the primary flag, --mount-format is a deprecated alias
+		mountFormatString := cmd.Flag("format").Value.String()
+		if cmd.Flags().Changed("mount-format") && !cmd.Flags().Changed("format") {
+			// Use --mount-format value if specified and --format was not
+			mountFormatString = cmd.Flag("mount-format").Value.String()
+		}
 		mountTemplate := cmd.Flag("mount-template").Value.String()
 		maxReads := utils.GetIntFlag(cmd, "mount-max-reads", 32)
 		// only auto-detect the format if it hasn't been explicitly specified
-		shouldAutoDetectFormat := !cmd.Flags().Changed("mount-format")
+		shouldAutoDetectFormat := !cmd.Flags().Changed("format") && !cmd.Flags().Changed("mount-format")
 		shouldMountFile := mountPath != ""
 		shouldMountTemplate := mountTemplate != ""
 
 		var mountFormat string
-		if mountFormatVal, ok := models.SecretsMountFormatMap[mountFormatString]; ok {
-			mountFormat = mountFormatVal
+		if models.IsValidMountFormat(mountFormatString) {
+			mountFormat = mountFormatString
 		} else {
 			utils.HandleError(fmt.Errorf("Invalid mount format. Valid formats are %s", models.SecretsMountFormats))
 		}
@@ -178,13 +152,13 @@ doppler run --mount secrets.json -- cat secrets.json`,
 					mountFormat = models.TemplateMountFormat
 					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
 				} else if utils.IsDotNETSettingsFile(mountPath) {
-					mountFormat = models.DotNETJSONMountFormat
+					mountFormat = models.DOTNET_JSON.String()
 					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
 				} else if strings.HasSuffix(mountPath, ".env") {
-					mountFormat = models.EnvMountFormat
+					mountFormat = models.ENV.String()
 					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
 				} else if strings.HasSuffix(mountPath, ".json") {
-					mountFormat = models.JSONMountFormat
+					mountFormat = models.JSON.String()
 					utils.LogDebug(fmt.Sprintf("Detected %s format", mountFormat))
 				} else {
 					parts := strings.Split(mountPath, ".")
@@ -197,12 +171,56 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			if shouldMountTemplate {
 				if mountFormat != models.TemplateMountFormat {
-					utils.HandleError(errors.New("--mount-template can only be used with --mount-format=template"))
+					utils.HandleError(errors.New("--mount-template can only be used with --format=template"))
 				}
 				templateBody = controllers.ReadTemplateFile(mountTemplate)
 			} else if mountFormat == models.TemplateMountFormat {
-				utils.HandleError(errors.New("--mount-template must be specified when using --mount-format=template"))
+				utils.HandleError(errors.New("--mount-template must be specified when using --format=template"))
 			}
+		}
+
+		// Determine the API format to use
+		// When mounting: use the requested mount format (template uses JSON for client-side rendering)
+		// When not mounting: always use JSON for env injection
+		var format models.SecretsFormat
+		if shouldMountFile {
+			format, _ = models.GetMountSecretsFormat(mountFormat)
+		} else {
+			format = models.JSON
+		}
+
+		fallbackPath := ""
+		legacyFallbackPath := ""
+		metadataPath := ""
+		if enableFallback {
+			fallbackPath, legacyFallbackPath = initFallbackDir(cmd, localConfig, format, nameTransformer, secretsToInclude, exitOnWriteFailure)
+		}
+		if enableCache {
+			metadataPath = controllers.MetadataFilePath(localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, secretsToInclude)
+		}
+
+		if !enableFallback {
+			flags := []string{"fallback", "fallback-only", "offline", "fallback-readonly", "no-exit-on-write-failure", "passphrase"}
+			for _, flag := range flags {
+				if cmd.Flags().Changed(flag) {
+					utils.LogWarning(fmt.Sprintf("--%s has no effect when the fallback file is disabled", flag))
+				}
+			}
+		}
+
+		if fallbackOnly && (cmd.Flags().Changed("format") || cmd.Flags().Changed("mount-format")) {
+			utils.LogWarning(fmt.Sprintf("--format is ignored when %s is provided", fallbackFlag))
+		}
+
+		fallbackOpts := controllers.FallbackOptions{
+			Enable:             enableFallback,
+			Path:               fallbackPath,
+			LegacyPath:         legacyFallbackPath,
+			Readonly:           fallbackReadonly,
+			Exclusive:          fallbackOnly,
+			ExclusiveFlag:      fallbackFlag,
+			ExitOnWriteFailure: exitOnWriteFailure,
+			Passphrase:         passphrase,
 		}
 
 		mountOptions := controllers.MountOptions{
@@ -252,8 +270,9 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		startProcess := func() {
-			// ensure we can fetch the new secrets before restarting the process
-			secrets, fromCache := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
+			// Fetch secrets (returns raw bytes, supports caching/fallback for all formats)
+			secretsBytes, fromCache := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
+
 			secretsFetchedAt := time.Now()
 			if secretsFetchedAt.After(lastSecretsFetch) {
 				lastSecretsFetch = secretsFetchedAt
@@ -262,7 +281,21 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				watchedValuesMayBeStale = false
 			}
 
-			controllers.ValidateSecrets(secrets, secretsToInclude, exitOnMissingIncludedSecrets, mountOptions)
+			// Parse secrets to map when needed:
+			// - For env injection (not mounting)
+			// - For validation
+			// - For template rendering
+			var secrets map[string]string
+			needsParsedSecrets := !shouldMountFile || mountFormat == models.TemplateMountFormat
+			if needsParsedSecrets || len(secretsToInclude) > 0 {
+				// Template format and env injection require JSON, so we need to parse
+				var parseErr error
+				secrets, parseErr = controllers.ParseSecrets(secretsBytes)
+				if parseErr != nil {
+					utils.HandleError(parseErr, "Unable to parse secrets")
+				}
+				controllers.ValidateSecrets(secrets, secretsToInclude, exitOnMissingIncludedSecrets, mountOptions)
+			}
 
 			isRestart := c != nil
 			// terminate the old process
@@ -316,7 +349,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			terminatedByWatch = false
 
 			var env []string
-			env, cleanupMount = controllers.PrepareSecrets(secrets, os.Environ(), preserveEnv, mountOptions)
+			env, cleanupMount = controllers.PrepareSecrets(secrets, secretsBytes, os.Environ(), preserveEnv, mountOptions)
 
 			global.WaitGroup.Add(1)
 
@@ -656,11 +689,16 @@ func init() {
 	runCmd.Flags().Bool("no-liveness-ping", false, "disable the periodic liveness ping")
 	// secrets mount flags
 	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
-	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
-	err = runCmd.RegisterFlagCompletionFunc("mount-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{projectTemplateFileName}, cobra.ShellCompDirectiveDefault
+	runCmd.Flags().String("format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
+	err = runCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return models.SecretsMountFormats, cobra.ShellCompDirectiveDefault
 	})
 	if err != nil {
+		utils.HandleError(err)
+	}
+	// --mount-format is a deprecated alias for --format
+	runCmd.Flags().String("mount-format", "json", fmt.Sprintf("file format to use. one of %v", models.SecretsMountFormats))
+	if err := runCmd.Flags().MarkDeprecated("mount-format", "use --format instead"); err != nil {
 		utils.HandleError(err)
 	}
 	runCmd.Flags().String("mount-template", "", "template file to use. secrets will be rendered into this template before mount. see 'doppler secrets substitute' for more info.")

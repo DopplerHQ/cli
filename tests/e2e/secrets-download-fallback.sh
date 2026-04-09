@@ -49,10 +49,10 @@ test_fallback_dir="$test_config_dir/fallback"
 mkdir -p "$test_fallback_dir"
 DOPPLER_CONFIG_DIR="$test_config_dir" "$DOPPLER_BINARY" secrets download --no-file > /dev/null
 
-fallback_file_count="$(find "$test_fallback_dir" -name '.secrets-*' | wc -l)"
+fallback_file_count="$(find "$test_fallback_dir" -name '.secrets-*' | wc -l | awk '{$1=$1};1')"
 [[ "$fallback_file_count" == "1" ]] || (echo "ERROR: 'run' did not create fallback file in DOPPLER_CONFIG_DIR/fallback" && exit 1)
 
-metadata_file_count="$(find "$test_fallback_dir" -name '.metadata-*' | wc -l)"
+metadata_file_count="$(find "$test_fallback_dir" -name '.metadata-*' | wc -l | awk '{$1=$1};1')"
 [[ "$metadata_file_count" == "1" ]] || (echo "ERROR: 'run' did not create metadata file in DOPPLER_CONFIG_DIR/fallback" && exit 1)
 
 beforeEach
@@ -157,14 +157,11 @@ rm -f ./doppler.env
 
 beforeEach
 
-# test 'secrets download' doesn't write fallback when format is env
-"$DOPPLER_BINARY" secrets download --no-file --format=env > /dev/null
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is env" && exit 1)
-
-beforeEach
-
-# test 'secrets download' ignores fallback flags when format is env
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=env > /dev/null
+# test 'secrets download' writes fallback when format is env
+a="$("$DOPPLER_BINARY" secrets download --no-file --format=env --fallback ./fallback.txt)"
+b="$("$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback ./fallback.txt)"
+rm -f fallback.txt
+[[ "$a" == "$b" ]] || (echo "ERROR: 'secrets download' file contents do not match when used as fallback file for 'secrets download'" && exit 1)
 
 beforeEach
 
@@ -175,25 +172,19 @@ rm -f ./secrets.yaml
 
 beforeEach
 
-# test 'secrets download' doesn't write fallback when format is yaml
-"$DOPPLER_BINARY" secrets download --no-file --format=yaml > /dev/null
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is yaml" && exit 1)
+# test 'secrets download' writes fallback when format is yaml
+a="$("$DOPPLER_BINARY" secrets download --no-file --format=yaml --fallback ./fallback.txt)"
+b="$("$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback ./fallback.txt)"
+rm -f fallback.txt
+[[ "$a" == "$b" ]] || (echo "ERROR: 'secrets download' file contents do not match when used as fallback file for 'secrets download'" && exit 1)
 
 beforeEach
 
-# test 'secrets download' ignores fallback flags when format is yaml
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=yaml > /dev/null
-
-beforeEach
-
-# test 'secrets download' doesn't write fallback when format is docker
-"$DOPPLER_BINARY" secrets download --no-file --format=docker > /dev/null
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only > /dev/null 2>&1 && (echo "ERROR: 'secrets download' should not write fallback file when format is docker" && exit 1)
-
-beforeEach
-
-# test 'secrets download' ignores fallback flags when format is docker
-"$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback=./nonexistent-file --format=docker > /dev/null
+# test 'secrets download' writes fallback when format is docker
+a="$("$DOPPLER_BINARY" secrets download --no-file --format=docker --fallback ./fallback.txt)"
+b="$("$DOPPLER_BINARY" secrets download --no-file --fallback-only --fallback ./fallback.txt)"
+rm -f fallback.txt
+[[ "$a" == "$b" ]] || (echo "ERROR: 'secrets download' file contents do not match when used as fallback file for 'secrets download'" && exit 1)
 
 beforeEach
 
