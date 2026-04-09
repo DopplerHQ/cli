@@ -75,11 +75,21 @@ fi
 
 beforeEach
 
-# verify specified format is used
+# verify specified format is used (--mount-format, deprecated)
 EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
  echo "ERROR: mounted secrets file with json format has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify specified format is used (--format, new flag)
+EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
+actual="$("$DOPPLER_BINARY" run --mount secrets.env --format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
+ echo "ERROR: mounted secrets file with --format json has invalid contents"
  exit 1
 fi
 
@@ -105,7 +115,7 @@ fi
 
 beforeEach
 
-# verify --mount-template can be used with --mount-format=template
+# verify --mount-template can be used with --mount-format=template (deprecated flag)
 EXPECTED_SECRETS='e2e'
 actual="$("$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --mount-format template --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}')"
 if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
@@ -115,9 +125,19 @@ fi
 
 beforeEach
 
-# verify --mount-template cannot be used with --mount-format=json
-"$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}' && \
-  (echo "ERROR: mounted secrets with template was successful with invalid --mount-format" && exit 1)
+# verify --mount-template can be used with --format=template (new flag)
+EXPECTED_SECRETS='e2e'
+actual="$("$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --format template --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}')"
+if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
+ echo "ERROR: mounted secrets file with --format template has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify --mount-template cannot be used with --format=json
+"$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --format json --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.DOPPLER_CONFIG}}' && \
+  (echo "ERROR: mounted secrets with template was successful with invalid --format" && exit 1)
 
 beforeEach
 
