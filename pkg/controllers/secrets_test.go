@@ -77,40 +77,6 @@ func TestCheckForDangerousSecretNames(t *testing.T) {
 	}
 }
 
-func TestSecretsToBytes(t *testing.T) {
-	secrets := map[string]string{"S1": "foo", "SECRET2": "bar"}
-
-	format := "env"
-	bytes, err := SecretsToBytes(secrets, format, "")
-	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1="foo"`, `SECRET2="bar"`}, "\n") {
-		t.Errorf("Unable to convert secrets to byte array in %s format", format)
-	}
-
-	format = "env-no-quotes"
-	bytes, err = SecretsToBytes(secrets, format, "")
-	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1=foo`, `SECRET2=bar`}, "\n") {
-		t.Errorf("Unable to convert secrets to byte array in %s format", format)
-	}
-
-	format = "docker"
-	bytes, err = SecretsToBytes(secrets, format, "")
-	if !err.IsNil() || string(bytes) != strings.Join([]string{`S1=foo`, `SECRET2=bar`}, "\n") {
-		t.Errorf("Unable to convert secrets to byte array in %s format", format)
-	}
-
-	format = "json"
-	bytes, err = SecretsToBytes(secrets, format, "")
-	if !err.IsNil() || string(bytes) != `{"S1":"foo","SECRET2":"bar"}` {
-		t.Errorf("Unable to convert secrets to byte array in %s format", format)
-	}
-
-	format = "dotnet-json"
-	bytes, err = SecretsToBytes(secrets, format, "")
-	if !err.IsNil() || string(bytes) != `{"S1":"foo","Secret2":"bar"}` {
-		t.Errorf("Unable to convert secrets to byte array in %s format", format)
-	}
-}
-
 func TestMountSecrets(t *testing.T) {
 	if !utils.SupportsNamedPipes {
 		t.Skip("Named pipes not supported on this platform")
@@ -165,4 +131,45 @@ func TestMountSecretsBrokenPipe(t *testing.T) {
 	content, readErr := os.ReadFile(path)
 	assert.NoError(t, readErr, "mount should survive broken pipe")
 	assert.Equal(t, secrets, content)
+}
+
+func TestPrepareSecretsMountsRawBytes(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	// Raw bytes from the backend (simulating what FetchSecrets returns)
+	// This tests that PrepareSecrets uses the raw bytes directly for mounting
+	secretsBytes := []byte("SECRET=value\\nwith_escaped_newline")
+
+	mountPath := filepath.Join(t.TempDir(), "formatted_secrets")
+	mountOptions := MountOptions{
+		Enable:   true,
+		Format:   "docker",
+		Path:     mountPath,
+		MaxReads: 1,
+	}
+
+	// Pass empty secrets map and raw bytes for mounting
+	env, cleanup := PrepareSecrets(map[string]string{}, secretsBytes, []string{}, "false", mountOptions)
+	if cleanup != nil {
+		defer cleanup()
+	}
+
+	// Verify DOPPLER_CLI_SECRETS_PATH is set
+	var secretsPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "DOPPLER_CLI_SECRETS_PATH=") {
+			secretsPath = strings.TrimPrefix(e, "DOPPLER_CLI_SECRETS_PATH=")
+			break
+		}
+	}
+	assert.NotEmpty(t, secretsPath, "DOPPLER_CLI_SECRETS_PATH should be set")
+
+	time.Sleep(50 * time.Millisecond)
+
+	// Read the mounted file and verify it contains the raw bytes
+	content, readErr := os.ReadFile(secretsPath)
+	assert.NoError(t, readErr)
+	assert.Equal(t, secretsBytes, content, "mounted file should contain raw bytes from backend")
 }
