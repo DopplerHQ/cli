@@ -97,13 +97,15 @@ func MetadataFile(path string) (models.SecretsFileMetadata, Error) {
 }
 
 // WriteMetadataFile writes the contents of the metadata file
-func WriteMetadataFile(path string, etag string, hash string) Error {
+func WriteMetadataFile(path string, etag string, hash string, pollETag string, requestIdentity string) Error {
 	utils.LogDebug(fmt.Sprintf("Writing ETag to metadata file %s", path))
 
 	metadata := models.SecretsFileMetadata{
-		Version: "1",
-		ETag:    etag,
-		Hash:    hash,
+		Version:         "1",
+		ETag:            etag,
+		Hash:            hash,
+		PollETag:        pollETag,
+		RequestIdentity: requestIdentity,
 	}
 
 	metadataBytes, err := yaml.Marshal(metadata)

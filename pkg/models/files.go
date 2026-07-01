@@ -17,9 +17,11 @@ package models
 
 // SecretsFileMetadata contains metadata about a secrets file
 type SecretsFileMetadata struct {
-	Version string `json:"version,omitempty" yaml:"version,omitempty"`
-	ETag    string `json:"etag,omitempty" yaml:"etag,omitempty"`
-	Hash    string `json:"hash,omitempty" yaml:"hash,omitempty"`
+	Version         string `json:"version,omitempty" yaml:"version,omitempty"`
+	ETag            string `json:"etag,omitempty" yaml:"etag,omitempty"`
+	Hash            string `json:"hash,omitempty" yaml:"hash,omitempty"`
+	PollETag        string `json:"poll_etag,omitempty" yaml:"poll_etag,omitempty"`
+	RequestIdentity string `json:"request_identity,omitempty" yaml:"request_identity,omitempty"`
 }
 
 // ParseSecretsFileMetadata parse secrets file metadata
@@ -34,6 +36,12 @@ func ParseSecretsFileMetadata(data map[string]interface{}) SecretsFileMetadata {
 	}
 	if data["hash"] != nil {
 		parsedMetadata.Hash = data["hash"].(string)
+	}
+	if data["poll_etag"] != nil {
+		parsedMetadata.PollETag = data["poll_etag"].(string)
+	}
+	if data["request_identity"] != nil {
+		parsedMetadata.RequestIdentity = data["request_identity"].(string)
 	}
 
 	return parsedMetadata

@@ -25,6 +25,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"text/template"
@@ -409,6 +410,49 @@ func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, origi
 	return env, onExit
 }
 
+// SecretsRequestIdentity returns a sha256 hex digest over the effective request shape for a
+// secrets download/poll invocation. Project and config are only folded into the metadata file's
+// PATH (see MetadataFilePath / GenerateFallbackFileHash) when BOTH are non-empty, so when either
+// is empty, two different effective configs can collide on the same metadata path. To guard
+// against serving cached secrets for the wrong config in that case, project and config are
+// included here explicitly (position-stable, even when empty) alongside format, transformer,
+// secrets subset, and TTL.
+func SecretsRequestIdentity(project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, secrets []string) string {
+	// The CLI always sends include_dynamic_secrets=true (see DownloadSecrets); this is encoded
+	// here as a literal constant rather than derived from a parameter. If include_dynamic_secrets
+	// ever becomes configurable, this MUST become a real parameter to this function so identities
+	// correctly distinguish requests that differ only by that dimension.
+	const includeDynamicSecretsPart = "dynamic:true"
+
+	parts := []string{project, config, format.String(), includeDynamicSecretsPart}
+
+	if nameTransformer != nil {
+		parts = append(parts, nameTransformer.Type)
+	} else {
+		parts = append(parts, "")
+	}
+
+	if len(secrets) > 0 {
+		// ensure consistent ordering w/ dedupe and sort
+		namesMap := map[string]bool{}
+		for _, name := range secrets {
+			namesMap[name] = true
+		}
+		var names []string
+		for name := range namesMap {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		parts = append(parts, strings.Join(names, ","))
+	} else {
+		parts = append(parts, "")
+	}
+
+	parts = append(parts, strconv.Itoa(int(dynamicSecretsTTL.Seconds())))
+
+	return crypto.Hash(strings.Join(parts, ":"))
+}
+
 // FetchSecrets from Doppler and handle fallback file.
 // It returns a tuple of the raw response bytes and a boolean of whether the result was from a cache/fallback file.
 // The caller is responsible for parsing the bytes if needed (e.g., JSON to map for env injection).
@@ -483,7 +527,9 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 			if etag := respHeaders.Get("etag"); etag != "" {
 				hash := crypto.Hash(encryptedResponse)
 
-				if err := WriteMetadataFile(metadataPath, etag, hash); !err.IsNil() {
+				requestIdentity := SecretsRequestIdentity(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, dynamicSecretsTTL, secretNames)
+
+				if err := WriteMetadataFile(metadataPath, etag, hash, "", requestIdentity); !err.IsNil() {
 					utils.LogDebugError(err.Unwrap())
 					utils.LogDebug(err.Message)
 				}
