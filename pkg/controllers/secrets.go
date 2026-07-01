@@ -471,6 +471,55 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 		etag = getCacheFileETag(metadataPath, fallbackOpts.Path)
 	}
 
+	// requestIdentity and attemptedPollETag are threaded down to the v3-write fallback path below.
+	// attemptedPollETag records exactly what validPollETag returned this invocation (or "" if it
+	// was never called, e.g. enableCache is false): the etag that was actually validated and
+	// possibly polled with THIS invocation, never a stale value re-read from disk after the fact.
+	var requestIdentity string
+	var attemptedPollETag string
+
+	// Poll-first ladder (v4). Runs only when caching is enabled; on any poll/v4 failure it falls
+	// through to the existing v3 DownloadSecrets flow below, byte-identical, for this invocation
+	// only. No persisted failure/unsupported markers of any kind.
+	if enableCache {
+		requestIdentity = SecretsRequestIdentity(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, dynamicSecretsTTL, secretNames)
+		attemptedPollETag = validPollETag(metadataPath, fallbackOpts.Path, requestIdentity)
+
+		if pollETag := attemptedPollETag; pollETag != "" {
+			// A valid stored poll context exists: ask the server whether secrets changed.
+			pollResult, pollErr := http.PollSecretsChange(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), pollETag)
+			if !pollErr.IsNil() {
+				// Never contains the etag (guaranteed and tested at the http layer).
+				utils.LogDebugError(pollErr.Unwrap())
+			}
+			switch pollResult {
+			case http.PollCurrent:
+				utils.LogDebug("Poll reports secrets unchanged, using cached secrets from fallback file")
+				cache, err := SecretsCacheFileBytes(fallbackOpts.Path, fallbackOpts.Passphrase)
+				if !err.IsNil() {
+					utils.LogDebugError(err.Unwrap())
+					utils.LogDebug(err.Message)
+					// we have to exit here as we don't have any secrets
+					utils.HandleError(err.Unwrap(), err.Message)
+				}
+				return cache, true
+			case http.PollChanged:
+				if v4Response, ok := downloadSecretsV4(localConfig, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretNames, requestIdentity); ok {
+					return v4Response, false
+				}
+				// v4 download failed (404/501/any error): fall through to v3 below.
+			case http.PollUnavailable:
+				// fall through to v3 below.
+			}
+		} else {
+			// No valid stored poll context (first fetch, legacy metadata, or identity mismatch):
+			// try the v4 download first, then fall through to v3 on any failure.
+			if v4Response, ok := downloadSecretsV4(localConfig, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretNames, requestIdentity); ok {
+				return v4Response, false
+			}
+		}
+	}
+
 	statusCode, respHeaders, response, httpErr := http.DownloadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, etag, dynamicSecretsTTL, secretNames)
 	if !httpErr.IsNil() {
 		canUseFallback := statusCode != 401 && statusCode != 403 && statusCode != 404
@@ -527,9 +576,32 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 			if etag := respHeaders.Get("etag"); etag != "" {
 				hash := crypto.Hash(encryptedResponse)
 
-				requestIdentity := SecretsRequestIdentity(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, dynamicSecretsTTL, secretNames)
+				if requestIdentity == "" {
+					requestIdentity = SecretsRequestIdentity(localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, dynamicSecretsTTL, secretNames)
+				}
 
-				if err := WriteMetadataFile(metadataPath, etag, hash, "", requestIdentity); !err.IsNil() {
+				// Preserve the poll etag ONLY when this v3 write is a per-invocation fallback for
+				// the same request shape (identity matches) AND validPollETag actually validated
+				// that etag earlier THIS invocation (attemptedPollETag != ""). Rationale: if the
+				// secrets genuinely changed, the old poll etag is stale and a future poll will
+				// simply answer "changed" — harmless, and it triggers a correct refetch. But if
+				// the secrets did NOT change, carrying a VALIDATED poll etag forward avoids an
+				// unnecessary full v4 download after what was only a transient poll-service
+				// outage. Re-reading existing.PollETag from disk here would be wrong: it may be a
+				// value validPollETag just REJECTED this same invocation (empty Hash => fail
+				// closed, or hash mismatch), and preserving a rejected etag would re-admit it into
+				// the cache via a fresh, valid hash written by this v3 200. On no prior metadata,
+				// an identity mismatch, or a rejected/absent poll context, write "" (existing
+				// behavior) since a mismatched or never-validated poll context must never be
+				// carried forward.
+				pollETag := ""
+				if attemptedPollETag != "" {
+					if existing, mErr := MetadataFile(metadataPath); mErr.IsNil() && existing.RequestIdentity == requestIdentity {
+						pollETag = attemptedPollETag
+					}
+				}
+
+				if err := WriteMetadataFile(metadataPath, etag, hash, pollETag, requestIdentity); !err.IsNil() {
 					utils.LogDebugError(err.Unwrap())
 					utils.LogDebug(err.Message)
 				}
@@ -638,6 +710,81 @@ func ParseSecrets(response []byte) (map[string]string, error) {
 	secrets := map[string]string{}
 	err := json.Unmarshal(response, &secrets)
 	return secrets, err
+}
+
+// validPollETag returns the stored poll etag when the metadata file has a non-empty PollETag,
+// its RequestIdentity matches the current invocation, and the fallback file hash still verifies
+// (mirroring getCacheFileETag's hash tolerance). Otherwise it returns "" to signal that no valid
+// poll context exists and the caller should not attempt to poll. The returned etag is never logged.
+func validPollETag(metadataPath string, cachePath string, requestIdentity string) string {
+	metadata, Err := MetadataFile(metadataPath)
+	if !Err.IsNil() {
+		utils.LogDebugError(Err.Unwrap())
+		utils.LogDebug(Err.Message)
+		return ""
+	}
+
+	if metadata.PollETag == "" || metadata.RequestIdentity != requestIdentity {
+		return ""
+	}
+
+	if metadata.Hash == "" {
+		// Every legitimate PollETag writer also writes a hash. An empty hash alongside a
+		// non-empty PollETag indicates unexpected/tampered metadata, so fail closed rather
+		// than serving the cache via the poll path.
+		return ""
+	}
+
+	// verify hash
+	cacheFileBytes, err := ioutil.ReadFile(cachePath) // #nosec G304
+	if err == nil {
+		if crypto.Hash(string(cacheFileBytes)) == metadata.Hash {
+			return metadata.PollETag
+		}
+		utils.LogDebug("Fallback file failed hash check, ignoring stored poll etag")
+	}
+
+	return ""
+}
+
+// downloadSecretsV4 attempts a v4 secrets download. On success (200) it writes the fallback file
+// and metadata (persisting the X-Poll-ETag header value, which may legitimately be empty, and the
+// fresh request identity) and returns the response with ok=true. On 404/501 or any other error it
+// returns ok=false so the caller falls through to the existing v3 flow (no markers persisted).
+func downloadSecretsV4(localConfig models.ScopedOptions, fallbackOpts FallbackOptions, metadataPath string, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, format models.SecretsFormat, secretNames []string, requestIdentity string) ([]byte, bool) {
+	statusCode, respHeaders, response, httpErr := http.DownloadSecretsV4(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, format, nameTransformer, dynamicSecretsTTL, secretNames)
+	if !httpErr.IsNil() || statusCode != 200 {
+		utils.LogDebug("v4 secrets download unavailable, falling back to v3")
+		return nil, false
+	}
+
+	writeFallbackFile := fallbackOpts.Enable && !fallbackOpts.Readonly && nameTransformer == nil
+	if writeFallbackFile {
+		utils.LogDebug("Encrypting secrets")
+		encryptedResponse, err := crypto.Encrypt(fallbackOpts.Passphrase, response, "base64")
+		if err != nil {
+			utils.HandleError(err, "Unable to encrypt your secrets. No fallback file has been written.")
+		}
+
+		utils.LogDebug(fmt.Sprintf("Writing to fallback file %s", fallbackOpts.Path))
+		if err := utils.WriteFile(fallbackOpts.Path, []byte(encryptedResponse), utils.RestrictedFilePerms()); err != nil {
+			utils.Log("Unable to write to fallback file")
+			if fallbackOpts.ExitOnWriteFailure {
+				utils.HandleError(err, "", strings.Join(WriteFailureMessage(), "\n"))
+			} else {
+				utils.LogDebugError(err)
+			}
+		}
+
+		hash := crypto.Hash(encryptedResponse)
+		pollETag := respHeaders.Get("X-Poll-ETag")
+		if err := WriteMetadataFile(metadataPath, "", hash, pollETag, requestIdentity); !err.IsNil() {
+			utils.LogDebugError(err.Unwrap())
+			utils.LogDebug(err.Message)
+		}
+	}
+
+	return response, true
 }
 
 func getCacheFileETag(metadataPath string, cachePath string) string {
