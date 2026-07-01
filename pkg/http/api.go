@@ -16,14 +16,17 @@ limitations under the License.
 package http
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/models"
+	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/DopplerHQ/cli/pkg/version"
 )
 
@@ -238,6 +241,75 @@ func WatchSecrets(host string, verifyTLS bool, apiKey string, project string, co
 	return statusCode, respHeaders, Error{}
 }
 
+// PollResult the outcome of a v4 secrets change poll
+type PollResult int
+
+// the result of a PollSecretsChange call
+const (
+	PollCurrent PollResult = iota
+	PollChanged
+	PollUnavailable
+)
+
+// PollSecretsChange checks whether the secrets for a config have changed since the given etag.
+// The etag is only ever sent via the If-None-Match request header, in quoted canonical form; it
+// must never appear in a URL, log line, or error. No request or response body is ever sent/read:
+// the wire protocol is status-code only (304 = current, 200 = changed, anything else = unavailable).
+// Uses a dedicated short-timeout client so polling never blocks the caller's poll loop; this
+// intentionally bypasses the shared retry/timeout machinery used by other API calls.
+func PollSecretsChange(host string, verifyTLS bool, etag string) (PollResult, Error) {
+	url, err := generateURL(host, "/v4/secrets/poll", nil)
+	if err != nil {
+		return PollUnavailable, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return PollUnavailable, Error{Err: err, Message: "Unable to submit request"}
+	}
+	req.Header.Set("If-None-Match", strconv.Quote(etag))
+	req.Header.Set("Cache-Control", "no-store")
+	req.Header.Set("client-sdk", "go-cli")
+	req.Header.Set("client-version", version.ProgramVersion)
+	req.Header.Set("client-os", runtime.GOOS)
+	req.Header.Set("client-arch", runtime.GOARCH)
+	req.Header.Set("user-agent", "doppler-go-cli-"+version.ProgramVersion)
+	req.Close = true
+
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	if !verifyTLS {
+		tlsConfig.InsecureSkipVerify = true // #nosec G402
+	}
+	// give the poll client parity with the shared request transport's proxy/DNS/TLS
+	// behavior, while keeping this client's dedicated short timeout and no-retry semantics
+	client := &http.Client{
+		Timeout:   2 * time.Second,
+		Transport: newTransport(req, tlsConfig, newDialContext()),
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return PollUnavailable, Error{Err: err, Message: "Unable to poll for secrets changes"}
+	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			utils.LogDebug(closeErr.Error())
+		}
+	}()
+
+	switch resp.StatusCode {
+	case http.StatusNotModified:
+		return PollCurrent, Error{}
+	case http.StatusOK:
+		return PollChanged, Error{}
+	default:
+		// Deliberately excludes any response body/text: the poll endpoint's response is
+		// attacker/server controlled, and this error is debug-logged by callers. Only the
+		// numeric status code is included -- never the etag, never response text.
+		return PollUnavailable, Error{Err: fmt.Errorf("Poll request failed with HTTP %d", resp.StatusCode), Message: "Unable to poll for secrets changes", Code: resp.StatusCode}
+	}
+}
+
 // DownloadSecrets for specified project and config
 func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, etag string, dynamicSecretsTTL time.Duration, secrets []string) (int, http.Header, []byte, Error) {
 	var params []queryParam
@@ -263,6 +335,44 @@ func DownloadSecrets(host string, verifyTLS bool, apiKey string, project string,
 	}
 
 	url, err := generateURL(host, "/v3/configs/config/secrets/download", params)
+	if err != nil {
+		return 0, nil, nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, respHeaders, response, err := GetRequest(url, verifyTLS, headers)
+	if err != nil {
+		return statusCode, respHeaders, nil, Error{Err: err, Message: "Unable to download secrets", Code: statusCode}
+	}
+
+	return statusCode, respHeaders, response, Error{}
+}
+
+// DownloadSecretsV4 for specified project and config. Mirrors DownloadSecrets but hits
+// the v4 download endpoint, which never accepts If-None-Match and instead returns a fresh
+// X-Poll-ETag response header for use with PollSecretsChange (absent when the response
+// includes dynamic secret leases). statusCode 404/501 means the server has no v4 support,
+// and the caller should fall back to DownloadSecrets.
+func DownloadSecretsV4(host string, verifyTLS bool, apiKey string, project string, config string, format models.SecretsFormat, nameTransformer *models.SecretsNameTransformer, dynamicSecretsTTL time.Duration, secrets []string) (int, http.Header, []byte, Error) {
+	var params []queryParam
+	params = append(params, queryParam{Key: "project", Value: project})
+	params = append(params, queryParam{Key: "config", Value: config})
+	params = append(params, queryParam{Key: "format", Value: format.String()})
+	params = append(params, queryParam{Key: "include_dynamic_secrets", Value: "true"})
+	if len(secrets) > 0 {
+		params = append(params, queryParam{Key: "secrets", Value: strings.Join(secrets, ",")})
+	}
+
+	if dynamicSecretsTTL > 0 {
+		ttlSeconds := int(dynamicSecretsTTL.Seconds())
+		params = append(params, queryParam{Key: "dynamic_secrets_ttl_sec", Value: strconv.Itoa(ttlSeconds)})
+	}
+	if nameTransformer != nil {
+		params = append(params, queryParam{Key: "name_transformer", Value: nameTransformer.Type})
+	}
+
+	headers := apiKeyHeader(apiKey)
+
+	url, err := generateURL(host, "/v4/configs/config/secrets/download", params)
 	if err != nil {
 		return 0, nil, nil, Error{Err: err, Message: "Unable to generate url"}
 	}

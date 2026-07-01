@@ -146,6 +146,59 @@ func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body
 	return statusCode, respHeaders, body, nil
 }
 
+// newDialContext returns a DialContext func that honors the CLI's custom DNS resolver
+// setting (UseCustomDNSResolver / DNSResolverAddress / DNSResolverProto / DNSResolverTimeout),
+// falling back to a plain net.Dialer otherwise. Shared by the main request path and by
+// dedicated short-timeout clients (e.g. the v4 secrets poll client) so DNS behavior stays
+// consistent everywhere outbound requests are made.
+func newDialContext() func(ctx context.Context, network, addr string) (net.Conn, error) {
+	dialer := &net.Dialer{}
+	if UseCustomDNSResolver {
+		utils.LogDebug(fmt.Sprintf("Using custom DNS resolver %s", DNSResolverAddress))
+
+		dialer = &net.Dialer{
+			Resolver: &net.Resolver{
+				PreferGo: true,
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+					d := net.Dialer{
+						Timeout: DNSResolverTimeout,
+					}
+					return d.DialContext(ctx, DNSResolverProto, DNSResolverAddress)
+				},
+			},
+		}
+	}
+
+	return func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network, addr)
+	}
+}
+
+// newTransport builds an *http.Transport with the CLI's standard proxy and TLS behavior.
+// This is shared by the main request path and by dedicated short-timeout clients (e.g. the
+// v4 secrets poll client) so all outbound requests honor the same proxy/DNS/TLS handling,
+// even when they opt out of the shared retry/timeout machinery.
+func newTransport(req *http.Request, tlsConfig *tls.Config, dialContext func(ctx context.Context, network, addr string) (net.Conn, error)) *http.Transport {
+	proxyUrl, err := http.ProxyFromEnvironment(req)
+	if err != nil {
+		utils.LogDebug("Unable to read proxy from environment")
+		utils.LogDebugError(err)
+		proxyUrl = nil
+	}
+	if proxyUrl != nil {
+		utils.LogDebug(fmt.Sprintf("Using proxy %s", proxyUrl))
+	}
+
+	return &http.Transport{
+		// disable keep alives to prevent multiple CLI instances from exhausting the
+		// OS's available network sockets. this adds a negligible performance penalty
+		DisableKeepAlives: true,
+		TLSClientConfig:   tlsConfig,
+		DialContext:       dialContext,
+		Proxy:             http.ProxyURL(proxyUrl),
+	}
+}
+
 func request(req *http.Request, verifyTLS bool, allowTimeout bool, allowRetry bool) (*http.Response, error) {
 	// set headers
 	req.Header.Set("client-sdk", "go-cli")
@@ -176,45 +229,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool, allowRetry bo
 		tlsConfig.InsecureSkipVerify = true
 	}
 
-	// use custom DNS resolver
-	dialer := &net.Dialer{}
-	if UseCustomDNSResolver {
-		utils.LogDebug(fmt.Sprintf("Using custom DNS resolver %s", DNSResolverAddress))
-
-		dialer = &net.Dialer{
-			Resolver: &net.Resolver{
-				PreferGo: true,
-				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-					d := net.Dialer{
-						Timeout: DNSResolverTimeout,
-					}
-					return d.DialContext(ctx, DNSResolverProto, DNSResolverAddress)
-				},
-			},
-		}
-	}
-	dialContext := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		return dialer.DialContext(ctx, network, addr)
-	}
-
-	proxyUrl, err := http.ProxyFromEnvironment(req)
-	if err != nil {
-		utils.LogDebug("Unable to read proxy from environment")
-		utils.LogDebugError(err)
-		proxyUrl = nil
-	}
-	if proxyUrl != nil {
-		utils.LogDebug(fmt.Sprintf("Using proxy %s", proxyUrl))
-	}
-
-	client.Transport = &http.Transport{
-		// disable keep alives to prevent multiple CLI instances from exhausting the
-		// OS's available network sockets. this adds a negligible performance penalty
-		DisableKeepAlives: true,
-		TLSClientConfig:   tlsConfig,
-		DialContext:       dialContext,
-		Proxy:             http.ProxyURL(proxyUrl),
-	}
+	client.Transport = newTransport(req, tlsConfig, newDialContext())
 
 	utils.LogDebug(fmt.Sprintf("Performing HTTP %s to %s", req.Method, req.URL))
 
@@ -222,7 +237,7 @@ func request(req *http.Request, verifyTLS bool, allowTimeout bool, allowRetry bo
 	var response *http.Response
 	response = nil
 
-	err = utils.Retry(RequestAttempts, 500*time.Millisecond, func() error {
+	err := utils.Retry(RequestAttempts, 500*time.Millisecond, func() error {
 		// disable semgrep rule b/c we properly check that resp isn't nil before using it within the err block
 		resp, err := client.Do(req) // nosemgrep: trailofbits.go.invalid-usage-of-modified-variable.invalid-usage-of-modified-variable
 		if err != nil {
