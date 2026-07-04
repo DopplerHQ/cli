@@ -303,9 +303,6 @@ func PollSecretsChange(host string, verifyTLS bool, etag string) (PollResult, Er
 	case http.StatusOK:
 		return PollChanged, Error{}
 	default:
-		// Deliberately excludes any response body/text: the poll endpoint's response is
-		// attacker/server controlled, and this error is debug-logged by callers. Only the
-		// numeric status code is included -- never the etag, never response text.
 		return PollUnavailable, Error{Err: fmt.Errorf("Poll request failed with HTTP %d", resp.StatusCode), Message: "Unable to poll for secrets changes", Code: resp.StatusCode}
 	}
 }
