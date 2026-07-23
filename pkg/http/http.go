@@ -292,23 +292,60 @@ func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) 
 
 	headers := response.Header.Clone()
 
+	// a single Read may return a partial event or multiple events; buffer the
+	// stream and only hand complete events to the handler
+	var eventBuf sseEventBuffer
 	for {
-		s := 1024
-		data := make([]byte, s)
+		data := make([]byte, 1024)
 		n, err := response.Body.Read(data)
-		// this shouldn't occur, but log anyway to aid with debugging
-		if n == s {
-			utils.LogDebug(fmt.Sprintf("Response reached max buffer size of %d bytes", s))
-		}
 		// From Go docs for Reader.Read:
 		// "Callers should always process the n > 0 bytes returned before considering the error err."
 		if n > 0 {
-			go handler(data[:n])
+			for _, event := range eventBuf.append(data[:n]) {
+				go handler(event)
+			}
 		}
 		if err != nil {
 			return response.StatusCode, headers, err
 		}
 	}
+}
+
+// prevent unbounded memory growth if the stream never contains an event boundary
+const sseMaxBufferSize = 1024 * 1024
+
+var sseEventTerminator = []byte("\n\n")
+
+// sseEventBuffer accumulates raw bytes from an SSE stream and emits complete
+// events as they become available. TCP provides no message boundaries, so a
+// single event may arrive across multiple reads and a single read may contain
+// multiple events; events can only be parsed once the terminating blank line
+// ("\n\n") has been received.
+type sseEventBuffer struct {
+	buf bytes.Buffer
+}
+
+// append adds raw stream data to the buffer and returns all newly-completed events
+func (b *sseEventBuffer) append(data []byte) [][]byte {
+	b.buf.Write(data)
+
+	var events [][]byte
+	for {
+		i := bytes.Index(b.buf.Bytes(), sseEventTerminator)
+		if i == -1 {
+			break
+		}
+		// Next returns a slice aliasing the buffer's storage, which is
+		// overwritten by the next Write; clone it so the event survives handoff.
+		events = append(events, bytes.Clone(b.buf.Next(i+len(sseEventTerminator))))
+	}
+
+	if b.buf.Len() > sseMaxBufferSize {
+		utils.LogDebug("SSE buffer exceeded max size without an event boundary; discarding buffered data")
+		b.buf.Reset()
+	}
+
+	return events
 }
 
 func performRequest(req *http.Request, verifyTLS bool) (int, http.Header, []byte, error) {
