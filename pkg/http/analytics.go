@@ -36,6 +36,11 @@ func CaptureCommand(command string) ([]byte, Error) {
 		return nil, Error{Err: err, Message: "Unable to generate url"}
 	}
 
+	// Use shorter timeout for analytics to avoid blocking command execution
+	originalTimeout := TimeoutDuration
+	TimeoutDuration = AnalyticsTimeoutDuration
+	defer func() { TimeoutDuration = originalTimeout }()
+
 	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to send anonymous analytics"}
@@ -59,6 +64,11 @@ func CaptureEvent(event string, metadata map[string]interface{}) ([]byte, Error)
 	if err != nil {
 		return nil, Error{Err: err, Message: "Unable to generate url"}
 	}
+
+	// Use shorter timeout for analytics to avoid blocking command execution
+	originalTimeout := TimeoutDuration
+	TimeoutDuration = AnalyticsTimeoutDuration
+	defer func() { TimeoutDuration = originalTimeout }()
 
 	_, _, resp, err := PostRequest(url, true, map[string]string{"Content-Type": "application/json"}, body)
 	if err != nil {
