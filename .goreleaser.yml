@@ -111,6 +111,7 @@ dockers_v2:
       - doppler
     platforms:
       - linux/amd64
+      - linux/arm64
     images:
       - dopplerhq/cli
       - gcr.io/dopplerhq/cli
