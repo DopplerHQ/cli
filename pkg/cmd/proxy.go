@@ -1,0 +1,145 @@
+/*
+Copyright © 2026 Doppler <support@doppler.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package cmd
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"strings"
+	"syscall"
+
+	agentproxy "github.com/DopplerHQ/agent-proxy"
+	"github.com/DopplerHQ/cli/pkg/configuration"
+	"github.com/DopplerHQ/cli/pkg/proxy"
+	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/spf13/cobra"
+)
+
+var proxyCmd = &cobra.Command{
+	Use:   "proxy",
+	Short: "Run a credential-injecting proxy for AI agents (experimental)",
+	Args:  cobra.NoArgs,
+}
+
+var proxyStartCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Start the agent proxy",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		engineName, _ := cmd.Flags().GetString("engine")
+		address, _ := cmd.Flags().GetString("address")
+
+		// Resolve the CLI's auth + scope the same way `doppler run` does.
+		localConfig := configuration.LocalConfig(cmd)
+		utils.RequireValue("token", localConfig.Token.Value)
+
+		// A config-scoped service token (dp.st.) carries its own project/config.
+		// Otherwise we need a selected project + config — guide the user to
+		// `doppler setup` instead of failing later with a raw API error.
+		tokenIsConfigScoped := strings.HasPrefix(localConfig.Token.Value, "dp.st.")
+		if !tokenIsConfigScoped && (localConfig.EnclaveProject.Value == "" || localConfig.EnclaveConfig.Value == "") {
+			utils.HandleError(errors.New("no project/config selected. Run `doppler setup`, pass --project and --config, or use a scoped service token"))
+		}
+
+		// Look up the requested engine in the registry. This indirection is the
+		// pluggability seam: --engine selects which proxy implementation runs.
+		factory, ok := proxy.Get(engineName)
+		if !ok {
+			utils.HandleError(fmt.Errorf("unknown proxy engine %q (available: %s)", engineName, strings.Join(proxy.Names(), ", ")))
+		}
+
+		// Resolve where the proxy keeps its data (CA) and writes its log.
+		dataDir := agentproxy.DefaultDataDir()
+		logPath, _ := cmd.Flags().GetString("log-file")
+		if logPath == "" {
+			logPath = filepath.Join(dataDir, "proxy.log")
+		}
+		logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+		if err != nil {
+			utils.HandleError(err, "unable to open proxy log file")
+		}
+		defer logFile.Close()
+
+		// Build the engine, injecting the real Doppler-backed secret source.
+		// Logs go to both the terminal and the log file.
+		// Load the user-editable proxy config (scaffolding it, pre-filled with the
+		// Anthropic passthrough, on first run). The --passthrough flag appends.
+		proxyConfigPath, _ := cmd.Flags().GetString("proxy-config")
+		if proxyConfigPath == "" {
+			proxyConfigPath = filepath.Join(dataDir, "doppler-proxy.yaml")
+		}
+		proxyConfig, created, err := proxy.LoadOrScaffold(proxyConfigPath)
+		if err != nil {
+			utils.HandleError(err, "unable to load the proxy config")
+		}
+		if created {
+			utils.Log(fmt.Sprintf("Created starter config: %s (edit it to customize)", proxyConfigPath))
+		}
+		flagPassthrough, _ := cmd.Flags().GetStringSlice("passthrough")
+		passthrough := proxy.MergePassthrough(proxyConfig, flagPassthrough)
+		upstreamProxy, _ := cmd.Flags().GetString("upstream-proxy")
+
+		engine, err := factory(proxy.Options{
+			ListenAddr:       address,
+			Secrets:          proxy.NewDopplerSource(localConfig),
+			DataDir:          dataDir,
+			LogWriter:        io.MultiWriter(os.Stderr, logFile),
+			AgentEnvPath:     agentproxy.AgentEnvPath(dataDir),
+			PassthroughHosts: passthrough,
+			UpstreamProxy:    upstreamProxy,
+		})
+		if err != nil {
+			utils.HandleError(err)
+		}
+
+		// Cancel the context on Ctrl-C / SIGTERM so the engine shuts down cleanly.
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+
+		utils.Log(fmt.Sprintf("Starting proxy engine %q on %s (press Ctrl-C to stop)", engineName, address))
+		utils.Log(fmt.Sprintf("Logs: %s", logPath))
+		if err := engine.Start(ctx); err != nil {
+			utils.HandleError(err)
+		}
+	},
+}
+
+func init() {
+	proxyStartCmd.Flags().String("engine", "masked-hash", "proxy engine to run")
+	proxyStartCmd.Flags().String("address", "127.0.0.1:14322", "address the proxy listens on")
+	proxyStartCmd.Flags().String("log-file", "", "write proxy logs to this file (default <data-dir>/proxy.log)")
+	proxyStartCmd.Flags().String("proxy-config", "", "path to the proxy YAML config (default <data-dir>/doppler-proxy.yaml, scaffolded on first run)")
+	proxyStartCmd.Flags().StringSlice("passthrough", nil, "extra hostnames to blind-tunnel, appended to the config's passthrough list")
+	proxyStartCmd.Flags().String("upstream-proxy", "", "chain the proxy's own outbound connections through another HTTP proxy (e.g. http://127.0.0.1:3128 in a devcontainer)")
+	// Project/config resolve from `doppler setup` scope by default; these flags
+	// override it (same behavior as `doppler run`).
+	proxyStartCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
+	if err := proxyStartCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
+		utils.HandleError(err)
+	}
+	proxyStartCmd.Flags().StringP("config", "c", "", "config (e.g. dev)")
+	if err := proxyStartCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
+		utils.HandleError(err)
+	}
+	proxyCmd.AddCommand(proxyStartCmd)
+	rootCmd.AddCommand(proxyCmd)
+}

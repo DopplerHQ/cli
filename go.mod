@@ -5,6 +5,7 @@ go 1.25.12
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/DopplerHQ/agent-proxy v0.0.0-00010101000000-000000000000
 	github.com/DopplerHQ/gocui v0.1.0
 	github.com/atotto/clipboard v0.1.4
 	github.com/google/uuid v1.6.0
@@ -54,3 +55,5 @@ require (
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 )
+
+replace github.com/DopplerHQ/agent-proxy => ../agent-proxy

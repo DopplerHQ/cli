@@ -1,0 +1,355 @@
+/*
+Copyright © 2026 Doppler <support@doppler.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package cmd
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"os/user"
+	"strconv"
+	"strings"
+	"syscall"
+
+	agentproxy "github.com/DopplerHQ/agent-proxy"
+	"github.com/DopplerHQ/agent-proxy/enforce"
+	"github.com/DopplerHQ/agent-proxy/sandbox"
+	"github.com/DopplerHQ/agent-proxy/verify"
+	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/spf13/cobra"
+)
+
+var agentCmd = &cobra.Command{
+	Use:   "agent",
+	Short: "Run AI agents against the credential proxy (experimental)",
+	Args:  cobra.NoArgs,
+}
+
+var agentRunCmd = &cobra.Command{
+	Use:   "run -- <command>",
+	Short: "Run a command inside a locked-down sandbox whose only egress is the proxy",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		proxyPort, _ := cmd.Flags().GetInt("proxy-port")
+		rebuild, _ := cmd.Flags().GetBool("rebuild")
+		dockerBin, _ := cmd.Flags().GetString("docker")
+
+		// Resolve the proxy's artifacts using the shared path helpers.
+		dataDir := agentproxy.DefaultDataDir()
+		caPath := agentproxy.CACertPath(dataDir)
+		envPath := agentproxy.AgentEnvPath(dataDir)
+
+		for _, p := range []string{caPath, envPath} {
+			if _, err := os.Stat(p); err != nil {
+				utils.HandleError(fmt.Errorf(
+					"proxy artifacts not found (%s). Start the proxy first, bound to an address the sandbox can reach:\n  doppler proxy start --address 0.0.0.0:%d",
+					p, proxyPort))
+			}
+		}
+
+		// Forward the agent's own model-auth token(s) into the sandbox if set on
+		// the host (Claude Code can't do its interactive browser login inside a
+		// container). These are separate from the masked target-API secrets.
+		var env, names []string
+		for _, k := range []string{"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"} {
+			if v := os.Getenv(k); v != "" {
+				env = append(env, k+"="+v) // by value
+				names = append(names, k)
+			}
+		}
+		if len(names) == 0 {
+			utils.LogWarning("No CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY is set — Claude cannot log in inside the sandbox (its browser OAuth can't reach a container).")
+			utils.LogWarning("Fix: run `claude setup-token` on your host, then `export CLAUDE_CODE_OAUTH_TOKEN=<token>` and re-run this in the SAME shell.")
+		} else {
+			utils.Log(fmt.Sprintf("Forwarding agent auth into the sandbox: %s", strings.Join(names, ", ")))
+		}
+
+		cfg := sandbox.Config{
+			ProxyPort:    proxyPort,
+			CACertPath:   caPath,
+			AgentEnvPath: envPath,
+			Command:      args,
+			DockerBin:    dockerBin,
+			Interactive:  true,
+			Env:          env,
+		}
+
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+
+		if rebuild {
+			utils.Log("Rebuilding sandbox image…")
+			if err := sandbox.BuildImage(ctx, cfg); err != nil {
+				utils.HandleError(err, "failed to build the sandbox image")
+			}
+		} else {
+			utils.Log("Preparing sandbox image (first run may take a few minutes)…")
+			if err := sandbox.EnsureImage(ctx, cfg); err != nil {
+				utils.HandleError(err, "failed to prepare the sandbox image")
+			}
+		}
+
+		if err := sandbox.Run(ctx, cfg); err != nil {
+			utils.HandleError(err, "sandbox exited with an error")
+		}
+	},
+}
+
+// agentDoctorCmd verifies the sandbox contract for the environment it's run in.
+// It is the same verifier the enforced paths invoke internally as a preflight;
+// as a standalone command it doubles as a diagnostic ("why can't the agent reach
+// GitHub?"). Run it AS the agent — same user, network, and env the agent gets.
+var agentDoctorCmd = &cobra.Command{
+	Use:   "doctor",
+	Short: "Verify the sandbox contract (egress containment, CA trust, privilege, hygiene)",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		enforced, _ := cmd.Flags().GetBool("enforced")
+		strictDNS, _ := cmd.Flags().GetBool("strict-dns")
+		testURL, _ := cmd.Flags().GetString("test-url")
+
+		// The proxy the agent is meant to use: its HTTPS_PROXY, falling back to
+		// the default listen address.
+		proxyURL, _ := cmd.Flags().GetString("proxy")
+		if proxyURL == "" {
+			if v := firstEnv("HTTPS_PROXY", "https_proxy"); v != "" {
+				proxyURL = v
+			} else {
+				proxyURL = "http://127.0.0.1:14322"
+			}
+		}
+
+		// The proxy CA: prefer an explicit flag, then the vars the agent trusts,
+		// then the default on-disk location.
+		caPath, _ := cmd.Flags().GetString("ca")
+		if caPath == "" {
+			if v := firstEnv("NODE_EXTRA_CA_CERTS", "CURL_CA_BUNDLE", "SSL_CERT_FILE"); v != "" {
+				caPath = v
+			} else {
+				caPath = agentproxy.CACertPath(agentproxy.DefaultDataDir())
+			}
+		}
+
+		report := verify.Doctor{Enforced: enforced, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL)}.Run()
+		report.Render(os.Stdout)
+		os.Exit(report.ExitCode())
+	},
+}
+
+// agentChecks is the standard contract check-list, shared by `agent doctor` and
+// the preflight `agent enforce` runs before launching the agent — so both assert
+// exactly the same contract.
+func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string) []verify.Check {
+	return []verify.Check{
+		// clause 1 — egress containment (adversarial: dial by IP literal)
+		verify.EgressBlockedTCP("1.1.1.1:443"),
+		verify.EgressBlockedTCP("8.8.8.8:443"),
+		verify.EgressBlockedTCP("1.1.1.1:80"),
+		verify.EgressDNS("8.8.8.8:53", strictDNS),
+		// proxy reachability
+		verify.ProxyReachable(proxyURL),
+		// clause 3 — CA trust
+		verify.CACertValid(caPath),
+		verify.CATrustEnv(),
+		verify.CAEndToEnd(proxyURL, testURL),
+		// clause 2 — privilege
+		verify.UIDNotRoot(),
+		verify.NetAdminAbsent(),
+		// credential hygiene (Doppler-specific)
+		verify.EnvAbsent("DOPPLER_TOKEN"),
+		verify.EnvNoTokenShapes("real token shapes", "dp.st.", "dp.pt."),
+	}
+}
+
+// agentEnforceCmd installs the sandbox contract IN PLACE — inside a box the user
+// already has (a devcontainer, a VM) — then runs the agent. It locks the agent's
+// egress to only the proxy, drops to an unprivileged user, runs the doctor
+// preflight, and execs the command. Must be run as root (e.g. via sudo, or from
+// a devcontainer feature's init). Linux only.
+var agentEnforceCmd = &cobra.Command{
+	Use:   "enforce -- <command>",
+	Short: "Lock egress to the proxy in place, drop privileges, and run the agent (Linux, root)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		strategyName, _ := cmd.Flags().GetString("strategy")
+		agentUser, _ := cmd.Flags().GetString("agent-user")
+		proxyHost, _ := cmd.Flags().GetString("proxy-host")
+		proxyPort, _ := cmd.Flags().GetInt("proxy-port")
+		strictDNS, _ := cmd.Flags().GetBool("strict-dns")
+		testURL, _ := cmd.Flags().GetString("test-url")
+
+		var strat enforce.Strategy
+		switch strategyName {
+		case "owned-container":
+			strat = enforce.OwnedContainer{}
+		case "shared-box", "":
+			strat = enforce.SharedBox{}
+		default:
+			utils.HandleError(fmt.Errorf("unknown strategy %q (want owned-container or shared-box)", strategyName))
+		}
+
+		// Resolve the unprivileged agent user we'll drop to.
+		u, err := user.Lookup(agentUser)
+		if err != nil {
+			utils.HandleError(fmt.Errorf("agent user %q not found: %w. Create it (the devcontainer feature does this) or pass --agent-user", agentUser, err))
+		}
+		uid, gid, groups := resolveUser(u)
+
+		// The firewall rule needs an IP; the proxy env keeps the host name.
+		proxyIP := proxyHost
+		if net.ParseIP(proxyHost) == nil {
+			ips, err := net.LookupHost(proxyHost)
+			if err != nil || len(ips) == 0 {
+				utils.HandleError(fmt.Errorf("could not resolve proxy host %q: %w", proxyHost, err))
+			}
+			proxyIP = ips[0]
+		}
+
+		// CA path: flag, else default on-disk location.
+		caPath, _ := cmd.Flags().GetString("ca")
+		if caPath == "" {
+			caPath = agentproxy.CACertPath(agentproxy.DefaultDataDir())
+		}
+
+		// Build the agent env from the proxy's agent.env, repointing the proxy and
+		// CA vars at this boundary and stripping anything the agent must not hold.
+		envPath, _ := cmd.Flags().GetString("agent-env")
+		if envPath == "" {
+			envPath = agentproxy.AgentEnvPath(agentproxy.DefaultDataDir())
+		}
+		rawEnv, err := os.ReadFile(envPath)
+		if err != nil {
+			utils.HandleError(fmt.Errorf("reading agent env %s: %w. Start the proxy first", envPath, err))
+		}
+		proxyURL := fmt.Sprintf("http://%s:%d", proxyHost, proxyPort)
+		overrides := map[string]string{
+			"HTTPS_PROXY":         proxyURL,
+			"HTTP_PROXY":          proxyURL,
+			"NODE_EXTRA_CA_CERTS": caPath,
+			"CURL_CA_BUNDLE":      caPath,
+			"SSL_CERT_FILE":       caPath,
+			// Enforce clears the environment before exec, so the essential process
+			// vars for the dropped-privilege agent must be set explicitly.
+			"HOME":    u.HomeDir,
+			"USER":    agentUser,
+			"LOGNAME": agentUser,
+			"PATH":    envOr("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"),
+			"TERM":    envOr("TERM", "xterm"),
+		}
+		// Forward the agent's own model auth if present (Claude can't do its browser
+		// login in a sandbox). Separate from the masked target-API secrets.
+		for _, k := range []string{"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"} {
+			if v := os.Getenv(k); v != "" {
+				overrides[k] = v
+			}
+		}
+		env := enforce.ParseAgentEnv(string(rawEnv))
+		env = enforce.OverrideEnv(env, overrides)
+		env = enforce.RemoveEnv(env, "DOPPLER_TOKEN", "NO_PROXY", "no_proxy")
+
+		// The preflight is the same contract doctor asserts, run as the agent user
+		// after the lock. It fails the launch if the sandbox isn't sound.
+		preflight := func() error {
+			rep := verify.Doctor{Enforced: true, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL)}.Run()
+			rep.Render(os.Stderr)
+			if rep.Failed() {
+				return errors.New("sandbox contract check failed; refusing to launch the agent")
+			}
+			return nil
+		}
+
+		err = enforce.Enforce(enforce.Config{
+			Strategy:    strat,
+			Params:      enforce.Params{ProxyIP: proxyIP, ProxyPort: proxyPort, AgentUID: uid},
+			CACertPath:  caPath,
+			AgentUID:    uid,
+			AgentGID:    gid,
+			AgentGroups: groups,
+			Env:         env,
+			Command:     args,
+			Preflight:   preflight,
+			Logf:        func(f string, a ...any) { utils.Log(fmt.Sprintf(f, a...)) },
+		})
+		if err != nil {
+			utils.HandleError(err, "enforce failed")
+		}
+	},
+}
+
+// resolveUser turns an os/user.User into numeric uid/gid and supplementary gids.
+func resolveUser(u *user.User) (uid, gid int, groups []int) {
+	uid, _ = strconv.Atoi(u.Uid)
+	gid, _ = strconv.Atoi(u.Gid)
+	if gidStrs, err := u.GroupIds(); err == nil {
+		for _, g := range gidStrs {
+			if n, err := strconv.Atoi(g); err == nil {
+				groups = append(groups, n)
+			}
+		}
+	}
+	if len(groups) == 0 {
+		groups = []int{gid}
+	}
+	return uid, gid, groups
+}
+
+// firstEnv returns the first non-empty value among the given env var names.
+func firstEnv(names ...string) string {
+	for _, n := range names {
+		if v := os.Getenv(n); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// envOr returns the env var's value, or fallback if it's unset/empty.
+func envOr(name, fallback string) string {
+	if v := os.Getenv(name); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func init() {
+	agentRunCmd.Flags().Int("proxy-port", 14322, "port the credential proxy is listening on")
+	agentRunCmd.Flags().Bool("rebuild", false, "rebuild the sandbox image before running")
+	agentRunCmd.Flags().String("docker", "docker", "container CLI to use (docker, podman, ...)")
+	agentCmd.AddCommand(agentRunCmd)
+
+	agentDoctorCmd.Flags().Bool("enforced", false, "assert the full contract: an egress-containment failure is fatal")
+	agentDoctorCmd.Flags().Bool("strict-dns", false, "treat an open external DNS resolver as a failure, not a warning")
+	agentDoctorCmd.Flags().String("proxy", "", "proxy URL the agent should use (default $HTTPS_PROXY or http://127.0.0.1:14322)")
+	agentDoctorCmd.Flags().String("ca", "", "proxy CA cert path (default $NODE_EXTRA_CA_CERTS or <data-dir>/ca.crt)")
+	agentDoctorCmd.Flags().String("test-url", "https://example.com", "URL fetched through the proxy to test end-to-end CA trust")
+	agentCmd.AddCommand(agentDoctorCmd)
+
+	agentEnforceCmd.Flags().String("strategy", "shared-box", "egress lock strategy: shared-box (compose onto an existing firewall) or owned-container (flush)")
+	agentEnforceCmd.Flags().String("agent-user", "agent", "unprivileged user to drop to before running the agent")
+	agentEnforceCmd.Flags().String("proxy-host", "127.0.0.1", "host the credential proxy is reachable at from inside this boundary")
+	agentEnforceCmd.Flags().Int("proxy-port", 14322, "port the credential proxy is listening on")
+	agentEnforceCmd.Flags().String("ca", "", "proxy CA cert path (default <data-dir>/ca.crt)")
+	agentEnforceCmd.Flags().String("agent-env", "", "path to the proxy's agent.env (default <data-dir>/agent.env)")
+	agentEnforceCmd.Flags().Bool("strict-dns", false, "treat an open external DNS resolver as a preflight failure")
+	agentEnforceCmd.Flags().String("test-url", "https://example.com", "URL fetched through the proxy to test end-to-end CA trust")
+	agentCmd.AddCommand(agentEnforceCmd)
+
+	rootCmd.AddCommand(agentCmd)
+}
