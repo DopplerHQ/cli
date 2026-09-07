@@ -28,3 +28,4 @@ completions/
 
 # IDEs
 .idea/
+.vscode/

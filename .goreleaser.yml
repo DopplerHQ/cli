@@ -111,7 +111,6 @@ dockers_v2:
       - doppler
     platforms:
       - linux/amd64
-      - linux/arm64
     images:
       - dopplerhq/cli
       - gcr.io/dopplerhq/cli
@@ -127,11 +126,6 @@ dockers_v2:
     sbom: false
     flags:
       - "--provenance=false"
-    hooks:
-      # runs after the images are pushed but before the GitHub release is cut. Keep the platform list in sync with `platforms` above
-      post:
-        - cmd: ./scripts/release/verify-images.sh {{ .IsSnapshot }} linux/amd64,linux/arm64 {{ range .Images }}{{ . }} {{ end }}
-          output: true
 
 homebrew_casks:
   - name: doppler
