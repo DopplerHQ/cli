@@ -58,7 +58,7 @@ func SetFlag(flag string, enable bool) {
 func GetFlagDefault(flag string) bool {
 	switch flag {
 	case models.FlagAnalytics:
-		return false
+		return true
 	case models.FlagEnvWarning:
 		return true
 	case models.FlagUpdateCheck:

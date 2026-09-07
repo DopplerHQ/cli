@@ -26,6 +26,7 @@ require (
 )
 
 require (
+	github.com/DopplerHQ/agent-proxy v0.0.0-00010101000000-000000000000
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -54,3 +55,5 @@ require (
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 )
+
+replace github.com/DopplerHQ/agent-proxy => ../agent-proxy
