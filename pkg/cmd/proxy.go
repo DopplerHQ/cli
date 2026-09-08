@@ -118,16 +118,6 @@ var proxyStartCmd = &cobra.Command{
 		passthrough := proxy.MergePassthrough(proxyConfig, flagPassthrough)
 		upstreamProxy, _ := cmd.Flags().GetString("upstream-proxy")
 		allowPrivateEgress, _ := cmd.Flags().GetBool("allow-private-egress")
-		binding, err := proxyConfig.BindingResolver()
-		if err != nil {
-			utils.HandleError(err, "invalid bindings in the proxy config")
-		}
-
-		logOut := io.MultiWriter(os.Stderr, logFile)
-		secrets := agentproxy.NewRefreshingSource(proxy.NewDopplerSource(localConfig), agentproxy.RefreshOptions{
-			Logf: func(format string, args ...any) { fmt.Fprintf(logOut, format+"\n", args...) },
-		})
-		warnShapeMismatches(binding, secrets)
 
 		// Mint a per-run credential the proxy requires from every client, so a
 		// broadly-bound or shared-network listener isn't an open forward proxy. It's
@@ -138,18 +128,22 @@ var proxyStartCmd = &cobra.Command{
 			utils.HandleError(err, "unable to generate the per-run proxy token")
 		}
 
-		engine, err := factory(proxy.Options{
-			ListenAddr:         address,
-			Secrets:            secrets,
-			DataDir:            dataDir,
-			LogWriter:          logOut,
-			AgentEnvPath:       agentproxy.AgentEnvPath(dataDir),
-			PassthroughHosts:   passthrough,
-			UpstreamProxy:      upstreamProxy,
-			ProxyAuthToken:     proxyToken,
-			Binding:            binding,
-			AllowPrivateEgress: allowPrivateEgress,
+		opts, err := engineOptions(proxyConfig, proxyStartInputs{
+			address:            address,
+			dataDir:            dataDir,
+			logOut:             io.MultiWriter(os.Stderr, logFile),
+			passthrough:        passthrough,
+			upstreamProxy:      upstreamProxy,
+			proxyToken:         proxyToken,
+			allowPrivateEgress: allowPrivateEgress,
+			source:             proxy.NewDopplerSource(localConfig),
 		})
+		if err != nil {
+			utils.HandleError(err, "invalid bindings in the proxy config")
+		}
+		warnShapeMismatches(opts.Binding, opts.Secrets)
+
+		engine, err := factory(opts)
 		if err != nil {
 			utils.HandleError(err)
 		}
@@ -164,6 +158,39 @@ var proxyStartCmd = &cobra.Command{
 			utils.HandleError(err)
 		}
 	},
+}
+
+// proxyStartInputs are the resolved flags proxy start turns into engine options.
+type proxyStartInputs struct {
+	address, dataDir, upstreamProxy, proxyToken string
+	allowPrivateEgress                          bool
+	passthrough                                 []string
+	logOut                                      io.Writer
+	source                                      agentproxy.SecretSource
+}
+
+// engineOptions is the one place config and flags become engine options, so a
+// test can assert each setting actually reaches the engine.
+func engineOptions(cfg *proxy.ProxyConfig, in proxyStartInputs) (proxy.Options, error) {
+	binding, err := cfg.BindingResolver()
+	if err != nil {
+		return proxy.Options{}, err
+	}
+	secrets := agentproxy.NewRefreshingSource(in.source, agentproxy.RefreshOptions{
+		Logf: func(format string, args ...any) { fmt.Fprintf(in.logOut, format+"\n", args...) },
+	})
+	return proxy.Options{
+		ListenAddr:         in.address,
+		Secrets:            secrets,
+		DataDir:            in.dataDir,
+		LogWriter:          in.logOut,
+		AgentEnvPath:       agentproxy.AgentEnvPath(in.dataDir),
+		PassthroughHosts:   in.passthrough,
+		UpstreamProxy:      in.upstreamProxy,
+		ProxyAuthToken:     in.proxyToken,
+		Binding:            binding,
+		AllowPrivateEgress: in.allowPrivateEgress,
+	}, nil
 }
 
 // warnShapeMismatches logs each rule that points a recognizable token at another
