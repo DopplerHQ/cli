@@ -38,6 +38,7 @@ func init() {
 			PassthroughHosts: opts.PassthroughHosts,
 			UpstreamProxy:    opts.UpstreamProxy,
 			ProxyAuthToken:   opts.ProxyAuthToken,
+			Binding:          opts.Binding,
 		})
 	})
 }

@@ -19,8 +19,10 @@ package proxy
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 
+	agentproxy "github.com/DopplerHQ/agent-proxy"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,6 +36,29 @@ type ProxyConfig struct {
 	// Passthrough lists hostnames the proxy blind-tunnels instead of
 	// intercepting (no TLS termination, no injection).
 	Passthrough []string `yaml:"passthrough"`
+
+	// Bindings declares where each secret may be injected, by secret name. A
+	// secret with no entry falls under Unbound.
+	Bindings map[string][]agentproxy.Rule `yaml:"bindings"`
+
+	// Unbound is the policy for a secret with no bindings entry: "deny" (the
+	// default) refuses it everywhere, "trust-first-use" pins it to the first
+	// host the agent sends it to.
+	Unbound string `yaml:"unbound"`
+}
+
+// BindingResolver builds the resolver the proxy authorizes injection with.
+func (c *ProxyConfig) BindingResolver() (agentproxy.BindingResolver, error) {
+	var policy agentproxy.UnboundPolicy
+	switch c.Unbound {
+	case "", "deny":
+		policy = agentproxy.UnboundDeny
+	case "trust-first-use":
+		policy = agentproxy.UnboundTOFU
+	default:
+		return nil, fmt.Errorf("unbound must be deny or trust-first-use, got %q", c.Unbound)
+	}
+	return agentproxy.NewRuleResolver(c.Bindings, policy), nil
 }
 
 // starterConfig is written on first run so the operator has an editable file,
@@ -62,6 +87,22 @@ passthrough:
   - claude.com
   - statsig.anthropic.com
   - sentry.io
+
+# Where each secret may be injected. A secret with no entry is refused everywhere
+# unless unbound below says otherwise. paths are globs matched per segment (** spans
+# segments) and methods are optional; both default to any.
+# bindings:
+#   GITHUB_TOKEN:
+#     - host: api.github.com
+#       paths: ["/repos/**", "/user"]
+#       methods: [GET, POST]
+#   STRIPE_KEY:
+#     - host: api.stripe.com
+
+# Policy for a secret with no bindings entry. deny refuses it everywhere and
+# logs the host it was sent to. trust-first-use pins it to the first host the
+# agent uses, which lets the agent decide where the credential goes.
+# unbound: deny
 `
 
 // LoadOrScaffold loads the proxy config from path. If the file does not exist it

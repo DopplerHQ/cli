@@ -53,6 +53,9 @@ type Options struct {
 	// from every client (as a Basic Proxy-Authorization) and embeds it in the agent
 	// env so standard clients send it automatically.
 	ProxyAuthToken string
+	// Binding authorizes each injection by destination. Nil means the engine's
+	// own default.
+	Binding agentproxy.BindingResolver
 }
 
 // Factory builds an Engine from Options.

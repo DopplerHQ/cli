@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+
+	agentproxy "github.com/DopplerHQ/agent-proxy"
 )
 
 func TestLoadOrScaffold(t *testing.T) {
@@ -94,5 +96,59 @@ func TestParsePassthroughList(t *testing.T) {
 	}
 	if !slices.Equal(cfg.Passthrough, []string{"a.com", "b.com"}) {
 		t.Fatalf("passthrough = %v", cfg.Passthrough)
+	}
+}
+
+func TestParseBindings(t *testing.T) {
+	cfg, err := parseProxyConfig([]byte(`
+bindings:
+  GITHUB_TOKEN:
+    - host: api.github.com
+      paths: ["/repos/**"]
+      methods: [GET]
+  STRIPE_KEY:
+    - host: api.stripe.com
+unbound: trust-first-use
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Bindings) != 2 {
+		t.Fatalf("bindings = %v", cfg.Bindings)
+	}
+	gh := cfg.Bindings["GITHUB_TOKEN"]
+	if len(gh) != 1 || gh[0].Host != "api.github.com" || !slices.Equal(gh[0].Paths, []string{"/repos/**"}) || !slices.Equal(gh[0].Methods, []string{"GET"}) {
+		t.Fatalf("GITHUB_TOKEN rules = %+v", gh)
+	}
+	if cfg.Unbound != "trust-first-use" {
+		t.Fatalf("unbound = %q", cfg.Unbound)
+	}
+	if _, err := cfg.BindingResolver(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// With no bindings block at all, an unrecognizable secret is refused everywhere.
+func TestBindingResolverDefaultsToDeny(t *testing.T) {
+	r, err := (&ProxyConfig{}).BindingResolver()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ok, why := r.Allowed(agentproxy.BindingRequest{
+		Name:  "DB_PASSWORD",
+		Value: "plain-database-password",
+		Dest:  agentproxy.Destination{Host: "db.example.com:443", Path: "/", Method: "GET"},
+	})
+	if ok {
+		t.Fatal("an undeclared secret must be refused by default")
+	}
+	if why == "" {
+		t.Fatal("refusal should carry a reason")
+	}
+}
+
+func TestBindingResolverRejectsUnknownPolicy(t *testing.T) {
+	if _, err := (&ProxyConfig{Unbound: "maybe"}).BindingResolver(); err == nil {
+		t.Fatal("an unknown unbound policy must be an error")
 	}
 }

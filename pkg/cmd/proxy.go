@@ -117,6 +117,13 @@ var proxyStartCmd = &cobra.Command{
 		flagPassthrough, _ := cmd.Flags().GetStringSlice("passthrough")
 		passthrough := proxy.MergePassthrough(proxyConfig, flagPassthrough)
 		upstreamProxy, _ := cmd.Flags().GetString("upstream-proxy")
+		binding, err := proxyConfig.BindingResolver()
+		if err != nil {
+			utils.HandleError(err, "invalid bindings in the proxy config")
+		}
+
+		secrets := proxy.NewDopplerSource(localConfig)
+		warnShapeMismatches(binding, secrets)
 
 		// Mint a per-run credential the proxy requires from every client, so a
 		// broadly-bound or shared-network listener isn't an open forward proxy. It's
@@ -129,13 +136,14 @@ var proxyStartCmd = &cobra.Command{
 
 		engine, err := factory(proxy.Options{
 			ListenAddr:       address,
-			Secrets:          proxy.NewDopplerSource(localConfig),
+			Secrets:          secrets,
 			DataDir:          dataDir,
 			LogWriter:        io.MultiWriter(os.Stderr, logFile),
 			AgentEnvPath:     agentproxy.AgentEnvPath(dataDir),
 			PassthroughHosts: passthrough,
 			UpstreamProxy:    upstreamProxy,
 			ProxyAuthToken:   proxyToken,
+			Binding:          binding,
 		})
 		if err != nil {
 			utils.HandleError(err)
@@ -151,6 +159,31 @@ var proxyStartCmd = &cobra.Command{
 			utils.HandleError(err)
 		}
 	},
+}
+
+// warnShapeMismatches logs each rule that points a recognizable token at another
+// provider's host. The rule still wins at runtime, since a proxy or an enterprise
+// host is a legitimate reason, but the mismatch is worth a look before the agent
+// finds out.
+func warnShapeMismatches(binding agentproxy.BindingResolver, secrets agentproxy.SecretSource) {
+	rules, ok := binding.(*agentproxy.RuleResolver)
+	if !ok {
+		return
+	}
+	ctx := context.Background()
+	names, err := secrets.List(ctx)
+	if err != nil {
+		return // the engine reports the load failure itself
+	}
+	values := make(map[string]string, len(names))
+	for _, name := range names {
+		if v, err := secrets.Fetch(ctx, agentproxy.SecretRef{Name: name}); err == nil {
+			values[name] = v
+		}
+	}
+	for _, warning := range rules.Validate(values) {
+		utils.LogWarning(warning)
+	}
 }
 
 func init() {
