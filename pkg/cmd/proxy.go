@@ -117,6 +117,7 @@ var proxyStartCmd = &cobra.Command{
 		flagPassthrough, _ := cmd.Flags().GetStringSlice("passthrough")
 		passthrough := proxy.MergePassthrough(proxyConfig, flagPassthrough)
 		upstreamProxy, _ := cmd.Flags().GetString("upstream-proxy")
+		allowPrivateEgress, _ := cmd.Flags().GetBool("allow-private-egress")
 		binding, err := proxyConfig.BindingResolver()
 		if err != nil {
 			utils.HandleError(err, "invalid bindings in the proxy config")
@@ -138,15 +139,16 @@ var proxyStartCmd = &cobra.Command{
 		}
 
 		engine, err := factory(proxy.Options{
-			ListenAddr:       address,
-			Secrets:          secrets,
-			DataDir:          dataDir,
-			LogWriter:        logOut,
-			AgentEnvPath:     agentproxy.AgentEnvPath(dataDir),
-			PassthroughHosts: passthrough,
-			UpstreamProxy:    upstreamProxy,
-			ProxyAuthToken:   proxyToken,
-			Binding:          binding,
+			ListenAddr:         address,
+			Secrets:            secrets,
+			DataDir:            dataDir,
+			LogWriter:          logOut,
+			AgentEnvPath:       agentproxy.AgentEnvPath(dataDir),
+			PassthroughHosts:   passthrough,
+			UpstreamProxy:      upstreamProxy,
+			ProxyAuthToken:     proxyToken,
+			Binding:            binding,
+			AllowPrivateEgress: allowPrivateEgress,
 		})
 		if err != nil {
 			utils.HandleError(err)
@@ -196,6 +198,7 @@ func init() {
 	proxyStartCmd.Flags().String("proxy-config", "", "path to the proxy YAML config (default <data-dir>/doppler-proxy.yaml, scaffolded on first run)")
 	proxyStartCmd.Flags().StringSlice("passthrough", nil, "extra hostnames to blind-tunnel, appended to the config's passthrough list")
 	proxyStartCmd.Flags().String("upstream-proxy", "", "chain the proxy's own outbound connections through another HTTP proxy (e.g. http://127.0.0.1:3128 in a devcontainer)")
+	proxyStartCmd.Flags().Bool("allow-private-egress", false, "let the proxy connect to loopback and private-network addresses (local development against a local upstream only)")
 	// Project/config resolve from `doppler setup` scope by default; these flags
 	// override it (same behavior as `doppler run`).
 	proxyStartCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

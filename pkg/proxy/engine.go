@@ -56,6 +56,9 @@ type Options struct {
 	// Binding authorizes each injection by destination. Nil means the engine's
 	// own default.
 	Binding agentproxy.BindingResolver
+	// AllowPrivateEgress lets the proxy connect to loopback and private-network
+	// addresses, for local development against a local upstream.
+	AllowPrivateEgress bool
 }
 
 // Factory builds an Engine from Options.
