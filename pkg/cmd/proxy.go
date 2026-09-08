@@ -122,7 +122,10 @@ var proxyStartCmd = &cobra.Command{
 			utils.HandleError(err, "invalid bindings in the proxy config")
 		}
 
-		secrets := proxy.NewDopplerSource(localConfig)
+		logOut := io.MultiWriter(os.Stderr, logFile)
+		secrets := agentproxy.NewRefreshingSource(proxy.NewDopplerSource(localConfig), agentproxy.RefreshOptions{
+			Logf: func(format string, args ...any) { fmt.Fprintf(logOut, format+"\n", args...) },
+		})
 		warnShapeMismatches(binding, secrets)
 
 		// Mint a per-run credential the proxy requires from every client, so a
@@ -138,7 +141,7 @@ var proxyStartCmd = &cobra.Command{
 			ListenAddr:       address,
 			Secrets:          secrets,
 			DataDir:          dataDir,
-			LogWriter:        io.MultiWriter(os.Stderr, logFile),
+			LogWriter:        logOut,
 			AgentEnvPath:     agentproxy.AgentEnvPath(dataDir),
 			PassthroughHosts: passthrough,
 			UpstreamProxy:    upstreamProxy,

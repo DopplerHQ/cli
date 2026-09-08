@@ -29,17 +29,14 @@ import (
 
 // dopplerSource is the real SecretSource: it reads the configured project/config
 // from Doppler using the CLI's existing auth + API client — the same path
-// `doppler run` uses. It fetches the config's secrets once (eagerly, on first
-// use) and serves List/Fetch from that snapshot.
-//
-// This is the file the boundary promised would be the *only* change to make the
-// proxy real — agent-proxy is untouched.
+// `doppler run` uses. Every List fetches the config's secrets and serves the
+// following Fetch calls from that snapshot, which is the shape RefreshingSource
+// drives on each TTL.
 type dopplerSource struct {
 	config models.ScopedOptions
 
-	once    sync.Once
+	mu      sync.Mutex
 	secrets map[string]string
-	loadErr error
 }
 
 // NewDopplerSource returns a SecretSource backed by the resolved CLI config.
@@ -47,31 +44,31 @@ func NewDopplerSource(config models.ScopedOptions) agentproxy.SecretSource {
 	return &dopplerSource{config: config}
 }
 
-// load fetches the config's secrets exactly once.
-func (s *dopplerSource) load() {
-	s.once.Do(func() {
-		computed, err := controllers.GetSecrets(s.config)
-		if !err.IsNil() {
-			s.loadErr = err.Unwrap()
-			return
+// load fetches the config's secrets and replaces the snapshot.
+func (s *dopplerSource) load() (map[string]string, error) {
+	computed, err := controllers.GetSecrets(s.config)
+	if !err.IsNil() {
+		return nil, err.Unwrap()
+	}
+	m := make(map[string]string, len(computed))
+	for name, cs := range computed {
+		if cs.ComputedValue != nil {
+			m[name] = *cs.ComputedValue
 		}
-		m := make(map[string]string, len(computed))
-		for name, cs := range computed {
-			if cs.ComputedValue != nil {
-				m[name] = *cs.ComputedValue
-			}
-		}
-		s.secrets = m
-	})
+	}
+	s.mu.Lock()
+	s.secrets = m
+	s.mu.Unlock()
+	return m, nil
 }
 
 func (s *dopplerSource) List(_ context.Context) ([]string, error) {
-	s.load()
-	if s.loadErr != nil {
-		return nil, s.loadErr
+	m, err := s.load()
+	if err != nil {
+		return nil, err
 	}
-	names := make([]string, 0, len(s.secrets))
-	for name := range s.secrets {
+	names := make([]string, 0, len(m))
+	for name := range m {
 		names = append(names, name)
 	}
 	sort.Strings(names)
@@ -79,11 +76,16 @@ func (s *dopplerSource) List(_ context.Context) ([]string, error) {
 }
 
 func (s *dopplerSource) Fetch(_ context.Context, ref agentproxy.SecretRef) (string, error) {
-	s.load()
-	if s.loadErr != nil {
-		return "", s.loadErr
+	s.mu.Lock()
+	m := s.secrets
+	s.mu.Unlock()
+	if m == nil {
+		var err error
+		if m, err = s.load(); err != nil {
+			return "", err
+		}
 	}
-	value, ok := s.secrets[ref.Name]
+	value, ok := m[ref.Name]
 	if !ok {
 		return "", fmt.Errorf("secret %q not found in the configured Doppler config", ref.Name)
 	}
