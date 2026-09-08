@@ -25,6 +25,8 @@ import (
 	"os"
 	"os/signal"
 	"os/user"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -148,7 +150,7 @@ var agentDoctorCmd = &cobra.Command{
 			}
 		}
 
-		report := verify.Doctor{Enforced: enforced, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL)}.Run()
+		report := verify.Doctor{Enforced: enforced, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL, resolveCredentialSources(cmd))}.Run()
 		report.Render(os.Stdout)
 		os.Exit(report.ExitCode())
 	},
@@ -157,8 +159,8 @@ var agentDoctorCmd = &cobra.Command{
 // agentChecks is the standard contract check-list, shared by `agent doctor` and
 // the preflight `agent enforce` runs before launching the agent — so both assert
 // exactly the same contract.
-func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string) []verify.Check {
-	return []verify.Check{
+func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, credentialSources []string) []verify.Check {
+	checks := []verify.Check{
 		// clause 1 — egress containment (adversarial: dial by IP literal)
 		verify.EgressBlockedTCP("1.1.1.1:443"),
 		verify.EgressBlockedTCP("8.8.8.8:443"),
@@ -177,6 +179,49 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string) []veri
 		verify.EnvAbsent("DOPPLER_TOKEN"),
 		verify.EnvNoTokenShapes("real token shapes", "dp.st.", "dp.pt."),
 	}
+	// masking only holds while the agent cannot read the brokered secrets off disk
+	for _, p := range credentialSources {
+		checks = append(checks, verify.FileUnreadable("agent cannot read "+p, p))
+	}
+	return checks
+}
+
+// developerHome is the home of the person whose secrets the proxy brokers: the
+// user behind sudo under `agent enforce`, otherwise the current user.
+func developerHome() string {
+	if dev := os.Getenv("SUDO_USER"); dev != "" {
+		if u, err := user.Lookup(dev); err == nil {
+			return u.HomeDir
+		}
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		return home
+	}
+	return ""
+}
+
+// credentialSources are the files holding what the proxy brokers on the agent's
+// behalf: the developer's Doppler config and the proxy CA key. Files rather
+// than their directories, since a directory the agent cannot list still lets it
+// open a file inside by name.
+func credentialSources(devHome, dataDir string) []string {
+	var out []string
+	if devHome != "" {
+		out = append(out, filepath.Join(devHome, ".doppler", ".doppler.yaml"))
+	}
+	if dataDir != "" {
+		out = append(out, filepath.Join(dataDir, "ca.key"))
+	}
+	return out
+}
+
+// dataDirUnder is agentproxy.DefaultDataDir for another user's home, following
+// the platform default. --proxy-data-dir covers an XDG_CONFIG_HOME override.
+func dataDirUnder(home string) string {
+	if runtime.GOOS == "darwin" {
+		return filepath.Join(home, "Library", "Application Support", "agent-proxy")
+	}
+	return filepath.Join(home, ".config", "agent-proxy")
 }
 
 // agentEnforceCmd installs the sandbox contract IN PLACE — inside a box the user
@@ -268,10 +313,14 @@ var agentEnforceCmd = &cobra.Command{
 		env = enforce.OverrideEnv(env, overrides)
 		env = enforce.RemoveEnv(env, "DOPPLER_TOKEN", "NO_PROXY", "no_proxy")
 
+		// Resolved here, while SUDO_USER is still in the environment; Enforce clears
+		// the environment before the preflight runs as the agent.
+		sources := resolveCredentialSources(cmd)
+
 		// The preflight is the same contract doctor asserts, run as the agent user
 		// after the lock. It fails the launch if the sandbox isn't sound.
 		preflight := func() error {
-			rep := verify.Doctor{Enforced: true, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL)}.Run()
+			rep := verify.Doctor{Enforced: true, Checks: agentChecks(proxyURL, caPath, strictDNS, testURL, sources)}.Run()
 			rep.Render(os.Stderr)
 			if rep.Failed() {
 				return errors.New("sandbox contract check failed; refusing to launch the agent")
@@ -295,6 +344,17 @@ var agentEnforceCmd = &cobra.Command{
 			utils.HandleError(err, "enforce failed")
 		}
 	},
+}
+
+// resolveCredentialSources reads the developer's home and the proxy data dir
+// from the current environment and flags.
+func resolveCredentialSources(cmd *cobra.Command) []string {
+	devHome := developerHome()
+	dataDir, _ := cmd.Flags().GetString("proxy-data-dir")
+	if dataDir == "" {
+		dataDir = dataDirUnder(devHome)
+	}
+	return credentialSources(devHome, dataDir)
 }
 
 // resolveUser turns an os/user.User into numeric uid/gid and supplementary gids.
@@ -364,6 +424,7 @@ func init() {
 	agentDoctorCmd.Flags().String("proxy", "", "proxy URL the agent should use (default $HTTPS_PROXY or http://127.0.0.1:14322)")
 	agentDoctorCmd.Flags().String("ca", "", "proxy CA cert path (default $NODE_EXTRA_CA_CERTS or <data-dir>/ca.crt)")
 	agentDoctorCmd.Flags().String("test-url", "https://example.com", "URL fetched through the proxy to test end-to-end CA trust")
+	agentDoctorCmd.Flags().String("proxy-data-dir", "", "proxy data directory holding the CA key (default: the developer's platform config dir)")
 	agentCmd.AddCommand(agentDoctorCmd)
 
 	agentEnforceCmd.Flags().String("strategy", "shared-box", "egress lock strategy: shared-box (compose onto an existing firewall) or owned-container (flush)")
@@ -374,6 +435,7 @@ func init() {
 	agentEnforceCmd.Flags().String("agent-env", "", "path to the proxy's agent.env (default <data-dir>/agent.env)")
 	agentEnforceCmd.Flags().Bool("strict-dns", false, "treat an open external DNS resolver as a preflight failure")
 	agentEnforceCmd.Flags().String("test-url", "https://example.com", "URL fetched through the proxy to test end-to-end CA trust")
+	agentEnforceCmd.Flags().String("proxy-data-dir", "", "proxy data directory holding the CA key (default: the developer's platform config dir)")
 	agentCmd.AddCommand(agentEnforceCmd)
 
 	rootCmd.AddCommand(agentCmd)
