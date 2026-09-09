@@ -249,3 +249,13 @@ func TestMethodConfigsNilWhenEmpty(t *testing.T) {
 		t.Fatalf("expected nil methods when none declared, got %v", got)
 	}
 }
+
+func TestParsePassByValue(t *testing.T) {
+	cfg, err := parseProxyConfig([]byte("pass_by_value:\n  - MODEL_TOKEN\n  - OTHER\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(cfg.PassByValue, []string{"MODEL_TOKEN", "OTHER"}) {
+		t.Fatalf("pass_by_value = %v", cfg.PassByValue)
+	}
+}

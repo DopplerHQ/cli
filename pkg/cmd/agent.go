@@ -67,23 +67,6 @@ var agentRunCmd = &cobra.Command{
 			}
 		}
 
-		// Forward the agent's own model-auth token(s) into the sandbox if set on
-		// the host (Claude Code can't do its interactive browser login inside a
-		// container). These are separate from the masked target-API secrets.
-		var env, names []string
-		for _, k := range []string{"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"} {
-			if v := os.Getenv(k); v != "" {
-				env = append(env, k+"="+v) // by value
-				names = append(names, k)
-			}
-		}
-		if len(names) == 0 {
-			utils.LogWarning("No CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY is set — Claude cannot log in inside the sandbox (its browser OAuth can't reach a container).")
-			utils.LogWarning("Fix: run `claude setup-token` on your host, then `export CLAUDE_CODE_OAUTH_TOKEN=<token>` and re-run this in the SAME shell.")
-		} else {
-			utils.Log(fmt.Sprintf("Forwarding agent auth into the sandbox: %s", strings.Join(names, ", ")))
-		}
-
 		cfg := sandbox.Config{
 			ProxyPort:    proxyPort,
 			CACertPath:   caPath,
@@ -91,7 +74,6 @@ var agentRunCmd = &cobra.Command{
 			Command:      args,
 			DockerBin:    dockerBin,
 			Interactive:  true,
-			Env:          env,
 		}
 
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -339,13 +321,6 @@ var agentEnforceCmd = &cobra.Command{
 			"LOGNAME": agentUser,
 			"PATH":    envOr("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"),
 			"TERM":    envOr("TERM", "xterm"),
-		}
-		// Forward the agent's own model auth if present (Claude can't do its browser
-		// login in a sandbox). Separate from the masked target-API secrets.
-		for _, k := range []string{"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"} {
-			if v := os.Getenv(k); v != "" {
-				overrides[k] = v
-			}
 		}
 		env := enforce.ParseAgentEnv(string(rawEnv))
 		env = enforce.OverrideEnv(env, overrides)
