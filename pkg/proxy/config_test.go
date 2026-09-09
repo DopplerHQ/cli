@@ -20,15 +20,51 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	agentproxy "github.com/DopplerHQ/agent-proxy"
 )
 
+// On first run the scaffolded config pre-seeds the bindings section with the
+// operator's own secret names (ENG-9770) — a commented stub per secret — so they
+// edit real entries. The stubs stay commented, so a fresh scaffold injects nothing
+// until a host is filled in.
+func TestScaffoldSeedsBindingStubsFromSecretNames(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "doppler-proxy.yaml")
+	cfg, created, err := LoadOrScaffold(path, func() []string { return []string{"DATABASE_URL", "GITHUB_TOKEN"} })
+	if err != nil || !created {
+		t.Fatalf("scaffold: created=%v err=%v", created, err)
+	}
+	data, _ := os.ReadFile(path)
+	for _, name := range []string{"DATABASE_URL", "GITHUB_TOKEN"} {
+		if !strings.Contains(string(data), "#   "+name+":") {
+			t.Errorf("scaffolded config missing a binding stub for %q\n%s", name, data)
+		}
+	}
+	// The stubs are commented, so nothing is actually bound yet.
+	if len(cfg.Bindings) != 0 {
+		t.Errorf("scaffolded stubs must be commented (inactive), got bindings %v", cfg.Bindings)
+	}
+}
+
+// With no secret names available, scaffolding falls back to the generic provider
+// example rather than an empty bindings section.
+func TestScaffoldFallsBackToExampleWithoutNames(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "doppler-proxy.yaml")
+	if _, _, err := LoadOrScaffold(path, nil); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(path)
+	if !strings.Contains(string(data), "#   GITHUB_TOKEN:") {
+		t.Errorf("fallback scaffold should carry the GITHUB_TOKEN example\n%s", data)
+	}
+}
+
 func TestLoadOrScaffold(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "doppler-proxy.yaml")
 
-	cfg, created, err := LoadOrScaffold(path)
+	cfg, created, err := LoadOrScaffold(path, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +82,7 @@ func TestLoadOrScaffold(t *testing.T) {
 	}
 
 	// A second load reads the existing file — not scaffolded again.
-	cfg2, created2, err := LoadOrScaffold(path)
+	cfg2, created2, err := LoadOrScaffold(path, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +99,7 @@ func TestLoadOrScaffold(t *testing.T) {
 // telemetry (statsig.anthropic.com) must not be blind-tunneled: they work fine
 // intercepted, and a Sentry DSN is a world-writable exfil endpoint.
 func TestScaffoldedPassthroughDropsTelemetryHoles(t *testing.T) {
-	cfg, err := parseProxyConfig([]byte(starterConfig))
+	cfg, err := parseProxyConfig([]byte(buildStarterConfig(nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +123,7 @@ func TestLoadOrScaffoldRewritesEmptyFile(t *testing.T) {
 	if err := os.WriteFile(path, []byte("   \n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg, created, err := LoadOrScaffold(path)
+	cfg, created, err := LoadOrScaffold(path, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
