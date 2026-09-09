@@ -313,6 +313,11 @@ var agentEnforceCmd = &cobra.Command{
 			"NODE_EXTRA_CA_CERTS": caPath,
 			"CURL_CA_BUNDLE":      caPath,
 			"SSL_CERT_FILE":       caPath,
+			// git and Python's requests honor their own CA vars, not the three above;
+			// without these, git over HTTPS to an intercepted host fails in the enforced
+			// box now that enforce no longer installs the CA into the system trust store.
+			"GIT_SSL_CAINFO":     caPath,
+			"REQUESTS_CA_BUNDLE": caPath,
 			// Enforce clears the environment before exec, so the essential process
 			// vars for the dropped-privilege agent must be set explicitly.
 			"HOME":    u.HomeDir,
@@ -347,10 +352,11 @@ var agentEnforceCmd = &cobra.Command{
 			return nil
 		}
 
+		// No CA path is passed: Enforce no longer installs a system-trust CA (ENG-9745);
+		// the agent env's CA vars carry that trust instead.
 		err = enforce.Enforce(enforce.Config{
 			Strategy:    strat,
 			Params:      enforce.Params{ProxyIP: proxyIP, ProxyPort: proxyPort, AgentUID: uid},
-			CACertPath:  caPath,
 			AgentUID:    uid,
 			AgentGID:    gid,
 			AgentGroups: groups,
