@@ -45,6 +45,29 @@ type ProxyConfig struct {
 	// default) refuses it everywhere, "trust-first-use" pins it to the first
 	// host the agent sends it to.
 	Unbound string `yaml:"unbound"`
+
+	// Methods declares a non-static credential method per secret name. A secret with
+	// no entry uses the static method: its masked value is swapped in a header.
+	Methods map[string]CredentialMethod `yaml:"methods"`
+}
+
+// CredentialMethod is how a secret is brokered onto a request (doppler-proxy.yaml).
+// It maps to agentproxy.MethodConfig.
+type CredentialMethod struct {
+	// Kind: "static" (default), "oauth2_client_credentials", or "aws_sigv4".
+	Kind string `yaml:"kind"`
+
+	// OAuth2 client-credentials (kind: oauth2_client_credentials). The secret's value
+	// is the client secret; the proxy exchanges it for a bearer and injects that.
+	TokenURL string   `yaml:"token_url"`
+	ClientID string   `yaml:"client_id"`
+	Scopes   []string `yaml:"scopes"`
+
+	// AWS SigV4 (kind: aws_sigv4). The secret is the AWS secret access key; access_key_id
+	// names the secret holding the access key id. Region defaults to us-east-1.
+	Service     string `yaml:"service"`
+	Region      string `yaml:"region"`
+	AccessKeyID string `yaml:"access_key_id"`
 }
 
 // BindingResolver builds the resolver the proxy authorizes injection with.
@@ -59,6 +82,27 @@ func (c *ProxyConfig) BindingResolver() (agentproxy.BindingResolver, error) {
 		return nil, fmt.Errorf("unbound must be deny or trust-first-use, got %q", c.Unbound)
 	}
 	return agentproxy.NewRuleResolver(c.Bindings, policy), nil
+}
+
+// MethodConfigs maps the user's credential-method declarations to the agent-proxy
+// method registry. Returns nil when none are declared (every secret is static).
+func (c *ProxyConfig) MethodConfigs() map[string]agentproxy.MethodConfig {
+	if len(c.Methods) == 0 {
+		return nil
+	}
+	out := make(map[string]agentproxy.MethodConfig, len(c.Methods))
+	for name, m := range c.Methods {
+		out[name] = agentproxy.MethodConfig{
+			Kind:        m.Kind,
+			TokenURL:    m.TokenURL,
+			ClientID:    m.ClientID,
+			Scopes:      m.Scopes,
+			Service:     m.Service,
+			Region:      m.Region,
+			AccessKeyID: m.AccessKeyID,
+		}
+	}
+	return out
 }
 
 // starterConfig is written on first run so the operator has an editable file,
@@ -103,6 +147,23 @@ passthrough:
 # logs the host it was sent to. trust-first-use pins it to the first host the
 # agent uses, which lets the agent decide where the credential goes.
 # unbound: deny
+
+# Non-static credential methods, by secret name. A secret omitted here is injected as
+# its literal value (static). oauth2_client_credentials exchanges the secret for a
+# bearer at token_url and injects that; aws_sigv4 signs the whole request with the AWS
+# secret access key (access_key_id names the secret holding the key id; region defaults
+# to us-east-1). In every case the agent only ever holds the mask.
+# methods:
+#   MY_OAUTH_SECRET:
+#     kind: oauth2_client_credentials
+#     token_url: https://provider.example.com/oauth/token
+#     client_id: your-client-id
+#     scopes: [read, write]
+#   AWS_SECRET_ACCESS_KEY:
+#     kind: aws_sigv4
+#     service: s3
+#     region: us-east-1
+#     access_key_id: AWS_ACCESS_KEY_ID
 `
 
 // LoadOrScaffold loads the proxy config from path. If the file does not exist it

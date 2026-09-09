@@ -40,6 +40,7 @@ func init() {
 			ProxyAuthToken:     opts.ProxyAuthToken,
 			Binding:            opts.Binding,
 			AllowPrivateEgress: opts.AllowPrivateEgress,
+			Methods:            opts.Methods,
 		})
 	})
 }
