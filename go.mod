@@ -26,6 +26,11 @@ require (
 )
 
 require (
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
+)
+
+require (
 	github.com/DopplerHQ/agent-proxy v0.0.0-00010101000000-000000000000
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
