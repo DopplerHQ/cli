@@ -159,12 +159,31 @@ var agentDoctorCmd = &cobra.Command{
 // agentChecks is the standard contract check-list, shared by `agent doctor` and
 // the preflight `agent enforce` runs before launching the agent — so both assert
 // exactly the same contract.
+// egressProbeTargets are the IP:port literals clause 1 proves are directly
+// unreachable from the agent. They span both IP families on purpose: a
+// shared-box lock that only writes iptables rules leaves the agent's IPv6
+// egress wide open wherever the container has an IPv6 route, so an IPv4-only
+// probe list reports "contained" on a box that isn't. The list mixes external
+// routes (the agent must not reach the internet directly) with an IPv6 loopback
+// service port (a `::1` Postgres or the like is egress the lock must also cut,
+// and netfilter's IPv4 chain never sees it). Every entry is an IP literal, never
+// a hostname — a blocked resolver would make a hostname dial fail at resolution
+// and falsely look contained.
+var egressProbeTargets = []string{
+	"1.1.1.1:443",                // IPv4 external
+	"8.8.8.8:443",                // IPv4 external
+	"1.1.1.1:80",                 // IPv4 external (plaintext)
+	"[2606:4700:4700::1111]:443", // IPv6 external — an IPv4-only iptables lock never covers this
+	"[::1]:5432",                 // IPv6 loopback — a local service (e.g. Postgres) the agent must not reach
+}
+
 func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, credentialSources []string) []verify.Check {
-	checks := []verify.Check{
-		// clause 1 — egress containment (adversarial: dial by IP literal)
-		verify.EgressBlockedTCP("1.1.1.1:443"),
-		verify.EgressBlockedTCP("8.8.8.8:443"),
-		verify.EgressBlockedTCP("1.1.1.1:80"),
+	// clause 1 — egress containment (adversarial: dial by IP literal, both families)
+	var checks []verify.Check
+	for _, addr := range egressProbeTargets {
+		checks = append(checks, verify.EgressBlockedTCP(addr))
+	}
+	checks = append(checks,
 		verify.EgressDNS("8.8.8.8:53", strictDNS),
 		// proxy reachability
 		verify.ProxyReachable(proxyURL),
@@ -178,7 +197,7 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, creden
 		// credential hygiene (Doppler-specific)
 		verify.EnvAbsent("DOPPLER_TOKEN"),
 		verify.EnvNoTokenShapes("real token shapes", "dp.st.", "dp.pt."),
-	}
+	)
 	// masking only holds while the agent cannot read the brokered secrets off disk
 	for _, p := range credentialSources {
 		checks = append(checks, verify.FileUnreadable("agent cannot read "+p, p))

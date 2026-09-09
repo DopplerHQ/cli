@@ -8,12 +8,49 @@ you may not use this file except in compliance with the License.
 package cmd
 
 import (
+	"net"
 	"os"
 	"os/user"
 	"path/filepath"
 	"slices"
 	"testing"
 )
+
+// The egress probes must cover BOTH IP families. A shared-box lock writes only
+// iptables rules, so an IPv4-only probe list reports "contained" while the
+// agent's IPv6 egress — external routes and `::1` services alike — is wide
+// open. This asserts the wiring (both families, all IP literals) without dialing,
+// so it can't go flaky; EgressBlockedTCP's own tests cover the dial behavior.
+func TestEgressProbesCoverBothIPFamilies(t *testing.T) {
+	var v4, v6External, v6Loopback bool
+	for _, addr := range egressProbeTargets {
+		host, _, err := net.SplitHostPort(addr)
+		if err != nil {
+			t.Fatalf("probe %q is not a valid host:port: %v", addr, err)
+		}
+		ip := net.ParseIP(host)
+		if ip == nil {
+			t.Fatalf("probe %q must be an IP literal, got host %q (a hostname would fail at resolution and falsely look contained)", addr, host)
+		}
+		switch {
+		case ip.To4() != nil:
+			v4 = true
+		case ip.IsLoopback():
+			v6Loopback = true
+		default:
+			v6External = true
+		}
+	}
+	if !v4 {
+		t.Error("no IPv4 egress probe")
+	}
+	if !v6External {
+		t.Error("no external IPv6 egress probe; an IPv4-only iptables lock leaves IPv6 egress open")
+	}
+	if !v6Loopback {
+		t.Error("no IPv6 loopback egress probe; `::1` services bypass an IPv4-only lock")
+	}
+}
 
 // TestProxyUserinfo: `agent enforce` must keep the per-run proxy token from
 // agent.env's HTTPS_PROXY when it repoints the proxy host — dropping it 407s every
