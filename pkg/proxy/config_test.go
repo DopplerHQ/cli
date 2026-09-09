@@ -58,6 +58,29 @@ func TestLoadOrScaffold(t *testing.T) {
 	}
 }
 
+// ENG-9723: the scaffolded passthrough list is a set of blind holes — no audit, no
+// injection — so it must stay minimal. A third-party error sink (sentry.io) or
+// telemetry (statsig.anthropic.com) must not be blind-tunneled: they work fine
+// intercepted, and a Sentry DSN is a world-writable exfil endpoint.
+func TestScaffoldedPassthroughDropsTelemetryHoles(t *testing.T) {
+	cfg, err := parseProxyConfig([]byte(starterConfig))
+	if err != nil {
+		t.Fatal(err)
+	}
+	banned := map[string]string{
+		"sentry.io":             "a third-party, world-writable error sink",
+		"statsig.anthropic.com": "telemetry",
+	}
+	for _, h := range cfg.Passthrough {
+		if why, bad := banned[h]; bad {
+			t.Errorf("passthrough must not blind-tunnel %q (%s) — it works intercepted", h, why)
+		}
+	}
+	if !slices.Contains(cfg.Passthrough, "api.anthropic.com") {
+		t.Error("api.anthropic.com must remain — the agent cannot function without its model API")
+	}
+}
+
 func TestLoadOrScaffoldRewritesEmptyFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "doppler-proxy.yaml")
 	// Pre-create an empty (blank) file — the bug case.
