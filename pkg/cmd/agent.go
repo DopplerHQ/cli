@@ -191,10 +191,11 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, creden
 		verify.CACertValid(caPath),
 		verify.CATrustEnv(),
 		verify.CAEndToEnd(proxyURL, testURL),
-		// clause 2 — privilege
-		verify.UIDNotRoot(),
-		verify.NetAdminAbsent(),
-		// credential hygiene (Doppler-specific)
+	)
+	// clause 2 — privilege
+	checks = append(checks, privilegeChecks()...)
+	// credential hygiene (Doppler-specific)
+	checks = append(checks,
 		verify.EnvAbsent("DOPPLER_TOKEN"),
 		verify.EnvNoTokenShapes("real token shapes", "dp.st.", "dp.pt."),
 	)
@@ -203,6 +204,19 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, creden
 		checks = append(checks, verify.FileUnreadable("agent cannot read "+p, p))
 	}
 	return checks
+}
+
+// privilegeChecks proves clause 2: the agent runs unprivileged AND cannot regain
+// the capability it would need to unlock its own egress. A clean effective set
+// (NetAdminAbsent) is not enough on its own — while CAP_NET_ADMIN remains in the
+// bounding set, a file-capability or setuid binary can hand it back — so the
+// bounding set must be clean too (NetAdminNotAcquirable, ENG-9749).
+func privilegeChecks() []verify.Check {
+	return []verify.Check{
+		verify.UIDNotRoot(),
+		verify.NetAdminAbsent(),
+		verify.NetAdminNotAcquirable(),
+	}
 }
 
 // developerHome is the home of the person whose secrets the proxy brokers: the
