@@ -52,6 +52,24 @@ func TestEgressProbesCoverBothIPFamilies(t *testing.T) {
 	}
 }
 
+// Clause 2 must cover BOTH the effective capability set and the bounding set: a
+// clean effective set still lets a file-capability or setuid binary hand
+// CAP_NET_ADMIN back, so a bounding-set check is required too (ENG-9749). A
+// check's Name is set regardless of platform or result, so this reads the names
+// without dialing the network or depending on /proc — it can't go flaky.
+func TestPrivilegeChecksCoverBoundingSet(t *testing.T) {
+	var names []string
+	for _, c := range privilegeChecks() {
+		names = append(names, c().Name)
+	}
+	if !slices.Contains(names, "CAP_NET_ADMIN") {
+		t.Errorf("privilege checks must include the effective-set NET_ADMIN check; got %v", names)
+	}
+	if !slices.Contains(names, "CAP_NET_ADMIN (bounding set)") {
+		t.Errorf("privilege checks must also cover the capability bounding set; got %v", names)
+	}
+}
+
 // TestProxyUserinfo: `agent enforce` must keep the per-run proxy token from
 // agent.env's HTTPS_PROXY when it repoints the proxy host — dropping it 407s every
 // agent request.

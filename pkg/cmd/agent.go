@@ -191,10 +191,11 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, creden
 		verify.CACertValid(caPath),
 		verify.CATrustEnv(),
 		verify.CAEndToEnd(proxyURL, testURL),
-		// clause 2 — privilege
-		verify.UIDNotRoot(),
-		verify.NetAdminAbsent(),
-		// credential hygiene (Doppler-specific)
+	)
+	// clause 2 — privilege
+	checks = append(checks, privilegeChecks()...)
+	// credential hygiene (Doppler-specific)
+	checks = append(checks,
 		verify.EnvAbsent("DOPPLER_TOKEN"),
 		verify.EnvNoTokenShapes("real token shapes", "dp.st.", "dp.pt."),
 	)
@@ -203,6 +204,19 @@ func agentChecks(proxyURL, caPath string, strictDNS bool, testURL string, creden
 		checks = append(checks, verify.FileUnreadable("agent cannot read "+p, p))
 	}
 	return checks
+}
+
+// privilegeChecks proves clause 2: the agent runs unprivileged AND cannot regain
+// the capability it would need to unlock its own egress. A clean effective set
+// (NetAdminAbsent) is not enough on its own — while CAP_NET_ADMIN remains in the
+// bounding set, a file-capability or setuid binary can hand it back — so the
+// bounding set must be clean too (NetAdminNotAcquirable, ENG-9749).
+func privilegeChecks() []verify.Check {
+	return []verify.Check{
+		verify.UIDNotRoot(),
+		verify.NetAdminAbsent(),
+		verify.NetAdminNotAcquirable(),
+	}
 }
 
 // developerHome is the home of the person whose secrets the proxy brokers: the
@@ -313,6 +327,11 @@ var agentEnforceCmd = &cobra.Command{
 			"NODE_EXTRA_CA_CERTS": caPath,
 			"CURL_CA_BUNDLE":      caPath,
 			"SSL_CERT_FILE":       caPath,
+			// git and Python's requests honor their own CA vars, not the three above;
+			// without these, git over HTTPS to an intercepted host fails in the enforced
+			// box now that enforce no longer installs the CA into the system trust store.
+			"GIT_SSL_CAINFO":     caPath,
+			"REQUESTS_CA_BUNDLE": caPath,
 			// Enforce clears the environment before exec, so the essential process
 			// vars for the dropped-privilege agent must be set explicitly.
 			"HOME":    u.HomeDir,
@@ -347,10 +366,11 @@ var agentEnforceCmd = &cobra.Command{
 			return nil
 		}
 
+		// No CA path is passed: Enforce no longer installs a system-trust CA (ENG-9745);
+		// the agent env's CA vars carry that trust instead.
 		err = enforce.Enforce(enforce.Config{
 			Strategy:    strat,
 			Params:      enforce.Params{ProxyIP: proxyIP, ProxyPort: proxyPort, AgentUID: uid},
-			CACertPath:  caPath,
 			AgentUID:    uid,
 			AgentGID:    gid,
 			AgentGroups: groups,
