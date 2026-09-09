@@ -190,6 +190,7 @@ func engineOptions(cfg *proxy.ProxyConfig, in proxyStartInputs) (proxy.Options, 
 		ProxyAuthToken:     in.proxyToken,
 		Binding:            binding,
 		AllowPrivateEgress: in.allowPrivateEgress,
+		Methods:            cfg.MethodConfigs(),
 	}, nil
 }
 

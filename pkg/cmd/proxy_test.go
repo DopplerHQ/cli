@@ -35,7 +35,10 @@ func (s staticSource) Fetch(_ context.Context, ref agentproxy.SecretRef) (string
 // here would silently disable a feature.
 func TestEngineOptionsCarryEverySetting(t *testing.T) {
 	dir := t.TempDir()
-	cfg := &proxy.ProxyConfig{Bindings: map[string][]agentproxy.Rule{"GH": {{Host: "api.github.com"}}}}
+	cfg := &proxy.ProxyConfig{
+		Bindings: map[string][]agentproxy.Rule{"GH": {{Host: "api.github.com"}}},
+		Methods:  map[string]proxy.CredentialMethod{"OA": {Kind: "oauth2_client_credentials", TokenURL: "https://p/token", ClientID: "cid"}},
+	}
 	opts, err := engineOptions(cfg, proxyStartInputs{
 		address:            "127.0.0.1:14322",
 		dataDir:            dir,
@@ -67,6 +70,9 @@ func TestEngineOptionsCarryEverySetting(t *testing.T) {
 	}
 	if allowed, _ := rules.Allowed(agentproxy.BindingRequest{Name: "DB", Value: "plain-value", Dest: agentproxy.Destination{Host: "db.example.com:443", Path: "/", Method: "GET"}}); allowed {
 		t.Fatal("an undeclared secret must be refused by default")
+	}
+	if m := opts.Methods["OA"]; m.Kind != "oauth2_client_credentials" || m.TokenURL != "https://p/token" {
+		t.Fatalf("credential method did not reach the engine: %+v", opts.Methods)
 	}
 }
 

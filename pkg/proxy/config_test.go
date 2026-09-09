@@ -152,3 +152,41 @@ func TestBindingResolverRejectsUnknownPolicy(t *testing.T) {
 		t.Fatal("an unknown unbound policy must be an error")
 	}
 }
+
+func TestParseMethods(t *testing.T) {
+	cfg, err := parseProxyConfig([]byte(`
+methods:
+  OAUTH_SECRET:
+    kind: oauth2_client_credentials
+    token_url: https://provider.example.com/oauth/token
+    client_id: cid
+    scopes: [read, write]
+  AWS_SECRET_ACCESS_KEY:
+    kind: aws_sigv4
+    service: s3
+    region: us-west-2
+    access_key_id: AWS_ACCESS_KEY_ID
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	o := cfg.Methods["OAUTH_SECRET"]
+	if o.Kind != "oauth2_client_credentials" || o.TokenURL != "https://provider.example.com/oauth/token" || o.ClientID != "cid" || !slices.Equal(o.Scopes, []string{"read", "write"}) {
+		t.Fatalf("oauth method = %+v", o)
+	}
+	a := cfg.Methods["AWS_SECRET_ACCESS_KEY"]
+	if a.Kind != "aws_sigv4" || a.Service != "s3" || a.Region != "us-west-2" || a.AccessKeyID != "AWS_ACCESS_KEY_ID" {
+		t.Fatalf("sigv4 method = %+v", a)
+	}
+	// snake_case yaml maps cleanly to the agent-proxy method registry.
+	m := cfg.MethodConfigs()
+	if m["OAUTH_SECRET"].TokenURL != "https://provider.example.com/oauth/token" || m["AWS_SECRET_ACCESS_KEY"].AccessKeyID != "AWS_ACCESS_KEY_ID" {
+		t.Fatalf("MethodConfigs mapping wrong: %+v", m)
+	}
+}
+
+func TestMethodConfigsNilWhenEmpty(t *testing.T) {
+	if got := (&ProxyConfig{}).MethodConfigs(); got != nil {
+		t.Fatalf("expected nil methods when none declared, got %v", got)
+	}
+}
