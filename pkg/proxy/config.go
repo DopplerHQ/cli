@@ -74,19 +74,22 @@ const starterConfig = `# doppler-proxy.yaml — configuration for the Doppler ag
 # --address overrides this.
 listen_address: 0.0.0.0:14322
 
-# Hosts the proxy BLIND-TUNNELS instead of intercepting: no TLS termination and
-# no credential injection. Put an agent's own control-plane here so its traffic
-# passes through untouched (e.g. an AI agent reaching its model provider). This
-# must include the agent's AUTH domains too — intercepting them breaks login
-# (auth endpoints reject an unexpected CA), so Claude's login/session domains are
-# passed through alongside its model endpoint.
+# Hosts the proxy BLIND-TUNNELS instead of intercepting: no TLS termination, no
+# credential injection, and nothing in the audit log. Every entry is a hole we chose,
+# so keep this list as short as possible. Removing a host does NOT block it — the host
+# is simply intercepted instead (the agent trusts the proxy CA), so it still works and
+# is now examined. Only two kinds of host belong here: the agent's own control plane
+# that we deliberately don't inspect, and auth endpoints that BREAK under interception
+# because they reject an unexpected CA. Matching is exact — there is no wildcard.
 passthrough:
+  # Claude's model API — the endpoint the agent exists to use. Passed through so the
+  # agent's own model traffic is never intercepted.
   - api.anthropic.com
+  # Claude Code login/session and OAuth token refresh. Auth endpoints reject the proxy's
+  # unexpected CA, so intercepting these breaks sign-in. Kept to Anthropic's first party.
   - console.anthropic.com
   - claude.ai
   - claude.com
-  - statsig.anthropic.com
-  - sentry.io
 
 # Where each secret may be injected. A secret with no entry is refused everywhere
 # unless unbound below says otherwise. paths are globs matched per segment (** spans
