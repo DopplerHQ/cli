@@ -30,14 +30,16 @@ import (
 func init() {
 	Register("masked-hash", func(opts Options) (Engine, error) {
 		return agentproxy.New(agentproxy.Config{
-			ListenAddr:       opts.ListenAddr,
-			Secrets:          opts.Secrets,
-			DataDir:          opts.DataDir,
-			LogWriter:        opts.LogWriter,
-			AgentEnvPath:     opts.AgentEnvPath,
-			PassthroughHosts: opts.PassthroughHosts,
-			UpstreamProxy:    opts.UpstreamProxy,
-			ProxyAuthToken:   opts.ProxyAuthToken,
+			ListenAddr:         opts.ListenAddr,
+			Secrets:            opts.Secrets,
+			DataDir:            opts.DataDir,
+			LogWriter:          opts.LogWriter,
+			AgentEnvPath:       opts.AgentEnvPath,
+			PassthroughHosts:   opts.PassthroughHosts,
+			UpstreamProxy:      opts.UpstreamProxy,
+			ProxyAuthToken:     opts.ProxyAuthToken,
+			Binding:            opts.Binding,
+			AllowPrivateEgress: opts.AllowPrivateEgress,
 		})
 	})
 }

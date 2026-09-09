@@ -117,6 +117,7 @@ var proxyStartCmd = &cobra.Command{
 		flagPassthrough, _ := cmd.Flags().GetStringSlice("passthrough")
 		passthrough := proxy.MergePassthrough(proxyConfig, flagPassthrough)
 		upstreamProxy, _ := cmd.Flags().GetString("upstream-proxy")
+		allowPrivateEgress, _ := cmd.Flags().GetBool("allow-private-egress")
 
 		// Mint a per-run credential the proxy requires from every client, so a
 		// broadly-bound or shared-network listener isn't an open forward proxy. It's
@@ -127,16 +128,22 @@ var proxyStartCmd = &cobra.Command{
 			utils.HandleError(err, "unable to generate the per-run proxy token")
 		}
 
-		engine, err := factory(proxy.Options{
-			ListenAddr:       address,
-			Secrets:          proxy.NewDopplerSource(localConfig),
-			DataDir:          dataDir,
-			LogWriter:        io.MultiWriter(os.Stderr, logFile),
-			AgentEnvPath:     agentproxy.AgentEnvPath(dataDir),
-			PassthroughHosts: passthrough,
-			UpstreamProxy:    upstreamProxy,
-			ProxyAuthToken:   proxyToken,
+		opts, err := engineOptions(proxyConfig, proxyStartInputs{
+			address:            address,
+			dataDir:            dataDir,
+			logOut:             io.MultiWriter(os.Stderr, logFile),
+			passthrough:        passthrough,
+			upstreamProxy:      upstreamProxy,
+			proxyToken:         proxyToken,
+			allowPrivateEgress: allowPrivateEgress,
+			source:             proxy.NewDopplerSource(localConfig),
 		})
+		if err != nil {
+			utils.HandleError(err, "invalid bindings in the proxy config")
+		}
+		warnShapeMismatches(opts.Binding, opts.Secrets)
+
+		engine, err := factory(opts)
 		if err != nil {
 			utils.HandleError(err)
 		}
@@ -153,6 +160,64 @@ var proxyStartCmd = &cobra.Command{
 	},
 }
 
+// proxyStartInputs are the resolved flags proxy start turns into engine options.
+type proxyStartInputs struct {
+	address, dataDir, upstreamProxy, proxyToken string
+	allowPrivateEgress                          bool
+	passthrough                                 []string
+	logOut                                      io.Writer
+	source                                      agentproxy.SecretSource
+}
+
+// engineOptions is the one place config and flags become engine options, so a
+// test can assert each setting actually reaches the engine.
+func engineOptions(cfg *proxy.ProxyConfig, in proxyStartInputs) (proxy.Options, error) {
+	binding, err := cfg.BindingResolver()
+	if err != nil {
+		return proxy.Options{}, err
+	}
+	secrets := agentproxy.NewRefreshingSource(in.source, agentproxy.RefreshOptions{
+		Logf: func(format string, args ...any) { fmt.Fprintf(in.logOut, format+"\n", args...) },
+	})
+	return proxy.Options{
+		ListenAddr:         in.address,
+		Secrets:            secrets,
+		DataDir:            in.dataDir,
+		LogWriter:          in.logOut,
+		AgentEnvPath:       agentproxy.AgentEnvPath(in.dataDir),
+		PassthroughHosts:   in.passthrough,
+		UpstreamProxy:      in.upstreamProxy,
+		ProxyAuthToken:     in.proxyToken,
+		Binding:            binding,
+		AllowPrivateEgress: in.allowPrivateEgress,
+	}, nil
+}
+
+// warnShapeMismatches logs each rule that points a recognizable token at another
+// provider's host. The rule still wins at runtime, since a proxy or an enterprise
+// host is a legitimate reason, but the mismatch is worth a look before the agent
+// finds out.
+func warnShapeMismatches(binding agentproxy.BindingResolver, secrets agentproxy.SecretSource) {
+	rules, ok := binding.(*agentproxy.RuleResolver)
+	if !ok {
+		return
+	}
+	ctx := context.Background()
+	names, err := secrets.List(ctx)
+	if err != nil {
+		return // the engine reports the load failure itself
+	}
+	values := make(map[string]string, len(names))
+	for _, name := range names {
+		if v, err := secrets.Fetch(ctx, agentproxy.SecretRef{Name: name}); err == nil {
+			values[name] = v
+		}
+	}
+	for _, warning := range rules.Validate(values) {
+		utils.LogWarning(warning)
+	}
+}
+
 func init() {
 	proxyStartCmd.Flags().String("engine", "masked-hash", "proxy engine to run")
 	proxyStartCmd.Flags().String("address", "0.0.0.0:14322", "address the proxy listens on; serves host + sandbox (set 127.0.0.1 for loopback-only, no sandbox). Overrides listen_address in the proxy config")
@@ -160,6 +225,7 @@ func init() {
 	proxyStartCmd.Flags().String("proxy-config", "", "path to the proxy YAML config (default <data-dir>/doppler-proxy.yaml, scaffolded on first run)")
 	proxyStartCmd.Flags().StringSlice("passthrough", nil, "extra hostnames to blind-tunnel, appended to the config's passthrough list")
 	proxyStartCmd.Flags().String("upstream-proxy", "", "chain the proxy's own outbound connections through another HTTP proxy (e.g. http://127.0.0.1:3128 in a devcontainer)")
+	proxyStartCmd.Flags().Bool("allow-private-egress", false, "let the proxy connect to loopback and private-network addresses (local development against a local upstream only)")
 	// Project/config resolve from `doppler setup` scope by default; these flags
 	// override it (same behavior as `doppler run`).
 	proxyStartCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
