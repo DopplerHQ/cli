@@ -59,6 +59,14 @@ type WorkplaceSettings struct {
 	BillingEmail string `json:"billing_email"`
 }
 
+// TagInfo workplace tag info
+type TagInfo struct {
+	Slug      string `json:"slug"`
+	Name      string `json:"name"`
+	Color     string `json:"color"`
+	CreatedAt string `json:"created_at"`
+}
+
 // ProjectInfo project info
 type ProjectInfo struct {
 	ID          string `json:"id"`

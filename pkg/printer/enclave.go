@@ -446,6 +446,31 @@ func Settings(settings models.WorkplaceSettings, jsonFlag bool) {
 	Table([]string{"id", "name", "billing email"}, rows, TableOptions())
 }
 
+// TagsInfo print info of multiple workplace tags
+func TagsInfo(info []models.TagInfo, jsonFlag bool) {
+	if jsonFlag {
+		JSON(info)
+		return
+	}
+
+	var rows [][]string
+	for _, tagInfo := range info {
+		rows = append(rows, []string{tagInfo.Slug, tagInfo.Name, tagInfo.Color, tagInfo.CreatedAt})
+	}
+	Table([]string{"slug", "name", "color", "created at"}, rows, TableOptions())
+}
+
+// TagInfo print workplace tag info
+func TagInfo(info models.TagInfo, jsonFlag bool) {
+	if jsonFlag {
+		JSON(info)
+		return
+	}
+
+	rows := [][]string{{info.Slug, info.Name, info.Color, info.CreatedAt}}
+	Table([]string{"slug", "name", "color", "created at"}, rows, TableOptions())
+}
+
 // ConfigServiceTokensInfo print info of multiple config service tokens
 func ConfigServiceTokensInfo(tokens []models.ConfigServiceToken, number int, jsonFlag bool) {
 	maxTokens := int(math.Min(float64(len(tokens)), float64(number)))

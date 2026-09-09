@@ -40,6 +40,26 @@ func ParseWorkplaceSettings(info map[string]interface{}) WorkplaceSettings {
 	return workplaceInfo
 }
 
+// ParseTagInfo parse workplace tag info
+func ParseTagInfo(info map[string]interface{}) TagInfo {
+	var tagInfo TagInfo
+
+	if info["slug"] != nil {
+		tagInfo.Slug = info["slug"].(string)
+	}
+	if info["name"] != nil {
+		tagInfo.Name = info["name"].(string)
+	}
+	if info["color"] != nil {
+		tagInfo.Color = info["color"].(string)
+	}
+	if info["created_at"] != nil {
+		tagInfo.CreatedAt = info["created_at"].(string)
+	}
+
+	return tagInfo
+}
+
 // ParseProjectInfo parse project info
 func ParseProjectInfo(info map[string]interface{}) ProjectInfo {
 	var projectInfo ProjectInfo
