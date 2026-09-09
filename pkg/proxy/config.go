@@ -50,6 +50,10 @@ type ProxyConfig struct {
 	// Methods declares a non-static credential method per secret name. A secret with
 	// no entry uses the static method: its masked value is swapped in a header.
 	Methods map[string]CredentialMethod `yaml:"methods"`
+
+	// PassByValue names secrets the agent holds for real rather than as a mask,
+	// typically its own model provider token whose host is passed through.
+	PassByValue []string `yaml:"pass_by_value"`
 }
 
 // CredentialMethod is how a secret is brokered onto a request (doppler-proxy.yaml).
@@ -161,6 +165,13 @@ const starterConfigTail = `
 #     service: s3
 #     region: us-east-1
 #     access_key_id: AWS_ACCESS_KEY_ID
+
+# Secrets the agent has to hold for real, typically its own model provider token.
+# Their host belongs on the passthrough list above, so the injector never sees
+# them. The proxy writes them into agent.env as plaintext and refuses any
+# intercepted request that carries one.
+# pass_by_value:
+#   - MODEL_PROVIDER_TOKEN
 `
 
 // scaffoldBindings renders the commented "bindings" section of the starter config.

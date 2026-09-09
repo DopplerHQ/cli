@@ -36,8 +36,9 @@ func (s staticSource) Fetch(_ context.Context, ref agentproxy.SecretRef) (string
 func TestEngineOptionsCarryEverySetting(t *testing.T) {
 	dir := t.TempDir()
 	cfg := &proxy.ProxyConfig{
-		Bindings: map[string][]agentproxy.Rule{"GH": {{Host: "api.github.com"}}},
-		Methods:  map[string]proxy.CredentialMethod{"OA": {Kind: "oauth2_client_credentials", TokenURL: "https://p/token", ClientID: "cid"}},
+		Bindings:    map[string][]agentproxy.Rule{"GH": {{Host: "api.github.com"}}},
+		Methods:     map[string]proxy.CredentialMethod{"OA": {Kind: "oauth2_client_credentials", TokenURL: "https://p/token", ClientID: "cid"}},
+		PassByValue: []string{"MODEL_TOKEN"},
 	}
 	opts, err := engineOptions(cfg, proxyStartInputs{
 		address:            "127.0.0.1:14322",
@@ -57,6 +58,9 @@ func TestEngineOptionsCarryEverySetting(t *testing.T) {
 	}
 	if opts.AgentEnvPath != filepath.Join(dir, "agent.env") || opts.DataDir != dir {
 		t.Fatalf("data dir paths wrong: %+v", opts)
+	}
+	if len(opts.PassByValue) != 1 || opts.PassByValue[0] != "MODEL_TOKEN" {
+		t.Fatalf("pass_by_value did not reach the engine: %+v", opts.PassByValue)
 	}
 	if _, ok := opts.Secrets.(*agentproxy.RefreshingSource); !ok {
 		t.Fatalf("secrets should be wrapped in RefreshingSource, got %T", opts.Secrets)

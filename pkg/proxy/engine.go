@@ -62,6 +62,8 @@ type Options struct {
 	// Methods declares a non-static credential brokering method per secret name
 	// (OAuth2 client-credentials, AWS SigV4). Empty means every secret is static.
 	Methods map[string]agentproxy.MethodConfig
+	// PassByValue names the secrets written to the agent env as real values.
+	PassByValue []string
 }
 
 // Factory builds an Engine from Options.

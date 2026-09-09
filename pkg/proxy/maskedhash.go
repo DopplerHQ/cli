@@ -41,6 +41,7 @@ func init() {
 			Binding:            opts.Binding,
 			AllowPrivateEgress: opts.AllowPrivateEgress,
 			Methods:            opts.Methods,
+			PassByValue:        opts.PassByValue,
 		})
 	})
 }
