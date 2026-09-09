@@ -94,7 +94,14 @@ var proxyStartCmd = &cobra.Command{
 		if proxyConfigPath == "" {
 			proxyConfigPath = filepath.Join(dataDir, "doppler-proxy.yaml")
 		}
-		proxyConfig, created, err := proxy.LoadOrScaffold(proxyConfigPath)
+		// The Doppler-backed secret source, reused below for the engine. On first run
+		// its secret names also pre-seed the scaffolded bindings template so the
+		// operator edits real entries instead of a generic example.
+		source := proxy.NewDopplerSource(localConfig)
+		proxyConfig, created, err := proxy.LoadOrScaffold(proxyConfigPath, func() []string {
+			names, _ := source.List(context.Background())
+			return names
+		})
 		if err != nil {
 			utils.HandleError(err, "unable to load the proxy config")
 		}
@@ -136,7 +143,7 @@ var proxyStartCmd = &cobra.Command{
 			upstreamProxy:      upstreamProxy,
 			proxyToken:         proxyToken,
 			allowPrivateEgress: allowPrivateEgress,
-			source:             proxy.NewDopplerSource(localConfig),
+			source:             source,
 		})
 		if err != nil {
 			utils.HandleError(err, "invalid bindings in the proxy config")
