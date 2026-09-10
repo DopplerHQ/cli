@@ -61,7 +61,7 @@ func CheckUpdate(command string) (bool, models.VersionCheck) {
 		}
 	}
 
-	if !version.PerformVersionCheck || version.IsDevelopment() {
+	if !version.PerformVersionCheck || version.IsDevelopment() || version.IsRenamed() {
 		return false, models.VersionCheck{}
 	}
 

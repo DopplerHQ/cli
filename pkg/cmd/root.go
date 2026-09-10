@@ -36,7 +36,7 @@ import (
 var printConfig = false
 
 var rootCmd = &cobra.Command{
-	Use:   "doppler",
+	Use:   version.ProgramName,
 	Short: "The official Doppler CLI",
 	Args:  cobra.NoArgs,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {

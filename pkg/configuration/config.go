@@ -27,6 +27,7 @@ import (
 
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -49,13 +50,13 @@ var Scope = "."
 // CanReadEnv whether configuration can be read from the environment
 var CanReadEnv = true
 
-var configFileName = ".doppler.yaml"
+var configFileName = version.ConfigFileName
 var configContents models.ConfigFile
 var configUid = -1
 var configGid = -1
 
 func init() {
-	SetConfigDir(filepath.Join(utils.HomeDir(), ".doppler"))
+	SetConfigDir(filepath.Join(utils.HomeDir(), version.ConfigDirName))
 }
 
 func SetConfigDir(dir string) {

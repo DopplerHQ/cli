@@ -19,6 +19,7 @@ import (
 	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
+	"github.com/DopplerHQ/cli/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -48,5 +49,9 @@ var updateCmd = &cobra.Command{
 
 func init() {
 	updateCmd.Flags().BoolP("force", "f", false, "install the latest CLI regardless of whether there's an update available")
-	rootCmd.AddCommand(updateCmd)
+	// A rebranded distribution (e.g. the agent-proxy demo build) must not self-update:
+	// `update` fetches the official doppler release, which would overwrite this binary.
+	if !version.IsRenamed() {
+		rootCmd.AddCommand(updateCmd)
+	}
 }

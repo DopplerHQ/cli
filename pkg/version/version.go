@@ -24,6 +24,32 @@ import (
 // ProgramVersion the current version of this program
 var ProgramVersion = "dev"
 
+// ProgramName is the invoked command name (cobra Use / help text) and the identity the
+// update self-management keys on. ConfigDirName / ConfigFileName locate the on-disk
+// config under the user's home. All three are build-time-injectable so a renamed
+// distribution — e.g. the agent-proxy demo build — can flip its name and config location
+// without forking the code:
+//
+//	-ldflags "-X github.com/DopplerHQ/cli/pkg/version.ProgramName=doppler-agent \
+//	          -X github.com/DopplerHQ/cli/pkg/version.ConfigDirName=.doppler-agent \
+//	          -X github.com/DopplerHQ/cli/pkg/version.ConfigFileName=.doppler-agent.yaml"
+//
+// The point is a rebranded build never collides with a customer's production `doppler`:
+// a distinct name on PATH, and a separate config dir so it can't read or clobber their
+// real credentials.
+var (
+	ProgramName    = "doppler"
+	ConfigDirName  = ".doppler"
+	ConfigFileName = ".doppler.yaml"
+)
+
+// IsRenamed reports whether this is a rebranded distribution rather than the official
+// doppler CLI. A renamed build turns off update self-management (the `update` command and
+// the startup check) — it must never fetch and overwrite itself with the production binary.
+func IsRenamed() bool {
+	return ProgramName != "doppler"
+}
+
 // Version semver
 type Version struct {
 	Major int16
