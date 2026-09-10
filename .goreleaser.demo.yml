@@ -1,0 +1,71 @@
+version: 2
+project_name: doppler-agent
+
+# Demo/preview distribution of the CLI fork (which bundles the agent-proxy) for a handful
+# of pilot customers. Kept SEPARATE from .goreleaser.yml (the production release) on
+# purpose: a distinct binary name and config dir so it never collides with a customer's
+# real `doppler` install on PATH or in ~/.doppler.
+#
+# The code's defaults are unchanged (doppler / ~/.doppler); the ldflags below flip the
+# identity at build time via the injectable vars in pkg/version. See that package for
+# the full explanation.
+#
+# PREREQUISITE (ENG-9769): the CLI must build against a PINNED agent-proxy — the
+# `replace => ../agent-proxy` in go.mod has to be removed and a real version required.
+# Until the agent-proxy stacks land in main and go.mod is pinned, this config builds
+# only locally (with the replace), not in CI.
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: doppler-agent
+    binary: doppler-agent
+    env:
+      - CGO_ENABLED=0
+    # The big 4: covers every Mac and Linux dev box / devcontainer a pilot customer runs.
+    # `doppler agent enforce` is Linux-only, but `proxy start` / `agent run` work on macOS
+    # via Docker Desktop. Add windows/amd64 here only if a customer needs it.
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/DopplerHQ/cli/pkg/version.ProgramVersion=v{{.Version}}
+      # Build-time identity — the rename lives entirely here, not in the code:
+      - -X github.com/DopplerHQ/cli/pkg/version.ProgramName=doppler-agent
+      - -X github.com/DopplerHQ/cli/pkg/version.ConfigDirName=.doppler-agent
+      - -X github.com/DopplerHQ/cli/pkg/version.ConfigFileName=.doppler-agent.yaml
+
+archives:
+  - id: doppler-agent
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- if eq .Os "darwin" }}macOS
+      {{- else }}{{ .Os }}{{ end }}_
+      {{- .Arch }}
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+# No GitHub release, brew tap, Docker image, or apt/rpm packages — the demo ships only as
+# archives in GCS, fetched by install.sh.
+release:
+  disable: true
+
+# Upload the archives + checksums to GCS. The bucket is a placeholder until infra
+# provisions one; the workflow authenticates with GOOGLE_APPLICATION_CREDENTIALS
+# (a demo service-account key), the same mechanism the production release uses.
+blobs:
+  - provider: gs
+    bucket: PLACEHOLDER_DEMO_BUCKET # TODO(infra): replace with the real demo GCS bucket
+    directory: "doppler-agent/{{ .Version }}"
