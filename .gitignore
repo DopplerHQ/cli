@@ -29,3 +29,5 @@ completions/
 # IDEs
 .idea/
 .vscode/
+go.work
+go.work.sum

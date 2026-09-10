@@ -19,7 +19,7 @@ limitations under the License.
 // --engine <name>` can pick an implementation, and the Doppler-backed
 // capabilities (secret fetching, later auditing) injected into an engine.
 //
-// The proxy runtime itself lives in the separate github.com/DopplerHQ/agent-proxy
+// The proxy runtime itself lives in the separate github.com/DopplerTest/agent-proxy
 // module; this package is where the CLI plugs into it.
 package proxy
 
@@ -28,7 +28,7 @@ import (
 	"io"
 	"sort"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 )
 
 // Engine is any runnable proxy implementation. The surface is intentionally

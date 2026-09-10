@@ -29,7 +29,7 @@ import (
 	"strings"
 	"syscall"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 	"github.com/DopplerHQ/cli/pkg/configuration"
 	"github.com/DopplerHQ/cli/pkg/proxy"
 	"github.com/DopplerHQ/cli/pkg/utils"

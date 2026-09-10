@@ -22,7 +22,7 @@ import (
 	"sort"
 	"sync"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 	"github.com/DopplerHQ/cli/pkg/controllers"
 	"github.com/DopplerHQ/cli/pkg/models"
 )

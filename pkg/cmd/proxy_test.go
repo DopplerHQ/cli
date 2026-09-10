@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 	"github.com/DopplerHQ/cli/pkg/proxy"
 )
 

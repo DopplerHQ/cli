@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 )
 
 // On first run the scaffolded config pre-seeds the bindings section with the

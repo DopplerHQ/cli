@@ -23,7 +23,7 @@ import (
 	"os"
 	"strings"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 	"gopkg.in/yaml.v3"
 )
 

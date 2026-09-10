@@ -26,12 +26,14 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.46.0 // indirect
+	github.com/aws/smithy-go v1.28.1 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 )
 
 require (
-	github.com/DopplerHQ/agent-proxy v0.0.0-00010101000000-000000000000
+	github.com/DopplerTest/agent-proxy v0.1.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -60,5 +62,3 @@ require (
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 )
-
-replace github.com/DopplerHQ/agent-proxy => ../agent-proxy

@@ -17,7 +17,7 @@ limitations under the License.
 package proxy
 
 import (
-	agentproxy "github.com/DopplerHQ/agent-proxy"
+	agentproxy "github.com/DopplerTest/agent-proxy"
 )
 
 // init registers the "masked-hash" engine: the per-secret-hash proxy backed by

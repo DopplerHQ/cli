@@ -31,10 +31,10 @@ import (
 	"strings"
 	"syscall"
 
-	agentproxy "github.com/DopplerHQ/agent-proxy"
-	"github.com/DopplerHQ/agent-proxy/enforce"
-	"github.com/DopplerHQ/agent-proxy/sandbox"
-	"github.com/DopplerHQ/agent-proxy/verify"
+	agentproxy "github.com/DopplerTest/agent-proxy"
+	"github.com/DopplerTest/agent-proxy/enforce"
+	"github.com/DopplerTest/agent-proxy/sandbox"
+	"github.com/DopplerTest/agent-proxy/verify"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/spf13/cobra"
 )
