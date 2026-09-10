@@ -1,0 +1,79 @@
+name: release-demo
+
+# Build the `doppler-agent` preview (this CLI fork, which bundles the agent-proxy) and
+# publish it to GCS for pilot customers. Manual trigger only; entirely separate from the
+# production `release` workflow.
+#
+# agent-proxy is a private module (github.com/DopplerTest/agent-proxy), so the runner
+# needs read access to fetch it — see the "private module access" step below. The
+# customer never touches it: agent-proxy is statically linked into the shipped binary.
+#
+# Secrets used (demo-scoped, distinct from the production release):
+#   GCP_KEY_DEMO          — service-account key with write access to the demo bucket.
+#   AGENT_PROXY_READ_TOKEN — token with read access to DopplerTest/agent-proxy, so `go`
+#                            can fetch the private module during the build.
+# And replace PLACEHOLDER_DEMO_BUCKET below with the real bucket once infra provisions it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, e.g. 0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  DEMO_BUCKET: PLACEHOLDER_DEMO_BUCKET # TODO(infra): real demo GCS bucket
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # goreleaser needs tags/history
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Private module access (github.com/DopplerTest/agent-proxy)
+        run: |
+          git config --global \
+            url."https://x-access-token:${AGENT_PROXY_READ_TOKEN}@github.com/DopplerTest/".insteadOf \
+            "https://github.com/DopplerTest/"
+          echo "GOPRIVATE=github.com/DopplerTest/*" >> "$GITHUB_ENV"
+        env:
+          AGENT_PROXY_READ_TOKEN: ${{ secrets.AGENT_PROXY_READ_TOKEN }}
+
+      - name: Tag this commit for goreleaser
+        run: git tag "v${{ inputs.version }}"
+
+      - name: Write GCP credentials
+        run: |
+          printf '%s' "$GCP_KEY_DEMO" > "$RUNNER_TEMP/gcp.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp.json" >> "$GITHUB_ENV"
+        env:
+          GCP_KEY_DEMO: ${{ secrets.GCP_KEY_DEMO }}
+
+      - name: Install goreleaser
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt update
+          sudo apt install -y goreleaser
+
+      - name: Validate config
+        run: goreleaser check -f .goreleaser.demo.yml
+
+      - name: Build + upload archives to GCS
+        run: goreleaser release -f .goreleaser.demo.yml --clean
+
+      - name: Publish the latest marker + install script
+        run: |
+          printf '%s' "${{ inputs.version }}" | gcloud storage cp - "gs://${DEMO_BUCKET}/doppler-agent/latest"
+          gcloud storage cp scripts/install-demo.sh "gs://${DEMO_BUCKET}/install.sh"

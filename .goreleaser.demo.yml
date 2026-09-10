@@ -10,10 +10,10 @@ project_name: doppler-agent
 # identity at build time via the injectable vars in pkg/version. See that package for
 # the full explanation.
 #
-# PREREQUISITE (ENG-9769): the CLI must build against a PINNED agent-proxy — the
-# `replace => ../agent-proxy` in go.mod has to be removed and a real version required.
-# Until the agent-proxy stacks land in main and go.mod is pinned, this config builds
-# only locally (with the replace), not in CI.
+# The CLI depends on agent-proxy as a tagged private module (github.com/DopplerTest/
+# agent-proxy); go.mod requires a real version, no local replace. CI fetches it with a
+# read token (see release-demo.yml). For local builds, add an uncommitted
+# `replace github.com/DopplerTest/agent-proxy => ../agent-proxy`.
 
 before:
   hooks:
