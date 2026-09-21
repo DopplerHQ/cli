@@ -278,7 +278,7 @@ func setSecrets(cmd *cobra.Command, args []string) {
 			}
 
 			utils.Print("Enter your secret value")
-			utils.Print("When finished, type a newline followed by a period")
+			utils.Print("When finished, type two newlines followed by a period")
 			utils.Print("Run 'doppler secrets set --help' for more information")
 			utils.Print("———————————————————— START INPUT ————————————————————")
 		}
