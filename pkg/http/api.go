@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -517,6 +518,149 @@ func SetWorkplaceSettings(host string, verifyTLS bool, apiKey string, values mod
 	}
 	settings := models.ParseWorkplaceSettings(workplace)
 	return settings, Error{}
+}
+
+// GetTags get workplace tags
+func GetTags(host string, verifyTLS bool, apiKey string) ([]models.TagInfo, Error) {
+	url, err := generateURL(host, "/v3/workplace/tags", nil)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := GetRequest(url, verifyTLS, apiKeyHeader(apiKey))
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to fetch tags", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	var info []models.TagInfo
+	for _, tag := range result["tags"].([]interface{}) {
+		tag, ok := tag.(map[string]interface{})
+		if !ok {
+			return nil, Error{Err: fmt.Errorf("Unexpected type for tag, expected map[string]interface{}, got %T", tag), Message: "Unable to parse API response", Code: statusCode}
+		}
+		info = append(info, models.ParseTagInfo(tag))
+	}
+	return info, Error{}
+}
+
+// GetTag get specified workplace tag
+func GetTag(host string, verifyTLS bool, apiKey string, tag string) (models.TagInfo, Error) {
+	url, err := generateURL(host, fmt.Sprintf("/v3/workplace/tags/tag/%s", url.PathEscape(tag)), nil)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := GetRequest(url, verifyTLS, apiKeyHeader(apiKey))
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to fetch tag", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	resultTag, ok := result["tag"].(map[string]interface{})
+	if !ok {
+		return models.TagInfo{}, Error{Err: fmt.Errorf("Unexpected type for tag, expected map[string]interface{}, got %T", result["tag"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	return models.ParseTagInfo(resultTag), Error{}
+}
+
+// CreateTag create a workplace tag
+func CreateTag(host string, verifyTLS bool, apiKey string, name string, color string, slug string) (models.TagInfo, Error) {
+	postBody := map[string]string{"name": name}
+	if color != "" {
+		postBody["color"] = color
+	}
+	if slug != "" {
+		postBody["slug"] = slug
+	}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Invalid tag info"}
+	}
+
+	url, err := generateURL(host, "/v3/workplace/tags", nil)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PostRequest(url, verifyTLS, apiKeyHeader(apiKey), body)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to create tag", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	resultTag, ok := result["tag"].(map[string]interface{})
+	if !ok {
+		return models.TagInfo{}, Error{Err: fmt.Errorf("Unexpected type for tag, expected map[string]interface{}, got %T", result["tag"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	return models.ParseTagInfo(resultTag), Error{}
+}
+
+// UpdateTag update a workplace tag's name and/or color
+func UpdateTag(host string, verifyTLS bool, apiKey string, tag string, name string, color string) (models.TagInfo, Error) {
+	postBody := map[string]string{}
+	if name != "" {
+		postBody["name"] = name
+	}
+	if color != "" {
+		postBody["color"] = color
+	}
+	body, err := json.Marshal(postBody)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Invalid tag info"}
+	}
+
+	url, err := generateURL(host, fmt.Sprintf("/v3/workplace/tags/tag/%s", url.PathEscape(tag)), nil)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, response, err := PatchRequest(url, verifyTLS, apiKeyHeader(apiKey), body)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to update tag", Code: statusCode}
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return models.TagInfo{}, Error{Err: err, Message: "Unable to parse API response", Code: statusCode}
+	}
+
+	resultTag, ok := result["tag"].(map[string]interface{})
+	if !ok {
+		return models.TagInfo{}, Error{Err: fmt.Errorf("Unexpected type for tag, expected map[string]interface{}, got %T", result["tag"]), Message: "Unable to parse API response", Code: statusCode}
+	}
+	return models.ParseTagInfo(resultTag), Error{}
+}
+
+// DeleteTag delete a workplace tag
+func DeleteTag(host string, verifyTLS bool, apiKey string, tag string) Error {
+	url, err := generateURL(host, fmt.Sprintf("/v3/workplace/tags/tag/%s", url.PathEscape(tag)), nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to generate url"}
+	}
+
+	statusCode, _, _, err := DeleteRequest(url, verifyTLS, apiKeyHeader(apiKey), nil)
+	if err != nil {
+		return Error{Err: err, Message: "Unable to delete tag", Code: statusCode}
+	}
+
+	return Error{}
 }
 
 // GetProjects get projects
