@@ -127,6 +127,25 @@ func PutRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []
 	return statusCode, respHeaders, body, nil
 }
 
+// PatchRequest perform HTTP PATCH
+func PatchRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []byte) (int, http.Header, []byte, error) {
+	req, err := http.NewRequest("PATCH", url.String(), bytes.NewReader(body))
+	if err != nil {
+		return 0, nil, nil, err
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	statusCode, respHeaders, body, err := performRequest(req, verifyTLS)
+	if err != nil {
+		return statusCode, respHeaders, body, err
+	}
+
+	return statusCode, respHeaders, body, nil
+}
+
 // DeleteRequest perform HTTP DELETE
 func DeleteRequest(url *url.URL, verifyTLS bool, headers map[string]string, body []byte) (int, http.Header, []byte, error) {
 	req, err := http.NewRequest("DELETE", url.String(), bytes.NewReader(body))
