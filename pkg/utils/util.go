@@ -106,7 +106,7 @@ func Cwd() string {
 }
 
 // RunCommand runs the specified command
-func RunCommand(command []string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer, forwardSignals bool) (*exec.Cmd, error) {
+func RunCommand(command []string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer) (*exec.Cmd, error) {
 	cmd := exec.Command(command[0], command[1:]...) // #nosec G204 nosemgrep: semgrep_configs.prohibit-exec-command
 	// Resolves https://github.com/DopplerHQ/cli/issues/415
 	if errors.Is(cmd.Err, exec.ErrDot) {
@@ -118,12 +118,12 @@ func RunCommand(command []string, env []string, inFile io.Reader, outFile io.Wri
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	err := execCommand(cmd, forwardSignals)
+	err := cmd.Start()
 	return cmd, err
 }
 
 // RunCommandString runs the specified command string
-func RunCommandString(command string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer, forwardSignals bool) (*exec.Cmd, error) {
+func RunCommandString(command string, env []string, inFile io.Reader, outFile io.Writer, errFile io.Writer) (*exec.Cmd, error) {
 	shell := [2]string{"sh", "-c"}
 	if IsWindows() {
 		shell = [2]string{"cmd", "/C"}
@@ -144,36 +144,26 @@ func RunCommandString(command string, env []string, inFile io.Reader, outFile io
 	cmd.Stdout = outFile
 	cmd.Stderr = errFile
 
-	err := execCommand(cmd, forwardSignals)
+	err := cmd.Start()
 	return cmd, err
 }
 
-func execCommand(cmd *exec.Cmd, forwardSignals bool) error {
-	// signal handling logic adapted from aws-vault https://github.com/99designs/aws-vault/
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan)
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	// handle all signals
+// ForwardSignals forwards the specified signals to cmd's process rather than letting them terminate the CLI. Call the
+// returned func once the process has exited to restore the signals' default behavior
+func ForwardSignals(cmd *exec.Cmd, signals ...os.Signal) func() {
+	sigChan := make(chan os.Signal, len(signals))
+	signal.Notify(sigChan, signals...)
 	go func() {
-		for {
-			// When running with a TTY, user-generated signals (like SIGINT) are sent to the entire process group.
-			// If we forward the signal, the child process will end up receiving the signal twice.
-			if forwardSignals {
-				// forward to process
-				sig := <-sigChan
-				cmd.Process.Signal(sig) // #nosec G104
-			} else {
-				// ignore
-				<-sigChan
-			}
+		for sig := range sigChan {
+			cmd.Process.Signal(sig) // #nosec G104
 		}
 	}()
 
-	return nil
+	return func() {
+		// once Stop returns nothing else sends on the channel, so closing it ends the goroutine
+		signal.Stop(sigChan)
+		close(sigChan)
+	}
 }
 
 func WaitCommand(cmd *exec.Cmd) (int, error) {

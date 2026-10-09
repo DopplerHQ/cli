@@ -496,15 +496,15 @@ func FetchSecrets(localConfig models.ScopedOptions, enableCache bool, fallbackOp
 	return response, false
 }
 
-func Run(cmd *cobra.Command, args []string, env []string, forwardSignals bool) (*exec.Cmd, error) {
+func Run(cmd *cobra.Command, args []string, env []string) (*exec.Cmd, error) {
 	var c *exec.Cmd
 	var err error
 
 	if cmd.Flags().Changed("command") {
 		command := cmd.Flag("command").Value.String()
-		c, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+		c, err = utils.RunCommandString(command, env, os.Stdin, os.Stdout, os.Stderr)
 	} else {
-		c, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr, forwardSignals)
+		c, err = utils.RunCommand(args, env, os.Stdin, os.Stdout, os.Stderr)
 	}
 
 	return c, err
