@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -241,15 +242,20 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		var c *exec.Cmd
 		var cleanupMount func()
 		var err error
-		var lastSecretsFetch time.Time
-		var lastUpdateEvent time.Time
 		// used to ensure we only run one process at a time
 		var processMutex sync.Mutex
 		// used to ensure we only process one event at a time
 		var watchMutex sync.Mutex
-		// these variables have the potential to be racey, but are made safe by our use of the mutex
-		terminatedByWatch := false
+		// read by the process's cleanup goroutine
+		var terminatedByWatch atomic.Bool
+
+		// guards the variables below, which are shared by the watch stream's event handlers (each runs in its own
+		// goroutine) and the watch connection's retry loop
+		var stateMutex sync.Mutex
+		var lastSecretsFetch time.Time
+		var lastUpdateEvent time.Time
 		watchedValuesMayBeStale := false
+		watchRetrySleep := 1 * time.Second
 		signals := newRunSignalHandler(forwardSignals)
 
 		startLivenessPing := func() {
@@ -275,12 +281,15 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			secretsBytes, fromCache := controllers.FetchSecrets(localConfig, enableCache, fallbackOpts, metadataPath, nameTransformer, dynamicSecretsTTL, format, secretsToInclude)
 
 			secretsFetchedAt := time.Now()
+			stateMutex.Lock()
 			if secretsFetchedAt.After(lastSecretsFetch) {
 				lastSecretsFetch = secretsFetchedAt
 			}
 			if !fromCache {
 				watchedValuesMayBeStale = false
 			}
+			valuesMayBeStale := watchedValuesMayBeStale
+			stateMutex.Unlock()
 
 			// Parse secrets to map when needed:
 			// - For env injection (not mounting)
@@ -302,11 +311,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			// terminate the old process
 			if isRestart {
 				// if the watched values might be stale and we didn't read a brand new copy from the network, we shouldn't restart the process
-				if fromCache && watchedValuesMayBeStale {
+				if fromCache && valuesMayBeStale {
 					return
 				}
 
-				terminatedByWatch = true
+				terminatedByWatch.Store(true)
 				signals.beginRestart()
 
 				// killing the process here will cause the cleanup goroutine below to run, thereby unlocking the mutex
@@ -343,13 +352,16 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			// we could have received a new update event while we were waiting for the previous process to terminate.
 			// if so, don't bother starting the process as it'll just be immediately restarted again after fetching the latest secrets
-			if lastUpdateEvent.After(secretsFetchedAt) {
+			stateMutex.Lock()
+			newerUpdateEvent := lastUpdateEvent.After(secretsFetchedAt)
+			stateMutex.Unlock()
+			if newerUpdateEvent {
 				utils.LogDebug("Not starting new process; more recent update event has been received")
 				processMutex.Unlock()
 				return
 			}
 
-			terminatedByWatch = false
+			terminatedByWatch.Store(false)
 
 			global.WaitGroup.Add(1)
 
@@ -375,7 +387,8 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				utils.HandleError(err)
 			}
 
-			go func() {
+			// pass the process and its cleanup func so that this goroutine doesn't read variables the next restart reassigns
+			go func(c *exec.Cmd, cleanupMount func()) {
 				defer processMutex.Unlock()
 				defer global.WaitGroup.Done()
 
@@ -389,7 +402,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 
 				// ignore errors if we were responsible for killing the process
-				if !terminatedByWatch {
+				if !terminatedByWatch.Load() {
 					if err != nil {
 						if strings.HasPrefix(err.Error(), "exec") || strings.HasPrefix(err.Error(), "fork/exec") {
 							utils.LogError(err)
@@ -399,10 +412,9 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 					os.Exit(exitCode)
 				}
-			}()
+			}(c, cleanupMount)
 		}
 
-		watchRetrySleep := 1 * time.Second
 		watchHandler := func(data []byte) {
 			event := controllers.ParseWatchEvent(data)
 			if event.Type == "" {
@@ -410,7 +422,9 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			}
 
 			// when we've received a successful event, we know we're connected, and we can reset the retry sleep time
+			stateMutex.Lock()
 			watchRetrySleep = 1 * time.Second
+			stateMutex.Unlock()
 
 			// don't capture analytics for the ping event; it's too noisy
 			if event.Type != "ping" {
@@ -419,9 +433,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			if event.Type == "secrets.update" {
 				eventReceived := time.Now()
+				stateMutex.Lock()
 				if lastUpdateEvent.Before(eventReceived) {
 					lastUpdateEvent = eventReceived
 				}
+				stateMutex.Unlock()
 
 				watchMutex.Lock()
 				defer watchMutex.Unlock()
@@ -430,7 +446,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 				// due to the lock, we only process one event at a time, so this event could have come in many seconds ago.
 				// it's possible we've already refetched secrets since then, in which case we don't need to re-fetch
-				if lastSecretsFetch.After(eventReceived) {
+				stateMutex.Lock()
+				alreadyFetched := lastSecretsFetch.After(eventReceived)
+				stateMutex.Unlock()
+				if alreadyFetched {
 					utils.LogDebug("Ignoring event; newer secrets have already been fetched")
 					return
 				}
@@ -441,7 +460,10 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 				// if we're recovering the connection after a network failure, it's possible that we missed a secrets.update event.
 				// we'll call startProcess() to check the latest values against our cache and restart as necessary
-				if watchedValuesMayBeStale {
+				stateMutex.Lock()
+				valuesMayBeStale := watchedValuesMayBeStale
+				stateMutex.Unlock()
+				if valuesMayBeStale {
 					watchMutex.Lock()
 					defer watchMutex.Unlock()
 					startProcess()
@@ -468,7 +490,11 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 				if !httpErr.IsNil() {
 					e := httpErr.Unwrap()
+					stateMutex.Lock()
 					watchRetrySleep = 2 * watchRetrySleep
+					retrySleep := watchRetrySleep
+					watchedValuesMayBeStale = true
+					stateMutex.Unlock()
 
 					utils.LogDebug(fmt.Sprintf("Status Code %v", statusCode))
 
@@ -488,7 +514,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 					}
 
 					controllers.CaptureEvent("WatchConnectionError", map[string]interface{}{"statusCode": statusCode, "canRetry": canRetry})
-					watchedValuesMayBeStale = true
 
 					if statusCode != 0 {
 						e = fmt.Errorf("%s. Status code: %d", e, statusCode)
@@ -496,8 +521,8 @@ doppler run --mount secrets.json -- cat secrets.json`,
 					utils.LogDebugError(e)
 
 					if canRetry {
-						jitter := time.Duration(rand.Int63n(int64(watchRetrySleep))) // #nosec G404
-						sleep := utils.Min(watchRetrySleep, defaultMaxRetrySleep) + jitter/2
+						jitter := time.Duration(rand.Int63n(int64(retrySleep))) // #nosec G404
+						sleep := utils.Min(retrySleep, defaultMaxRetrySleep) + jitter/2
 						utils.LogDebug(fmt.Sprintf("restarting after %v", sleep))
 						time.Sleep(sleep)
 

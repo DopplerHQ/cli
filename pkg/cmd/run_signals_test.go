@@ -41,6 +41,23 @@ import (
 
 var dopplerBinary string
 
+// buildDir holds binaries built by the tests
+var buildDir string
+
+// dopplerRaceBinary returns a doppler binary built with the race detector, building it on first use since that's
+// slow. DOPPLER_TEST_RACE_BINARY uses a prebuilt one instead
+var dopplerRaceBinary = sync.OnceValues(func() (string, error) {
+	if binary := os.Getenv("DOPPLER_TEST_RACE_BINARY"); binary != "" {
+		return binary, nil
+	}
+	binary := filepath.Join(buildDir, "doppler-race")
+	out, err := exec.Command("go", "build", "-race", "-o", binary, "github.com/DopplerHQ/cli").CombinedOutput() // #nosec G204
+	if err != nil {
+		return "", fmt.Errorf("%v: %s", err, out)
+	}
+	return binary, nil
+})
+
 // openTTY returns the slave side of a new pseudo-terminal. It's only implemented on some OSes
 var openTTY func(t *testing.T) *os.File
 
@@ -49,6 +66,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
+	buildDir = dir
 	// DOPPLER_TEST_BINARY runs the tests against a prebuilt binary, e.g. to compare behavior with an older version
 	dopplerBinary = os.Getenv("DOPPLER_TEST_BINARY")
 	if dopplerBinary == "" {
@@ -108,6 +126,9 @@ func newMockAPI(t *testing.T, holdFrom int32) *mockAPI {
 		for {
 			select {
 			case event := <-api.watchEvents:
+				if event == dropConnection {
+					return
+				}
 				fmt.Fprintf(w, "event: message\ndata: {\"type\":\"%s\"}\n\n", event)
 				flusher.Flush()
 			case <-r.Context().Done():
@@ -123,6 +144,18 @@ func newMockAPI(t *testing.T, holdFrom int32) *mockAPI {
 		api.server.Close()
 	})
 	return api
+}
+
+// sent on watchEvents to end the watch stream, which makes doppler reconnect
+const dropConnection = "drop-connection"
+
+func (api *mockAPI) dropWatchConnection(t *testing.T) {
+	t.Helper()
+	select {
+	case api.watchEvents <- dropConnection:
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out dropping the watch connection")
+	}
 }
 
 func (api *mockAPI) releaseDownloads() {
@@ -145,13 +178,7 @@ func (api *mockAPI) waitForDownload(t *testing.T, n int32) {
 // one event per read from the stream, so sending both at once could merge them into a single unparseable read
 func triggerSecretsUpdate(t *testing.T, api *mockAPI, p *dopplerProcess) {
 	t.Helper()
-	deadline := time.Now().Add(10 * time.Second)
-	for !strings.Contains(p.output(), "Connected to secrets stream") {
-		if time.Now().After(deadline) {
-			t.Fatalf("timed out waiting for doppler to connect to the watch stream\n%s", p.describe())
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	p.waitForOutput(t, "Connected to secrets stream", 1)
 	select {
 	case api.watchEvents <- "secrets.update":
 	case <-p.done:
@@ -171,6 +198,8 @@ type runOptions struct {
 	argsForm bool
 	watch    bool
 	mount    bool
+	// run a doppler binary built with the race detector
+	raceDetector bool
 	// body of the child's sh script. the prelude defines `log` and sets GEN, and the script is followed by an
 	// interruptible wait. $! is the pid of that wait's background sleep
 	traps string
@@ -261,7 +290,14 @@ func startDoppler(t *testing.T, api *mockAPI, opts runOptions) *dopplerProcess {
 	}
 	defer out.Close()
 
-	p.cmd = exec.Command(dopplerBinary, args...) // #nosec G204
+	binary := dopplerBinary
+	if opts.raceDetector {
+		var err error
+		if binary, err = dopplerRaceBinary(); err != nil {
+			t.Skipf("unable to build doppler with the race detector: %v", err)
+		}
+	}
+	p.cmd = exec.Command(binary, args...) // #nosec G204
 	p.cmd.Env = env
 	p.cmd.Stdout = out
 	if opts.ttyStdout {
@@ -363,6 +399,18 @@ func (p *dopplerProcess) output() string {
 
 func (p *dopplerProcess) describe() string {
 	return fmt.Sprintf("child events: %q\ndoppler output:\n%s", p.events(), p.output())
+}
+
+// waitForOutput waits until doppler's output contains s at least n times
+func (p *dopplerProcess) waitForOutput(t *testing.T, s string, n int) {
+	t.Helper()
+	deadline := time.Now().Add(15 * time.Second)
+	for strings.Count(p.output(), s) < n {
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for doppler to log %q %d time(s)\n%s", s, n, p.describe())
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 func (p *dopplerProcess) waitForEvent(t *testing.T, event string) {
