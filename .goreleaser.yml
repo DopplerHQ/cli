@@ -143,10 +143,6 @@ homebrew_casks:
       email: bot@doppler.com
     homepage: "https://doppler.com"
     description: "The official Doppler CLI for managing your secrets"
-    # homepage (doppler.com) differs from the release download domain
-    # (github.com), so mark the URL verified to satisfy `brew audit`
-    url:
-      verified: github.com/DopplerHQ/cli
     binaries:
       - doppler
     completions:
