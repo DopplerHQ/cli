@@ -398,9 +398,6 @@ func setSecrets(cmd *cobra.Command, args []string) {
 }
 
 func uploadSecrets(cmd *cobra.Command, args []string) {
-	jsonFlag := utils.OutputJSON
-	raw := utils.GetBoolFlag(cmd, "raw")
-	reveal := utils.GetBoolFlag(cmd, "reveal")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -420,13 +417,13 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(err, "Unable to read upload file")
 	}
 
-	response, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
+	_, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
 	if !httpErr.IsNil() {
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, reveal)
+		utils.Log(fmt.Sprintf("Uploaded %s", filePath))
 	}
 }
 
@@ -714,7 +711,9 @@ func init() {
 		utils.HandleError(err)
 	}
 	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsUploadCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	if err := secretsUploadCmd.Flags().MarkDeprecated("raw", "upload no longer prints secret values"); err != nil {
+		utils.HandleError(err)
+	}
 	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
