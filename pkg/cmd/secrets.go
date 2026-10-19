@@ -431,9 +431,6 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 }
 
 func deleteSecrets(cmd *cobra.Command, args []string) {
-	jsonFlag := utils.OutputJSON
-	raw := utils.GetBoolFlag(cmd, "raw")
-	reveal := utils.GetBoolFlag(cmd, "reveal")
 	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -445,13 +442,13 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 			secrets[arg] = nil
 		}
 
-		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets, nil)
+		_, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets, nil)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
 		if !utils.Silent {
-			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, reveal)
+			utils.Log(fmt.Sprintf("Deleted %s", strings.Join(args, ", ")))
 		}
 	}
 }
@@ -729,8 +726,10 @@ func init() {
 		utils.HandleError(err)
 	}
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	if err := secretsDeleteCmd.Flags().MarkDeprecated("raw", "delete no longer prints secret values"); err != nil {
+		utils.HandleError(err)
+	}
 	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	secretsDeleteCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
