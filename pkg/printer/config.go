@@ -28,11 +28,11 @@ import (
 
 // ScopedConfig print scoped config
 func ScopedConfig(conf models.ScopedOptions, jsonFlag bool) {
-	ScopedConfigSource(conf, jsonFlag, false, true)
+	ScopedConfigSource(conf, jsonFlag, false)
 }
 
 // ScopedConfigSource print scoped config with source
-func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool, obfuscateToken bool) {
+func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool) {
 	pairs := models.ScopedOptionsMap(&conf)
 
 	if jsonFlag {
@@ -42,6 +42,9 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool, o
 			if *pair != (models.ScopedOption{}) {
 				scope := pair.Scope
 				value := pair.Value
+				if name == models.ConfigToken.String() {
+					value = utils.RedactAuthToken(value)
+				}
 
 				if confMap[scope] == nil {
 					confMap[scope] = map[string]string{}
@@ -62,7 +65,7 @@ func ScopedConfigSource(conf models.ScopedOptions, jsonFlag bool, source bool, o
 			translatedName := configuration.TranslateConfigOption(name)
 
 			value := pair.Value
-			if obfuscateToken && name == models.ConfigToken.String() {
+			if name == models.ConfigToken.String() {
 				value = utils.RedactAuthToken(value)
 			}
 
@@ -133,9 +136,16 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 }
 
 // Configs print configs
-func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool, obfuscateToken bool) {
+func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool) {
 	if jsonFlag {
-		JSON(configs)
+		redacted := make(map[string]models.FileScopedOptions, len(configs))
+		for scope, conf := range configs {
+			if conf.Token != "" {
+				conf.Token = utils.RedactAuthToken(conf.Token)
+			}
+			redacted[scope] = conf
+		}
+		JSON(redacted)
 		return
 	}
 
@@ -145,7 +155,7 @@ func Configs(configs map[string]models.FileScopedOptions, jsonFlag bool, obfusca
 
 		for name, value := range pairs {
 			if value != "" {
-				if obfuscateToken && name == models.ConfigToken.String() {
+				if name == models.ConfigToken.String() {
 					value = utils.RedactAuthToken(value)
 				}
 
