@@ -37,7 +37,7 @@ var configureCmd = &cobra.Command{
 		jsonFlag := utils.OutputJSON
 
 		if all {
-			printer.Configs(configuration.AllConfigs(), jsonFlag, true)
+			printer.Configs(configuration.AllConfigs(), jsonFlag)
 			return
 		}
 
@@ -61,7 +61,7 @@ and your config file. Flags have the highest priority; config file has the least
 		utils.Log(fmt.Sprintf("%s %s", color.Green.Render("Configuration directory:"), configuration.UserConfigDir))
 
 		config := configuration.LocalConfig(cmd)
-		printer.ScopedConfigSource(config, jsonFlag, true, false)
+		printer.ScopedConfigSource(config, jsonFlag, true)
 	},
 }
 
