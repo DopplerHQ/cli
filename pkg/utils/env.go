@@ -23,6 +23,10 @@ func ParseEnvStrings(envStrings []string) map[string]string {
 	for _, envVar := range envStrings {
 		// key=value format
 		parts := strings.SplitN(envVar, "=", 2)
+		if len(parts) != 2 {
+			// skip malformed entry without '='
+			continue
+		}
 		key := parts[0]
 		value := parts[1]
 		env[key] = value
