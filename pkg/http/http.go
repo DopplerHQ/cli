@@ -16,6 +16,7 @@ limitations under the License.
 package http
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -311,18 +312,22 @@ func performSSERequest(req *http.Request, verifyTLS bool, handler func([]byte)) 
 
 	headers := response.Header.Clone()
 
+	reader := bufio.NewReader(response.Body)
+	var event strings.Builder
 	for {
-		s := 1024
-		data := make([]byte, s)
-		n, err := response.Body.Read(data)
-		// this shouldn't occur, but log anyway to aid with debugging
-		if n == s {
-			utils.LogDebug(fmt.Sprintf("Response reached max buffer size of %d bytes", s))
-		}
-		// From Go docs for Reader.Read:
-		// "Callers should always process the n > 0 bytes returned before considering the error err."
-		if n > 0 {
-			go handler(data[:n])
+		line, err := reader.ReadString('\n')
+		// Network reads do not correspond to SSE events. Dispatch only after the
+		// blank line terminating an event, retaining the frame expected by callers.
+		if strings.HasSuffix(line, "\n") {
+			line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
+			if line != "" {
+				event.WriteString(line)
+				event.WriteByte('\n')
+			} else if event.Len() > 0 {
+				event.WriteByte('\n')
+				go handler([]byte(event.String()))
+				event.Reset()
+			}
 		}
 		if err != nil {
 			return response.StatusCode, headers, err
