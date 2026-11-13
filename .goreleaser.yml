@@ -153,9 +153,9 @@ homebrew_casks:
     # quarantine attribute on macOS to keep `brew install` working
     hooks:
       post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/doppler"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/doppler"]
           end
 
 scoops:
