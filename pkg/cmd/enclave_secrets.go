@@ -107,6 +107,7 @@ func init() {
 	enclaveSecretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	enclaveSecretsCmd.Flags().Bool("type", false, "include secret type in table output")
 	enclaveSecretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
+	enclaveSecretsCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 
 	enclaveSecretsGetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
 	if err := enclaveSecretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
@@ -122,6 +123,7 @@ func init() {
 	enclaveSecretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	enclaveSecretsGetCmd.Flags().Bool("type", false, "include secret type in table output")
 	enclaveSecretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
+	enclaveSecretsGetCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsGetCmd)
 
 	enclaveSecretsSetCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
@@ -134,6 +136,7 @@ func init() {
 	}
 	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
+	enclaveSecretsSetCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 
 	enclaveSecretsDeleteCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
@@ -146,6 +149,7 @@ func init() {
 	}
 	enclaveSecretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	enclaveSecretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	enclaveSecretsDeleteCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDeleteCmd)
 
 	enclaveSecretsDownloadCmd.Flags().StringP("project", "p", "", "enclave project (e.g. backend)")
