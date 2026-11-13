@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"syscall"
@@ -63,6 +64,49 @@ var dangerousSecretNames = [...]string{
 	// NodeJS
 	"NODE_VERSION",
 	"NODE_OPTIONS",
+	"NODE_REPL_EXTERNAL_MODULE",
+
+	// Shell startup files sourced by non-interactive shells.
+	// bash reads BASH_ENV before running any non-interactive shell, so this
+	// reaches every `#!/bin/bash` script started via `doppler run`.
+	"BASH_ENV",
+	"ENV",
+	"SHELLOPTS",
+	"PS4",
+	// Python / Ruby
+	"PYTHONPATH",
+	"PYTHONSTARTUP",
+	"RUBYOPT",
+	// JVM: -javaagent: / -javaagent-style options are honoured from these
+	"JAVA_TOOL_OPTIONS",
+	"_JAVA_OPTIONS",
+	"CLASSPATH",
+	// git executes the value of these as a command
+	"GIT_SSH_COMMAND",
+	"GIT_EXTERNAL_DIFF",
+}
+
+// Whole namespaces where every member influences the dynamic linker, so an
+// exhaustive list is not maintainable. Deliberately limited to the loader
+// prefixes: broader prefixes (NODE_, JAVA_, GIT_, PYTHON_ ...) would match
+// ubiquitous benign names such as NODE_ENV, JAVA_HOME and GIT_DIR.
+var dangerousSecretNamePatterns = []*regexp.Regexp{
+	regexp.MustCompile(`^LD_`),
+	regexp.MustCompile(`^DYLD_`),
+}
+
+func isDangerousSecretName(name string) bool {
+	for _, dangerousName := range dangerousSecretNames {
+		if name == dangerousName {
+			return true
+		}
+	}
+	for _, pattern := range dangerousSecretNamePatterns {
+		if pattern.MatchString(name) {
+			return true
+		}
+	}
+	return false
 }
 
 type FallbackOptions struct {
@@ -301,11 +345,14 @@ func MissingSecrets(secrets map[string]string, secretsToInclude []string) []stri
 func CheckForDangerousSecretNames(secrets map[string]string) error {
 	dangerousSecretNamesFound := []string{}
 
-	for _, dangerousName := range dangerousSecretNames {
-		if _, ok := secrets[dangerousName]; ok {
-			dangerousSecretNamesFound = append(dangerousSecretNamesFound, dangerousName)
+	// iterate the config's secrets rather than the list, so that the prefix
+	// patterns are applied too
+	for name := range secrets {
+		if isDangerousSecretName(name) {
+			dangerousSecretNamesFound = append(dangerousSecretNamesFound, name)
 		}
 	}
+	sort.Strings(dangerousSecretNamesFound)
 
 	if len(dangerousSecretNamesFound) > 0 {
 		return fmt.Errorf("your config contains the following potentially dangerous secret names (https://docs.doppler.com/docs/accessing-secrets#injection):\n- %s", strings.Join(dangerousSecretNamesFound, "\n- "))
