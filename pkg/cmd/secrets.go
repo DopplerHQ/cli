@@ -169,6 +169,7 @@ The '--use-env' flag can be used to expose environment variables to templates:
 func secrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	showValues := utils.GetBoolFlag(cmd, "show-values")
 	visibility := utils.GetBoolFlag(cmd, "visibility")
 	valueType := utils.GetBoolFlag(cmd, "type")
 	onlyNames := utils.GetBoolFlag(cmd, "only-names")
@@ -193,13 +194,14 @@ func secrets(cmd *cobra.Command, args []string) {
 			utils.HandleError(parseErr, "Unable to parse API response")
 		}
 
-		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false, visibility, valueType)
+		printer.Secrets(secrets, []string{}, jsonFlag, false, raw, false, visibility, valueType, showValues)
 	}
 }
 
 func getSecrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	plain := utils.GetBoolFlag(cmd, "plain")
+	showValues := utils.GetBoolFlag(cmd, "show-values")
 	copy := utils.GetBoolFlag(cmd, "copy")
 	raw := utils.GetBoolFlag(cmd, "raw")
 	visibility := utils.GetBoolFlag(cmd, "visibility")
@@ -240,12 +242,13 @@ func getSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy, visibility, valueType)
+	printer.Secrets(secrets, args, jsonFlag, plain, raw, copy, visibility, valueType, showValues)
 }
 
 func setSecrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	showValues := utils.GetBoolFlag(cmd, "show-values")
 	canPromptUser := !utils.GetBoolFlag(cmd, "no-interactive")
 	localConfig := configuration.LocalConfig(cmd)
 	visibility := cmd.Flag("visibility").Value.String()
@@ -390,13 +393,14 @@ func setSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, valueTypeModified)
+		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, valueTypeModified, showValues)
 	}
 }
 
 func uploadSecrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	showValues := utils.GetBoolFlag(cmd, "show-values")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -422,13 +426,14 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false)
+		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, showValues)
 	}
 }
 
 func deleteSecrets(cmd *cobra.Command, args []string) {
 	jsonFlag := utils.OutputJSON
 	raw := utils.GetBoolFlag(cmd, "raw")
+	showValues := utils.GetBoolFlag(cmd, "show-values")
 	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -446,7 +451,7 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 		}
 
 		if !utils.Silent {
-			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false)
+			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, showValues)
 		}
 	}
 }
@@ -669,6 +674,7 @@ func init() {
 	secretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
+	secretsCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 
 	secretsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	if err := secretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
@@ -684,6 +690,7 @@ func init() {
 	secretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsGetCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
+	secretsGetCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -698,6 +705,7 @@ func init() {
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsSetCmd.Flags().String("visibility", "", "visibility (e.g. masked, unmasked, or restricted)")
 	secretsSetCmd.Flags().String("type", "", "value type (e.g. string, decimal, etc)")
+	secretsSetCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -709,6 +717,7 @@ func init() {
 		utils.HandleError(err)
 	}
 	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	secretsUploadCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -721,6 +730,7 @@ func init() {
 	}
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
+	secretsDeleteCmd.Flags().Bool("show-values", false, "show secret values in table output (values are masked by default)")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
