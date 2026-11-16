@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/DopplerHQ/cli/pkg/configuration"
@@ -159,11 +160,17 @@ func RunInstallScript() (bool, string, Error) {
 		// must execute in sh on MINGW64 Windows to avoid "command not found" error
 		c := []string{"sh"}
 		c = append(c, command...)
-		cmd, err = utils.RunCommand(c, os.Environ(), nil, &out, &out, true)
+		cmd, err = utils.RunCommand(c, os.Environ(), nil, &out, &out)
 	} else {
-		cmd, err = utils.RunCommand(command, os.Environ(), nil, &out, &out, true)
+		cmd, err = utils.RunCommand(command, os.Environ(), nil, &out, &out)
+	}
+	// keep running until the script exits so we can report the failure and remove the temp file
+	stopForwarding := func() {}
+	if err == nil {
+		stopForwarding = utils.ForwardSignals(cmd, os.Interrupt, syscall.SIGTERM)
 	}
 	waitExitCode, waitErr := utils.WaitCommand(cmd)
+	stopForwarding()
 
 	executeDuration := time.Since(startTime).Milliseconds()
 	strOut := out.String()
@@ -295,7 +302,7 @@ func installedViaWinget() bool {
 	if utils.CanLogDebug() {
 		out = os.Stderr
 	}
-	cmd, err := utils.RunCommandString(command, os.Environ(), nil, out, out, true)
+	cmd, err := utils.RunCommandString(command, os.Environ(), nil, out, out)
 	if err != nil {
 		utils.LogDebugError(err)
 		return false
@@ -313,7 +320,7 @@ func isUpdateAvailableViaWinget(updateVersion string) bool {
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
 
 	var out bytes.Buffer
-	cmd, err := utils.RunCommandString(command, os.Environ(), nil, &out, &out, true)
+	cmd, err := utils.RunCommandString(command, os.Environ(), nil, &out, &out)
 	if err != nil {
 		utils.LogDebugError(err)
 		return false
@@ -341,7 +348,7 @@ func updateViaWinget(version string) error {
 	command := fmt.Sprintf("winget upgrade --id %s --exact --disable-interactivity --version %s", wingetPackageId, strings.TrimPrefix(version, "v"))
 
 	utils.LogDebug(fmt.Sprintf("Executing \"%s\"", command))
-	_, err := utils.RunCommandString(command, os.Environ(), nil, os.Stdout, os.Stderr, true)
+	_, err := utils.RunCommandString(command, os.Environ(), nil, os.Stdout, os.Stderr)
 	if err != nil {
 		CaptureEvent("WingetUpgradeFailed", nil)
 		return err

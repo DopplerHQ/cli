@@ -250,6 +250,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		// these variables have the potential to be racey, but are made safe by our use of the mutex
 		terminatedByWatch := false
 		watchedValuesMayBeStale := false
+		signals := newRunSignalHandler(forwardSignals)
 
 		startLivenessPing := func() {
 			ticker := time.NewTicker(defaultLivenessPingIntervalSeconds)
@@ -306,6 +307,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 
 				terminatedByWatch = true
+				signals.beginRestart()
 
 				// killing the process here will cause the cleanup goroutine below to run, thereby unlocking the mutex
 				utils.LogDebug(fmt.Sprintf("Sending SIGTERM to process %d", c.Process.Pid))
@@ -333,6 +335,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				}
 
 				c = nil
+				signals.childExited()
 			}
 
 			// this lock ensures the old process, if any, has exited before we start a new process
@@ -348,17 +351,22 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			terminatedByWatch = false
 
-			var env []string
-			env, cleanupMount = controllers.PrepareSecrets(secrets, secretsBytes, os.Environ(), preserveEnv, mountOptions)
-
 			global.WaitGroup.Add(1)
 
 			if isRestart {
 				utils.Log("Restarting process")
 			}
 
-			// start the process
-			c, err = controllers.Run(cmd, args, env, forwardSignals)
+			// start the process. if we were asked to stop while restarting, this exits instead
+			c, cleanupMount, err = signals.start(func() (*exec.Cmd, func(), error) {
+				env, onExit := controllers.PrepareSecrets(secrets, secretsBytes, os.Environ(), preserveEnv, mountOptions)
+				if onExit != nil {
+					// the signal handler may also run this when exiting during a restart
+					onExit = sync.OnceFunc(onExit)
+				}
+				c, err := controllers.Run(cmd, args, env)
+				return c, onExit, err
+			})
 			if err != nil {
 				defer global.WaitGroup.Done()
 				if cleanupMount != nil {
