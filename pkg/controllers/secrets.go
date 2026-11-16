@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"text/template"
 	"time"
@@ -148,11 +149,12 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 		return "", nil, Error{Err: err, Message: "Unable to mount secrets file"}
 	}
 
-	fifoCleanupStarted := false
+	// set by cleanupFIFO and read by the goroutine that writes to the pipe
+	var fifoCleanupStarted atomic.Bool
 
 	// cleanup named pipe on exit
 	cleanupFIFO := func() {
-		fifoCleanupStarted = true
+		fifoCleanupStarted.Store(true)
 
 		utils.LogDebug(fmt.Sprintf("Deleting secrets mount %s", mountPath))
 		if err := os.Remove(mountPath); err != nil {
@@ -185,7 +187,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 			f, err := os.OpenFile(mountPath, os.O_WRONLY, os.ModeNamedPipe) // #nosec G304
 			if err != nil {
 				// race: cleanup has already begun; no need to error
-				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted {
+				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted.Load() {
 					break
 				}
 				cleanupFIFO()
@@ -199,7 +201,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 
 			if _, err := f.Write(secrets); err != nil {
 				// race: cleanup has already begun; no need to error
-				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted {
+				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted.Load() {
 					break
 				}
 				// broken pipe occurs when reader closes pipe before writing completes (eg. with vite dev server)
@@ -215,7 +217,7 @@ func MountSecrets(secrets []byte, mountPath string, maxReads int) (string, func(
 
 			if err := f.Close(); err != nil {
 				// race: cleanup has already begun; no need to error
-				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted {
+				if errors.Is(err, fs.ErrNotExist) && fifoCleanupStarted.Load() {
 					break
 				}
 				// broken pipe on close is safe to ignore - the reader has already disconnected
