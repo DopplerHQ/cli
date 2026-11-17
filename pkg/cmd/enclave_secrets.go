@@ -133,6 +133,9 @@ func init() {
 		utils.HandleError(err)
 	}
 	enclaveSecretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	if err := enclaveSecretsSetCmd.Flags().MarkDeprecated("raw", "set no longer prints secret values"); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsSetCmd)
 

@@ -244,8 +244,6 @@ func getSecrets(cmd *cobra.Command, args []string) {
 }
 
 func setSecrets(cmd *cobra.Command, args []string) {
-	jsonFlag := utils.OutputJSON
-	raw := utils.GetBoolFlag(cmd, "raw")
 	canPromptUser := !utils.GetBoolFlag(cmd, "no-interactive")
 	localConfig := configuration.LocalConfig(cmd)
 	visibility := cmd.Flag("visibility").Value.String()
@@ -384,13 +382,13 @@ func setSecrets(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, changeRequests)
+	_, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, nil, changeRequests)
 	if !err.IsNil() {
 		utils.HandleError(err.Unwrap(), err.Message)
 	}
 
 	if !utils.Silent {
-		printer.Secrets(response, keys, jsonFlag, false, raw, false, visibilityModified, valueTypeModified)
+		utils.Log(fmt.Sprintf("Set %s", strings.Join(keys, ", ")))
 	}
 }
 
@@ -695,6 +693,9 @@ func init() {
 		utils.HandleError(err)
 	}
 	secretsSetCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	if err := secretsSetCmd.Flags().MarkDeprecated("raw", "set no longer prints secret values"); err != nil {
+		utils.HandleError(err)
+	}
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsSetCmd.Flags().String("visibility", "", "visibility (e.g. masked, unmasked, or restricted)")
 	secretsSetCmd.Flags().String("type", "", "value type (e.g. string, decimal, etc)")
