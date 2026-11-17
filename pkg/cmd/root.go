@@ -53,7 +53,7 @@ var rootCmd = &cobra.Command{
 		// this output does not honor --silent
 		if printConfig {
 			utils.LogDebug("Active configuration")
-			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true, true)
+			printer.ScopedConfigSource(configuration.LocalConfig(cmd), false, true)
 			utils.LogDebug("")
 		}
 
