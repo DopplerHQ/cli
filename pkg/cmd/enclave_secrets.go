@@ -145,6 +145,9 @@ func init() {
 		utils.HandleError(err)
 	}
 	enclaveSecretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
+	if err := enclaveSecretsDeleteCmd.Flags().MarkDeprecated("raw", "delete no longer prints secret values"); err != nil {
+		utils.HandleError(err)
+	}
 	enclaveSecretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	enclaveSecretsCmd.AddCommand(enclaveSecretsDeleteCmd)
 
