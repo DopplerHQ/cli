@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/DopplerHQ/cli/pkg/models"
 	"github.com/DopplerHQ/cli/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -172,4 +173,38 @@ func TestPrepareSecretsMountsRawBytes(t *testing.T) {
 	content, readErr := os.ReadFile(secretsPath)
 	assert.NoError(t, readErr)
 	assert.Equal(t, secretsBytes, content, "mounted file should contain raw bytes from backend")
+}
+
+func TestMissingSecrets(t *testing.T) {
+	secretsToInclude := []string{"API_KEY", "DB_HOST_2"}
+
+	testCases := []struct {
+		name            string
+		nameTransformer *models.SecretsNameTransformer
+		secrets         map[string]string
+		expected        []string
+	}{
+		{"no transformer, all present", nil, map[string]string{"API_KEY": "a", "DB_HOST_2": "b"}, nil},
+		{"no transformer, one missing", nil, map[string]string{"API_KEY": "a"}, []string{"DB_HOST_2"}},
+		{"no transformer, transformed name does not count", nil, map[string]string{"apiKey": "a", "DB_HOST_2": "b"}, []string{"API_KEY"}},
+		{"tf-var", models.TFVarTransformer, map[string]string{"TF_VAR_api_key": "a", "TF_VAR_db_host_2": "b"}, nil},
+		{"camel", models.CamelTransformer, map[string]string{"apiKey": "a", "dbHost2": "b"}, nil},
+		{"upper-camel", models.UpperCamelTransformer, map[string]string{"ApiKey": "a", "DbHost2": "b"}, nil},
+		{"lower-kebab", models.LowerKebabTransformer, map[string]string{"api-key": "a", "db-host-2": "b"}, nil},
+		{"lower-snake", models.LowerSnakeTransformer, map[string]string{"api_key": "a", "db_host_2": "b"}, nil},
+		{"tf-var, one missing", models.TFVarTransformer, map[string]string{"TF_VAR_api_key": "a"}, []string{"DB_HOST_2"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, MissingSecrets(tc.secrets, secretsToInclude, tc.nameTransformer))
+		})
+	}
+}
+
+func TestMissingSecretsTFVarNameWithPrefix(t *testing.T) {
+	// a secret named TF_VAR_REGION becomes TF_VAR_tf_var_region with the tf-var transformer
+	secrets := map[string]string{"TF_VAR_tf_var_region": "a"}
+	assert.Empty(t, MissingSecrets(secrets, []string{"TF_VAR_REGION"}, models.TFVarTransformer))
+	assert.Equal(t, []string{"REGION"}, MissingSecrets(secrets, []string{"REGION"}, models.TFVarTransformer))
 }
