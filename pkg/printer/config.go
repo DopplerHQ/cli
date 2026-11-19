@@ -126,7 +126,13 @@ func ScopedConfigValues(conf models.ScopedOptions, args []string, values map[str
 	for _, arg := range args {
 		if option, exists := values[arg]; exists {
 			translatedArg := configuration.TranslateConfigOption(arg)
-			rows = append(rows, []string{translatedArg, option.Value, option.Scope})
+
+			value := option.Value
+			if arg == models.ConfigToken.String() {
+				value = utils.RedactAuthToken(value)
+			}
+
+			rows = append(rows, []string{translatedArg, value, option.Scope})
 		}
 	}
 	Table([]string{"name", "value", "scope"}, rows, TableOptions())

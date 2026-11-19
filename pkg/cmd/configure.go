@@ -82,6 +82,8 @@ var configureGetCmd = &cobra.Command{
 	Short: "Get the value of one or more options in the config file",
 	Long: `Get the value of one or more options in the config file.
 
+The auth token is redacted in the table output. Use --plain to print it in full.
+
 Ex: output the options "key" and "otherkey":
 doppler configure get key otherkey`,
 	ValidArgsFunction: currentConfigOptionsValidArgs,
