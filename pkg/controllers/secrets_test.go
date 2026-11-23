@@ -185,6 +185,7 @@ func TestPrepareSecretsEnvInjectionPrecedence(t *testing.T) {
 		{"false", []string{"FOO=doppler-foo", "BAR=doppler-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
 		{"true", []string{"FOO=env-foo", "BAR=env-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
 		{"FOO", []string{"FOO=env-foo", "BAR=doppler-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
+		{" FOO, ,BAR ", []string{"FOO=env-foo", "BAR=env-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
 	}
 
 	for _, tc := range testCases {

@@ -353,7 +353,7 @@ func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, origi
 			existingEnv := utils.ParseEnvStrings(originalEnv)
 			// with a list, only the listed env vars are merged into the mounted file
 			if preserveEnv != "true" {
-				secretsToPreserve := strings.Split(preserveEnv, ",")
+				secretsToPreserve := parsePreserveEnvList(preserveEnv)
 				for name := range existingEnv {
 					if !utils.Contains(secretsToPreserve, name) {
 						delete(existingEnv, name)
@@ -425,7 +425,7 @@ func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, origi
 // where the existing environment value wins.
 func mergeSecretsWithEnv(dopplerSecrets map[string]string, existingEnv map[string]string, preserveEnv string) map[string]string {
 	preserveAll := preserveEnv == "true"
-	secretsToPreserve := strings.Split(preserveEnv, ",")
+	secretsToPreserve := parsePreserveEnvList(preserveEnv)
 
 	secrets := maps.Clone(existingEnv)
 	for name, value := range dopplerSecrets {
@@ -436,6 +436,17 @@ func mergeSecretsWithEnv(dopplerSecrets map[string]string, existingEnv map[strin
 		secrets[name] = value
 	}
 	return secrets
+}
+
+// parsePreserveEnvList splits a --preserve-env list into names, ignoring surrounding whitespace and empty entries
+func parsePreserveEnvList(preserveEnv string) []string {
+	names := []string{}
+	for _, name := range strings.Split(preserveEnv, ",") {
+		if name = strings.TrimSpace(name); name != "" {
+			names = append(names, name)
+		}
+	}
+	return names
 }
 
 // FetchSecrets from Doppler and handle fallback file.
