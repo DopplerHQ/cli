@@ -16,6 +16,7 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +31,7 @@ import (
 	"syscall"
 	"text/template"
 	"time"
+	"unicode/utf8"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -83,6 +85,8 @@ type MountOptions struct {
 	Path     string
 	Template string
 	MaxReads int
+	// SecretsToInclude is the --only-secrets list. When set, env vars never add names to the mounted file
+	SecretsToInclude []string
 }
 
 func GetSecrets(config models.ScopedOptions) (map[string]models.ComputedSecret, Error) {
@@ -344,6 +348,45 @@ func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, origi
 	if mountOptions.Enable {
 		env = originalEnv
 		secrets := dopplerSecrets
+
+		if preserveEnv != "false" {
+			existingEnv := utils.ParseEnvStrings(originalEnv)
+			// with a list, only the listed env vars are merged into the mounted file
+			if preserveEnv != "true" {
+				secretsToPreserve := strings.Split(preserveEnv, ",")
+				for name := range existingEnv {
+					if !utils.Contains(secretsToPreserve, name) {
+						delete(existingEnv, name)
+					}
+				}
+			}
+			secrets = mergeSecretsWithEnv(dopplerSecrets, existingEnv, preserveEnv)
+			if len(mountOptions.SecretsToInclude) > 0 {
+				for name := range secrets {
+					if _, isDopplerSecret := dopplerSecrets[name]; !isDopplerSecret {
+						delete(secrets, name)
+					}
+				}
+			}
+
+			// the backend's bytes no longer reflect the merged values, so re-render them
+			if mountOptions.Format == models.JSON.String() {
+				// the encoder would silently replace invalid bytes with U+FFFD
+				for name, value := range secrets {
+					if !utf8.ValidString(value) {
+						utils.HandleError(fmt.Errorf("the value of %s is not valid UTF-8, so it can't be written to a json file", name))
+					}
+				}
+				var buf bytes.Buffer
+				encoder := json.NewEncoder(&buf)
+				// match the backend's output, which doesn't escape <, >, and &
+				encoder.SetEscapeHTML(false)
+				if err := encoder.Encode(secrets); err != nil {
+					utils.HandleError(err, "Unable to serialize secrets")
+				}
+				secretsBytes = bytes.TrimSuffix(buf.Bytes(), []byte("\n"))
+			}
+		}
 
 		// For template format, render the template using the parsed secrets
 		if mountOptions.Format == models.TemplateMountFormat {

@@ -195,3 +195,80 @@ func TestPrepareSecretsEnvInjectionPrecedence(t *testing.T) {
 		})
 	}
 }
+
+func TestPrepareSecretsMountJSONPreserveEnv(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	secretsBytes := []byte(`{"BAR":"doppler-bar","FOO":"doppler-foo","HOME":"doppler-home"}`)
+	originalEnv := []string{"FOO=<env&foo>", "UNRELATED=env-unrelated", "HOME=env-home", "OTHER=env-other"}
+
+	testCases := []struct {
+		name        string
+		preserveEnv string
+		expected    string
+	}{
+		{"disabled mounts backend bytes", "false", string(secretsBytes)},
+		{"true merges the whole env like env injection", "true", `{"BAR":"doppler-bar","FOO":"<env&foo>","HOME":"env-home","OTHER":"env-other","UNRELATED":"env-unrelated"}`},
+		{"list overrides only listed Doppler secrets", "FOO", `{"BAR":"doppler-bar","FOO":"<env&foo>","HOME":"doppler-home"}`},
+		{"list adds listed env vars that aren't Doppler secrets", "FOO,UNRELATED", `{"BAR":"doppler-bar","FOO":"<env&foo>","HOME":"doppler-home","UNRELATED":"env-unrelated"}`},
+		{"listed name missing from env keeps Doppler value", "BAR,MISSING", `{"BAR":"doppler-bar","FOO":"doppler-foo","HOME":"doppler-home"}`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dopplerSecrets := map[string]string{"FOO": "doppler-foo", "BAR": "doppler-bar", "HOME": "doppler-home"}
+			mountOptions := MountOptions{Enable: true, Format: "json", Path: filepath.Join(t.TempDir(), "secrets.json"), MaxReads: 1}
+			env, cleanup := PrepareSecrets(dopplerSecrets, secretsBytes, originalEnv, tc.preserveEnv, mountOptions)
+			if cleanup != nil {
+				defer cleanup()
+			}
+			assert.Equal(t, tc.expected, readMountedSecrets(t, env))
+			assert.Equal(t, "doppler-foo", dopplerSecrets["FOO"], "caller's map must not be mutated")
+		})
+	}
+}
+
+func TestPrepareSecretsMountTemplatePreserveEnv(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	dopplerSecrets := map[string]string{"FOO": "doppler-foo", "BAR": "doppler-bar", "PS1": "doppler-ps1"}
+	mountOptions := MountOptions{
+		Enable:   true,
+		Format:   "template",
+		Path:     filepath.Join(t.TempDir(), "secrets.txt"),
+		Template: "{{.FOO}} {{.BAR}} {{.UNRELATED}} {{.PS1}}",
+		MaxReads: 1,
+	}
+	env, cleanup := PrepareSecrets(dopplerSecrets, nil, []string{"FOO=env-foo", "UNRELATED=env-unrelated"}, "true", mountOptions)
+	if cleanup != nil {
+		defer cleanup()
+	}
+	assert.Equal(t, "env-foo doppler-bar env-unrelated doppler-ps1", readMountedSecrets(t, env))
+}
+
+func TestPrepareSecretsMountOnlySecretsLimitsPreserveEnv(t *testing.T) {
+	if !utils.SupportsNamedPipes {
+		t.Skip("Named pipes not supported on this platform")
+	}
+
+	for _, preserveEnv := range []string{"true", "FOO,BAR"} {
+		t.Run(preserveEnv, func(t *testing.T) {
+			mountOptions := MountOptions{
+				Enable:           true,
+				Format:           "json",
+				Path:             filepath.Join(t.TempDir(), "secrets.json"),
+				MaxReads:         1,
+				SecretsToInclude: []string{"FOO"},
+			}
+			env, cleanup := PrepareSecrets(map[string]string{"FOO": "doppler-foo"}, nil, []string{"FOO=env-foo", "BAR=env-bar"}, preserveEnv, mountOptions)
+			if cleanup != nil {
+				defer cleanup()
+			}
+			assert.Equal(t, `{"FOO":"env-foo"}`, readMountedSecrets(t, env))
+		})
+	}
+}
