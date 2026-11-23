@@ -99,6 +99,16 @@ fi
 
 beforeEach
 
+# verify --only-secrets works with a mount format that isn't json (the DOPPLER_ secrets are always included)
+EXPECTED_SECRETS='DOPPLER_CONFIG="e2e"\nDOPPLER_ENVIRONMENT="e2e"\nDOPPLER_PROJECT="cli"\nFOO="bar"'
+actual="$("$DOPPLER_BINARY" run --mount secrets.env --only-secrets FOO --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
+ echo "ERROR: mounted env secrets file with --only-secrets has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
 # verify specified format is used (--mount-format, deprecated)
 EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"

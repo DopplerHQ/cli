@@ -285,13 +285,13 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			// Parse secrets to map when needed:
 			// - For env injection (not mounting)
-			// - For validation
 			// - For template rendering
 			// - For merging preserved env vars into a mounted file
+			// - For validating --only-secrets, which is only possible when the response is JSON keyed by secret name
 			var secrets map[string]string
 			needsParsedSecrets := !shouldMountFile || mountFormat == models.TemplateMountFormat || preserveEnv != "false"
-			if needsParsedSecrets || len(secretsToInclude) > 0 {
-				// Template format and env injection require JSON, so we need to parse
+			canValidateIncludedSecrets := !shouldMountFile || mountFormat == models.JSON.String() || mountFormat == models.TemplateMountFormat
+			if needsParsedSecrets || (len(secretsToInclude) > 0 && canValidateIncludedSecrets) {
 				var parseErr error
 				secrets, parseErr = controllers.ParseSecrets(secretsBytes)
 				if parseErr != nil {
