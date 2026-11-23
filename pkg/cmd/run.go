@@ -133,14 +133,6 @@ doppler run --mount secrets.json -- cat secrets.json`,
 			utils.HandleError(fmt.Errorf("Invalid mount format. Valid formats are %s", models.SecretsMountFormats))
 		}
 
-		if preserveEnv != "false" {
-			if shouldMountFile {
-				utils.LogWarning("--preserve-env has no effect when used with --mount")
-			} else {
-				utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
-			}
-		}
-
 		if shouldMountTemplate && !shouldMountFile {
 			utils.HandleError(errors.New("--mount-template must be used with --mount"))
 		}
@@ -176,6 +168,15 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				templateBody = controllers.ReadTemplateFile(mountTemplate)
 			} else if mountFormat == models.TemplateMountFormat {
 				utils.HandleError(errors.New("--mount-template must be specified when using --format=template"))
+			}
+		}
+
+		if preserveEnv != "false" {
+			if shouldMountFile && mountFormat != models.JSON.String() && mountFormat != models.TemplateMountFormat {
+				utils.LogWarning(fmt.Sprintf("--preserve-env has no effect when mounting secrets in %s format. Supported formats are json and template", mountFormat))
+				preserveEnv = "false"
+			} else {
+				utils.LogWarning("Ignoring Doppler secrets already defined in the environment due to --preserve-env flag")
 			}
 		}
 
@@ -224,11 +225,12 @@ doppler run --mount secrets.json -- cat secrets.json`,
 		}
 
 		mountOptions := controllers.MountOptions{
-			Enable:   shouldMountFile,
-			Format:   mountFormat,
-			Path:     mountPath,
-			Template: templateBody,
-			MaxReads: maxReads,
+			Enable:           shouldMountFile,
+			Format:           mountFormat,
+			Path:             mountPath,
+			Template:         templateBody,
+			MaxReads:         maxReads,
+			SecretsToInclude: secretsToInclude,
 		}
 
 		watch := cmd.Flags().Changed("watch")
@@ -283,12 +285,13 @@ doppler run --mount secrets.json -- cat secrets.json`,
 
 			// Parse secrets to map when needed:
 			// - For env injection (not mounting)
-			// - For validation
 			// - For template rendering
+			// - For merging preserved env vars into a mounted file
+			// - For validating --only-secrets, which is only possible when the response is JSON keyed by secret name
 			var secrets map[string]string
-			needsParsedSecrets := !shouldMountFile || mountFormat == models.TemplateMountFormat
-			if needsParsedSecrets || len(secretsToInclude) > 0 {
-				// Template format and env injection require JSON, so we need to parse
+			needsParsedSecrets := !shouldMountFile || mountFormat == models.TemplateMountFormat || preserveEnv != "false"
+			canValidateIncludedSecrets := !shouldMountFile || mountFormat == models.JSON.String() || mountFormat == models.TemplateMountFormat
+			if needsParsedSecrets || (len(secretsToInclude) > 0 && canValidateIncludedSecrets) {
 				var parseErr error
 				secrets, parseErr = controllers.ParseSecrets(secretsBytes)
 				if parseErr != nil {
@@ -663,7 +666,7 @@ func init() {
 	}
 	runCmd.Flags().String("command", "", "command to execute (e.g. \"echo hi\")")
 	// note: requires using "--preserve-env=VALUE", doesn't work with "--preserve-env VALUE"
-	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence over the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk.")
+	runCmd.Flags().String("preserve-env", "false", "a comma separated list of secrets for which the existing value from the environment, if any, should take precedence over the Doppler secret value. value must be specified with an equals sign (e.g. --preserve-env=\"FOO,BAR\"). specify \"true\" to give precedence to all existing environment values, however this has potential security implications and should be used at your own risk. names are matched after --name-transformer is applied. with --mount, only the json and template formats are supported: \"true\" merges the entire environment into the mounted file, and a list merges only the listed environment variables.")
 	// we must specify a default when no value is passed as this flag used to be a boolean
 	// https://github.com/spf13/pflag#setting-no-option-default-values-for-flags
 	runCmd.Flags().Lookup("preserve-env").NoOptDefVal = "true"
@@ -688,7 +691,7 @@ func init() {
 	runCmd.Flags().Bool("forward-signals", forwardSignals, "forward signals to the child process (defaults to false when STDOUT is a TTY)")
 	runCmd.Flags().Bool("no-liveness-ping", false, "disable the periodic liveness ping")
 	// secrets mount flags
-	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment")
+	runCmd.Flags().String("mount", "", "write secrets to an ephemeral file, accessible at DOPPLER_CLI_SECRETS_PATH. when enabled, secrets are NOT injected into the environment. with --preserve-env, environment values are also written to the file (json and template formats only)")
 	runCmd.Flags().String("format", "json", fmt.Sprintf("file format to use. if not specified, will be auto-detected from mount name. one of %v", models.SecretsMountFormats))
 	err = runCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return models.SecretsMountFormats, cobra.ShellCompDirectiveDefault

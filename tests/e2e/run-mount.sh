@@ -99,6 +99,16 @@ fi
 
 beforeEach
 
+# verify --only-secrets works with a mount format that isn't json (the DOPPLER_ secrets are always included)
+EXPECTED_SECRETS='DOPPLER_CONFIG="e2e"\nDOPPLER_ENVIRONMENT="e2e"\nDOPPLER_PROJECT="cli"\nFOO="bar"'
+actual="$("$DOPPLER_BINARY" run --mount secrets.env --only-secrets FOO --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
+ echo "ERROR: mounted env secrets file with --only-secrets has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
 # verify specified format is used (--mount-format, deprecated)
 EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --mount-format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
@@ -114,6 +124,36 @@ EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_P
 actual="$("$DOPPLER_BINARY" run --mount secrets.env --format json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
 if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
  echo "ERROR: mounted secrets file with --format json has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify --preserve-env with a list merges only the listed env vars into a mounted json file
+EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"from-env","HOME":"123","LISTED":"from-env","TEST":"abc"}'
+actual="$(FOO=from-env LISTED=from-env UNLISTED=from-env "$DOPPLER_BINARY" run --mount secrets.json --preserve-env=FOO,LISTED --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+if [[ "$actual" != "$EXPECTED_SECRETS" ]]; then
+ echo "ERROR: mounted secrets file with --preserve-env list has invalid contents"
+ exit 1
+fi
+
+beforeEach
+
+# verify --preserve-env=true merges the whole env into a mounted json file, as it does for env injection
+actual="$(FOO=from-env UNLISTED=from-env "$DOPPLER_BINARY" run --mount secrets.json --preserve-env --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+for expected in '"FOO":"from-env"' '"UNLISTED":"from-env"' '"TEST":"abc"' "\"HOME\":\"$HOME\""; do
+  if [[ "$actual" != *"$expected"* ]]; then
+   echo "ERROR: mounted secrets file with --preserve-env=true is missing $expected"
+   exit 1
+  fi
+done
+
+beforeEach
+
+# verify --preserve-env overrides matching secrets in a mounted template
+actual="$(FOO=from-env "$DOPPLER_BINARY" run --mount secrets.json --mount-template /dev/stdin --preserve-env=FOO --command "cat \$DOPPLER_CLI_SECRETS_PATH" <<<'{{.FOO}}')"
+if [[ "$actual" != "from-env" ]]; then
+ echo "ERROR: mounted secrets template with --preserve-env has invalid contents"
  exit 1
 fi
 
@@ -171,11 +211,11 @@ beforeEach
 
 beforeEach
 
-# verify existing env value is ignored even when --preserve-env is specified
-EXPECTED_SECRETS='{"DOPPLER_CONFIG":"e2e","DOPPLER_ENVIRONMENT":"e2e","DOPPLER_PROJECT":"cli","FOO":"bar","HOME":"123","TEST":"abc"}'
-actual="$(DOPPLER_CONFIG="test" "$DOPPLER_BINARY" run --preserve-env --config e2e --mount secrets.json --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
-if [ "$actual" != "$EXPECTED_SECRETS" ]; then
- echo "ERROR: mounted secrets file with --preserve-env has invalid contents"
+# verify existing env value is ignored when --preserve-env is specified with a format that doesn't support it
+EXPECTED_SECRETS='DOPPLER_CONFIG="e2e"\nDOPPLER_ENVIRONMENT="e2e"\nDOPPLER_PROJECT="cli"\nFOO="bar"\nHOME="123"\nTEST="abc"'
+actual="$(DOPPLER_CONFIG="test" "$DOPPLER_BINARY" run --preserve-env --config e2e --mount secrets.env --command "cat \$DOPPLER_CLI_SECRETS_PATH")"
+if [[ "$actual" != "$(echo -e "$EXPECTED_SECRETS")" ]]; then
+ echo "ERROR: mounted env secrets file with --preserve-env has invalid contents"
  exit 1
 fi
 
