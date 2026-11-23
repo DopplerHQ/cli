@@ -156,20 +156,42 @@ func TestPrepareSecretsMountsRawBytes(t *testing.T) {
 		defer cleanup()
 	}
 
-	// Verify DOPPLER_CLI_SECRETS_PATH is set
+	assert.Equal(t, string(secretsBytes), readMountedSecrets(t, env), "mounted file should contain raw bytes from backend")
+}
+
+func readMountedSecrets(t *testing.T, env []string) string {
+	t.Helper()
 	var secretsPath string
 	for _, e := range env {
 		if strings.HasPrefix(e, "DOPPLER_CLI_SECRETS_PATH=") {
 			secretsPath = strings.TrimPrefix(e, "DOPPLER_CLI_SECRETS_PATH=")
-			break
 		}
 	}
-	assert.NotEmpty(t, secretsPath, "DOPPLER_CLI_SECRETS_PATH should be set")
-
+	if !assert.NotEmpty(t, secretsPath, "DOPPLER_CLI_SECRETS_PATH should be set") {
+		return ""
+	}
 	time.Sleep(50 * time.Millisecond)
+	content, err := os.ReadFile(secretsPath)
+	assert.NoError(t, err)
+	return string(content)
+}
 
-	// Read the mounted file and verify it contains the raw bytes
-	content, readErr := os.ReadFile(secretsPath)
-	assert.NoError(t, readErr)
-	assert.Equal(t, secretsBytes, content, "mounted file should contain raw bytes from backend")
+func TestPrepareSecretsEnvInjectionPrecedence(t *testing.T) {
+	originalEnv := []string{"FOO=env-foo", "BAR=env-bar", "UNRELATED=env-unrelated", "HOME=env-home"}
+	testCases := []struct {
+		preserveEnv string
+		expected    []string
+	}{
+		{"false", []string{"FOO=doppler-foo", "BAR=doppler-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
+		{"true", []string{"FOO=env-foo", "BAR=env-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
+		{"FOO", []string{"FOO=env-foo", "BAR=doppler-bar", "UNRELATED=env-unrelated", "HOME=env-home", "ONLY_DOPPLER=doppler-only"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.preserveEnv, func(t *testing.T) {
+			dopplerSecrets := map[string]string{"FOO": "doppler-foo", "BAR": "doppler-bar", "HOME": "doppler-home", "ONLY_DOPPLER": "doppler-only"}
+			env, _ := PrepareSecrets(dopplerSecrets, nil, originalEnv, tc.preserveEnv, MountOptions{})
+			assert.ElementsMatch(t, tc.expected, env)
+		})
+	}
 }

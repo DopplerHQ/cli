@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -339,11 +340,10 @@ func ValidateSecrets(secrets map[string]string, secretsToInclude []string, exitO
 
 func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, originalEnv []string, preserveEnv string, mountOptions MountOptions) ([]string, func()) {
 	env := []string{}
-	secrets := map[string]string{}
 	var onExit func()
 	if mountOptions.Enable {
-		secrets = dopplerSecrets
 		env = originalEnv
+		secrets := dopplerSecrets
 
 		// For template format, render the template using the parsed secrets
 		if mountOptions.Format == models.TemplateMountFormat {
@@ -359,54 +359,40 @@ func PrepareSecrets(dopplerSecrets map[string]string, secretsBytes []byte, origi
 		// export path to mounted file
 		env = append(env, fmt.Sprintf("%s=%s", "DOPPLER_CLI_SECRETS_PATH", mountPath))
 	} else {
-		// remove any reserved keys from secrets
-		reservedKeys := []string{"PATH", "PS1", "HOME"}
-		for _, reservedKey := range reservedKeys {
-			if _, found := dopplerSecrets[reservedKey]; found {
+		// reserved names would clobber the process's own environment, so never inject them from Doppler
+		injectableSecrets := maps.Clone(dopplerSecrets)
+		for _, reservedKey := range []string{"PATH", "PS1", "HOME"} {
+			if _, found := injectableSecrets[reservedKey]; found {
 				utils.LogDebug(fmt.Sprintf("Ignoring reserved secret %s", reservedKey))
-				delete(dopplerSecrets, reservedKey)
+				delete(injectableSecrets, reservedKey)
 			}
 		}
 
-		existingEnvKeys := utils.ParseEnvStrings(originalEnv)
-
-		if preserveEnv != "false" {
-			secretsToPreserve := strings.Split(preserveEnv, ",")
-
-			// use doppler secrets
-			for name, value := range dopplerSecrets {
-				secrets[name] = value
-			}
-			// then use existing env vars
-			for name, value := range existingEnvKeys {
-				_, isDopplerSecret := secrets[name]
-				preserveEnvVar := preserveEnv == "true" || utils.Contains(secretsToPreserve, name)
-				if isDopplerSecret && !preserveEnvVar {
-					continue
-				}
-
-				if isDopplerSecret {
-					utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
-				}
-				secrets[name] = value
-			}
-		} else {
-			// use existing env vars
-			for name, value := range existingEnvKeys {
-				secrets[name] = value
-			}
-			// then use doppler secrets
-			for name, value := range dopplerSecrets {
-				secrets[name] = value
-			}
-		}
-
+		secrets := mergeSecretsWithEnv(injectableSecrets, utils.ParseEnvStrings(originalEnv), preserveEnv)
 		for _, envVar := range utils.MapToEnvFormat(secrets, false) {
 			env = append(env, envVar)
 		}
 	}
 
 	return env, onExit
+}
+
+// mergeSecretsWithEnv combines existingEnv with Doppler secrets. Doppler secrets take precedence,
+// except for names selected by preserveEnv ("true" for all names, otherwise a comma separated list),
+// where the existing environment value wins.
+func mergeSecretsWithEnv(dopplerSecrets map[string]string, existingEnv map[string]string, preserveEnv string) map[string]string {
+	preserveAll := preserveEnv == "true"
+	secretsToPreserve := strings.Split(preserveEnv, ",")
+
+	secrets := maps.Clone(existingEnv)
+	for name, value := range dopplerSecrets {
+		if _, inEnv := existingEnv[name]; inEnv && preserveEnv != "false" && (preserveAll || utils.Contains(secretsToPreserve, name)) {
+			utils.LogDebug(fmt.Sprintf("Ignoring Doppler secret %s", name))
+			continue
+		}
+		secrets[name] = value
+	}
+	return secrets
 }
 
 // FetchSecrets from Doppler and handle fallback file.
