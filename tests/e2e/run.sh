@@ -152,4 +152,17 @@ beforeEach
 value="$(NOT_DOPPLER_SECRET="foo" "$DOPPLER_BINARY" run --preserve-env=false -- printenv NOT_DOPPLER_SECRET || true)"
 [[ "$value" == "foo" ]] || error "ERROR: existing env var not preserved when preserve-env flag passed false"
 
+beforeEach
+
+# verify only-secrets accepts original secret names when a name transformer is used
+value="$("$DOPPLER_BINARY" run --only-secrets FOO --name-transformer tf-var -- printenv TF_VAR_foo)"
+[[ "$value" == "bar" ]] || error "ERROR: only-secrets did not inject the transformed secret when a name transformer was used"
+
+beforeEach
+
+# verify only-secrets still reports nonexistent secrets when a name transformer is used
+if "$DOPPLER_BINARY" run --only-secrets NOPE --name-transformer tf-var -- true > /dev/null 2>&1; then
+  error "ERROR: only-secrets did not report a nonexistent secret when a name transformer was used"
+fi
+
 afterAll

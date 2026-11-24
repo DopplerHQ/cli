@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"text/template"
 	"time"
+	"unicode"
 
 	"github.com/DopplerHQ/cli/pkg/crypto"
 	"github.com/DopplerHQ/cli/pkg/http"
@@ -285,15 +286,52 @@ func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) st
 	return buffer.String()
 }
 
-func MissingSecrets(secrets map[string]string, secretsToInclude []string) []string {
+const tfVarPrefix = "TF_VAR_"
+
+// MissingSecrets returns the names in secretsToInclude that are not in secrets.
+// With a name transformer, the keys of secrets are transformed names (e.g. TF_VAR_api_key
+// for API_KEY), so both sides are compared after keeping only letters and digits in lower case.
+// The env-compatible transformers only change case and separators (plus tf-var's prefix),
+// so this is exact except when two requested names differ only in case or separators
+// (API_KEY and APIKEY); then one present secret satisfies both.
+func MissingSecrets(secrets map[string]string, secretsToInclude []string, nameTransformer *models.SecretsNameTransformer) []string {
 	var missingSecrets []string
+	if nameTransformer == nil {
+		for _, name := range secretsToInclude {
+			if _, ok := secrets[name]; !ok {
+				missingSecrets = append(missingSecrets, name)
+			}
+		}
+		return missingSecrets
+	}
+
+	transformedNames := map[string]bool{}
+	for name := range secrets {
+		if nameTransformer.Type == models.TFVarTransformer.Type {
+			name = strings.TrimPrefix(name, tfVarPrefix)
+		}
+		transformedNames[normalizeSecretName(name)] = true
+	}
 	for _, name := range secretsToInclude {
-		if _, ok := secrets[name]; !ok {
+		if !transformedNames[normalizeSecretName(name)] {
 			missingSecrets = append(missingSecrets, name)
 		}
 	}
 
 	return missingSecrets
+}
+
+// normalizeSecretName keeps only the letters and digits of a name, in lower case.
+// The name transformers change only the case and the separators of a name,
+// so a secret name and its transformed name have the same normalized form.
+func normalizeSecretName(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			b.WriteRune(unicode.ToLower(r))
+		}
+	}
+	return b.String()
 }
 
 // CheckForDangerousSecretNames checks for potential dangerous secret names.
@@ -314,9 +352,9 @@ func CheckForDangerousSecretNames(secrets map[string]string) error {
 	return nil
 }
 
-func ValidateSecrets(secrets map[string]string, secretsToInclude []string, exitOnMissingIncludedSecrets bool, mountOptions MountOptions) {
+func ValidateSecrets(secrets map[string]string, secretsToInclude []string, nameTransformer *models.SecretsNameTransformer, exitOnMissingIncludedSecrets bool, mountOptions MountOptions) {
 	if len(secretsToInclude) > 0 {
-		missingSecrets := MissingSecrets(secrets, secretsToInclude)
+		missingSecrets := MissingSecrets(secrets, secretsToInclude, nameTransformer)
 		if len(missingSecrets) > 0 {
 			err := fmt.Errorf("the following secrets you are trying to include do not exist in your config:\n- %v", strings.Join(missingSecrets, "\n- "))
 			if exitOnMissingIncludedSecrets {

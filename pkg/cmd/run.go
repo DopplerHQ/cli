@@ -294,7 +294,7 @@ doppler run --mount secrets.json -- cat secrets.json`,
 				if parseErr != nil {
 					utils.HandleError(parseErr, "Unable to parse secrets")
 				}
-				controllers.ValidateSecrets(secrets, secretsToInclude, exitOnMissingIncludedSecrets, mountOptions)
+				controllers.ValidateSecrets(secrets, secretsToInclude, nameTransformer, exitOnMissingIncludedSecrets, mountOptions)
 			}
 
 			isRestart := c != nil
