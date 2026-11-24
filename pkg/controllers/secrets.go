@@ -286,9 +286,14 @@ func RenderSecretsTemplate(templateBody string, secretsMap map[string]string) st
 	return buffer.String()
 }
 
+const tfVarPrefix = "TF_VAR_"
+
 // MissingSecrets returns the names in secretsToInclude that are not in secrets.
-// When a name transformer is used, the keys of secrets are the transformed names
-// (e.g. TF_VAR_api_key for API_KEY), so both sides are compared in a normalized form.
+// With a name transformer, the keys of secrets are transformed names (e.g. TF_VAR_api_key
+// for API_KEY), so both sides are compared after keeping only letters and digits in lower case.
+// The env-compatible transformers only change case and separators (plus tf-var's prefix),
+// so this is exact except when two requested names differ only in case or separators
+// (API_KEY and APIKEY); then one present secret satisfies both.
 func MissingSecrets(secrets map[string]string, secretsToInclude []string, nameTransformer *models.SecretsNameTransformer) []string {
 	var missingSecrets []string
 	if nameTransformer == nil {
@@ -302,8 +307,8 @@ func MissingSecrets(secrets map[string]string, secretsToInclude []string, nameTr
 
 	transformedNames := map[string]bool{}
 	for name := range secrets {
-		if nameTransformer.Type == models.TFVarTransformer.Type && len(name) >= len(tfVarPrefix) && strings.EqualFold(name[:len(tfVarPrefix)], tfVarPrefix) {
-			name = name[len(tfVarPrefix):]
+		if nameTransformer.Type == models.TFVarTransformer.Type {
+			name = strings.TrimPrefix(name, tfVarPrefix)
 		}
 		transformedNames[normalizeSecretName(name)] = true
 	}
@@ -315,8 +320,6 @@ func MissingSecrets(secrets map[string]string, secretsToInclude []string, nameTr
 
 	return missingSecrets
 }
-
-const tfVarPrefix = "TF_VAR_"
 
 // normalizeSecretName keeps only the letters and digits of a name, in lower case.
 // The name transformers change only the case and the separators of a name,

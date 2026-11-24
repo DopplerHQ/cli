@@ -202,6 +202,13 @@ func TestMissingSecrets(t *testing.T) {
 	}
 }
 
+func TestMissingSecretsWordSplitting(t *testing.T) {
+	// the server splits words on acronym boundaries and keeps dotnet-env's __ separator
+	assert.Empty(t, MissingSecrets(map[string]string{"HttpServerUrl": "a"}, []string{"HTTP_SERVER_URL"}, models.UpperCamelTransformer))
+	assert.Empty(t, MissingSecrets(map[string]string{"httpServerUrl": "a"}, []string{"HTTP_SERVER_URL"}, models.CamelTransformer))
+	assert.Empty(t, MissingSecrets(map[string]string{"Db__Host": "a"}, []string{"DB__HOST"}, models.DotNETEnvTransformer))
+}
+
 func TestMissingSecretsTFVarNameWithPrefix(t *testing.T) {
 	// a secret named TF_VAR_REGION becomes TF_VAR_tf_var_region with the tf-var transformer
 	secrets := map[string]string{"TF_VAR_tf_var_region": "a"}
