@@ -90,6 +90,8 @@ var secretsUploadCmd = &cobra.Command{
 	Short: "Upload a secrets file",
 	Long: `Upload a json or env secrets file.
 
+Prints a one-line summary to stderr. With --json, prints the config's secrets to stdout instead.
+
 Ex: upload an env file:
 doppler secrets upload dev.env
 
@@ -103,6 +105,8 @@ var secretsDeleteCmd = &cobra.Command{
 	Use:   "delete [secrets]",
 	Short: "Delete the value of one or more secrets",
 	Long: `Delete the value of one or more secrets.
+
+Prints a one-line summary to stderr. With --json, prints the config's remaining secrets to stdout instead.
 
 Ex: delete the secrets "API_KEY" and "CRYPTO_KEY":
 doppler secrets delete API_KEY CRYPTO_KEY`,
@@ -398,6 +402,8 @@ func setSecrets(cmd *cobra.Command, args []string) {
 }
 
 func uploadSecrets(cmd *cobra.Command, args []string) {
+	jsonFlag := utils.OutputJSON
+	raw := utils.GetBoolFlag(cmd, "raw")
 	localConfig := configuration.LocalConfig(cmd)
 
 	utils.RequireValue("token", localConfig.Token.Value)
@@ -417,17 +423,24 @@ func uploadSecrets(cmd *cobra.Command, args []string) {
 		utils.HandleError(err, "Unable to read upload file")
 	}
 
-	_, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
+	response, httpErr := http.UploadSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, string(file))
 	if !httpErr.IsNil() {
 		utils.HandleError(httpErr.Unwrap(), httpErr.Message)
 	}
 
-	if !utils.Silent {
-		utils.Log(fmt.Sprintf("Uploaded %s", filePath))
+	if utils.Silent {
+		return
 	}
+	if jsonFlag {
+		printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, false)
+		return
+	}
+	utils.Log(fmt.Sprintf("Uploaded secrets from %s%s", filePath, secretsDestination(localConfig)))
 }
 
 func deleteSecrets(cmd *cobra.Command, args []string) {
+	jsonFlag := utils.OutputJSON
+	raw := utils.GetBoolFlag(cmd, "raw")
 	yes := utils.GetBoolFlag(cmd, "yes")
 	localConfig := configuration.LocalConfig(cmd)
 
@@ -439,15 +452,29 @@ func deleteSecrets(cmd *cobra.Command, args []string) {
 			secrets[arg] = nil
 		}
 
-		_, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets, nil)
+		response, err := http.SetSecrets(localConfig.APIHost.Value, utils.GetBool(localConfig.VerifyTLS.Value, true), localConfig.Token.Value, localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value, secrets, nil)
 		if !err.IsNil() {
 			utils.HandleError(err.Unwrap(), err.Message)
 		}
 
-		if !utils.Silent {
-			utils.Log(fmt.Sprintf("Deleted %s", strings.Join(args, ", ")))
+		if utils.Silent {
+			return
 		}
+		if jsonFlag {
+			printer.Secrets(response, []string{}, jsonFlag, false, raw, false, false, false, false)
+			return
+		}
+		utils.Log(fmt.Sprintf("Deleted %s%s", strings.Join(args, ", "), secretsDestination(localConfig)))
 	}
+}
+
+// secretsDestination names the config a write went to (" in backend/dev"), or returns
+// "" when the project and config come from the token rather than from local config
+func secretsDestination(localConfig models.ScopedOptions) string {
+	if localConfig.EnclaveProject.Value == "" || localConfig.EnclaveConfig.Value == "" {
+		return ""
+	}
+	return fmt.Sprintf(" in %s/%s", localConfig.EnclaveProject.Value, localConfig.EnclaveConfig.Value)
 }
 
 func downloadSecrets(cmd *cobra.Command, args []string) {
@@ -710,10 +737,7 @@ func init() {
 	if err := secretsUploadCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
 		utils.HandleError(err)
 	}
-	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	if err := secretsUploadCmd.Flags().MarkDeprecated("raw", "upload no longer prints secret values"); err != nil {
-		utils.HandleError(err)
-	}
+	secretsUploadCmd.Flags().Bool("raw", false, "include the raw secret values in --json output")
 	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -724,10 +748,7 @@ func init() {
 	if err := secretsDeleteCmd.RegisterFlagCompletionFunc("config", configNamesValidArgs); err != nil {
 		utils.HandleError(err)
 	}
-	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	if err := secretsDeleteCmd.Flags().MarkDeprecated("raw", "delete no longer prints secret values"); err != nil {
-		utils.HandleError(err)
-	}
+	secretsDeleteCmd.Flags().Bool("raw", false, "include the raw secret values in --json output")
 	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
