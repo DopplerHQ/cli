@@ -62,16 +62,18 @@ func fakeAPI(t *testing.T) (*httptest.Server, *[]map[string]interface{}) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/v3/configs/config/secrets", "/v3/configs/config/secrets/upload":
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				t.Errorf("reading request body: %v", err)
+			if r.Method == http.MethodPost {
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Errorf("reading request body: %v", err)
+				}
+				var parsed map[string]interface{}
+				if err := json.Unmarshal(body, &parsed); err != nil {
+					t.Errorf("parsing request body: %v", err)
+				}
+				parsed["path"] = r.URL.Path
+				writes = append(writes, parsed)
 			}
-			var parsed map[string]interface{}
-			if err := json.Unmarshal(body, &parsed); err != nil {
-				t.Errorf("parsing request body: %v", err)
-			}
-			parsed["path"] = r.URL.Path
-			writes = append(writes, parsed)
 
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"success":true,"secrets":{
@@ -160,18 +162,30 @@ func TestDeleteSecretsPrintsSummary(t *testing.T) {
 	}
 }
 
-func TestDeleteSecretsRawFlagIsNotDeprecated(t *testing.T) {
-	server, _ := fakeAPI(t)
-
-	stdout, stderr := runCLI(t, server, "secrets", "delete", "SECRET_C", "--yes", "--raw")
-
-	if strings.Contains(stderr, "deprecated") {
-		t.Errorf("--raw should not be reported as deprecated:\n%s", stderr)
+func TestRawWithoutJSONPrintsNoValues(t *testing.T) {
+	uploadFile := writeUploadFile(t)
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"secrets", []string{"secrets", "--raw"}},
+		{"secrets get", []string{"secrets", "get", "SECRET_A", "SECRET_B", "--raw"}},
+		{"secrets set", []string{"secrets", "set", "SECRET_A=new-value", "--raw"}},
+		{"secrets delete", []string{"secrets", "delete", "SECRET_C", "--yes", "--raw"}},
+		{"secrets upload", []string{"secrets", "upload", uploadFile, "--raw"}},
 	}
-	if !strings.Contains(stderr, "Deleted SECRET_C") {
-		t.Errorf("expected summary on stderr, got:\n%s", stderr)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server, _ := fakeAPI(t)
+
+			stdout, stderr := runCLI(t, server, tt.args...)
+
+			if strings.Contains(stderr, "deprecated") {
+				t.Errorf("--raw should not be reported as deprecated:\n%s", stderr)
+			}
+			assertNoValues(t, stdout, stderr)
+		})
 	}
-	assertNoValues(t, stdout, stderr)
 }
 
 func TestDeleteSecretsSilent(t *testing.T) {
