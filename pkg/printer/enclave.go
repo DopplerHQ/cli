@@ -364,7 +364,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 		var computedValue string
 		if secret.ComputedValue == nil {
 			computedValue = "[RESTRICTED]"
-		} else if !reveal {
+		} else if secret.ComputedVisibility == "masked" && !reveal {
 			computedValue = "[MASKED]"
 		} else {
 			computedValue = *secret.ComputedValue
@@ -382,7 +382,7 @@ func Secrets(secrets map[string]models.ComputedSecret, secretsToPrint []string, 
 			var rawValue string
 			if secret.RawValue == nil {
 				rawValue = "[RESTRICTED]"
-			} else if !reveal {
+			} else if secret.RawVisibility == "masked" && !reveal {
 				rawValue = "[MASKED]"
 			} else {
 				rawValue = *secret.RawValue

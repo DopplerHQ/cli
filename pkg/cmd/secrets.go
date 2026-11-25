@@ -674,7 +674,7 @@ func init() {
 	secretsCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsCmd.Flags().Bool("only-names", false, "only print the secret names; omit all values")
-	secretsCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	secretsCmd.Flags().Bool("reveal", false, "reveal masked secret values in table output")
 
 	secretsGetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
 	if err := secretsGetCmd.RegisterFlagCompletionFunc("project", projectIDsValidArgs); err != nil {
@@ -690,7 +690,7 @@ func init() {
 	secretsGetCmd.Flags().Bool("visibility", false, "include secret visibility in table output")
 	secretsGetCmd.Flags().Bool("type", false, "include secret type in table output")
 	secretsGetCmd.Flags().Bool("no-exit-on-missing-secret", false, "do not exit if unable to find a requested secret")
-	secretsGetCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	secretsGetCmd.Flags().Bool("reveal", false, "reveal masked secret values in table output")
 	secretsCmd.AddCommand(secretsGetCmd)
 
 	secretsSetCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -705,7 +705,7 @@ func init() {
 	secretsSetCmd.Flags().Bool("no-interactive", false, "do not allow entering secret value via interactive mode")
 	secretsSetCmd.Flags().String("visibility", "", "visibility (e.g. masked, unmasked, or restricted)")
 	secretsSetCmd.Flags().String("type", "", "value type (e.g. string, decimal, etc)")
-	secretsSetCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	secretsSetCmd.Flags().Bool("reveal", false, "reveal masked secret values in table output")
 	secretsCmd.AddCommand(secretsSetCmd)
 
 	secretsUploadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -717,7 +717,7 @@ func init() {
 		utils.HandleError(err)
 	}
 	secretsUploadCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
-	secretsUploadCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	secretsUploadCmd.Flags().Bool("reveal", false, "reveal masked secret values in table output")
 	secretsCmd.AddCommand(secretsUploadCmd)
 
 	secretsDeleteCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")
@@ -730,7 +730,7 @@ func init() {
 	}
 	secretsDeleteCmd.Flags().Bool("raw", false, "print the raw secret value without processing variables")
 	secretsDeleteCmd.Flags().BoolP("yes", "y", false, "proceed without confirmation")
-	secretsDeleteCmd.Flags().Bool("reveal", false, "reveal secret values in table output (values are masked by default)")
+	secretsDeleteCmd.Flags().Bool("reveal", false, "reveal masked secret values in table output")
 	secretsCmd.AddCommand(secretsDeleteCmd)
 
 	secretsDownloadCmd.Flags().StringP("project", "p", "", "project (e.g. backend)")

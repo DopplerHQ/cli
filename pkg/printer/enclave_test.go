@@ -50,6 +50,9 @@ const (
 	testComputedValue  = "cmp-s3cr3t"
 	testRawValue       = "raw-s3cr3t"
 	testRestrictedName = "RESTRICTED_KEY"
+	testUnmaskedName   = "LOG_LEVEL"
+	testUnmaskedCmp    = "cmp-debug"
+	testUnmaskedRaw    = "raw-debug"
 )
 
 func testSecrets() map[string]models.ComputedSecret {
@@ -63,6 +66,15 @@ func testSecrets() map[string]models.ComputedSecret {
 			RawValueType:       models.SecretValueType{Type: "string"},
 			ComputedValueType:  models.SecretValueType{Type: "string"},
 			Note:               "a note",
+		},
+		testUnmaskedName: {
+			Name:               testUnmaskedName,
+			RawValue:           strPtr(testUnmaskedRaw),
+			ComputedValue:      strPtr(testUnmaskedCmp),
+			RawVisibility:      "unmasked",
+			ComputedVisibility: "unmasked",
+			RawValueType:       models.SecretValueType{Type: "string"},
+			ComputedValueType:  models.SecretValueType{Type: "string"},
 		},
 		testRestrictedName: {
 			Name:               testRestrictedName,
@@ -85,31 +97,31 @@ func TestSecretsTableMasking(t *testing.T) {
 		wantNotContain []string
 	}{
 		{
-			name:           "default table masks computed value",
+			name:           "default table masks only masked computed values",
 			raw:            false,
 			reveal:         false,
-			wantContain:    []string{testSecretName, "[MASKED]", testRestrictedName, "[RESTRICTED]"},
-			wantNotContain: []string{testComputedValue, testRawValue},
+			wantContain:    []string{testSecretName, "[MASKED]", testUnmaskedCmp, testRestrictedName, "[RESTRICTED]"},
+			wantNotContain: []string{testComputedValue, testRawValue, testUnmaskedRaw},
 		},
 		{
 			name:           "reveal table prints computed value",
 			raw:            false,
 			reveal:         true,
-			wantContain:    []string{testSecretName, testComputedValue, testRestrictedName, "[RESTRICTED]"},
-			wantNotContain: []string{"[MASKED]", testRawValue},
+			wantContain:    []string{testSecretName, testComputedValue, testUnmaskedCmp, testRestrictedName, "[RESTRICTED]"},
+			wantNotContain: []string{"[MASKED]", testRawValue, testUnmaskedRaw},
 		},
 		{
-			name:           "raw table masks computed and raw columns by default",
+			name:           "raw table masks only masked computed and raw values by default",
 			raw:            true,
 			reveal:         false,
-			wantContain:    []string{testSecretName, "[MASKED]", "RAW VALUE", testRestrictedName, "[RESTRICTED]"},
+			wantContain:    []string{testSecretName, "[MASKED]", "RAW VALUE", testUnmaskedCmp, testUnmaskedRaw, testRestrictedName, "[RESTRICTED]"},
 			wantNotContain: []string{testComputedValue, testRawValue},
 		},
 		{
 			name:           "raw table with reveal prints computed and raw values",
 			raw:            true,
 			reveal:         true,
-			wantContain:    []string{testSecretName, testComputedValue, testRawValue, testRestrictedName, "[RESTRICTED]"},
+			wantContain:    []string{testSecretName, testComputedValue, testRawValue, testUnmaskedCmp, testUnmaskedRaw, testRestrictedName, "[RESTRICTED]"},
 			wantNotContain: []string{"[MASKED]"},
 		},
 	}
@@ -139,7 +151,8 @@ func TestSecretsTableMaskedCountMatchesSecrets(t *testing.T) {
 		Secrets(testSecrets(), []string{}, false, false, true, false, false, false, false)
 	})
 
-	// One non-restricted secret with --raw: computed column and raw column are both masked.
+	// One masked secret with --raw: its computed and raw columns are both masked.
+	// The unmasked secret's values print as-is, so it adds no [MASKED] cells.
 	if got := strings.Count(out, "[MASKED]"); got != 2 {
 		t.Errorf("expected 2 [MASKED] cells, got %d\noutput:\n%s", got, out)
 	}
@@ -187,5 +200,33 @@ func TestSecretsPlainUnchangedByReveal(t *testing.T) {
 		if strings.TrimSpace(rawOut) != testRawValue {
 			t.Errorf("reveal=%v: plain raw output = %q, want %q", reveal, strings.TrimSpace(rawOut), testRawValue)
 		}
+	}
+}
+
+func TestSecretsTableMixedRawAndComputedVisibility(t *testing.T) {
+	// A secret whose raw value is masked but whose computed value is unmasked
+	// (or vice versa) masks each column by its own visibility.
+	secrets := map[string]models.ComputedSecret{
+		testSecretName: {
+			Name:               testSecretName,
+			RawValue:           strPtr(testRawValue),
+			ComputedValue:      strPtr(testComputedValue),
+			RawVisibility:      "masked",
+			ComputedVisibility: "unmasked",
+		},
+	}
+
+	out := captureStdout(t, func() {
+		Secrets(secrets, []string{}, false, false, true, false, false, false, false)
+	})
+
+	if !strings.Contains(out, testComputedValue) {
+		t.Errorf("expected unmasked computed value %q in output:\n%s", testComputedValue, out)
+	}
+	if strings.Contains(out, testRawValue) {
+		t.Errorf("expected masked raw value %q to be hidden:\n%s", testRawValue, out)
+	}
+	if got := strings.Count(out, "[MASKED]"); got != 1 {
+		t.Errorf("expected 1 [MASKED] cell, got %d\noutput:\n%s", got, out)
 	}
 }
